@@ -74,10 +74,14 @@ public:
 
   // beta (value heads rows) | alpha (value heads rows), rows in grouped head
   // order: one 256-row tensor of their format padded with zero rows, or F32 as
-  // one float tensor, which BF16 is widened to exactly.
+  // one float tensor, which BF16 and mixed F32/Q3_K pairs are widened to exactly.
   void alphaBeta(const std::string &betaName, const std::string &alphaName) {
     const GgufTensor *beta = file_.find(betaName), *alpha = file_.find(alphaName);
-    if (!beta || !alpha || beta->type != alpha->type || !alphaBetaType(beta->type)) {
+    const uint32_t q3k = kQuantFormats[GGUF_FMT_Q3K].ggml_type;
+    const bool mixed = beta && alpha &&
+        ((beta->type == ggml::kF32 && alpha->type == q3k) ||
+         (beta->type == q3k && alpha->type == ggml::kF32));
+    if (!beta || !alpha || (!mixed && beta->type != alpha->type) || !alphaBetaType(beta->type)) {
       reject(betaName, beta);
       reject(alphaName, alpha);
       return;
@@ -86,15 +90,17 @@ public:
     for (const GgufTensor *t : {beta, alpha})
       if (t->rows() != heads || t->columns() != hidden)
         throw GgufError("alpha/beta must be [" + std::to_string(heads) + ", hidden]: " + t->name);
-    if (beta->type == ggml::kF32 || beta->type == ggml::kBF16) {
-      const uint64_t widening = beta->type == ggml::kBF16 ? 2 : 1;
-      const uint64_t bytes = (beta->bytes + alpha->bytes) * widening;
+    if (beta->type == ggml::kF32 || beta->type == ggml::kBF16 || mixed) {
+      const uint64_t tensorBytes = uint64_t{heads} * hidden * sizeof(float);
+      const uint64_t bytes = 2 * tensorBytes;
       descriptor(ggml::kF32, 2ull * heads, hidden, {}, {bytes, 0, 0}, betaName);
       uint64_t destination = section(bytes);
       for (const GgufTensor *t : {beta, alpha}) {
+        const Conversion conversion = t->type == ggml::kBF16 ? Conversion::WidenToFloat32
+            : t->type == q3k ? Conversion::DequantizeQ3KToFloat32 : Conversion::None;
         image_.copies.push_back({destination, tensorRows(*t, heads, t->bytes / heads, grouped(0, 1)),
-                                 widening == 2 ? Conversion::WidenToFloat32 : Conversion::None});
-        destination += t->bytes * widening;
+                                 conversion});
+        destination += tensorBytes;
       }
       return;
     }

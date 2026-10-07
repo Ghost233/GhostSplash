@@ -746,14 +746,36 @@ void splitVisibility(MetalBackend &backend, const Linear &linear, LinearTile til
 // ops::Embedding over the native rows of every embedding format (kernels/shared/embedding.metal): each gathered value
 // is the bf16 rounding of GGML's fp32 value, for tokens in any order, repeated, and the vocabulary's first and last.
 void tokenGather(MetalBackend &backend) {
-  constexpr uint32_t kVocabulary = 64, kHidden = 1024;
-  const std::vector<uint32_t> tokens{kVocabulary - 1, 0, 17, 17, 42, 3, kVocabulary - 1, 29, 8};
+  constexpr uint32_t kVocabulary = 64;
   int formats = 0;
   for (int fi = 0; fi < FMT_COUNT; ++fi) {
-    if (!gguf_embedding_format(fi)) continue;
+    if (!gguf_embedding_format(fi)) {
+      fail(std::string(fmtName(fi)) + " token gather is not registered");
+      continue;
+    }
     ++formats;
     const Fmt f = Fmt(fi);
-    const std::vector<uint8_t> native = makeNative(f, kVocabulary, kHidden, rng);
+    constexpr uint32_t kHidden = 5120;
+    std::vector<uint32_t> tokens{kVocabulary - 1, 0, 17, 17, 42, 3, kVocabulary - 1, 29, 8};
+    for (uint32_t token = 0; token < kVocabulary; ++token) tokens.push_back(token);
+    std::vector<uint8_t> native = makeNative(f, kVocabulary, kHidden, rng);
+    if (f == IQ2S) {
+      // The real 27B row width, every 10-bit grid index, both scale nibbles and all sign bits,
+      // across multiple blocks and token rows. The CPU reference decodes the native GGML layout.
+      for (size_t b = 0; b < native.size() / 82; ++b) {
+        uint8_t *block = native.data() + b * 82;
+        for (uint32_t j = 0; j < 8; ++j) {
+          block[66 + j] = 0;
+          for (uint32_t entry = 0; entry < 4; ++entry) {
+            const uint32_t index = uint32_t((b * 32 + j * 4 + entry) % 1024);
+            block[2 + 4 * j + entry] = uint8_t(index);
+            block[66 + j] |= uint8_t((index >> 8) << (2 * entry));
+            block[34 + 4 * j + entry] = uint8_t(b + 4 * j + entry);
+          }
+          block[74 + j] = uint8_t(((3 * b + j) & 15) | (((7 * b + j + 8) & 15) << 4));
+        }
+      }
+    }
     const EmbeddingWeights table(kVocabulary, kHidden, NativeRows(upload(backend, native), f));
     const Guarded ids(backend, tokens.size() * sizeof(uint32_t), 0), output(backend, tokens.size() * kHidden * 2, 0xFF);
     std::memcpy(ids.view.contents(), tokens.data(), ids.bytes);
@@ -789,7 +811,8 @@ void gatherExtents(MetalBackend &backend) {
     });
   };
   std::vector<EmbeddingWeights> tables;
-  for (const Fmt f : {Q80, PQ20}) {
+  for (int fi = 0; fi < FMT_COUNT; ++fi) {
+    const Fmt f = Fmt(fi);
     const QuantFormat &format = kQuantFormats[f];
     const uint64_t rowBytes = uint64_t{kHidden} / format.block_elements * format.block_bytes;
     EmbeddingWeights table(kVocabulary, kHidden, NativeRows(test::sharedBuffer(backend, kVocabulary * rowBytes), f));

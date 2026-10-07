@@ -201,6 +201,46 @@ void checkQuantizedAlphaBeta(MetalBackend &backend, const std::filesystem::path 
     }
 }
 
+void checkMixedAlphaBeta(MetalBackend &backend, const std::filesystem::path &directory) {
+  for (bool moe : {false, true})
+    for (bool betaQuantized : {false, true}) {
+      SmallTarget target = smallTarget(moe);
+      const auto &g = target.geometry;
+      const std::string quantized = betaQuantized ? "blk.0.ssm_beta.weight" : "blk.0.ssm_alpha.weight";
+      Tensor &other = tensorNamed(target.tensors, betaQuantized ? "blk.0.ssm_alpha.weight" : "blk.0.ssm_beta.weight");
+      other.type = model::ggml::kF32;
+      other.data.resize(uint64_t{g.gdnValueHeads} * g.hiddenSize * sizeof(float));
+      for (uint64_t i = 0; i < uint64_t{g.gdnValueHeads} * g.hiddenSize; ++i) {
+        const float value = (int(i % 31) - 15) * 0.03125f;
+        std::memcpy(other.data.data() + i * sizeof(float), &value, sizeof value);
+      }
+      Tensor &tensor = tensorNamed(target.tensors, quantized);
+      tensor.type = kQuantFormats[Q3K].ggml_type;
+      tensor.data = fixture(Q3K, g.gdnValueHeads, g.hiddenSize, 7301);
+      const uint64_t stride = rowBytes(Q3K, g.hiddenSize);
+      std::vector<uint8_t> floats(uint64_t{g.gdnValueHeads} * g.hiddenSize * sizeof(float));
+      for (uint32_t row = 0; row < g.gdnValueHeads; ++row)
+        for (uint32_t group = 0; group < g.hiddenSize / 32; ++group) {
+          float values[32];
+          uint8_t p0[32], p1[8];
+          groupPack(Q3K, tensor.data.data() + row * stride, group, values, p0, p1);
+          std::memcpy(floats.data() + (uint64_t{row} * g.hiddenSize + group * 32) * sizeof(float), values, sizeof values);
+        }
+      const auto path = directory / "mixed-alpha-beta.gguf";
+      writeGguf(path, target.tensors, g);
+      const auto images = planned(path, g);
+      const auto image = preparedImages(backend, path, g).front();
+      for (const std::string name : {"blk.0.ssm_beta.weight", "blk.0.ssm_alpha.weight"}) {
+        const auto *copy = copyOf(images[0], name);
+        if (!copy) throw std::runtime_error("missing mixed alpha/beta copy");
+        const auto expected = orderedRows(name == quantized ? floats : target.data(name),
+                                         uint64_t{g.hiddenSize} * sizeof(float), copy->source.order);
+        check(slice(image, copy->destination, expected.size()) == expected,
+              "mixed F32/Q3_K alpha/beta equals reference F32 in grouped head order: " + name);
+      }
+    }
+}
+
 // The MoE layer: the F32 alpha/beta tensor, the golden images and tensor
 // offsets past 4 GiB.
 void checkMoe(MetalBackend &backend, const std::filesystem::path &directory, const Goldens &hashes) {
@@ -474,6 +514,7 @@ int main(int argc, char **argv) {
     guarded("preparation of the MoE target", [&] { checkMoe(backend, directory.path(), hashes); });
     guarded("preparation of BF16 alpha/beta", [&] { checkWidenedAlphaBeta(backend, directory.path()); });
     guarded("preparation of quantized alpha/beta", [&] { checkQuantizedAlphaBeta(backend, directory.path()); });
+    guarded("preparation of mixed alpha/beta", [&] { checkMixedAlphaBeta(backend, directory.path()); });
     guarded("the target loader", [&] { checkDenseTarget(backend, directory.path()); });
     std::printf("%s (%d failures)\n", failures ? "GGUF preparation tests FAILED" : "GGUF preparation tests passed",
                 failures);

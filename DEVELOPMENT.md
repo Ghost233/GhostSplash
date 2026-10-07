@@ -1049,14 +1049,14 @@ and lists every unsupported tensor in one error:
 - linears and experts: Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_0, Q4_0, Q4_1,
   IQ1_S, IQ1_M, IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_XS, IQ4_NL,
   MXFP4 or PQ2_0;
-- token embeddings: Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_0, Q4_0, Q4_1, IQ3_S,
-  IQ4_NL or IQ4_XS, every type llama-quantize gives a token table by default
-  in a file whose linears load, and Prism's PQ2_0;
+- token embeddings: all the quantized formats listed for linears and experts,
+  gathered directly from native GGUF blocks;
 - norms, the MoE router and shared-expert scalar gate, and the GDN
   convolution, decay and time-step bias: F32;
 - GDN alpha and beta: both of one type, any of the linears' formats (one
   segment of the GDN input projection), F32 or BF16, which loading widens to
-  the F32 values it equals.
+  the F32 values it equals. A mixed F32/Q3_K pair is decoded into one F32
+  segment without rounding its weights.
 
 Of Unsloth's files in September 2026 that covers every file of Qwen3.8-27B and
 Qwen3.6-35B-A3B, from UD-IQ1_S up, but UD-Q8_K_XL and BF16, whose BF16 tensors

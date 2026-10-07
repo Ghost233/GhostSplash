@@ -442,25 +442,13 @@ QUANTIZED_TYPES = {
 }
 # The token rows the embedding kernels gather (gguf_embedding_format in
 # runtime/metal/abi/Gguf.h).
-EMBEDDING_TYPES = {
-    "Q2_K",
-    "Q3_K",
-    "Q4_K",
-    "Q5_K",
-    "Q6_K",
-    "Q8_0",
-    "Q4_0",
-    "Q4_1",
-    "IQ3_S",
-    "IQ4_NL",
-    "IQ4_XS",
-    "PQ2_0",
-}
+EMBEDDING_TYPES = QUANTIZED_TYPES
 # The tensors the native loader reads from a target, and the types it accepts
 # for each (runtime/model/GgufImage.cpp): quantized projections; F32 norms,
 # small GDN vectors and MoE routers, which llama.cpp keeps unquantized and
 # which run unrounded; GDN alpha and beta, both of one type: a quantized
 # format, F32 or BF16, which preparation widens to the F32 values it equals.
+# A mixed F32/Q3_K pair is decoded into one F32 segment.
 F32 = {"F32"}
 MODEL_TENSORS = {
     "token_embd.weight": EMBEDDING_TYPES,
@@ -573,13 +561,13 @@ def require_loadable(metadata):
             unsupported[
                 name.split(".", 2)[-1] if name.startswith("blk.") else name, found
             ] += 1
-        # The two GDN input gates run as one segment of their shared format.
-        if name.endswith(".ssm_beta.weight") and kind != metadata.tensors.get(
-            name.replace("ssm_beta", "ssm_alpha")
-        ):
-            unsupported[
-                "ssm_alpha.weight and ssm_beta.weight", "of different types"
-            ] += 1
+        # Mixed F32/Q3_K gates are widened; other pairs share their format.
+        if name.endswith(".ssm_beta.weight"):
+            alpha_kind = metadata.tensors.get(name.replace("ssm_beta", "ssm_alpha"))
+            if kind != alpha_kind and {kind, alpha_kind} != {0, 11}:
+                unsupported[
+                    "ssm_alpha.weight and ssm_beta.weight", "of different types"
+                ] += 1
     if unsupported:
         listed = ", ".join(
             f"{tensor} {found} ({count} {'tensor' if count == 1 else 'tensors'})"

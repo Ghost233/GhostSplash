@@ -78,11 +78,35 @@ void widenToFloat32(const uint8_t *values, uint64_t count, uint8_t *to) {
   }
 }
 
-// Destination bytes of source bytes: halved when narrowed, doubled when widened.
+// Decode native block_q3_K values without rounding, for mixed F32/Q3_K GDN gates.
+void dequantizeQ3KToFloat32(const uint8_t *values, uint64_t bytes, uint8_t *to) {
+  constexpr uint64_t blockBytes = kQuantFormats[GGUF_FMT_Q3K].block_bytes;
+  for (uint64_t offset = 0; offset < bytes; offset += blockBytes) {
+    const uint8_t *block = values + offset;
+    __fp16 halfScale;
+    std::memcpy(&halfScale, block + 108, sizeof halfScale);
+    const float scale = static_cast<float>(halfScale);
+    const uint8_t *scales = block + 96;
+    for (uint32_t i = 0; i < 256; ++i) {
+      const uint32_t group = i / 16;
+      const int localScale = int(((scales[group % 8] >> (4 * (group / 8))) & 15) |
+                                (((scales[8 + group % 4] >> (2 * (group / 4))) & 3) << 4)) - 32;
+      const uint32_t quantGroup = i / 32, column = i % 32;
+      const int low = (block[32 + (quantGroup / 4) * 32 + column] >> (2 * (quantGroup % 4))) & 3;
+      const int high = (block[column] >> quantGroup) & 1;
+      const float value = scale * localScale * (low - (high ? 0 : 4));
+      std::memcpy(to + (offset / blockBytes * 256 + i) * sizeof(float), &value, sizeof value);
+    }
+  }
+}
+
+// Destination bytes of source bytes after conversion.
 uint64_t copiedBytes(const gguf::Copy &copy, uint64_t sourceBytes) {
   switch (copy.conversion) {
   case gguf::Conversion::NarrowToBfloat16: return sourceBytes / 2;
   case gguf::Conversion::WidenToFloat32: return sourceBytes * 2;
+  case gguf::Conversion::DequantizeQ3KToFloat32:
+    return sourceBytes / kQuantFormats[GGUF_FMT_Q3K].block_bytes * kGgufBlockColumns * sizeof(float);
   case gguf::Conversion::None: break;
   }
   return sourceBytes;
@@ -99,7 +123,9 @@ uint64_t copyBytes(const gguf::Copy &copy) {
 void addCopyTasks(const WeightSource &source, uint8_t *image, const gguf::Copy &copy,
                   std::vector<std::function<void(std::vector<uint8_t> &)>> &tasks) {
   const gguf::TensorRows &rows = copy.source;
-  const uint64_t span = std::min<uint64_t>(rows.rowBytes, kLoadStepBytes & ~uint64_t{3});
+  const uint64_t alignment = copy.conversion == gguf::Conversion::DequantizeQ3KToFloat32
+      ? kQuantFormats[GGUF_FMT_Q3K].block_bytes : sizeof(float);
+  const uint64_t span = std::min<uint64_t>(rows.rowBytes, kLoadStepBytes / alignment * alignment);
   const uint64_t batch = span == rows.rowBytes ? kLoadStepBytes / rows.rowBytes : 1;
   for (uint64_t first = 0; first < rows.rows; first += batch) {
     const uint64_t count = std::min(batch, rows.rows - first);
@@ -116,6 +142,8 @@ void addCopyTasks(const WeightSource &source, uint8_t *image, const gguf::Copy &
         readRows(source, rows, first, count, column, width, staging.data());
         if (copy.conversion == gguf::Conversion::NarrowToBfloat16)
           narrowToBfloat16(staging.data(), count * width / 4, to, rows.name);
+        else if (copy.conversion == gguf::Conversion::DequantizeQ3KToFloat32)
+          dequantizeQ3KToFloat32(staging.data(), count * width, to);
         else
           widenToFloat32(staging.data(), count * width / 2, to);
       });
