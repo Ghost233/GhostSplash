@@ -26,12 +26,13 @@
   ],
   "files": {
     "comparison.json": "06d65d1e156b875071b5e1eb3cc76abda683bd9f8fbf5bd5868b515ea737095d",
-    "comparison.csv": "769ff977ab557111f758c952ea1c90fa5bf72945f290f6c986cf2b2b90a4d76c",
-    "whittle/groups.csv": "536a656851f78af433cb4d5ebb4eec3ec7a51e24d4c2d16e414a1a0a33bb9a7a",
-    "whittle/memory.csv": "84e527f3f736978bff0defca2213bdc0ced8028dbcb6aecb83e578e5735c45a9",
+    "comparison.csv": "7431dfc22165299b651342870173b4d5da26ee6f6c974489e96949c447632106",
+    "whittle/groups.csv": "5604b7b0bcb70413426511cdb90efbd5c274112a17bcd0a2211b61fe510102ec",
+    "whittle/memory.csv": "87a369b3ffd100e428c037295623aad54dc4a847371e99e23f320095c48a108e",
     "whittle/results.json": "91d630eace6fea7afb264570d161261b2757832f35c77d96ad418d13be699351",
-    "whittle/requests.csv": "e3da2283a65c076cdd876db162b683de65ce0890119cd2655f684c790499a7ba",
+    "whittle/requests.csv": "eb267f280abfaefb35f389adccaddf36e77f2c5e4472d19d441b069e80edfdf4",
     "baselines/original27.json": "f10bd4916b9976326fd0dc307f9029b31080e8164bfdb0c716cf86f2f0778847",
     "baselines/tiel_miniplus35.json": "734448a5f78e5e667c714aeade2b68acd9e14500f2b63ce8a25c280bdf459c56"
-  }
+  },
+  "csv_line_endings": "LF; CSV cell values preserved"
 }
