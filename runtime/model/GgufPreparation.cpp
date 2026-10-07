@@ -190,11 +190,18 @@ void requireRepack(const gguf::Repack &repack, uint64_t imageBytes) {
       repack.columns % kGgufBlockColumns)
     throw GgufError("invalid prepared weight repack");
   const QuantFormat &format = kQuantFormats[repack.format];
-  const uint64_t rowBytes = ggufRowBytes(format, repack.columns);
+  const uint64_t rowBytes = ggufRowBytes(format, repack.sourceColumns ? repack.sourceColumns : repack.columns);
+  if (repack.sourceColumns && (repack.columns != kGgufBlockColumns || repack.sourceColumns > repack.columns ||
+      repack.sourceColumns % format.block_elements))
+    throw GgufError("invalid prepared weight input padding");
   uint64_t sourceRows = 0;
   for (const gguf::TensorRows &rows : repack.sources) {
     if (rows.rowBytes != rowBytes) throw GgufError("invalid prepared weight source size");
-    sourceRows += rows.rows;
+    if (rows.groupRows) {
+      if (rows.rows % rows.groupRows || rows.paddedGroupRows < rows.groupRows)
+        throw GgufError("invalid prepared weight expert padding");
+      sourceRows += rows.rows / rows.groupRows * rows.paddedGroupRows;
+    } else sourceRows += rows.rows;
   }
   if (sourceRows > repack.rows) throw GgufError("invalid prepared weight source size");
   // A format without plane1 has an empty plane1 at offset 0.
@@ -214,7 +221,9 @@ void writeRepack(metal::MetalBackend &backend, const WeightSource &source, const
     const uint64_t rows = std::min(chunk.rows, repack.rows - firstRow);
     for (uint64_t firstColumn = 0; firstColumn < repack.columns; firstColumn += chunk.columns) {
       const uint64_t columns = std::min(chunk.columns, repack.columns - firstColumn);
-      const uint64_t chunkRowBytes = ggufRowBytes(format, columns);
+      const uint64_t sourceColumns = repack.sourceColumns ? repack.sourceColumns : repack.columns;
+      const uint64_t readColumns = std::min(columns, sourceColumns - firstColumn);
+      const uint64_t chunkRowBytes = ggufRowBytes(format, readColumns);
       const uint64_t column = ggufRowBytes(format, firstColumn);
       // The sources' rows in image order, then zero rows, a task for each
       // run of rows within kLoadStepBytes.
@@ -224,13 +233,28 @@ void writeRepack(metal::MetalBackend &backend, const WeightSource &source, const
         uint8_t *to;
       };
       std::vector<Read> reads;
+      std::memset(host, 0, rows * chunkRowBytes);
       const uint64_t batch = std::max<uint64_t>(1, kLoadStepBytes / chunkRowBytes);
       uint64_t start = 0;
       for (const gguf::TensorRows &tensor : repack.sources) {
-        const uint64_t begin = std::max(firstRow, start), end = std::min(firstRow + rows, start + tensor.rows);
-        for (uint64_t row = begin; row < end; row += batch)
-          reads.push_back({&tensor, row - start, std::min(batch, end - row), host + (row - firstRow) * chunkRowBytes});
-        start += tensor.rows;
+        const uint64_t countRows = tensor.groupRows ? tensor.rows / tensor.groupRows * tensor.paddedGroupRows : tensor.rows;
+        const uint64_t begin = std::max(firstRow, start), end = std::min(firstRow + rows, start + countRows);
+        for (uint64_t row = begin; row < end;) {
+          const uint64_t local = row - start;
+          uint64_t sourceRow = local, count = std::min(batch, end - row);
+          if (tensor.groupRows) {
+            const uint64_t offset = local % tensor.paddedGroupRows;
+            if (offset >= tensor.groupRows) {
+              row += std::min(end - row, tensor.paddedGroupRows - offset);
+              continue;
+            }
+            sourceRow = local / tensor.paddedGroupRows * tensor.groupRows + offset;
+            count = std::min(count, tensor.groupRows - offset);
+          }
+          reads.push_back({&tensor, sourceRow, count, host + (row - firstRow) * chunkRowBytes});
+          row += count;
+        }
+        start += countRows;
       }
       parallelFor(reads.size(), [&](size_t index, unsigned) {
         const Read &read = reads[index];
@@ -260,6 +284,7 @@ void writeRepack(metal::MetalBackend &backend, const WeightSource &source, const
       params.src_row_bytes = static_cast<uint32_t>(chunkRowBytes);
       params.dst_plane1 = lengths[1] ? static_cast<uint32_t>(at[1] - at[0]) : 0;
       params.dst_meta = static_cast<uint32_t>(at[2] - at[0]);
+      params.source_input_size = repack.sourceColumns ? static_cast<uint32_t>(readColumns) : 0;
       static_cast<void>(backend.submit({"gguf_repack", {{0, input}, {1, backend.view(image, at[0], extent)}},
                                         {{2, &params, sizeof(params)}}, {rows * (columns / 32) / 256, 1, 1},
                                         {256, 1, 1}}));

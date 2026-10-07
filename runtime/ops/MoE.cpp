@@ -260,7 +260,7 @@ MoePlan::MoePlan(MoeShape shape, uint32_t rows, MoeConfig config,
 }
 
 void MoE::add(metal::CommandGraph &graph, const MoeBuffers &buffers,
-              const MoeWeights &weights, const MoePlan &plan) {
+              const MoeWeights &weights, const MoePlan &plan, bool routedOnly) {
   const MoeShape shape = plan.shape();
   const uint32_t rows = plan.rows();
   const uint32_t tileRows = plan.tileRows();
@@ -270,7 +270,7 @@ void MoE::add(metal::CommandGraph &graph, const MoeBuffers &buffers,
   const uint64_t hiddenRows = uint64_t{rows} * shape.hiddenSize * sizeof(uint16_t);
   requireBytes(buffers.input, hiddenRows, "MoE input");
   requireBytes(buffers.residual, hiddenRows, "MoE residual");
-  requireBytes(buffers.output, hiddenRows, "MoE output");
+  requireBytes(buffers.output, hiddenRows * (routedOnly ? 2 : 1), "MoE output");
   const MoeScratch &scratch = buffers.scratch;
   for (const MoeScratchField &field : kMoeScratchFields)
     requireBytes(scratch.*field.buffer, required.*field.bytes, field.name);
@@ -325,11 +325,25 @@ void MoE::add(metal::CommandGraph &graph, const MoeBuffers &buffers,
     addGgufExperts(graph, scratch, weights.blocks(), plan);
   else
     addAffineExperts(graph, scratch, weights.affine(), plan);
-  graph.add("moe_combine",
+  graph.add(routedOnly ? "moe_combine_routed_f32" : "moe_combine",
             {scratch.expertOutput, scratch.routeRows, scratch.routingWeights,
              buffers.residual, buffers.output},
             MoeCombineParams{rows, shape.hiddenSize, shape.routesPerToken()},
             {rows, shape.hiddenSize / 256, 1});
+}
+
+void MoE::addSharedJoin(metal::CommandGraph &graph, metal::MetalBuffer routed,
+                        metal::MetalBuffer shared, const MoeScratch &scratch,
+                        metal::MetalBuffer output, const MoePlan &plan) {
+  const uint64_t elements = uint64_t{plan.rows()} * plan.shape().hiddenSize;
+  requireBytes(routed, elements * sizeof(float), "Whittle routed output");
+  requireBytes(shared, elements * sizeof(uint16_t), "Whittle shared output");
+  requireBytes(output, elements * sizeof(uint16_t), "Whittle joined output");
+  requireBytes(scratch.routingWeights, uint64_t{plan.rows()} * plan.shape().routesPerToken() * sizeof(float),
+               "Whittle routing weights");
+  graph.add("whittle_shared_join", {routed, shared, scratch.routingWeights, output},
+            MoeCombineParams{plan.rows(), plan.shape().hiddenSize, plan.shape().routesPerToken()},
+            {plan.rows(), plan.shape().hiddenSize / 256, 1});
 }
 
 MoePlan MoE::prefillPlan(MoeShape shape, uint32_t rows, MoeConfig config) {

@@ -14,5 +14,6 @@ struct GgufRepackParams {
   uint32_t src_row_bytes; // bytes per staged row
   uint32_t dst_plane1;    // byte offsets in the output buffer
   uint32_t dst_meta;
+  uint32_t source_input_size = 0; // Zero: input_size; trailing groups are exact zeros.
 };
-static_assert(sizeof(GgufRepackParams) == 24, "GGUF repack parameters are 24 bytes on both sides");
+static_assert(sizeof(GgufRepackParams) == 28, "GGUF repack parameters are 28 bytes on both sides");

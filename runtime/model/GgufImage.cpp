@@ -72,6 +72,28 @@ public:
     image_.repacks.push_back(std::move(repack));
   }
 
+  void paddedExperts(const std::string &name, uint64_t rows, uint64_t columns, bool down) {
+    const GgufTensor *tensor = find(name, quantizedType);
+    if (!tensor) return;
+    const uint64_t sourceWidth = geometry_.sourceExpertIntermediateSize;
+    const uint64_t physicalWidth = geometry_.expertIntermediateSize;
+    const uint64_t sourceRows = down ? rows : geometry_.experts * sourceWidth;
+    const uint64_t sourceColumns = down ? sourceWidth : columns;
+    if (tensor->rows() != sourceRows || tensor->columns() != sourceColumns)
+      throw GgufError("unexpected shape for " + name);
+    const uint32_t format = gguf_format_of(tensor->type);
+    Repack repack = planes(format, rows, columns, name);
+    auto source = tensorRows(*tensor, sourceRows, ggufRowBytes(kQuantFormats[format], sourceColumns));
+    if (down) repack.sourceColumns = sourceColumns;
+    else { source.groupRows = sourceWidth; source.paddedGroupRows = physicalWidth; }
+    repack.sources.push_back(std::move(source));
+    image_.repacks.push_back(std::move(repack));
+  }
+
+  void zeroQuantized(uint64_t rows, uint64_t columns) {
+    image_.repacks.push_back(planes(GGUF_FMT_Q40, rows, columns, "zero shared expert"));
+  }
+
   // beta (value heads rows) | alpha (value heads rows), rows in grouped head
   // order: one 256-row tensor of their format padded with zero rows, or F32 as
   // one float tensor, which BF16 and mixed F32/Q3_K pairs are widened to exactly.
@@ -279,13 +301,29 @@ Image layerImage(const GgufFile &file, const QwenTargetDimensions &g, std::vecto
   if (g.ffnKind == QwenFfnKind::SparseMoe) {
     const uint64_t routed = g.experts, width = g.expertIntermediateSize;
     b.floatTensor(p + "ffn_gate_inp.weight", routed, g.hiddenSize);
-    b.quantized(p + "ffn_gate_exps.weight", routed * width, g.hiddenSize);
-    b.quantized(p + "ffn_up_exps.weight", routed * width, g.hiddenSize);
-    b.quantized(p + "ffn_down_exps.weight", routed * g.hiddenSize, width);
-    b.quantized(p + "ffn_gate_shexp.weight", width, g.hiddenSize);
-    b.quantized(p + "ffn_up_shexp.weight", width, g.hiddenSize);
-    b.quantized(p + "ffn_down_shexp.weight", g.hiddenSize, width);
+    if (g.sourceExpertIntermediateSize) {
+      b.paddedExperts(p + "ffn_gate_exps.weight", routed * width, g.hiddenSize, false);
+      b.paddedExperts(p + "ffn_up_exps.weight", routed * width, g.hiddenSize, false);
+      b.paddedExperts(p + "ffn_down_exps.weight", routed * g.hiddenSize, width, true);
+      // The routing plan retains its shared slot, whose narrow weights are exact zeros.
+      // The real wide shared expert executes separately and joins before the only residual rounding.
+      b.zeroQuantized(width, g.hiddenSize);
+      b.zeroQuantized(width, g.hiddenSize);
+      b.zeroQuantized(g.hiddenSize, width);
+    } else {
+      b.quantized(p + "ffn_gate_exps.weight", routed * width, g.hiddenSize);
+      b.quantized(p + "ffn_up_exps.weight", routed * width, g.hiddenSize);
+      b.quantized(p + "ffn_down_exps.weight", routed * g.hiddenSize, width);
+      b.quantized(p + "ffn_gate_shexp.weight", width, g.hiddenSize);
+      b.quantized(p + "ffn_up_shexp.weight", width, g.hiddenSize);
+      b.quantized(p + "ffn_down_shexp.weight", g.hiddenSize, width);
+    }
     b.floatTensor(p + "ffn_gate_inp_shexp.weight", 1, g.hiddenSize);
+    if (g.sourceExpertIntermediateSize) {
+      b.quantized(p + "ffn_gate_shexp.weight", g.intermediateSize, g.hiddenSize);
+      b.quantized(p + "ffn_up_shexp.weight", g.intermediateSize, g.hiddenSize);
+      b.quantized(p + "ffn_down_shexp.weight", g.hiddenSize, g.intermediateSize);
+    }
   } else {
     b.quantized(p + "ffn_gate.weight", g.intermediateSize, g.hiddenSize);
     b.quantized(p + "ffn_up.weight", g.intermediateSize, g.hiddenSize);
@@ -359,8 +397,10 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
   if (geometry.ffnKind == QwenFfnKind::SparseMoe) {
     expect("expert_count", geometry.experts);
     expect("expert_used_count", geometry.expertsPerToken);
-    expect("expert_feed_forward_length", geometry.expertIntermediateSize);
-    expect("expert_shared_feed_forward_length", geometry.expertIntermediateSize);
+    expect("expert_feed_forward_length", geometry.sourceExpertIntermediateSize
+        ? geometry.sourceExpertIntermediateSize : geometry.expertIntermediateSize);
+    expect("expert_shared_feed_forward_length", geometry.sourceExpertIntermediateSize
+        ? geometry.intermediateSize : geometry.expertIntermediateSize);
   } else {
     expect("feed_forward_length", geometry.intermediateSize);
   }

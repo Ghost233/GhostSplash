@@ -2,6 +2,7 @@
 
 #include "model/Qwen3_6Moe.hpp"
 #include "model/Qwen3_8.hpp"
+#include "model/Whittle27.hpp"
 #include "model/WeightStore.hpp"
 #include "ops/AneFfn.hpp"
 #include "ops/Embedding.hpp"
@@ -47,6 +48,8 @@ template QwenTarget::QwenTarget(const Qwen3_8Weights &, const QwenTargetGeometry
                                 const ops::ExecutionPlans &);
 template QwenTarget::QwenTarget(const Qwen3_6MoeWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
                                 const ops::ExecutionPlans &);
+template QwenTarget::QwenTarget(const Whittle27Weights &, const QwenTargetGeometry &, metal::MetalBackend &,
+                                const ops::ExecutionPlans &);
 
 namespace {
 
@@ -69,13 +72,22 @@ void includeFfn(QwenTargetGeometry &geometry, const Qwen3_6MoeLayerWeights &laye
   if (layer.ffn.layout() != geometry.moeLayout)
     throw WeightStoreError("the MoE blocks of a target must share one weight layout");
 }
+void includeFfn(QwenTargetGeometry &geometry, const Whittle27LayerWeights &layer, bool first) {
+  if (first) geometry.moeLayout = layer.ffn.layout();
+  if (layer.ffn.layout() != geometry.moeLayout)
+    throw WeightStoreError("the MoE blocks of a target must share one weight layout");
+  includeProjection(geometry, layer.sharedGate);
+  includeProjection(geometry, layer.sharedUp);
+  includeProjection(geometry, layer.sharedDown);
+  geometry.gateUpProjections.push_back(layer.sharedUp.shape());
+}
 
 // The format of most routed expert weights of a GGUF target's MoE blocks,
 // GGUF_FMT_COUNT for none (ops::MoeShape::expertFormat).
 uint32_t routedExpertFormat(std::span<const Qwen3_8LayerWeights>) { return GGUF_FMT_COUNT; }
-uint32_t routedExpertFormat(std::span<const Qwen3_6MoeLayerWeights> layers) {
+template <class Layer> uint32_t routedExpertFormat(std::span<const Layer> layers) {
   std::array<uint64_t, GGUF_FMT_COUNT> weights{};
-  for (const Qwen3_6MoeLayerWeights &layer : layers) {
+  for (const auto &layer : layers) {
     if (layer.ffn.layout() != ops::WeightLayout::Block32) return GGUF_FMT_COUNT;
     const ops::BlockMoeWeights &block = layer.ffn.blocks();
     for (const ops::BlockExpertProjection *projection : {&block.gate, &block.up, &block.down})
@@ -106,7 +118,7 @@ QwenTargetGeometry qwenTargetGeometry(const QwenTargetWeights<Layout, Layer> &we
     }, layer.mixer);
     includeFfn(geometry, layer, &layer == &weights.layers.front());
   }
-  geometry.moeExpertFormat = routedExpertFormat(weights.layers);
+  geometry.moeExpertFormat = routedExpertFormat(std::span(weights.layers));
   geometry.prefillProjections = geometry.decodeProjections;
   includeProjection(geometry, weights.logitsProjection);
   for (auto *shapes : {&geometry.prefillProjections, &geometry.decodeProjections,
@@ -119,6 +131,7 @@ QwenTargetGeometry qwenTargetGeometry(const QwenTargetWeights<Layout, Layer> &we
 
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_8Weights &);
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_6MoeWeights &);
+template QwenTargetGeometry qwenTargetGeometry(const Whittle27Weights &);
 
 const ops::Projection &QwenTarget::vocabularyProjection() const noexcept {
   return weightsBase_.logitsProjection;
@@ -469,6 +482,41 @@ void QwenTarget::addVerifyFfn(VerifyStep &step, const Qwen3_6MoeLayerWeights &la
   ops::Normalization::addRms(step.graph, residual, layer.postAttentionNorm, b.normalized, geometry_.hiddenSize,
                              step.rows);
   ops::MoE::add(step.graph, {b.normalized, residual, output, b.moe}, layer.ffn, *step.moe);
+}
+
+namespace {
+template <class Buffers>
+void addWhittleFfn(metal::CommandGraph &graph, const Buffers &b, const Whittle27LayerWeights &layer,
+                   const ops::Linear &linear, const ops::MoePlan &moe, uint32_t rows, uint32_t lanes,
+                   metal::MetalBuffer residual, metal::MetalBuffer output) {
+  const uint32_t hidden = layer.sharedDown.outputSize;
+  ops::Normalization::addRms(graph, residual, layer.postAttentionNorm, b.normalized, hidden, rows);
+  ops::MoE::add(graph, {b.normalized, residual, b.whittleRouted, b.moe}, layer.ffn, moe, true);
+  if (lanes) {
+    const auto gateUp = linear.decodePlan(layer.sharedUp, lanes, ops::LinearEpilogue::GateUp, &layer.sharedGate);
+    linear.add(graph, {.input = b.normalized, .output = b.denseIntermediate,
+                      .gateScratch = b.denseGateScratch, .scratch = b.linearScratch},
+               layer.sharedUp, gateUp, &layer.sharedGate);
+  } else {
+    linear.addPrefill(graph, b.normalized, layer.sharedGate, b.denseGateScratch, {}, rows, b.linearScratch);
+    linear.addPrefillUpWithGate(graph, b.normalized, layer.sharedUp, b.denseGateScratch,
+                                b.denseIntermediate, {}, {}, rows, b.linearScratch);
+  }
+  const auto down = lanes ? linear.decodePlan(layer.sharedDown, lanes)
+                          : linear.prefillPlan(layer.sharedDown, rows, ops::LinearEpilogue::None);
+  linear.add(graph, {.input = b.denseIntermediate, .output = b.whittleShared, .scratch = b.linearScratch},
+             layer.sharedDown, down);
+  ops::MoE::addSharedJoin(graph, b.whittleRouted, b.whittleShared, b.moe, output, moe);
+}
+} // namespace
+
+void QwenTarget::addPrefillFfn(PrefillStep &step, uint32_t, const Whittle27LayerWeights &layer,
+                               metal::MetalBuffer residual, metal::MetalBuffer output) const {
+  addWhittleFfn(step.graph, step.buffers, layer, operators_.linear(), *step.moe, step.rows, 0, residual, output);
+}
+void QwenTarget::addVerifyFfn(VerifyStep &step, const Whittle27LayerWeights &layer,
+                              metal::MetalBuffer residual, metal::MetalBuffer output) const {
+  addWhittleFfn(step.graph, step.buffers, layer, operators_.linear(), *step.moe, step.rows, step.lanes, residual, output);
 }
 
 void QwenTarget::addHeadBatch(metal::CommandGraph &graph, metal::MetalBuffer hidden,

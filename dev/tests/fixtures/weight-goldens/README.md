@@ -5,6 +5,11 @@
   (`dev/tests/engine/GgufFormatReference.hpp`) to llama.cpp 7ab4ee7, and
   PQ2_0, which upstream GGML lacks, to PrismML-Eng/llama.cpp 01ae597, so no
   Splash change touches them.
+  The appended `q50` fixture (seed 26, 256 rows of 1024 values) was checked
+  independently by a Python native-block decoder: half scale, 32 fifth bits,
+  16 low-nibble bytes and zero point 16. Its fp32 bytes hash to
+  `6ddc18d3fc08a79c11ae40abb7d318792428136fef3e49d611e192821febb6b6`.
+  The existing format hashes remain unchanged.
 - `gguf_images`: every image `gguf-preparation` writes from its dense and MoE
   GGUF fixtures.
 - `affine_images`: every image `run_affine_preparation.py` writes from its

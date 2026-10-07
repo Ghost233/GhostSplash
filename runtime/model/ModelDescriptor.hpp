@@ -3,6 +3,7 @@
 #include "DFlashDraft.hpp"
 #include "Model.hpp"
 #include "Qwen3_6Moe.hpp"
+#include "Whittle27.hpp"
 #include "Qwen3_8.hpp"
 #include "ops/Vision.hpp"
 
@@ -15,7 +16,7 @@
 
 namespace splash::model {
 
-using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout>;
+using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Whittle27Layout>;
 
 // Where a model's weights come from: a Splash package's files, read as they
 // are, or an MLX or GGUF checkpoint prepared into images when it loads. The

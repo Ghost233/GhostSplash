@@ -292,7 +292,10 @@ struct MoE final {
   [[nodiscard]] static MoePlan prefillPlan(MoeShape shape, uint32_t rows, MoeConfig config);
   [[nodiscard]] static MoePlan decodePlan(MoeShape shape, uint32_t lanes, MoeConfig config);
   static void add(metal::CommandGraph &graph, const MoeBuffers &buffers,
-                  const MoeWeights &weights, const MoePlan &plan);
+                  const MoeWeights &weights, const MoePlan &plan, bool routedOnly = false);
+  static void addSharedJoin(metal::CommandGraph &graph, metal::MetalBuffer routed,
+                            metal::MetalBuffer shared, const MoeScratch &scratch,
+                            metal::MetalBuffer output, const MoePlan &plan);
 };
 
 } // namespace splash::ops

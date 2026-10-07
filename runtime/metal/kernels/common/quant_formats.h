@@ -120,6 +120,19 @@ struct FmtQ5K {
   static uint4 codes(Chunk q) { return quant_nibble_pairs(q.x) | (((uint4(q.y) >> uint4(0, 2, 4, 6)) & 0x00010001u) << 4); }
   static QuantCoef coef(Meta hdr, ushort j) { return quant_k4_coef(hdr, j); }
 };
+// Q5_0 uses Q5_K's code planes, with one half scale per 32 values and zero point 16.
+struct FmtQ50 {
+  QUANT_FORMAT(GGUF_FMT_Q50, QuantLinear, 16, 32, false);
+  typedef FmtQ5K::Payload Payload;
+  typedef FmtQ5K::Chunk Chunk;
+  typedef ushort Meta;
+  static Payload load(device uchar *p0, device uchar *p1) { return FmtQ5K::load(p0, p1); }
+  static Chunk chunk(Payload w, ushort c) { return FmtQ5K::chunk(w, c); }
+  static Chunk loadChunk(device uchar *p0, device uchar *p1, ushort c) { return FmtQ5K::loadChunk(p0, p1, c); }
+  static uint4 codes(Chunk q) { return FmtQ5K::codes(q); }
+  static Meta loadMeta(device uchar *m) { return *((device ushort *)m); }
+  static QuantCoef coef(Meta mt, ushort) { return {float2(float(as_type<half>(mt)))}; }
+};
 // Q6_K: plane0 low 4 bits, plane1 the high 2 bits (halfword c = chunk c); meta 16 int8 scales, then half d.
 // value = d * sc * (q - 32) with one scale per 16-group.
 struct FmtQ6K {
@@ -445,7 +458,7 @@ struct FmtPQ20 {
 #define QUANT_FORMATS(X)                                                                                            \
   X(FmtQ4K, q4k) X(FmtIQ4XS, iq4xs) X(FmtIQ4NL, iq4nl) X(FmtQ5K, q5k) X(FmtQ6K, q6k) X(FmtQ3K, q3k) X(FmtQ80, q80) \
   X(FmtIQ3S, iq3s) X(FmtQ2K, q2k) X(FmtIQ3XXS, iq3xxs) X(FmtIQ2XXS, iq2xxs) X(FmtIQ2XS, iq2xs) X(FmtIQ2S, iq2s)      \
-  X(FmtIQ1S, iq1s) X(FmtIQ1M, iq1m) X(FmtQ40, q40) X(FmtQ41, q41) X(FmtMXFP4, mxfp4) X(FmtPQ20, pq20)
+  X(FmtIQ1S, iq1s) X(FmtIQ1M, iq1m) X(FmtQ40, q40) X(FmtQ41, q41) X(FmtMXFP4, mxfp4) X(FmtPQ20, pq20) X(FmtQ50, q50)
 
 // Runs body(F()) with the format type of run-time format id `format` (GGUF_FMT_*), for kernels whose tiles pick
 // their tensor, and so its format, at run time. The branch is uniform in a threadgroup. The host passes known ids

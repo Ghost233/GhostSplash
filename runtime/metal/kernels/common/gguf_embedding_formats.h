@@ -98,6 +98,17 @@ template <bool Min> struct GgufEmbedQ4 {
 using GgufEmbedQ40 = GgufEmbedQ4<false>;
 using GgufEmbedQ41 = GgufEmbedQ4<true>;
 
+struct GgufEmbedQ50 {
+  enum : uint { Weights = 32, Bytes = 22 };
+  __attribute__((always_inline)) static bfloat value(device const uchar *block, uint dim) {
+#pragma clang fp reassociate(off)
+    const uint l = dim % Weights;
+    const uint low = (block[6 + l % 16] >> (4 * (l / 16))) & 15;
+    const uint high = (block[2 + l / 8] >> (l % 8)) & 1;
+    return bfloat(float(gguf_half(block, 0)) * float(int(low | (high << 4)) - 16));
+  }
+};
+
 // block_pq2_0: half d | uchar qs[32], element l in bits 2 (l % 4) of qs[l / 4]; zero point 1. decode is the
 // element in fp32, which the rotated gather (shared/gguf_rotation.metal) transforms before it rounds.
 struct GgufEmbedPQ20 {

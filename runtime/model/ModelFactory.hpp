@@ -26,7 +26,7 @@ namespace splash::model {
 class QwenStateStorage;
 class VisionLoader;
 
-using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights>;
+using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Whittle27Weights>;
 
 struct LoadedModel final {
   ModelDescriptor descriptor;

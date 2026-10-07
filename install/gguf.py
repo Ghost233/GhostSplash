@@ -420,6 +420,7 @@ TENSOR_TYPES = {
     142: "PQ2_0",
 }
 QUANTIZED_TYPES = {
+    "Q5_0",
     "Q2_K",
     "Q3_K",
     "Q4_K",

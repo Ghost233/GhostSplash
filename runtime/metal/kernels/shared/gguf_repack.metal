@@ -43,12 +43,28 @@ kernel void gguf_repack(device const uchar *src [[buffer(0)]], device uchar *dst
   device uchar *out0 = dst + quant_tile_index(n, g, G) * f.plane0_bytes;
   device uchar *out1 = dst + p.dst_plane1 + quant_tile_index(n, g, G) * f.plane1_bytes;
   device uchar *meta = dst + p.dst_meta + quant_tile_index(n, b, G / f.meta_groups) * f.meta_bytes;
+  if (p.source_input_size && g * 32 >= p.source_input_size) {
+    for (uint i = 0; i < f.plane0_bytes; ++i) out0[i] = 0;
+    for (uint i = 0; i < f.plane1_bytes; ++i) out1[i] = 0;
+    if (j == 0) for (uint i = 0; i < f.meta_bytes; ++i) meta[i] = 0;
+    return;
+  }
   uchar lo[32], hi[32];   // per slot: the (low) code and its high bits
   switch (p.fmt) {
     case GGUF_FMT_Q4K: {
       for (uint e = 0; e < 32; ++e) lo[quant_slot(e)] = (blk[16 + (j / 2) * 32 + e] >> (4 * (j % 2))) & 15;
       gguf_store_pairs(lo, out0);
       if (j == 0) for (uint i = 0; i < 16; ++i) meta[i] = blk[i];
+      break;
+    }
+    case GGUF_FMT_Q50: {
+      for (uint e = 0; e < 32; ++e) {
+        lo[quant_slot(e)] = (blk[6 + e % 16] >> (4 * (e / 16))) & 15;
+        hi[quant_slot(e)] = (blk[2 + e / 8] >> (e % 8)) & 1;
+      }
+      gguf_store_pairs(lo, out0);
+      gguf_store_bits(hi, 1, out1);
+      meta[0] = blk[0]; meta[1] = blk[1];
       break;
     }
     case GGUF_FMT_Q5K: {

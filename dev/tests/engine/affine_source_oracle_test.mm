@@ -75,27 +75,31 @@ int main(int argc, char **argv) {
       const std::filesystem::path package(argv[3]);
       const auto descriptor = model::inspectModelRoot(package);
       std::visit([&](const auto &layout) {
-        // Each image is written into memory of its own, so one is held at a
-        // time.
-        const auto check = [&](const auto &load, uint64_t decayOffset = 0, uint32_t decayHeads = 0) {
-          model::WeightImages images(backend, descriptor.sourceIdentity);
-          model::AffineTargetLoader loader(images, argv[2], layout);
-          compare(load(loader), package / "target", decayOffset, decayHeads);
-        };
-        const uint32_t begin = argc == 5 ? std::stoul(argv[4]) : 0;
-        const uint32_t end = argc == 5 ? begin + 1 : layout.layers;
-        const std::vector<model::affine::Image> planned = model::affineTargetImages(layout);
-        for (uint32_t layer = begin; layer < end; ++layer) {
-          const auto &sections = planned.at(layer).sections;
-          const auto decay = std::ranges::find(sections, model::affine::SectionKind::Decay,
-                                               &model::affine::Section::kind);
-          const bool gdn = decay != sections.end();
-          check([&](auto &loader) { return loader.layer(layer); }, gdn ? decay->offset : 0,
-                gdn ? uint32_t(decay->bytes / sizeof(float)) : 0);
-        }
-        if (argc != 5) {
-          check([](auto &loader) { return loader.head(); });
-          check([](auto &loader) { return loader.embedding(); });
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, model::Whittle27Layout>) {
+          throw std::runtime_error("Whittle is a GGUF target and has no affine package oracle");
+        } else {
+          // Each image is written into memory of its own, so one is held at a
+          // time.
+          const auto check = [&](const auto &load, uint64_t decayOffset = 0, uint32_t decayHeads = 0) {
+            model::WeightImages images(backend, descriptor.sourceIdentity);
+            model::AffineTargetLoader loader(images, argv[2], layout);
+            compare(load(loader), package / "target", decayOffset, decayHeads);
+          };
+          const uint32_t begin = argc == 5 ? std::stoul(argv[4]) : 0;
+          const uint32_t end = argc == 5 ? begin + 1 : layout.layers;
+          const std::vector<model::affine::Image> planned = model::affineTargetImages(layout);
+          for (uint32_t layer = begin; layer < end; ++layer) {
+            const auto &sections = planned.at(layer).sections;
+            const auto decay = std::ranges::find(sections, model::affine::SectionKind::Decay,
+                                                 &model::affine::Section::kind);
+            const bool gdn = decay != sections.end();
+            check([&](auto &loader) { return loader.layer(layer); }, gdn ? decay->offset : 0,
+                  gdn ? uint32_t(decay->bytes / sizeof(float)) : 0);
+          }
+          if (argc != 5) {
+            check([](auto &loader) { return loader.head(); });
+            check([](auto &loader) { return loader.embedding(); });
+          }
         }
       }, descriptor.target);
       std::cout << "affine source oracle PASS seconds="

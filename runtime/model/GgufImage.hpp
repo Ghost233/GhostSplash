@@ -40,6 +40,7 @@ struct TensorRows {
   uint64_t rows = 0;
   uint64_t rowBytes = 0;
   RowOrder order{};
+  uint32_t groupRows = 0, paddedGroupRows = 0;
 };
 
 // Header and descriptor bytes.
@@ -65,6 +66,7 @@ struct Repack {
   uint64_t columns = 0;
   uint64_t plane0 = 0, plane1 = 0, meta = 0; // image offsets; plane1 when the format has one
   std::vector<TensorRows> sources;
+  uint64_t sourceColumns = 0; // Zero: columns as stored; otherwise pad the trailing input groups.
 };
 struct Image {
   std::string name; // layer-N.bin, head.bin, embedding.bin

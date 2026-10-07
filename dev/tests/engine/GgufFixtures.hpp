@@ -164,14 +164,16 @@ inline std::vector<Tensor> targetTensors(const model::QwenTargetDimensions &g, c
     }
     add(p + "post_attention_norm.weight", {hidden});
     if (g.ffnKind == model::QwenFfnKind::SparseMoe) {
-      const uint64_t experts = g.experts, width = g.expertIntermediateSize;
+      const uint64_t experts = g.experts, width = g.sourceExpertIntermediateSize
+          ? g.sourceExpertIntermediateSize : g.expertIntermediateSize;
+      const uint64_t sharedWidth = g.sourceExpertIntermediateSize ? g.intermediateSize : width;
       add(p + "ffn_gate_inp.weight", {hidden, experts});
       add(p + "ffn_gate_exps.weight", {hidden, width, experts});
       add(p + "ffn_up_exps.weight", {hidden, width, experts});
       add(p + "ffn_down_exps.weight", {width, hidden, experts});
-      add(p + "ffn_gate_shexp.weight", {hidden, width});
-      add(p + "ffn_up_shexp.weight", {hidden, width});
-      add(p + "ffn_down_shexp.weight", {width, hidden});
+      add(p + "ffn_gate_shexp.weight", {hidden, sharedWidth});
+      add(p + "ffn_up_shexp.weight", {hidden, sharedWidth});
+      add(p + "ffn_down_shexp.weight", {sharedWidth, hidden});
       add(p + "ffn_gate_inp_shexp.weight", {hidden});
     } else {
       add(p + "ffn_gate.weight", {hidden, g.intermediateSize});
@@ -311,8 +313,8 @@ inline std::vector<test_gguf::Key> metadata(const model::QwenTargetDimensions &g
   if (g.ffnKind == model::QwenFfnKind::SparseMoe) {
     key("expert_count", g.experts);
     key("expert_used_count", g.expertsPerToken);
-    key("expert_feed_forward_length", g.expertIntermediateSize);
-    key("expert_shared_feed_forward_length", g.expertIntermediateSize);
+    key("expert_feed_forward_length", g.sourceExpertIntermediateSize ? g.sourceExpertIntermediateSize : g.expertIntermediateSize);
+    key("expert_shared_feed_forward_length", g.sourceExpertIntermediateSize ? g.intermediateSize : g.expertIntermediateSize);
   } else {
     key("feed_forward_length", g.intermediateSize);
   }

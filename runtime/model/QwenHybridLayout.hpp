@@ -52,6 +52,8 @@ struct QwenTargetDimensions {
   uint32_t experts = 0;
   uint32_t expertsPerToken = 0;
   uint32_t expertIntermediateSize = 0;
+  // A GGUF's unpadded expert width, when loading expands each expert with exact zeros.
+  uint32_t sourceExpertIntermediateSize = 0;
 
   [[nodiscard]] constexpr bool
   isFullAttentionLayer(uint32_t layer) const noexcept {

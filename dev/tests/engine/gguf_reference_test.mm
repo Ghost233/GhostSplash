@@ -21,7 +21,7 @@ void checkFormat(void *ggml, const Goldens &hashes, Fmt f) {
   std::vector<float> values;
   repack(f, native, kRows, kColumns, &values);
   const std::span<const uint8_t> bytes(reinterpret_cast<const uint8_t *>(values.data()), values.size() * sizeof(float));
-  checkGolden(hashes, fmtName(f), bytes, std::string("CPU reference matches the GGML golden hash: ") + fmtName(f));
+  checkGolden(hashes, fmtName(f), bytes, std::string("CPU reference matches the dequantization golden hash: ") + fmtName(f));
   if (!ggml) return;
   std::vector<float> official;
   std::string error;

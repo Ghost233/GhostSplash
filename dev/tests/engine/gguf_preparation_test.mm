@@ -486,6 +486,54 @@ void checkRepack(MetalBackend &backend, const std::filesystem::path &directory, 
   }
 }
 
+void checkWhittlePadding(MetalBackend &backend, const std::filesystem::path &directory) {
+  auto target = smallTarget(true);
+  auto &g = target.geometry;
+  g.sourceExpertIntermediateSize = 192;
+  g.intermediateSize = 512;
+  target.tensors = targetTensors(g, {{"attn_qkv.weight", kQ8_0}, {"attn_gate.weight", kQ6_K},
+      {"ssm_out.weight", kQ4_K}, {"ffn_gate_exps.weight", kQ4_K}, {"ffn_up_exps.weight", kQ4_K},
+      {"ffn_down_exps.weight", ggmlType("Q5_0")}, {"ffn_gate_shexp.weight", kQ8_0},
+      {"ffn_up_shexp.weight", kQ8_0}, {"ffn_down_shexp.weight", kQ8_0},
+      {"output.weight", kQ6_K}, {"token_embd.weight", kQ8_0}});
+  randomize(target.tensors, 1234);
+  const auto path = directory / "whittle.gguf";
+  writeGguf(path, target.tensors, g);
+  model::WeightSource source(path);
+  const model::GgufFile file(source);
+  const auto plans = model::gguf::planImages(file, g);
+  const auto &plan = plans.front();
+  const auto image = backend.allocateBuffer(plan.bytes, splash::metal::BufferStorage::Shared, "Whittle fixture");
+  model::writeGgufImage(backend, source, image, plan);
+  const auto actual = model::contentsOf(image);
+  for (const auto &step : plan.repacks) {
+    if (step.sources.empty()) {
+      const auto bytes = model::ggufPlaneBytes(kQuantFormats[step.format], step.rows, step.columns);
+      for (const auto [offset, count] : {std::pair{step.plane0, bytes.plane0}, std::pair{step.meta, bytes.meta}})
+        check(std::all_of(actual.begin() + offset, actual.begin() + offset + count,
+                          [](uint8_t v) { return v == 0; }), "Whittle narrow shared placeholder is zero");
+      continue;
+    }
+    const auto &input = step.sources.front();
+    if (!input.groupRows && !step.sourceColumns) continue;
+    const auto &tensor = tensorNamed(target.tensors, input.name);
+    const Fmt format = Fmt(step.format);
+    const uint32_t stride = rowBytes(format, step.columns);
+    std::vector<uint8_t> padded(step.rows * stride, 0);
+    for (uint64_t row = 0; row < input.rows; ++row) {
+      const uint64_t destination = input.groupRows ? row / input.groupRows * input.paddedGroupRows + row % input.groupRows : row;
+      std::memcpy(padded.data() + destination * stride, tensor.data.data() + row * input.rowBytes, input.rowBytes);
+    }
+    const Packed expected = repack(format, padded, step.rows, step.columns, nullptr);
+    for (const auto &[offset, reference] : {std::pair{step.plane0, expected.w0}, std::pair{step.plane1, expected.w1},
+                                          std::pair{step.meta, expected.meta}}) {
+      if (!offset) continue; // Formats without plane1 have no stored plane.
+      check(std::equal(reference.begin(), reference.end(), actual.begin() + offset),
+            "Whittle 192-to-256 exact native padding: " + input.name);
+    }
+  }
+}
+
 void checkExecutor(MetalBackend &backend, const std::filesystem::path &directory) {
   const Shape shapes[] = {{512, 1024, {}}, {768, 1280, {256, 16, 8, 4}}, {768, 8448, {128, 16, 8, 5}}};
   for (int s = 0; s < 3; ++s)
@@ -515,6 +563,7 @@ int main(int argc, char **argv) {
     guarded("preparation of BF16 alpha/beta", [&] { checkWidenedAlphaBeta(backend, directory.path()); });
     guarded("preparation of quantized alpha/beta", [&] { checkQuantizedAlphaBeta(backend, directory.path()); });
     guarded("preparation of mixed alpha/beta", [&] { checkMixedAlphaBeta(backend, directory.path()); });
+    guarded("preparation of Whittle experts", [&] { checkWhittlePadding(backend, directory.path()); });
     guarded("the target loader", [&] { checkDenseTarget(backend, directory.path()); });
     std::printf("%s (%d failures)\n", failures ? "GGUF preparation tests FAILED" : "GGUF preparation tests passed",
                 failures);

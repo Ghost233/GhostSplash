@@ -29,6 +29,8 @@ namespace splash::model {
 struct Qwen3_8Layout;
 struct Qwen3_8LayerWeights;
 struct Qwen3_6MoeLayout;
+struct Whittle27Layout;
+struct Whittle27LayerWeights;
 struct Qwen3_6MoeLayerWeights;
 
 // Both supported targets bind the same mixer tensors per hybrid layer; only
@@ -107,7 +109,7 @@ struct QwenTargetGeometry final : QwenTargetDimensions {
   }
   [[nodiscard]] constexpr uint32_t ffnScratchWidth() const noexcept {
     return ffnKind == QwenFfnKind::Dense ? intermediateSize
-                                         : expertIntermediateSize;
+                                         : std::max(intermediateSize, expertIntermediateSize);
   }
   [[nodiscard]] constexpr std::span<const uint32_t>
   captureLayers() const noexcept {
@@ -192,6 +194,7 @@ struct QwenTargetPrefillBuffers final {
   metal::MetalBuffer attentionOutput;
   metal::MetalBuffer projectionSums;
   metal::MetalBuffer downProjectionSums;
+  metal::MetalBuffer whittleRouted, whittleShared;
   metal::MetalBuffer ropeCos;
   metal::MetalBuffer ropeSin;
   metal::MetalBuffer chunkKeys;
@@ -225,6 +228,7 @@ struct QwenTargetVerifyBuffers final {
   metal::MetalBuffer logits;
   metal::MetalBuffer denseGateScratch;
   std::span<const metal::MetalBuffer> gdnPacked;
+  metal::MetalBuffer whittleRouted, whittleShared;
   std::span<const metal::MetalBuffer> gdnMixed;
   std::span<const metal::MetalBuffer> gdnDecay;
   std::span<const metal::MetalBuffer> gdnBeta;
@@ -302,9 +306,14 @@ public:
 private:
   using WeightView =
       std::variant<const QwenTargetWeights<Qwen3_8Layout, Qwen3_8LayerWeights> *,
-                   const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *>;
+                   const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *,
+                   const QwenTargetWeights<Whittle27Layout, Whittle27LayerWeights> *>;
   struct PrefillStep;
   struct VerifyStep;
+  void addPrefillFfn(PrefillStep &step, uint32_t index, const Whittle27LayerWeights &layer,
+                    metal::MetalBuffer residual, metal::MetalBuffer output) const;
+  void addVerifyFfn(VerifyStep &step, const Whittle27LayerWeights &layer,
+                   metal::MetalBuffer residual, metal::MetalBuffer output) const;
 
   // A layer's parts in dispatch order: the mixer normalizes its input and
   // returns the residual rows the FFN normalizes and adds to into `output`.

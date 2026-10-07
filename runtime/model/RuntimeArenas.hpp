@@ -122,6 +122,8 @@ enum class PrefillTensor : uint32_t {
   LinearCounters,
   // The rotated input of a rotated projection (ops::LinearScratch::rotated).
   LinearRotated,
+  WhittleRouted,
+  WhittleShared,
   Count,
 };
 
@@ -267,6 +269,8 @@ enum class DecodeTensor : uint32_t {
   // One tensor per ops::kMoeScratchFields entry, in its order (moeScratchTensor).
   MoeScratch,
   MoeScratchLast = MoeScratch + ops::kMoeScratchFields.size() - 1,
+  WhittleRouted,
+  WhittleShared,
   Count,
 };
 

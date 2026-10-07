@@ -175,6 +175,8 @@ QwenTargetPrefillBuffers prefillBuffers(const PrefillArena &arena) {
   buffers.attentionOutput = arena.get(PrefillTensor::AttentionOutput);
   buffers.projectionSums = arena.get(PrefillTensor::ProjectionSums);
   buffers.downProjectionSums = arena.get(PrefillTensor::DownProjectionSums);
+  buffers.whittleRouted = arena.get(PrefillTensor::WhittleRouted);
+  buffers.whittleShared = arena.get(PrefillTensor::WhittleShared);
   buffers.ropeCos = arena.get(PrefillTensor::RopeCos);
   buffers.ropeSin = arena.get(PrefillTensor::RopeSin);
   buffers.chunkKeys = arena.get(PrefillTensor::ChunkKeys);
@@ -1442,6 +1444,8 @@ struct Runtime::Impl {
     buffers.gdnHidden = d(DecodeTensor::GdnHidden);
     buffers.gdnOutput = d(DecodeTensor::GdnOutput);
     buffers.denseIntermediate = d(DecodeTensor::Intermediate);
+    buffers.whittleRouted = d(DecodeTensor::WhittleRouted);
+    buffers.whittleShared = d(DecodeTensor::WhittleShared);
     buffers.fullPacked = d(DecodeTensor::FullPacked);
     buffers.fullQueries = d(DecodeTensor::FullQueries);
     buffers.attentionPartials = d(DecodeTensor::AttentionPartials);

@@ -38,6 +38,7 @@ GGML = {
     "Q4_0": 2,
     "Q4_1": 3,
     "Q5_0": 6,
+    "Q5_1": 7,
     "Q8_0": 8,
     "Q2_K": 10,
     "Q3_K": 11,
@@ -373,6 +374,7 @@ class GgufMetadataTests(unittest.TestCase):
             "Q3_K",
             "Q4_K",
             "Q5_K",
+            "Q5_0",
             "Q6_K",
             "Q8_0",
             "Q4_0",
@@ -426,8 +428,8 @@ class GgufMetadataTests(unittest.TestCase):
         f32 = {name: GGML["F32"] for name in tensors}
         for changes, reason in (
             (
-                {"blk.4.ffn_gate_exps.weight": GGML["Q5_0"]},
-                "ffn_gate_exps.weight Q5_0 [(]1 tensor[)]",
+                {"blk.4.ffn_gate_exps.weight": GGML["Q5_1"]},
+                "ffn_gate_exps.weight Q5_1 [(]1 tensor[)]",
             ),
             (
                 {

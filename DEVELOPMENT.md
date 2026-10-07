@@ -1046,7 +1046,7 @@ every tensor the loader reads with a type it accepts for that tensor
 quantized types to `runtime/metal/abi/QuantFormat.h`). The native loader checks again
 and lists every unsupported tensor in one error:
 
-- linears and experts: Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_0, Q4_0, Q4_1,
+- linears and experts: Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_0, Q4_0, Q4_1, Q5_0,
   IQ1_S, IQ1_M, IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_XS, IQ4_NL,
   MXFP4 or PQ2_0;
 - token embeddings: all the quantized formats listed for linears and experts,
@@ -1303,6 +1303,23 @@ records for the branch, never of another revision. Only files downloaded before
 are available, which is enough to rebuild a damaged or deleted assembly; a new
 selection needs the Hub once for its draft's default branch. The installer
 never rewrites upstream files.
+
+### Local Whittle 27B support
+
+`logic65/Qwen3.8-Whittle-MoE-27B-A17.8B-GGUF:Q4_K_M` is a text-only
+GGUF target of the `Whittle-MoE-27B-A17.8B` family. It retains the dense
+27B's attention layout and uses 64 routed experts, selecting 16 per token,
+with width 192, plus a shared expert of width 5120. The loader pads each
+routed expert to width 256 with exact zeros without requantizing or changing
+the source GGUF. The wide shared expert executes separately; its gated
+result joins the routed sum before the residual's BF16 rounding.
+
+It uses the official 27B DFlash2 draft. Compatibility does not establish
+draft acceptance, output quality or a speed advantage; measure these on the
+selected GGUF. `whittle27a178bsplash.sh` serves the local file on port 8006.
+`bench-whittle-context-speed.sh` reuses the ZxBench context-speed driver,
+with 8000/16000/32000/64000 input tokens, 512 output tokens and concurrency
+1/2/3/4. The results are written under `build/context-speed-whittle-*`.
 
 ### Weight loading
 

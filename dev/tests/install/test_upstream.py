@@ -61,12 +61,50 @@ class UpstreamTest(unittest.TestCase):
         for repo in repos:
             with self.subTest(repo=repo):
                 self.assertEqual(models.validate_repo_id(repo), repo)
-        self.assertEqual(len(set(repos)), len(repos))
+        self.assertEqual(len({f.name for f in families.FAMILIES}), len(repos))
+        self.assertEqual(
+            families.named("Whittle-MoE-27B-A17.8B").draft_repo, DENSE.draft_repo
+        )
+
+    def test_whittle_gguf_uses_27b_draft(self):
+        config = family_config(DENSE)
+        config["text_config"]["model_type"] = "qwen3_5_moe_text"
+        metadata = family_config(DENSE, "gguf-metadata.json")
+        for values in metadata.values():
+            for key in list(values):
+                if key.startswith("qwen35."):
+                    values[key.replace("qwen35.", "qwen35moe.")] = values.pop(key)
+        metadata["string"]["general.architecture"] = "qwen35moe"
+        metadata["unsigned"] |= {
+            "qwen35moe.block_count": 64,
+            "qwen35moe.nextn_predict_layers": 0,
+            "qwen35moe.expert_count": 64,
+            "qwen35moe.expert_used_count": 16,
+            "qwen35moe.expert_feed_forward_length": 192,
+            "qwen35moe.expert_shared_feed_forward_length": 5120,
+        }
+        path = self.root / "whittle-config.json"
+        path.write_text(json.dumps(config))
+        meta = self.root / "whittle-metadata.json"
+        meta.write_text(json.dumps(metadata))
+        draft = draft_dir(self.root / "whittle-draft", DENSE) / "config.json"
+        self.assertEqual(
+            upstream.check_model(
+                "gguf", "none", path, gguf_metadata=meta, draft=draft
+            ).name,
+            "Whittle-MoE-27B-A17.8B",
+        )
+        metadata["unsigned"]["qwen35moe.expert_feed_forward_length"] = 256
+        meta.write_text(json.dumps(metadata))
+        with self.assertRaisesRegex(models.ModelError, "expert_feed_forward_length"):
+            upstream.check_model("gguf", "none", path, gguf_metadata=meta)
+        with self.assertRaisesRegex(models.ModelError, "GGUF text targets only"):
+            upstream.check_model("gguf", "gguf", path, gguf_metadata=meta)
 
     def test_family_is_identified_by_architecture_not_name(self):
         # The engine's check (its model-check command), with and without the
         # draft.
-        for family in families.FAMILIES:
+        for family in (DENSE, MOE):
             config = mlx_target(self.root / family.name, family) / "config.json"
             draft = draft_dir(self.root / family.name / "draft", family)
             for arguments in ({}, {"draft": draft / "config.json"}):

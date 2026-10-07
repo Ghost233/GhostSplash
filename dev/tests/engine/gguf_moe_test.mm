@@ -626,6 +626,45 @@ void bufferExtents(MetalBackend &backend) {
                       [](BlockMoeWeights &changed, const MetalBuffer &view) { changed.sharedScalarGate.plane0 = view; });
 }
 
+int whittleJoin(MetalBackend &backend) {
+  const Model model = makeModel(backend, Q50);
+  const MoeShape shape{kHidden, kExperts, kTopK, kIntermediate, WeightLayout::Block32};
+  for (uint32_t rows : {1u, 7u, 32u, 65u}) {
+    Buffers b;
+    b.input = activations(uint64_t{rows} * kHidden);
+    b.residual = activations(uint64_t{rows} * kHidden);
+    b.moe.input = bfloatBuffer(backend, b.input, "Whittle input");
+    b.moe.residual = bfloatBuffer(backend, b.residual, "Whittle residual");
+    b.moe.output = zeros(backend, uint64_t{rows} * kHidden * 4, "Whittle routed fp32");
+    const auto plan = MoE::prefillPlan(shape, rows,
+        MoeConfig{MoeExpertTile::M32, moeRouteWideRows(kAssumedGpuCores), MoeExpertSimdgroups::Eight, MoeGgufTile::Staged});
+    allocate(backend, b, plan);
+    const auto shared = bfloatBuffer(backend, activations(uint64_t{rows} * kHidden), "Whittle wide shared output");
+    const auto output = zeros(backend, uint64_t{rows} * kHidden * 2, "Whittle joined output");
+    CommandGraph graph;
+    MoE::add(graph, b.moe, model.weights, plan, true);
+    MoE::addSharedJoin(graph, b.moe.output, shared, b.moe.scratch, output, plan);
+    static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
+    const auto *routes = static_cast<const uint32_t *>(b.moe.scratch.routeRows.contents());
+    const auto *weights = static_cast<const float *>(b.moe.scratch.routingWeights.contents());
+    const auto *expert = static_cast<const __bf16 *>(b.moe.scratch.expertOutput.contents());
+    const auto *residual = static_cast<const __bf16 *>(b.moe.residual.contents());
+    const auto *wide = static_cast<const __bf16 *>(shared.contents());
+    const auto *got = static_cast<const __bf16 *>(output.contents());
+    for (uint32_t row = 0; row < rows; ++row)
+      for (uint32_t dim = 0; dim < kHidden; ++dim) {
+        const uint64_t index = uint64_t{row} * kHidden + dim, route = uint64_t{row} * shape.routesPerToken();
+        float value = float(residual[index]);
+        for (uint32_t slot = 0; slot < kTopK; ++slot)
+          value += weights[route + slot] * float(expert[uint64_t{routes[route + slot]} * kHidden + dim]);
+        value += weights[route + kTopK] * float(wide[index]);
+        require(float(got[index]) == bf16(value), "Whittle joins routed and wide shared before one bf16 rounding");
+      }
+  }
+  std::cout << "Whittle routed/shared join: ragged prefill rows, one residual rounding ok\n";
+  return 0;
+}
+
 int moe(MetalBackend &backend) {
   int failures = 0;
   Buffers b;
@@ -722,7 +761,7 @@ int main(int argc, const char *argv[]) {
       MetalBackend backend(argv[1]);
       bufferExtents(backend);
       const int failures = floatProjection(backend) + floatSegments(backend, 64) + floatSegments(backend, 96) +
-                           floatOnlyChain(backend) + moe(backend);
+                           floatOnlyChain(backend) + whittleJoin(backend) + moe(backend);
       if (failures) {
         std::cerr << "gguf_moe_test: " << failures << " failures\n";
         return 1;

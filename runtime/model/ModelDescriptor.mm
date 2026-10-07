@@ -327,7 +327,8 @@ std::string_view sourceName(TargetSource source) {
 // from the family its config's model type names, or that it names none.
 std::invalid_argument unsupportedModel(const std::string &difference) {
   return std::invalid_argument("no supported model has this architecture (" + difference + "); supported: " +
-                               std::string(Qwen3_8Layout::family) + ", " + std::string(Qwen3_6MoeLayout::family));
+                               std::string(Qwen3_8Layout::family) + ", " + std::string(Qwen3_6MoeLayout::family) +
+                               ", " + std::string(Whittle27Layout::family));
 }
 
 // The target's text configuration, of the family its model type names. Every
@@ -515,9 +516,17 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   else throw std::invalid_argument("unsupported vision source format: " + std::string(visionFormat));
   ModelDescriptor result = moe ? qwen36Descriptor(std::move(name), targetSource, visionSource)
                                : qwen38Descriptor(std::move(name), targetSource, visionSource);
+  if (moe && [text[@"hidden_size"] unsignedIntValue] == 5120 &&
+      [text[@"num_hidden_layers"] unsignedIntValue] == 64) {
+    if (targetSource != TargetSource::Gguf || visionSource != VisionSource::None)
+      throw std::invalid_argument("Whittle supports GGUF text targets only");
+    result = makeModelDescriptor(result.name, Whittle27Layout{}, kQwen3_8DraftLayout,
+                                 kQwen3_8VisionLayout, targetSource, visionSource);
+  }
   std::visit([&](const auto &layout) {
     validateTextConfig(text, layout, layout.family, result.targetSource);
-    if (result.targetSource == TargetSource::Mlx) validateQuantization(config, layout);
+    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Whittle27Layout>)
+      if (result.targetSource == TargetSource::Mlx) validateQuantization(config, layout);
     if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
   }, result.target);
   if (result.hasVision())

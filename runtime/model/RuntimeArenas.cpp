@@ -8,6 +8,10 @@ std::array<uint64_t, prefillTensorCount>
 prefillTensorBytes(const RuntimeGeometry &geometry,
                    const ops::ExecutionPlans &operators) {
   std::array<uint64_t, prefillTensorCount> result{};
+  if (geometry.target.sourceExpertIntermediateSize) {
+    result[uint32_t(PrefillTensor::WhittleRouted)] = bytesFor<float>(uint64_t{kPrefillRows} * geometry.target.hiddenSize);
+    result[uint32_t(PrefillTensor::WhittleShared)] = bytesFor<uint16_t>(uint64_t{kPrefillRows} * geometry.target.hiddenSize);
+  }
   auto put = [&](PrefillTensor tensor, uint64_t bytes) {
     auto &size = result[static_cast<uint32_t>(tensor)];
     size = std::max(size, bytes);
@@ -168,6 +172,10 @@ std::array<uint64_t, decodeTensorCount>
 decodeTensorBytes(const RuntimeGeometry &geometry,
                   const ops::ExecutionPlans &operators) {
   std::array<uint64_t, decodeTensorCount> result{};
+  if (geometry.target.sourceExpertIntermediateSize) {
+    result[uint32_t(DecodeTensor::WhittleRouted)] = bytesFor<float>(uint64_t{kDecodeRows} * geometry.target.hiddenSize);
+    result[uint32_t(DecodeTensor::WhittleShared)] = bytesFor<uint16_t>(uint64_t{kDecodeRows} * geometry.target.hiddenSize);
+  }
   const auto draftWorkspace =
       operators.draftAttentionWorkspacePerLane(geometry.draft.attentionShape());
   const auto samplingWorkspace = ops::Sampling::workspace(kDecodeRows);

@@ -719,3 +719,31 @@ kernel void moe_combine(
   }
   output[ulong(row) * params.hidden_size + dimension] = bfloat(value);
 }
+
+// Whittle joins its separate wide shared expert before rounding the residual once.
+kernel void moe_combine_routed_f32(
+    device const bfloat *expert_output [[buffer(0)]], device const uint *route_rows [[buffer(1)]],
+    device const float *routing_weights [[buffer(2)]], device const bfloat *residual [[buffer(3)]],
+    device float *output [[buffer(4)]], constant MoeCombineParams &params [[buffer(5)]],
+    uint2 group [[threadgroup_position_in_grid]], uint thread_index [[thread_index_in_threadgroup]]) {
+  const uint row = group.x, dimension = group.y * 256 + thread_index;
+  if (row >= params.rows || dimension >= params.hidden_size) return;
+  float value = float(residual[ulong(row) * params.hidden_size + dimension]);
+  const ulong route = ulong(row) * params.routes_per_row;
+  for (uint slot = 0; slot + 1 < params.routes_per_row; ++slot)
+    value += routing_weights[route + slot] * float(expert_output[ulong(route_rows[route + slot]) * params.hidden_size + dimension]);
+  output[ulong(row) * params.hidden_size + dimension] = value;
+}
+
+kernel void whittle_shared_join(
+    device const float *routed [[buffer(0)]], device const bfloat *shared [[buffer(1)]],
+    device const float *routing_weights [[buffer(2)]], device bfloat *output [[buffer(3)]],
+    constant MoeCombineParams &params [[buffer(4)]],
+    uint2 group [[threadgroup_position_in_grid]], uint thread_index [[thread_index_in_threadgroup]]) {
+  const uint row = group.x, dimension = group.y * 256 + thread_index;
+  if (row >= params.rows || dimension >= params.hidden_size) return;
+  const ulong index = ulong(row) * params.hidden_size + dimension;
+  float value = routed[index];
+  value += routing_weights[ulong(row) * params.routes_per_row + params.routes_per_row - 1] * float(shared[index]);
+  output[index] = bfloat(value);
+}

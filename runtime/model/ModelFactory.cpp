@@ -56,6 +56,11 @@ TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_6MoeLayout &l
   return loadQwen3_6MoeWeights(backend, layout, files);
 }
 
+TargetWeights readTarget(metal::MetalBackend &backend, const Whittle27Layout &layout,
+                         const QwenTargetFiles<Whittle27Layout> &files) {
+  return loadWhittle27Weights(backend, layout, files);
+}
+
 template <class Image> uint64_t imageBytes(const std::vector<Image> &images) {
   uint64_t total = 0;
   for (const Image &image : images) total += image.bytes;
@@ -83,19 +88,26 @@ LoadedModel loadModel(metal::MetalBackend &backend,
       [&](const auto &layout) -> TargetWeights {
         using Layout = std::remove_cvref_t<decltype(layout)>;
         const std::filesystem::path directory = root / "target";
-        switch (result.descriptor.targetSource) {
-        case TargetSource::Package:
-          return readTarget(backend, layout, PackageTargetFiles<Layout>{images, directory, layout});
-        case TargetSource::Mlx: {
-          AffineTargetLoader loader(images, directory, layout);
-          return readTarget(backend, layout, std::ref(loader));
-        }
-        case TargetSource::Gguf: {
+        if constexpr (std::is_same_v<Layout, Whittle27Layout>) {
+          if (result.descriptor.targetSource != TargetSource::Gguf)
+            throw std::invalid_argument("Whittle supports GGUF text targets only");
           GgufTargetLoader loader(backend, images, findTargetGguf(directory), layout);
           return readTarget(backend, layout, std::ref(loader));
+        } else {
+          switch (result.descriptor.targetSource) {
+          case TargetSource::Package:
+            return readTarget(backend, layout, PackageTargetFiles<Layout>{images, directory, layout});
+          case TargetSource::Mlx: {
+            AffineTargetLoader loader(images, directory, layout);
+            return readTarget(backend, layout, std::ref(loader));
+          }
+          case TargetSource::Gguf: {
+            GgufTargetLoader loader(backend, images, findTargetGguf(directory), layout);
+            return readTarget(backend, layout, std::ref(loader));
+          }
+          }
+          throw std::invalid_argument("unknown target source");
         }
-        }
-        throw std::invalid_argument("unknown target source");
       },
       result.descriptor.target);
   result.draft = loadDFlashDraftWeights(
@@ -125,7 +137,11 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
         [&](const auto &layout) { return imageBytes(gguf::planImages(file, layout)); },
         descriptor.target);
   } else if (descriptor.targetSource == TargetSource::Mlx) {
-    bytes = std::visit([](const auto &layout) { return imageBytes(affineTargetImages(layout)); }, descriptor.target);
+    bytes = std::visit([](const auto &layout) -> uint64_t {
+      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Whittle27Layout>)
+        throw std::invalid_argument("Whittle supports GGUF text targets only");
+      else return imageBytes(affineTargetImages(layout));
+    }, descriptor.target);
   }
   if (descriptor.draftFromCheckpoint())
     bytes += imageBytes(draftCheckpointImages(descriptor.draft));

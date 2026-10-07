@@ -85,6 +85,7 @@ GGUF_EMBEDDING_ENTRY(gguf_embed_iq2xs, GgufEmbedIQ2XS)
 GGUF_EMBEDDING_ENTRY(gguf_embed_iq1s, GgufEmbedIQ1S)
 GGUF_EMBEDDING_ENTRY(gguf_embed_iq1m, GgufEmbedIQ1M)
 GGUF_EMBEDDING_ENTRY(gguf_embed_mxfp4, GgufEmbedMXFP4)
+GGUF_EMBEDDING_ENTRY(gguf_embed_q50, GgufEmbedQ50)
 #undef GGUF_EMBEDDING_ENTRY
 
 // A verify step's input tokens, SPLASH_TARGET_VERIFY_ROWS per lane: the
