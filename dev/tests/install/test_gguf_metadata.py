@@ -55,6 +55,7 @@ GGML = {
     "IQ1_M": 29,
     "BF16": 30,
     "MXFP4": 39,
+    "Q2_0": 42,
     "PQ2_0": 142,
 }
 
@@ -388,6 +389,7 @@ class GgufMetadataTests(unittest.TestCase):
             "IQ4_XS",
             "MXFP4",
             "PQ2_0",
+            "Q2_0",
         ):
             with self.subTest(kind=kind):
                 path = write_gguf(

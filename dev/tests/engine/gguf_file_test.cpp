@@ -62,6 +62,18 @@ int main() {
     require(source.dataOffset() + weight.offset + weight.bytes == source.bytes(),
             "valid data must end exactly at EOF");
 
+    // GGML Q2_0 stores 64 values in one 18-byte block (FP16 scale + 16 code bytes).
+    splash::test::writeFile(path, gguf::file({}, {{"weight", {128, 3}, 42, gguf::Bytes(108)}}));
+    splash::model::WeightSource q2Source(path);
+    splash::model::GgufFile q2File(q2Source);
+    const auto &q2 = q2File.require("weight");
+    require(q2.bytes == 108 && q2.elements() == 384 && q2.rows() == 3,
+            "Q2_0 rows must use two 18-byte blocks per 128 values");
+    rejects("Q2_0 unaligned block", gguf::file({}, {{"weight", {32, 1}, 42, gguf::Bytes(18)}}),
+            "not block aligned");
+    rejects("Q2_0 truncated tensor", gguf::file({}, {{"weight", {64, 1}, 42, gguf::Bytes(17)}}),
+            "runs past the end of the file");
+
     constexpr std::string_view overflow = "GGUF size overflows", pastEnd = "runs past the end of the file";
     rejects("shape overflow", model({256, uint64_t{1} << 60}), overflow);
     rejects("row product overflow", model({256, uint64_t{1} << 63, 2}), overflow);

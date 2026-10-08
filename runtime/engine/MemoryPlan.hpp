@@ -50,6 +50,7 @@ struct ModelMemoryProfile final {
   uint32_t maximumContextTokens = 0;
   kv::Layout targetKvLayout;
   ModelMemoryFootprint footprint;
+  bool requiresDraftWeights = true;
 
   [[nodiscard]] std::optional<std::string> validationError() const;
   [[nodiscard]] uint64_t fixedRuntimeBytes() const;

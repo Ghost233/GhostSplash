@@ -435,6 +435,8 @@ struct ModelMemoryActual final {
 };
 
 struct ModelTelemetry final {
+  uint64_t expertCacheHits = 0, expertCacheMisses = 0, expertCacheBytesRead = 0, expertCacheResidentBytes = 0, expertCacheEvictions = 0;
+  uint64_t weightHostCacheHits = 0, weightHostCacheMisses = 0, weightHostCacheResidentBytes = 0;
   uint64_t stateAllocatedBytes = 0;
   // Pooled state buffers no lane holds: GDN parity cells and draft rings.
   uint32_t idleGdnCells = 0;
@@ -508,6 +510,10 @@ class Model {
 public:
   virtual ~Model() = default;
   virtual void checkHealth() {}
+  [[nodiscard]] virtual bool supportsPrefixCache() const noexcept { return true; }
+  [[nodiscard]] virtual bool supportsIdleWeightRelease() const noexcept { return true; }
+  [[nodiscard]] virtual bool supportsConstrainedDecoding() const noexcept { return true; }
+  [[nodiscard]] virtual uint32_t maximumPrefillTokenBudget() const noexcept { return model::ExecutionLimits::prefillTokenBudget; }
   [[nodiscard]] virtual StateAdmission begin(const ModelRequest &request) = 0;
   // Safe-point preemption returns the request's state buffers, retaining
   // only its host-side sampling/constraint continuation. Resume replays the
@@ -569,6 +575,7 @@ class RuntimeModel : public Model {
 public:
   ~RuntimeModel() override = default;
 
+  [[nodiscard]] virtual uint32_t recommendedWarmupPrefillRows() const noexcept { return ExecutionLimits::prefillTokenBudget; }
   // Actual rows, not padded dispatch rows; valid range is 1..prefillTokenBudget.
   virtual WarmupStepResult warmupPrefill(uint32_t rows) = 0;
   virtual WarmupStepResult warmupDecodeBatch(uint32_t width) = 0;

@@ -73,7 +73,7 @@ std::string pageShortfall(const TokenAdmission &admission) {
 Engine::Engine(EngineConfig config, Cache &cache, model::Model &model,
                EngineEventSink &events)
     : config_(config), cache_(cache), writeBehind_(cache), model_(model),
-      events_(events), scheduler_(config_.decodeShare) {
+      events_(events), scheduler_(config_.decodeShare, model_.maximumPrefillTokenBudget()) {
   if (!config_.maxContext || !config_.vocabularySize) {
     throw std::invalid_argument("context and vocabulary sizes must be positive");
   }
@@ -81,9 +81,13 @@ Engine::Engine(EngineConfig config, Cache &cache, model::Model &model,
     throw std::invalid_argument("the engine needs the governor's growth pause and serving mark");
   if (!std::isfinite(config_.decodeShare) || config_.decodeShare < 0.0)
     throw std::invalid_argument("decode share must be nonnegative and finite");
+  if (!model_.maximumPrefillTokenBudget() || model_.maximumPrefillTokenBudget() > model::ExecutionLimits::prefillTokenBudget)
+    throw std::invalid_argument("invalid model prefill token budget");
 }
 
 void Engine::submit(EngineRequest value) {
+  if (value.constraint != ConstraintMode::None && !model_.supportsConstrainedDecoding())
+    throw std::invalid_argument("this model does not support constrained decoding");
   const auto outOfVocabulary = [&](uint32_t token) {
     return token >= config_.vocabularySize;
   };
@@ -463,7 +467,7 @@ bool Engine::admitQueued(double now) {
   // date: none for a request that ignores the cache, which is ranked by its
   // whole prompt.
   const auto cachedTokens = [&](Request &active) -> uint32_t {
-    if (active.skipCache)
+    if (active.skipCache || !model_.supportsPrefixCache())
       return 0;
     if (active.admissionProbe)
       cache_.refresh(*active.admissionProbe, active.exactTokens, active.request.images);
@@ -669,7 +673,7 @@ bool Engine::admit(Request &active, double now) {
   ModelRequest modelRequest = active.request.modelView();
   modelRequest.prompt = active.exactTokens;
   CacheLookup lookup =
-      active.skipCache
+      (active.skipCache || !model_.supportsPrefixCache())
           ? CacheLookup{}
           : cache_.lookup(modelRequest.prompt, active.request.images,
                           active.admissionProbe ? &*active.admissionProbe
@@ -792,7 +796,7 @@ bool Engine::admit(Request &active, double now) {
 void Engine::completeAdmission(Request &active, CacheLookup &lookup,
                                 DraftContextPlan draft) {
   const bool resuming = scheduler_.suspended(active.request.id);
-  active.skipCache = false;
+  active.skipCache = !model_.supportsPrefixCache();
   active.admissionProbe.reset();
   const uint32_t resumeBoundary = lookup.resumeBoundary();
   if (resuming)
@@ -1008,6 +1012,12 @@ DraftContextPlan Engine::pendingDraftStatePlan(const Request &active,
 }
 
 void Engine::armNextStateBoundary(Request &active) {
+  if (!model_.supportsPrefixCache()) {
+    active.stateBoundaries.clear();
+    active.stateBoundaryCursor = 0;
+    scheduler_.setPrefillBoundary(active.request.id, std::nullopt);
+    return;
+  }
   const std::optional<uint32_t> next =
       active.stateBoundaryCursor < active.stateBoundaries.size()
           ? std::optional<uint32_t>(
@@ -1042,6 +1052,10 @@ bool Engine::retireCheckpoint(Request &active) {
 
 void Engine::publishReachedStateBoundaries(Request &active,
                                            uint32_t promptProcessed, double now) {
+  if (!model_.supportsPrefixCache()) {
+    active.stateBoundaryCursor = active.stateBoundaries.size();
+    return;
+  }
   bool materialized = false;
   while (active.stateBoundaryCursor < active.stateBoundaries.size() &&
          active.stateBoundaries[active.stateBoundaryCursor].tokens <=

@@ -103,7 +103,7 @@ public:
     return core_.snapshot();
   }
   [[nodiscard]] WeightsSnapshot weightsSnapshot() const {
-    return {idleReleaseSeconds_, config_.weights->released(), weightRestores_};
+    return {idleReleaseSeconds_, config_.weights && config_.weights->released(), weightRestores_};
   }
   [[nodiscard]] engine::ResourceWaitSnapshot resourceWaitSnapshot() const {
     return core_.resourceWaitSnapshot(config_.monotonicMilliseconds());

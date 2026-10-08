@@ -199,8 +199,15 @@ private:
 class Executor final : public model::Model {
 public:
   explicit Executor(
-      uint32_t maximumLanes = model::ExecutionLimits::maximumBatchWidth)
-      : maximumLanes(maximumLanes) {}
+      uint32_t maximumLanes = model::ExecutionLimits::maximumBatchWidth,
+      bool idleRelease = true)
+      : maximumLanes(maximumLanes) { idleWeightReleaseSupported = idleRelease; }
+  bool idleWeightReleaseSupported = true;
+  bool constrainedDecodingSupported = true;
+  bool prefixCacheSupported = true;
+  bool supportsIdleWeightRelease() const noexcept override { return idleWeightReleaseSupported; }
+  bool supportsConstrainedDecoding() const noexcept override { return constrainedDecodingSupported; }
+  bool supportsPrefixCache() const noexcept override { return prefixCacheSupported; }
 
   void checkHealth() override {
     if (healthCheck)

@@ -304,7 +304,7 @@ std::string runtimeStatusJson(
   out << ",\"current_decode_batch\":";
   appendBatch(out, metrics.currentDecodeBatch);
   const std::string prefillName =
-      "prefill_" + std::to_string(SPLASH_PREFILL_TOKEN_BUDGET);
+      "prefill_" + std::to_string(warmup.maximumPrefillRows);
   const std::pair<std::string_view, WarmupStepStatus> warmupSteps[] = {
       {prefillName, warmup.maximumPrefill},
       {"decode_b1", warmup.decodeBatches[0]},
@@ -328,7 +328,23 @@ std::string runtimeStatusJson(
     out << json::quote(name);
     separator = true;
   }
+  out << "],\"not_applicable_steps\":[";
+  separator = false;
+  for (const auto &[name, status] : warmupSteps) {
+    if (status != WarmupStepStatus::NotApplicable) continue;
+    if (separator) out << ',';
+    out << json::quote(name);
+    separator = true;
+  }
   out << "],\"detail\":" << json::quote(warmup.maximumPrefillDetail) << "}"
+      << ",\"weight_cache\":{\"expert_hits\":" << executorTelemetry.expertCacheHits
+      << ",\"expert_misses\":" << executorTelemetry.expertCacheMisses
+      << ",\"expert_bytes_read\":" << executorTelemetry.expertCacheBytesRead
+      << ",\"expert_resident_bytes\":" << executorTelemetry.expertCacheResidentBytes
+      << ",\"expert_evictions\":" << executorTelemetry.expertCacheEvictions
+      << ",\"host_hits\":" << executorTelemetry.weightHostCacheHits
+      << ",\"host_misses\":" << executorTelemetry.weightHostCacheMisses
+      << ",\"host_resident_bytes\":" << executorTelemetry.weightHostCacheResidentBytes << "}"
       << ",\"metal\":{\"healthy\":" << boolean(metalHealthy)
       << ",\"failure_reason\":" << json::quote(metalFailureReason) << "}}";
   return out.str();

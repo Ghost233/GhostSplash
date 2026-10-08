@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -66,6 +67,24 @@ def _root_ggufs(files):
     return sorted(n for n in files if "/" not in n and n.endswith(".gguf"))
 
 
+def gguf_shards(files, first):
+    """The ordered members of a split GGUF; unsplit models keep one file."""
+    match = re.fullmatch(r"(.+)-(\d{5})-of-(\d{5})\.gguf", first)
+    if match is None:
+        return [first]
+    prefix, number, count = match.groups()
+    count = int(count)
+    if int(number) != 1 or not 1 <= count <= 1024:
+        raise models.ModelError("invalid first GGUF shard")
+    names = [
+        f"{prefix}-{index:05d}-of-{count:05d}.gguf" for index in range(1, count + 1)
+    ]
+    missing = [name for name in names if name not in files]
+    if missing:
+        raise models.ModelError("missing GGUF shard: " + ", ".join(missing))
+    return names
+
+
 def _projector_named(name):
     """Whether a root GGUF is named as a vision projector: mmproj-*.gguf, or
     MODEL-mmproj-*.gguf as Prism ML names theirs."""
@@ -82,6 +101,19 @@ def select_gguf(files, variant):
     :VARIANT, the only target GGUF. Anything else is an error listing the
     candidates."""
     candidates = [n for n in _root_ggufs(files) if not _projector_named(n)]
+    first_shards = [n for n in candidates if re.search(r"-00001-of-\d{5}\.gguf$", n)]
+    if first_shards:
+        matching = [
+            n
+            for n in first_shards
+            if variant is None
+            or re.sub(r"-00001-of-\d{5}\.gguf$", "", n)
+            .lower()
+            .endswith("-" + variant.lower())
+        ]
+        if len(matching) == 1:
+            gguf_shards(files, matching[0])
+            return matching[0], False
     if variant is None:
         if len(candidates) == 1:
             return candidates[0], False
@@ -184,9 +216,33 @@ def _gguf_target(repo, variant, language_only, scratch):
             f"whose name ends in -{variant}.",
             flush=True,
         )
-    with repo.open(name) as stream:
-        header = gguf.Metadata(stream, tensors=True)
-    files = {"target/" + name: name}
+    names = gguf_shards(repo.files, name)
+    headers = []
+    for index, shard in enumerate(names):
+        with repo.open(shard) as stream:
+            part = gguf.Metadata(stream, tensors=True)
+        if len(names) > 1 and (
+            part.values.get("split.no") != index
+            or part.values.get("split.count") != len(names)
+        ):
+            raise models.ModelError(
+                "GGUF shard metadata does not match its filename: " + shard
+            )
+        headers.append(part)
+    header = headers[0]
+    for part in headers[1:]:
+        if part.values.get("general.architecture") != header.values.get(
+            "general.architecture"
+        ):
+            raise models.ModelError("GGUF shards have different architectures")
+        if header.tensors.keys() & part.tensors.keys():
+            raise models.ModelError("GGUF shards contain duplicate tensors")
+        header.tensors.update(part.tensors)
+    if len(names) > 1 and any(
+        p.values.get("split.tensors.count") != len(header.tensors) for p in headers
+    ):
+        raise models.ModelError("GGUF split tensor count does not match all shards")
+    files = {"target/" + shard: shard for shard in names}
     config, metadata = scratch / "config.json", scratch / "gguf-metadata.json"
     config.write_bytes(models.json_bytes(gguf.model_config(header)))
     metadata.write_bytes(models.json_bytes(gguf.scalar_metadata(header)))
@@ -461,7 +517,7 @@ def _install(selection, repo, installed, draft=None):
         draft, files = _draft(target, installed, draft)
         print(
             f"Installing {selection.model} as {target.family.name} ({target.format}); "
-            f"draft {draft.name}; "
+            f"draft {draft.name if draft is not None else 'none (autoregressive)'}; "
             f"vision {'disabled' if selection.language_only else 'enabled'}.",
             flush=True,
         )
@@ -473,7 +529,10 @@ def _install(selection, repo, installed, draft=None):
         "family": target.family.name,
         "target_format": target.format,
         "vision_format": target.vision_format,
-        "sources": {"target": repo.identity(), "draft": draft.identity()},
+        "sources": {
+            "target": repo.identity(),
+            "draft": draft.identity() if draft is not None else None,
+        },
     }
     models_root = selection.models_root
     models_root.mkdir(parents=True, exist_ok=True)
@@ -512,10 +571,13 @@ def _changes(installed, family, draft):
         return [f"no supported family is named {installed['family']}"]
     changes = []
     recorded = installed["sources"]["draft"]
-    if draft.identity() != recorded:
+    if draft is None:
+        if recorded is not None:
+            changes.append("its runtime no longer uses an external draft")
+    elif draft.identity() != recorded:
         changes.append(
             f"{draft.name} moved from {recorded['revision'][:12]} to {draft.revision[:12]}"
-            if draft.name == recorded["repo"]
+            if recorded is not None and draft.name == recorded["repo"]
             else f"its draft is now {_at(draft)}"
         )
     if installed["target_format"] == "gguf" and installed[
@@ -532,6 +594,12 @@ def _resolve_draft(family, selection, installed, target):
     installed draft stands in, unlisted, or without one a commit the Hub
     cache holds for this selection; the installed draft also stands in, with
     the reason, when the draft cannot be resolved."""
+    if family.draft_repo is None:
+        if selection.draft_model is not None:
+            raise models.ModelError(
+                "Flash Next uses autoregressive decoding; an external draft is not supported"
+            )
+        return None
     name = selection.draft_model or family.draft_repo
     recorded = installed and installed["sources"]["draft"]
     asked = _answered(target)
@@ -564,6 +632,10 @@ def _draft(target, installed, draft):
     the installed one, which is kept too when draft cannot be fetched
     (downloaded and checked for the target)."""
     family = target.family
+    if draft is None:
+        if family.draft_repo is not None:
+            raise models.ModelError("the target family requires a DFlash2 draft")
+        return None, {}
     recorded = installed and installed["sources"]["draft"]
     if draft.identity() != recorded:
         try:

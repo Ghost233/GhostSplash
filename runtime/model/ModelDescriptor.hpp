@@ -2,6 +2,7 @@
 
 #include "DFlashDraft.hpp"
 #include "Model.hpp"
+#include "FlashNextLayout.hpp"
 #include "Qwen3_6Moe.hpp"
 #include "Qwen3_8.hpp"
 #include "ops/Vision.hpp"
@@ -30,6 +31,7 @@ enum class VisionSource : uint8_t { Package = 1, Mlx, Gguf, None };
 struct ModelDescriptor final {
   std::string name;
   TargetLayout target;
+  std::optional<FlashNextLayout> flashNext;
   DFlashDraftLayout draft;
   ops::VisionLayout vision;
   ModelCapabilities capabilities;
@@ -47,7 +49,7 @@ struct ModelDescriptor final {
   // A source model's draft is a DFlash2 checkpoint; a package carries its
   // own draft.
   [[nodiscard]] bool draftFromCheckpoint() const noexcept {
-    return targetSource != TargetSource::Package;
+    return !flashNext && targetSource != TargetSource::Package;
   }
 
   // A model installed with --language-only has no vision tower: it loads no
@@ -56,6 +58,7 @@ struct ModelDescriptor final {
     return visionSource != VisionSource::None;
   }
   [[nodiscard]] std::string_view family() const noexcept {
+    if (flashNext) return FlashNextLayout::family;
     return std::visit([](const auto &layout) { return layout.family; }, target);
   }
   [[nodiscard]] bool valid() const noexcept;

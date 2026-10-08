@@ -112,6 +112,19 @@ struct GgufEmbedPQ20 {
     return bfloat(decode(block, dim));
   }
 };
+// block_q2_0: half d | uchar qs[16], 64 elements with code levels -1, 0, 1, 2.
+struct GgufEmbedQ20 {
+  enum : uint { Weights = 64, Bytes = 18, D = 0, Codes = 2 };
+  __attribute__((always_inline)) static float decode(device const uchar *block, uint dim) {
+#pragma clang fp reassociate(off)
+    const uint l = dim % Weights;
+    const uchar q = (block[Codes + l / 4] >> (2 * (l % 4))) & 3;
+    return float(int(q) - 1) * float(gguf_half(block, D));
+  }
+  __attribute__((always_inline)) static bfloat value(device const uchar *block, uint dim) {
+    return bfloat(decode(block, dim));
+  }
+};
 // block_iq4_nl: block_q4_0's layout, whose codes index the IQ4_NL values.
 struct GgufEmbedIQ4NL {
   enum : uint { Weights = 32, Bytes = 18, D = 0, Codes = 2 };

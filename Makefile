@@ -235,6 +235,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/ops/DraftAttention.cpp \
 	runtime/ops/DraftSelector.cpp \
 	runtime/ops/Embedding.cpp \
+	runtime/ops/FlashNext.cpp \
 	runtime/ops/ExecutionPlans.cpp \
 	runtime/ops/GDN.cpp \
 	runtime/ops/Linear.cpp \
@@ -270,6 +271,11 @@ ENGINE_CPP_SOURCES := \
 	runtime/engine/Status.cpp \
 	runtime/model/WeightStore.cpp \
 	runtime/model/GgufFile.cpp \
+	runtime/model/GgufShardIndex.cpp \
+	runtime/model/WeightPageCache.cpp \
+	runtime/model/FlashNextTarget.cpp \
+	runtime/model/FlashNextRuntime.cpp \
+	runtime/model/FlashNextNgram.cpp \
 	runtime/model/GgufImage.cpp \
 	runtime/model/GgufTarget.cpp \
 	runtime/model/AffineTarget.cpp \

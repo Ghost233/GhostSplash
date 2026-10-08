@@ -3,6 +3,7 @@
 #include "ops/Vision.hpp"
 #include "DFlashDraft.hpp"
 #include "ModelDescriptor.hpp"
+#include "FlashNextTarget.hpp"
 #include "Qwen3_6Moe.hpp"
 #include "Qwen3_8.hpp"
 #include "QwenVision.hpp"
@@ -25,6 +26,7 @@ namespace splash::model {
 
 class QwenStateStorage;
 class VisionLoader;
+struct FlashNextWeights;
 
 using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights>;
 
@@ -33,6 +35,7 @@ struct LoadedModel final {
   // The memory of every image the weights below are views of.
   std::shared_ptr<WeightImages> images;
   TargetWeights target;
+  std::shared_ptr<FlashNextWeights> flashNext;
   DFlashDraftWeights draft;
   QwenVisionWeights vision;
   std::string manifestFingerprintSha256;
@@ -52,16 +55,19 @@ struct LoadedModel final {
     return descriptor.capabilities.maximumContextTokens;
   }
   [[nodiscard]] uint64_t targetActualAllocatedBytes() const noexcept {
+    if (flashNext) return flashNext->actualAllocatedBytes;
     return std::visit([](const auto &weights) {
       return weights.actualAllocatedBytes;
     }, target);
   }
   [[nodiscard]] const std::string &targetManifestFingerprint() const noexcept {
+    if (flashNext) return flashNext->manifestFingerprintSha256;
     return std::visit([](const auto &weights) -> const std::string & {
       return weights.manifestFingerprintSha256;
     }, target);
   }
   [[nodiscard]] std::span<const WeightFileRecord> targetFiles() const noexcept {
+    if (flashNext) return flashNext->files;
     return std::visit([](const auto &weights) ->
                           std::span<const WeightFileRecord> {
       return weights.files;
@@ -75,10 +81,11 @@ struct RuntimeContext final {
   metal::MetalBackend &backend;
   const LoadedModel &model;
   kv::PageStorage &kvPages;
-  QwenStateStorage &stateStorage;
+  QwenStateStorage *stateStorage = nullptr;
   const ops::ExecutionPlans &operators;
   // The prefill FFN's Neural Engine split (engine::startAneFfn), if any.
   ops::AneFfn *aneFfn = nullptr;
+  metal::AllocationAdmission admitAllocation{};
 };
 
 // Validates only the interface between independently defined target and draft

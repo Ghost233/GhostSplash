@@ -33,10 +33,11 @@ NativeRuntime::NativeRuntime(NativeLoopConfig config, double idleReleaseSeconds,
       output_(std::move(output)),
       statusProvider_(std::move(statusProvider)), limits_(limits),
       parser_(limits_), core_(config_.engine, cache, model, *this) {
-  if (!output_ || !statusProvider_ || !config_.metrics || !config_.weights ||
+  if (!output_ || !statusProvider_ || !config_.metrics ||
+      (!config_.weights && model.supportsIdleWeightRelease()) ||
       !config_.unixMicros || !config_.monotonicMilliseconds)
     throw std::invalid_argument("the native engine loop lacks a component it needs");
-  if (!(idleReleaseSeconds_ > 0.0))
+  if ((config_.weights && !(idleReleaseSeconds_ > 0.0)) || (!config_.weights && idleReleaseSeconds_ != 0.0))
     throw std::invalid_argument("the idle release must be positive");
   if (auto issue = protocol::validateLimits(limits_))
     throw std::invalid_argument(issue->describe());
@@ -132,7 +133,7 @@ bool NativeRuntime::flushRestorePoints() {
 }
 
 void NativeRuntime::releaseIdleWeights() {
-  if (config_.weights->released() || !core_.idle() ||
+  if (!config_.weights || config_.weights->released() || !core_.idle() ||
       config_.monotonicMilliseconds() - idleSinceMilliseconds_ <
           1000.0 * idleReleaseSeconds_)
     return;
@@ -142,6 +143,7 @@ void NativeRuntime::releaseIdleWeights() {
 }
 
 void NativeRuntime::restoreWeights() {
+  if (!config_.weights) return;
   if (!config_.weights->restore())
     return;
   ++weightRestores_;
@@ -257,7 +259,7 @@ bool NativeRuntime::handleRequest(protocol::RequestFrame &request) {
     config_.holdingRequests(true);
   // Released weights are written back before the engine runs the request
   // (tick()); a failure to restore them stops the engine.
-  if (config_.weights->released() && !restoreStarted_)
+  if (config_.weights && config_.weights->released() && !restoreStarted_)
     restoreStarted_ = nowMonotonic;
   return true;
 }

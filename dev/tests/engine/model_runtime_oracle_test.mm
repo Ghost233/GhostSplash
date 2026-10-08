@@ -1395,7 +1395,7 @@ void warmupEos(model::RuntimeContext context, model::LoadedModel &model) {
     weights.layout = std::get<Layout>(originalTarget);
   }, model.target);
   model.descriptor.target = originalTarget;
-  const model::QwenStateStorage &states = context.stateStorage;
+  const model::QwenStateStorage &states = *context.stateStorage;
   for (uint32_t lane = 0; lane < 4; ++lane)
     require(!states.metadata(lane).assigned(),
             "EOS warmup left an active state lane");
@@ -1580,7 +1580,7 @@ int main(int argc, char **argv) {
     model::QwenStateStorage states(backend,
                                     admission,
                                     model.stateLayout(), nullptr);
-    model::RuntimeContext context{backend, model, pages, states, operators, aneFfn.get()};
+    model::RuntimeContext context{backend, model, pages, &states, operators, aneFfn.get()};
     require(executorPlan.sharedDecodePlannedAllocatedBytes <=
                 std::numeric_limits<uint64_t>::max() -
                     executorPlan.sharedPrefillPlannedAllocatedBytes,

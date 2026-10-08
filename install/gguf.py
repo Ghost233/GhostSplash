@@ -157,10 +157,19 @@ USER_DEFINED_TOKEN = 4
 UNUSED_TOKEN = 5
 
 
-def derived_files(target, vision=None):
+def derived_files(target, vision=None, *, shards=()):
     """DERIVED_FILES' contents, derived from a target GGUF's metadata and its
     vision projector's (local paths)."""
     metadata = Metadata(target)
+    for index, shard in enumerate(shards, start=1):
+        part = Metadata(shard)
+        if (
+            part.values.get("general.architecture")
+            != metadata.values.get("general.architecture")
+            or part.values.get("split.no") != index
+            or part.values.get("split.count") != len(shards) + 1
+        ):
+            raise ModelError("invalid GGUF metadata shard")
     config = model_config(metadata, None if vision is None else Metadata(vision))
     return {"config.json": models.json_bytes(config), **tokenizer_files(metadata)}
 
@@ -281,7 +290,11 @@ def tokenizer_files(metadata):
 
 # The GGUF text architectures Splash serves, and the model type of each one's
 # text configuration.
-TEXT_MODEL_TYPES = {"qwen35": "qwen3_5_text", "qwen35moe": "qwen3_5_moe_text"}
+TEXT_MODEL_TYPES = {
+    "qwen35": "qwen3_5_text",
+    "qwen35moe": "qwen3_5_moe_text",
+    "qwen4exp": "qwen4_exp_text",
+}
 
 
 def text_architecture(metadata):
@@ -310,6 +323,67 @@ def model_config(metadata, vision=None):
         "model_type": TEXT_MODEL_TYPES[arch].removesuffix("_text"),
         "text_config": text,
     }
+    if arch == "qwen4exp":
+        fields = {
+            "num_experts": "expert_count",
+            "num_experts_per_tok": "expert_used_count",
+            "moe_intermediate_size": "expert_feed_forward_length",
+            "shared_expert_intermediate_size": "expert_shared_feed_forward_length",
+            "linear_conv_kernel_dim": "ssm.conv_kernel",
+            "linear_key_head_dim": "ssm.state_size",
+            "linear_num_key_heads": "ssm.group_count",
+            "linear_num_value_heads": "ssm.time_step_rank",
+            "full_attention_interval": "full_attention_interval",
+            "hc_count": "hyper_connection.count",
+            "hc_lowrank": "hyper_connection.low_rank",
+            "indexer_n_heads": "attention.indexer.head_count",
+            "indexer_head_dim": "attention.indexer.key_length",
+            "indexer_budget": "attention.indexer.top_k",
+            "ngram_size": "ple.ngram_size",
+            "heads_per_ngram": "ple.heads_per_ngram",
+            "ple_conv_kernel_size": "ple.conv_kernel",
+            "embedding_length_per_layer_input": "embedding_length_per_layer_input",
+        }
+        text.update(
+            {name: metadata.positive(arch + "." + key) for name, key in fields.items()}
+        )
+        text.update(
+            linear_value_head_dim=text["linear_key_head_dim"],
+            hidden_act="silu",
+            output_gate_type="sigmoid",
+            attention_bias=False,
+            tie_word_embeddings=False,
+            indexer_kv_heads=1,
+            indexer_compress_ratio=4,
+            ple_embed_dim=text["hidden_size"],
+            rms_norm_eps=metadata.require(
+                arch + ".attention.layer_norm_rms_epsilon", float
+            ),
+            partial_rotary_factor=metadata.positive(arch + ".rope.dimension_count")
+            / text["head_dim"],
+            ple_eos_token_id=metadata.require(arch + ".ple.eos_token_id", int),
+        )
+        text["rope_parameters"] = {
+            "rope_type": "default",
+            "rope_theta": metadata.require(arch + ".rope.freq_base", float),
+            "partial_rotary_factor": text["partial_rotary_factor"],
+        }
+        for name, key in {
+            "ple_layer_ids": "ple.layers",
+            "ple_layer_multipliers": "ple.layer_multipliers",
+            "ple_head_offsets": "ple.head_offsets",
+            "ple_head_vocab_sizes": "ple.head_vocab_sizes",
+            "attention_compress_ratios": "attention.compress_ratios",
+        }.items():
+            text[name] = metadata.require(arch + "." + key, list)
+        # Transformers' PLE layer IDs are one-based; GGUF block IDs are zero-based.
+        text["ple_layer_ids"] = [layer + 1 for layer in text["ple_layer_ids"]]
+        text["layer_types"] = [
+            "linear_attention" if recurrent else "full_attention"
+            for recurrent in metadata.require(
+                arch + ".attention.recurrent_layers", list
+            )
+        ]
     if vision is not None:
         config["vision_config"] = vision_config(vision)
     return config
@@ -417,10 +491,12 @@ TENSOR_TYPES = {
     29: "IQ1_M",
     30: "BF16",
     39: "MXFP4",
+    42: "Q2_0",
     142: "PQ2_0",
 }
 QUANTIZED_TYPES = {
     "Q2_K",
+    "Q2_0",
     "Q3_K",
     "Q4_K",
     "Q5_K",
@@ -497,6 +573,8 @@ def loaded_tensors(metadata):
     describes, with the types it accepts. MTP layers are not loaded; every
     full_attention_interval-th layer is full attention, the others GDN."""
     arch = text_architecture(metadata)
+    if arch == "qwen4exp":
+        return flash_next_tensors(metadata)
     period = metadata.positive(arch + ".full_attention_interval")
     ffn = MOE_TENSORS if arch == "qwen35moe" else DENSE_TENSORS
     tensors = dict(MODEL_TENSORS)
@@ -504,6 +582,50 @@ def loaded_tensors(metadata):
         mixer = ATTENTION_TENSORS if (layer + 1) % period == 0 else GDN_TENSORS
         for name, types in (LAYER_TENSORS | mixer | ffn).items():
             tensors[f"blk.{layer}.{name}"] = types
+    return tensors
+
+
+def flash_next_tensors(metadata):
+    """Flash Next has HC normalization instead of the older output/layer norms."""
+    projection = QUANTIZED_TYPES | {"BF16", "F32"}
+    tensors = {
+        "token_embd.weight": EMBEDDING_TYPES,
+        "per_layer_token_embd.weight": EMBEDDING_TYPES,
+        "output.weight": projection,
+        "output_hc_down.weight": projection,
+        "output_hc_up.weight": projection,
+        "output_hc_norm.weight": F32,
+    }
+    period = metadata.positive("qwen4exp.full_attention_interval")
+    ple_layers = metadata.require("qwen4exp.ple.layers", list)
+    for layer in range(loaded_layers(metadata, "qwen4exp")):
+        fields = {
+            name: projection if types is QUANTIZED_TYPES else types
+            for name, types in MOE_TENSORS.items()
+        }
+        if (layer + 1) % period == 0:
+            fields |= {
+                name: projection if types is QUANTIZED_TYPES else types
+                for name, types in ATTENTION_TENSORS.items()
+            }
+            fields |= {f"indexer.{name}_proj.weight": projection for name in ["q", "k"]}
+            fields |= {f"indexer.{name}_norm.weight": F32 for name in ["q", "k"]}
+        else:
+            fields |= {
+                name: projection if "weight" in name and types != F32 else types
+                for name, types in GDN_TENSORS.items()
+            }
+        for block in ["attn", "ffn"]:
+            fields[f"hc_{block}_norm.weight"] = F32
+            for name in ["down", "up", "inject"]:
+                fields[f"hc_{block}_{name}.weight"] = projection
+        if layer in ple_layers:
+            fields |= {f"ple_{name}.weight": projection for name in ["key", "value"]}
+            fields |= {
+                f"ple_norm_{name}.weight": F32 for name in ["key", "query", "conv"]
+            }
+            fields["ple_conv1d.weight"] = {"F16", "F32", "BF16"}
+        tensors |= {f"blk.{layer}.{name}": types for name, types in fields.items()}
     return tensors
 
 

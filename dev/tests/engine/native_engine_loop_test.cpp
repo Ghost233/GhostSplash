@@ -89,9 +89,11 @@ struct PoolShape {
 struct LoopFixture {
   explicit LoopFixture(NativeLoopConfig config = {}, PoolShape shape = {},
                        protocol::ProtocolLimits limits = {},
-                       double idleReleaseSeconds = metal::kResidencyKeepAliveSeconds)
+                       double idleReleaseSeconds = metal::kResidencyKeepAliveSeconds,
+                       bool idleReleaseSupported = true)
       : storage(shape.pages, 4096, shape.extentPages),
         pool(storage, shape.runwayPages), cache(pool, nullptr, nullptr),
+        executor(model::ExecutionLimits::maximumBatchWidth, idleReleaseSupported),
         loop(
             clocked(std::move(config)), idleReleaseSeconds, cache, executor,
             [this](std::span<const uint8_t> bytes) {
@@ -112,7 +114,7 @@ struct LoopFixture {
     config.engine = test::engineConfig(std::move(config.engine));
     if (!config.metrics)
       config.metrics = &metrics;
-    if (!config.weights)
+    if (!config.weights && executor.supportsIdleWeightRelease())
       config.weights = &weights;
     config.unixMicros = [] { return uint64_t{1'000'000}; };
     config.monotonicMilliseconds = [this] { return monotonic += clockStep; };
@@ -1516,6 +1518,16 @@ void testIdleReleaseOffKeepsTheWeights() {
   }
 }
 
+void testDraftlessRuntimeWithoutIdleWeightRelease() {
+  LoopFixture fixture({}, {}, {}, 0.0, false);
+  fixture.loop.announceReady();
+  fixture.monotonic += 1e12;
+  fixture.loop.releaseIdleWeights();
+  const auto snapshot = fixture.loop.weightsSnapshot();
+  require(snapshot.idleReleaseSeconds == 0.0 && !snapshot.released && snapshot.restores == 0,
+          "draftless runtime fabricated idle weight release");
+}
+
 // The loop reports that it holds requests from the first it takes to the end
 // of its last, the span the process keeps the Mac from idle sleep for.
 void testHoldingRequestsSpansFirstToLastRequest() {
@@ -1582,6 +1594,7 @@ void testMemoryStatusReporterLogsTransitionsOnly() {
 
 int main() {
   try {
+    testDraftlessRuntimeWithoutIdleWeightRelease();
     testWireLifecycleAndCacheHit();
     testGenerationPromptBoundsTheReplayState();
     testRequestFlagsReachTheModel();

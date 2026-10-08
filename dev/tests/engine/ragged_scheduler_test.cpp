@@ -1101,6 +1101,12 @@ void testReplayKeepsHeldInitialMask() {
 
 int main() {
   try {
+    Scheduler bounded(0.0, 1);
+    bounded.submit(request(9001, 10));
+    bounded.resourcesReady(9001, 0);
+    const auto first = bounded.next({});
+    require(first && first->kind == WorkKind::Prefill && first->items[0].tokenCount == 1,
+            "model-specific prefill bound was ignored");
     testAdmissionSharesDispatchOrderAndBudget();
     testAdmissionRespectsContendedBudgetAndDecodePriority();
     testHighestRunnablePriority();

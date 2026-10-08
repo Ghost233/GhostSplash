@@ -25,10 +25,11 @@ namespace splash::engine {
 
 struct RuntimeCacheIdentity;
 
-enum class WarmupStepStatus { Pending, Complete, MemoryLimited };
+enum class WarmupStepStatus { Pending, Complete, MemoryLimited, NotApplicable };
 
 struct WarmupReport {
   WarmupStepStatus maximumPrefill = WarmupStepStatus::Pending;
+  uint32_t maximumPrefillRows = model::ExecutionLimits::prefillTokenBudget;
   std::array<WarmupStepStatus, model::ExecutionLimits::maximumBatchWidth>
       decodeBatches{};
   WarmupStepStatus compositeStateRestore = WarmupStepStatus::Pending;

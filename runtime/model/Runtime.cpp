@@ -1,4 +1,5 @@
 #include "model/Runtime.hpp"
+#include "model/FlashNextRuntime.hpp"
 #include "AwakeClock.hpp"
 #include "model/QwenState.hpp"
 #include "model/QwenTarget.hpp"
@@ -333,7 +334,7 @@ struct Runtime::Impl {
         geometry(RuntimeGeometry::from(value.model, value.kvPages.layout().format)),
         operators(value.operators),
         kvPages(value.kvPages),
-        states(value.stateStorage),
+        states(*value.stateStorage),
         sampling(geometry.target.vocabularySize),
         targetModel(std::visit(
                         [&](const auto &weights) {
@@ -2713,6 +2714,7 @@ ModelMemoryPlan plannedRuntimeMemory(const LoadedModel &model,
                                      const ops::ExecutionPlans &operators,
                                      kv::Format format) {
   requireCompatibleModel(model);
+  if (model.flashNext) return flashNextRuntimeMemory(*model.flashNext, operators);
   const RuntimeGeometry geometry = RuntimeGeometry::from(model, format);
   return {model.stateLayout().laneBytes(),
           plannedPrefillBytes(geometry, operators),
@@ -2720,6 +2722,8 @@ ModelMemoryPlan plannedRuntimeMemory(const LoadedModel &model,
 }
 
 std::unique_ptr<RuntimeModel> createRuntime(RuntimeContext context) {
+  if (context.model.flashNext) return std::make_unique<FlashNextRuntime>(std::move(context));
+  if (!context.stateStorage) throw std::invalid_argument("Qwen runtime requires state storage");
   return std::make_unique<Runtime>(std::move(context));
 }
 

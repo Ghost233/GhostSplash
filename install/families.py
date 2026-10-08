@@ -18,12 +18,13 @@ class ModelFamily:
     # The repository of the DFlash2 checkpoint trained for the family, as its
     # release publishes it: config.json and BF16 safetensors. Installations
     # follow its default branch as they follow the target's.
-    draft_repo: str
+    draft_repo: str | None
 
 
 FAMILIES = (
     ModelFamily("Qwen3.8-27B", "incoai/Qwen3.8-27B-DFlash2"),
     ModelFamily("Qwen3.6-35B-A3B", "incoai/Qwen3.6-35B-A3B-DFlash2"),
+    ModelFamily("Qwen3.8-Flash-Next", None),
 )
 
 

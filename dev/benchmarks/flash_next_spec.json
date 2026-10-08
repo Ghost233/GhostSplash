@@ -1,0 +1,117 @@
+{
+  "base_commit": "4d8e399d647a0e3857aedd2afcec5daffe045bbc",
+  "branch": "codex/qwen38-flash-next-support",
+  "model_repo": "ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+  "model_revision": "99bb8f7f95c7aa7b24a36a7786a4f657b30f5d3d",
+  "variant": "IQ3_S",
+  "architecture": "qwen4exp",
+  "hardware": {
+    "gpu": "M5 Pro 20 cores",
+    "ram_gib": 64,
+    "metal_budget_gib": 40
+  },
+  "requirements": [
+    "Use Splash native Metal runtime; do not invoke llama.cpp",
+    "Two GGUF shards; use on-disk quantized weights without a full BF16 materialization",
+    "SSD bounded expert weight cache and bounded PLE embedding row cache",
+    "Implement HC, PLE ngram hashing, QSA indexer, 48-layer hybrid GDN/attention,512 experts top10 shared640",
+    "No compatible DFlash checkpoint is published by incoai for this architecture; do not substitute another family's draft",
+    "Preserve dense27B and35B-A3B behavior and all existing IQ3/MiniPlus fixes"
+  ],
+  "acceptance": [
+    "Independent CPU/numerical oracles and native tests for new math and quantized formats",
+    "New weights never exceed configured resident cache budget; pinned in-flight weights cannot be evicted",
+    "Missing/truncated shard must fail clearly, never read placeholders as weights",
+    "Real local model loads and generates correct smoke answers within physical memory; observe actual SSD cache misses/hits",
+    "Existing source checks, Python,CPU and Metal gates pass on final build",
+    "Context speed only after model download completes and minimal generation passes"
+  ],
+  "references": {
+    "transformers": "build/qwen4-exp-reference.py",
+    "gguf_reference": "build/qwen4exp-reference.cpp",
+    "ggml_types": "build/ggml-types.h",
+    "config": "build/ukisai--Swift-Qwen3.8-Flash-Next-config.json",
+    "tensor_index": "build/flash-next-iq3s-tensor-index.json"
+  },
+  "work_items": [
+    {
+      "id": "F1",
+      "scope": "GGUF shard index and bounded disk weight cache",
+      "depends": [],
+      "status": "implemented-and-regression-gates-passed"
+    },
+    {
+      "id": "F2",
+      "scope": "Q2_0 format support and numerical tests",
+      "depends": [],
+      "status": "implemented-and-regression-gates-passed"
+    },
+    {
+      "id": "F3",
+      "scope": "HC,PLE,QSA Metal operators and CPU oracles",
+      "depends": [],
+      "status": "implemented-and-regression-gates-passed"
+    },
+    {
+      "id": "F4",
+      "scope": "Native target/runtime and admission integration",
+      "depends": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "status": "implemented-and-regression-gates-passed"
+    },
+    {
+      "id": "F5",
+      "scope": "real-model launch, regression and review",
+      "depends": [
+        "F4"
+      ],
+      "status": "waiting-for-complete-model-download"
+    }
+  ],
+  "current_validation_log": "build/flash-next-full-validation.log",
+  "required_download_bytes": [
+    44900816736,
+    38842920384
+  ],
+  "initial_runtime_limits": {
+    "mode": "autoregressive",
+    "text_only": true,
+    "prefill_rows_per_tick": 1,
+    "prefix_cache": false,
+    "idle_weight_release": false,
+    "constrained_decoding": false,
+    "expert_metal_cache_gib": 20,
+    "host_staging_mib": 64
+  },
+  "review_reports": [
+    "build/flash-next-standards-review.json",
+    "build/flash-next-spec-review.json"
+  ],
+  "pending_review_fixes": [],
+  "final_gate": {
+    "command": "make -j4 all verify-build-identity check-source test-engine-cpu test-engine-metal check-python (mounted Metal toolchain)",
+    "log": "build/flash-next-final-gates.log",
+    "exit_code": 0,
+    "python_tests": 1244,
+    "python_skipped": 7
+  },
+  "remaining_acceptance": [
+    "Complete both real model shards",
+    "Real48layer generation and smoke correctness",
+    "Observed real expert cache hits/misses, physicalmemory, speed"
+  ],
+  "synthetic_full_forward": {
+    "kind": "zero-weight sparse GGUF, full48layer production wiring only",
+    "log": "build/flash-next-zero-model-run.log",
+    "exit_code": 0,
+    "backend_peak_bytes": 8339936612,
+    "expert_hits": 2880,
+    "expert_misses": 1440,
+    "real_model_payload_read": false
+  },
+  "model_validation_status": "waiting-for-user-download; real generation and speed not verified",
+  "launcher": "swift15flashnextsplash.sh"
+}

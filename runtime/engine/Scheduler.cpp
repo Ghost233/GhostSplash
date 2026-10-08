@@ -318,7 +318,7 @@ Scheduler::planPrefill(std::vector<PrefillRequestView> ready) const {
 
   BatchPlan plan;
   plan.kind = WorkKind::Prefill;
-  uint32_t budget = prefillBudget(ready.front(), ready);
+  uint32_t budget = std::min(prefillBudget(ready.front(), ready), maximumPrefillRows_);
   for (const PrefillRequestView &view : ready) {
     if (!budget || view.request->spec.priority != selectedPriority ||
         plan.width() == model::ExecutionLimits::maximumBatchWidth)

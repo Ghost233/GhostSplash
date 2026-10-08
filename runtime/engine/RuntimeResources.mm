@@ -164,7 +164,7 @@ std::array<uint8_t, 32> parseSha256(std::string_view value) {
 
 void requireLoadedModel(const model::LoadedModel &loaded) {
   if (!loaded.targetActualAllocatedBytes() ||
-      !loaded.draft.actualAllocatedBytes ||
+      (!loaded.descriptor.flashNext && !loaded.draft.actualAllocatedBytes) ||
       (loaded.descriptor.hasVision() && !loaded.vision.actualAllocatedBytes) ||
       loaded.manifestFingerprintSha256.empty() ||
       loaded.targetManifestFingerprint().empty()) {
@@ -326,7 +326,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
   std::shared_ptr<model::DiskBudget> diskBudget;
   std::shared_ptr<model::SlotFile> stateFile;
   const uint64_t stateBytes = config.model.stateLayout.cachedBytes();
-  if (config.maximumCacheDiskBytes) {
+  if (config.maximumCacheDiskBytes && !config.model.flashNext) {
     diskBudget = std::make_shared<model::DiskBudget>(config.maximumCacheDiskBytes);
     try {
       stateFile = std::make_shared<model::SlotFile>(
@@ -359,7 +359,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
         fixedBytes = std::numeric_limits<uint64_t>::max();
     }
     const uint64_t requiredBytes =
-        minimumRequiredBytes(fixedBytes, config.model.stateLayout.laneBytes(),
+        minimumRequiredBytes(fixedBytes, config.model.flashNext ? config.model.flashNext->stateBytes() : config.model.stateLayout.laneBytes(),
                              kvLayout)
             .value_or(std::numeric_limits<uint64_t>::max());
     if (requiredBytes > hardBudgetBytes) {
@@ -427,7 +427,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
     };
     ModelMemoryProfile modelProfile{
         loaded.name(), loaded.maximumContextTokens(),
-        loaded.targetKvLayout(config.kvFormat), footprint};
+        loaded.targetKvLayout(config.kvFormat), footprint, !loaded.descriptor.flashNext.has_value()};
     return evaluateEngineMemoryPlan(device, modelProfile, config.maximumMemoryBytes);
   };
   EngineMemoryPlanResult planResult = planMemory(0);
@@ -494,9 +494,9 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
       if (persistentCache.directory)
         stateFile = persistentCache.states;
     }
-    auto stateStorage = std::make_unique<model::QwenStateStorage>(
-        *backend, memoryGovernor->allocationAdmission(), loaded.stateLayout(),
-        stateFile);
+    std::unique_ptr<model::QwenStateStorage> stateStorage;
+    if (!loaded.flashNext) stateStorage = std::make_unique<model::QwenStateStorage>(
+        *backend, memoryGovernor->allocationAdmission(), loaded.stateLayout(), stateFile);
     std::unique_ptr<KvPageTier> kvTier;
     if (diskBudget) {
       try {
@@ -520,7 +520,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
     }
     auto cache = std::make_unique<engine::Cache>(*kvPool, kvTier.get(), diskBudget);
 
-    if (stateStorage->actualAllocatedBytes() != 0) {
+    if (stateStorage && stateStorage->actualAllocatedBytes() != 0) {
       throw std::runtime_error("lane state was allocated eagerly");
     }
     metal::MetalMemoryStats memory = backend->memoryStats();
@@ -651,9 +651,10 @@ model::RuntimeContext RuntimeResources::modelContext() noexcept {
       *backend_,
       model_,
       *kvPages_,
-      *stateStorage_,
+      stateStorage_.get(),
       operators_,
       aneFfn_.get(),
+      memoryGovernor_->allocationAdmission(),
   };
 }
 

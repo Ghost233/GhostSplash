@@ -88,6 +88,37 @@ void testOptionalVisionAudit() {
           "text-only warmup requires nonexistent vision weights");
 }
 
+void testDraftlessAuditAllowsAbsentOptionalCategories() {
+  DeviceCapabilities device;
+  device.deviceName = "test";
+  device.appleGpuFamily = 9;
+  device.macosMajor = 26;
+  device.macosMinor = 4;
+  device.physicalMemoryBytes = 32 * kGiB;
+  device.recommendedMaxWorkingSetBytes = 24 * kGiB;
+  device.maxBufferLengthBytes = 16 * kGiB;
+  device.maxThreadgroupMemoryBytes = 32 * 1024;
+  device.maxThreadgroupWidth = 1024;
+  device.hasUnifiedMemory = true;
+  auto profile = test::modelMemoryProfile(2 * kGiB, 0, 0);
+  profile.requiresDraftWeights = false;
+  profile.footprint.runtime.sharedPrefillPlannedAllocatedBytes = 0;
+  const auto memoryPlan = test::requireMemoryPlan(device, profile);
+  auto actual = report(memoryPlan);
+  const auto released = actual.stateAllocatedBytes;
+  actual.stateAllocatedBytes = 0;
+  actual.backendAllocatedBytes -= released;
+  actual.deviceCurrentAllocatedBytes -= released;
+  actual.devicePeakAllocatedBytes -= released;
+  actual.backendPeakAllocatedBytes -= released;
+  require(auditActualMemory(memoryPlan, actual).valid,
+          "draftless runtime requires a draft, separate prefill arena or retained idle state");
+  auto legacy = report(plan());
+  legacy.draftWeightsBytes = 0;
+  require(auditActualMemory(plan(), legacy).error == MemoryAuditError::MissingMeasurement,
+          "legacy draft presence check was weakened");
+}
+
 // Weights are planned from what loaded, so their rows have no bound of their
 // own; a buffer a loader does not report counts against the reserves.
 void testUnreportedAllocationsCountAgainstReserves() {
@@ -240,6 +271,7 @@ int main() {
   try {
     testUnifiedDynamicAudit();
     testOptionalVisionAudit();
+    testDraftlessAuditAllowsAbsentOptionalCategories();
     testUnreportedAllocationsCountAgainstReserves();
     testStateStagingHasItsOwnBound();
     testNeuralEngineSplitHasItsOwnBound();

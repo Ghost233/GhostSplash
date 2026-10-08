@@ -15,6 +15,11 @@
 namespace splash::model {
 
 void requireCompatibleModel(const LoadedModel &model) {
+  if (model.descriptor.flashNext) {
+    if (!model.descriptor.valid() || !model.flashNext || model.flashNext->layout != *model.descriptor.flashNext || model.draft.actualAllocatedBytes)
+      throw std::invalid_argument("invalid Flash Next autoregressive model");
+    return;
+  }
   if (!model.descriptor.valid() ||
       model.descriptor.draft != model.draft.layout ||
       !std::visit(
@@ -73,6 +78,11 @@ LoadedModel loadModel(metal::MetalBackend &backend,
     throw std::invalid_argument("model descriptor is invalid");
   result.images = std::make_shared<WeightImages>(backend, result.descriptor.sourceIdentity);
   WeightImages &images = *result.images;
+  if (result.descriptor.flashNext) {
+    result.flashNext = loadFlashNextWeights(backend, root, *result.descriptor.flashNext, result.descriptor.sourceIdentity);
+    result.manifestFingerprintSha256 = result.flashNext->manifestFingerprintSha256;
+    requireCompatibleModel(result); return result;
+  }
   // Every source's metadata is checked before the first image is written:
   // the vision tower's and the draft's here, the target's by its loader.
   const auto vision = planVisionLoader(root, result.descriptor);
@@ -118,6 +128,10 @@ LoadedModel loadModel(metal::MetalBackend &backend,
 
 uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor) {
   uint64_t bytes = 0;
+  if (descriptor.flashNext) {
+    GgufShardIndex index(findFlashNextShards(root / "target"));
+    return flashNextStaticWeightBytes(index, *descriptor.flashNext);
+  }
   if (descriptor.targetSource == TargetSource::Gguf) {
     WeightSource source(findTargetGguf(root / "target"));
     const GgufFile file(source);

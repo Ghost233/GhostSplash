@@ -8768,6 +8768,21 @@ void testWaitingEndsReleaseTheReplayPoint() {
 
 int main() {
   try {
+    {
+      test::TestKvStorage storage(64, 4096, 4);
+      KvPool pool(storage, 0);
+      engine::Cache cache(pool, nullptr, nullptr);
+      Executor model;
+      model.constrainedDecodingSupported = false;
+      Events events;
+      engine::Engine instance(test::engineConfig(), cache, model, events);
+      auto unsupported = request(9001, std::vector<uint32_t>{1});
+      unsupported.constraint = ConstraintMode::TokenMask;
+      rejects([&] { instance.submit(unsupported); }, "constrained decoding",
+              "unsupported constraints reached model admission");
+      require(model.beginAttempts == 0 && instance.idle(),
+              "unsupported constraints changed runtime state");
+    }
     testRunningRequestKeepsItsReplayPoint();
     testSuspendedRequestKeepsItsReplayPoint();
     testResumedLaneKeepsThePromptReplayPoint();

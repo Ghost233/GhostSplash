@@ -46,8 +46,9 @@ MemoryAuditResult auditActualMemory(const EngineMemoryPlan &plan,
   const EngineMemoryBreakdown &budget = plan.breakdown();
   // Vision weights are absent without a vision tower. Loading already
   // requires them for a model with vision.
-  if (!actual.targetWeightsBytes || !actual.draftWeightsBytes ||
-      !actual.stateAllocatedBytes || !actual.sharedPrefillBytes ||
+  if (!actual.targetWeightsBytes || (budget.draftWeightsBytes && !actual.draftWeightsBytes) ||
+      (budget.draftWeightsBytes && !actual.stateAllocatedBytes) ||
+      (budget.sharedPrefillBytes && !actual.sharedPrefillBytes) ||
       !actual.sharedDecodeBytes || !actual.kvAllocatedBytes ||
       !actual.backendAllocatedBytes || !actual.deviceCurrentAllocatedBytes ||
       !actual.devicePeakAllocatedBytes || !actual.backendPeakAllocatedBytes) {

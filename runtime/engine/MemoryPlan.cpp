@@ -115,11 +115,12 @@ std::optional<std::string> ModelMemoryProfile::validationError() const {
   }
   if (!targetKvLayout.valid()) return "invalid_target_kv_layout";
   if (!footprint.targetWeightsBytes) return "target_weight_bytes_required";
-  if (!footprint.draftWeightsBytes) return "draft_weight_bytes_required";
+  if (requiresDraftWeights && !footprint.draftWeightsBytes) return "draft_weight_bytes_required";
+  if (!requiresDraftWeights && footprint.draftWeightsBytes) return "unexpected_draft_weight_bytes";
   if (!footprint.runtime.laneStatePlannedAllocatedBytes) {
     return "lane_state_bytes_required";
   }
-  if (!footprint.runtime.sharedPrefillPlannedAllocatedBytes) {
+  if (requiresDraftWeights && !footprint.runtime.sharedPrefillPlannedAllocatedBytes) {
     return "shared_prefill_bytes_required";
   }
   if (!footprint.runtime.sharedDecodePlannedAllocatedBytes) {

@@ -63,7 +63,8 @@ class Scheduler final {
 public:
   // Decode time owed for each unit of time a prefill runs while requests of
   // equal or higher priority decode; zero alternates one command of each kind.
-  explicit Scheduler(double decodeShare) noexcept : decodeShare_(decodeShare) {}
+  explicit Scheduler(double decodeShare, uint32_t maximumPrefillRows = model::ExecutionLimits::prefillTokenBudget) noexcept
+      : decodeShare_(decodeShare), maximumPrefillRows_(maximumPrefillRows) {}
 
   void submit(RequestSpec request);
   void observePrefill(uint32_t rows, double wallMilliseconds);
@@ -166,6 +167,7 @@ private:
   uint64_t decodeDispatchOrder_ = 0;
   double prefillMillisecondsPerToken_ = 0.0;
   double decodeShare_;
+  uint32_t maximumPrefillRows_;
   // Decode time that prefill still owes the lanes that decoded beside it
   // (not those waiting for a mask): equal-priority decode runs until its
   // commands' wall time has worked it off.

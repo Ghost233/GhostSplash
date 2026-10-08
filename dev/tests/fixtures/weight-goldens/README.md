@@ -48,3 +48,16 @@ them with a libggml-base built from llama.cpp 7ab4ee7 (PrismML-Eng/llama.cpp
 01ae597 for PQ2_0; its other formats decode as upstream's):
 `SPLASH_GGML_ORACLE=<libggml-base.dylib> build/engine-tests/gguf-reference dev/tests/fixtures/weight-goldens/goldens.json`
 compares the reference with GGML and prints GGML's hash of each format.
+
+Q2_0 was added in ggml-org/llama.cpp after those revisions. Its golden is
+pinned to `9c2e0e491a822adae1f0b1c831adb4160057d24f`. The standalone
+`q2_0-oracle.cpp` preserves that revision's `dequantize_row_q2_0` verbatim
+and generates the fixture without Splash headers: 256 rows of 1024 values,
+MT19937 seed 26, random bytes followed by finite half scales. Regenerate its
+hash without building or running a llama.cpp engine:
+
+```sh
+clang++ -std=c++20 dev/tests/fixtures/weight-goldens/q2_0-oracle.cpp -o build/q2_0-oracle
+build/q2_0-oracle > build/q2_0-values.bin
+shasum -a 256 build/q2_0-values.bin
+```

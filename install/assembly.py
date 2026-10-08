@@ -181,14 +181,19 @@ def _well_formed(record):
         and isinstance(sources, dict)
         and set(sources) == {"target", "draft"}
         and all(
-            isinstance(source, dict)
+            source is None
+            and name == "draft"
+            and record["family"] == "Qwen3.8-Flash-Next"
+            and gguf_target
+            and record["vision_format"] == "none"
+            or isinstance(source, dict)
             and set(source) == {"repo", "revision"}
             and isinstance(source["repo"], str)
             and (
                 source["revision"] is None
                 or models.is_hex_digest(source["revision"], 40)
             )
-            for source in sources.values()
+            for name, source in sources.items()
         )
         and isinstance(files, dict)
         and all(
@@ -216,7 +221,7 @@ def pins(record):
     sources = {
         (hub.folder_name(source["repo"]), source["revision"]): source["repo"]
         for source in record["sources"].values()
-        if source["revision"] is not None
+        if source is not None and source["revision"] is not None
     }
     snapshots = {}
     for entry in record["files"].values():
@@ -279,7 +284,12 @@ def derived_metadata(models_root: Path, files):
     key = _metadata_key(sources)
 
     def write(stage):
-        contents = gguf.derived_files(*inputs)
+        targets = [
+            files[name] for name in _metadata_inputs(files) if name != GGUF_VISION
+        ]
+        contents = gguf.derived_files(
+            targets[0], files.get(GGUF_VISION), shards=targets[1:]
+        )
         if [file_record(path) for path in inputs] != sources:
             raise models.ModelError("GGUF source changed while reading metadata")
         for name, data in contents.items():

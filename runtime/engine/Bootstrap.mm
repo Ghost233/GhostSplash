@@ -185,12 +185,16 @@ RuntimeBootstrapReport RuntimeBootstrap::requireWarmupAndAnnounce(
     return result;
   };
 
+  const uint32_t prefillRows = modelRuntime.recommendedWarmupPrefillRows();
+  if (!prefillRows || prefillRows > model::ExecutionLimits::prefillTokenBudget)
+    fail(report, RuntimeBootstrapStage::MaximumPrefill, "invalid model warmup row count");
+  report.warmup.maximumPrefillRows = prefillRows;
   model::WarmupStepResult maximumPrefill =
       run(RuntimeBootstrapStage::MaximumPrefill, report.warmup.maximumPrefill,
           [&] {
-            return modelRuntime.warmupPrefill(model::ExecutionLimits::prefillTokenBudget);
+            return modelRuntime.warmupPrefill(prefillRows);
           });
-  nativeLoop.observePrefill(model::ExecutionLimits::prefillTokenBudget,
+  nativeLoop.observePrefill(prefillRows,
                            maximumPrefill.wallSeconds * 1000.0);
   report.warmup.maximumPrefillDetail = maximumPrefill.detail;
   const auto &budget = memoryPlan.breakdown();
@@ -213,9 +217,12 @@ RuntimeBootstrapReport RuntimeBootstrap::requireWarmupAndAnnounce(
         report.warmup.decodeBatches[width - 1],
         [&] { return modelRuntime.warmupDecodeBatch(width); }, width > 1);
   }
-  run(RuntimeBootstrapStage::CompositeStateRestore,
-      report.warmup.compositeStateRestore,
-      [&] { return modelRuntime.warmupCompositeStateRestore(); }, true);
+  if (modelRuntime.supportsPrefixCache())
+    run(RuntimeBootstrapStage::CompositeStateRestore,
+        report.warmup.compositeStateRestore,
+        [&] { return modelRuntime.warmupCompositeStateRestore(); }, true);
+  else
+    report.warmup.compositeStateRestore = WarmupStepStatus::NotApplicable;
 
   ActualMemoryReport actual;
   try {
@@ -344,11 +351,11 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
   std::unique_ptr<NativeRuntime> nativeLoop;
   try {
     connectToGovernor(config.nativeLoop.engine, resources->memoryGovernor());
-    config.nativeLoop.weights = &resources->releasableMemory();
+    config.nativeLoop.weights = config.resources.model.flashNext ? nullptr : &resources->releasableMemory();
     // The parser and engine consume the same resolved ceiling. In automatic
     // mode it cannot be known until resource planning has measured the device.
     nativeLoop = std::make_unique<NativeRuntime>(
-        config.nativeLoop, config.resources.idleReleaseSeconds, resources->cache(),
+        config.nativeLoop, config.resources.model.flashNext ? 0.0 : config.resources.idleReleaseSeconds, resources->cache(),
         *modelRuntime, std::move(output), std::move(statusProvider),
         protocolLimitsFor(config.resources.model.capabilities,
                           config.nativeLoop.engine.maxContext));
