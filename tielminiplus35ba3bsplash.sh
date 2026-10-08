@@ -3,6 +3,7 @@ set -eu
 
 # Local Tiel APEX-I-MiniPlus-V2.1 target, text only.
 model_dir=/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF
+chat_template="$model_dir/chat_template.jinja"
 model_id=IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF
 host=192.168.64.1
 port=8004
@@ -14,7 +15,7 @@ repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 python="$repo/.venv/bin/python"
 
 for path in "$model_dir/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf" \
-    "$python" "$repo/server/server.py" "$repo/build/splash"; do
+    "$chat_template" "$python" "$repo/server/server.py" "$repo/build/splash"; do
     if [ ! -e "$path" ]; then
         echo "Missing: $path" >&2
         exit 1
@@ -26,14 +27,16 @@ if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 unset SPLASH_API_KEY
-exec "$python" -u - "$repo" "$model_dir" "$model_id" "$host" "$port" \
+exec "$python" -u - "$repo" "$model_dir" "$model_id" "$chat_template" "$host" "$port" \
     "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" <<'PY'
+import hashlib
 import os
+import shutil
 import socket
 import sys
 from pathlib import Path
 
-repo, model_dir, model_id, host, port, context, memory, cache_disk, queue = sys.argv[1:]
+repo, model_dir, model_id, chat_template, host, port, context, memory, cache_disk, queue = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
 from install import assembly, hub, models, upstream
@@ -57,10 +60,42 @@ else:
 root, record_lock = assembly.hold(selection.link, selection.models_root)
 if record_lock is not None:
     os.set_inheritable(record_lock.fileno(), True)
+
+# Keep the author's guidance, with Splash tool calls and later agent instructions.
+template = Path(chat_template).read_text(encoding="utf-8")
+replacements = (
+    ("return a json object with function name and arguments", "return a function call with its parameters"),
+    ('{"name": <function-name>, "arguments": <args-json-object>}',
+     '<function=example_function_name>\n<parameter=example_parameter_name>\nvalue\n</parameter>\n</function>'),
+    ("a JSON object nested within <tool_call></tool_call> XML tags.",
+     "a <function=NAME> block with <parameter=NAME> values nested within <tool_call></tool_call> XML tags."),
+    ('''{{- '
+<tool_call>
+{"name": "' + tool_call.name + '", "arguments": ' + (tool_call.arguments | tojson) + '}
+</tool_call>' }}''',
+     r'''{{- '\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
+                {%- for name, value in tool_call.arguments.items() %}
+                    {{- '<parameter=' + name + '>\n' }}
+                    {{- value if value is string else value | tojson }}
+                    {{- '\n</parameter>\n' }}
+                {%- endfor %}
+                {{- '</function>\n</tool_call>' }}'''),
+    ("{{- raise_exception('System message must be at the beginning.') }}",
+     r"{{- '<|im_start|>system\n' + content + '<|im_end|>\n' }}"),
+)
+for old, new in replacements:
+    if template.count(old) != 1:
+        raise models.ModelError("Local chat template changed; review its Splash tool-call adaptation")
+    template = template.replace(old, new, 1)
+identity = hashlib.sha256((str(root) + template).encode()).hexdigest()
+tokenizer_dir = repo / "build/tokenizer-overrides/tiel-miniplus" / identity
+shutil.copytree(root / "tokenizer", tokenizer_dir, dirs_exist_ok=True)
+(tokenizer_dir / "chat_template.jinja").write_text(template, encoding="utf-8")
+print(f"Chat template: {chat_template} (Splash XML tool calls, later system messages)", flush=True)
 print(f"Tiel MiniPlus Splash: http://{host}:{port} (API: /v1)", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root), "--tokenizer", str(root / "tokenizer"),
+    str(root), "--tokenizer", str(tokenizer_dir),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
