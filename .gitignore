@@ -2,6 +2,7 @@ build/
 .venv
 .venv.install.lock
 install/models/
+install/models-local/
 # Hermes homes of older checkouts, with their sessions and keys.
 install/agents/
 install/profiles/
