@@ -418,6 +418,16 @@ flash_selected_attention(device const bfloat *query, device const bfloat *gate,
 FLASH_SELECTED_ATTENTION(flash_next_qsa_attention_bf16, bfloat)
 FLASH_SELECTED_ATTENTION(flash_next_qsa_attention_int8, int8_t)
 
+#define FLASH_COPY_ROWS(Name, Type) \
+kernel void Name(device const Type *x [[buffer(0)]], device Type *out [[buffer(1)]], \
+                 constant FlashNextRowsParams &p [[buffer(2)]], uint i [[thread_position_in_grid]]) { \
+  if (ulong(i) >= ulong(p.storage_rows) * p.output_stride) return; \
+  const uint row = i / p.output_stride, col = i % p.output_stride; \
+  out[i] = row < p.valid_rows && col < p.width ? x[ulong(row) * p.input_stride + col] : Type(0); \
+}
+FLASH_COPY_ROWS(flash_next_copy_rows_bf16, bfloat)
+FLASH_COPY_ROWS(flash_next_copy_rows_f32, float)
+
 kernel void flash_next_broadcast(device const bfloat *x [[buffer(0)]],
                                  device bfloat *out [[buffer(1)]],
                                  constant FlashNextParams &p [[buffer(2)]],

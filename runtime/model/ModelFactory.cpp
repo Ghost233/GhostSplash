@@ -2,6 +2,7 @@
 #include "model/AffineTarget.hpp"
 #include "model/DraftCheckpoint.hpp"
 #include "model/GgufTarget.hpp"
+#include "model/FlashNextMtp.hpp"
 #include "model/QwenTargetLoader.hpp"
 #include "model/VisionLoader.hpp"
 
@@ -16,8 +17,9 @@ namespace splash::model {
 
 void requireCompatibleModel(const LoadedModel &model) {
   if (model.descriptor.flashNext) {
-    if (!model.descriptor.valid() || !model.flashNext || model.flashNext->layout != *model.descriptor.flashNext || model.draft.actualAllocatedBytes)
-      throw std::invalid_argument("invalid Flash Next autoregressive model");
+    if (!model.descriptor.valid() || !model.flashNext || model.flashNext->layout != *model.descriptor.flashNext || model.draft.actualAllocatedBytes ||
+        model.flashNext->hasMtp != model.descriptor.flashNextMtp)
+      throw std::invalid_argument("invalid Flash Next model");
     return;
   }
   if (!model.descriptor.valid() ||
@@ -80,6 +82,10 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   WeightImages &images = *result.images;
   if (result.descriptor.flashNext) {
     result.flashNext = loadFlashNextWeights(backend, root, *result.descriptor.flashNext, result.descriptor.sourceIdentity);
+    if (result.descriptor.flashNextMtp) {
+      loadFlashNextMtpWeights(backend,*result.flashNext,root / "draft");
+      setFlashNextExpertBudget(*result.flashNext,18ull<<30);
+    }
     result.manifestFingerprintSha256 = result.flashNext->manifestFingerprintSha256;
     requireCompatibleModel(result); return result;
   }

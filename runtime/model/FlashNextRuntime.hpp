@@ -1,6 +1,7 @@
 #pragma once
 #include "model/ModelFactory.hpp"
 namespace splash::model {
+inline constexpr uint32_t kFlashNextPrefillRows = 512;
 [[nodiscard]] ModelMemoryPlan flashNextRuntimeMemory(const FlashNextWeights &, const ops::ExecutionPlans &);
 class FlashNextRuntime final : public RuntimeModel {
 public:
@@ -10,7 +11,7 @@ public:
   bool supportsPrefixCache() const noexcept override { return false; }
   bool supportsIdleWeightRelease() const noexcept override { return false; }
   bool supportsConstrainedDecoding() const noexcept override { return false; }
-  uint32_t maximumPrefillTokenBudget() const noexcept override { return 1; }
+  uint32_t maximumPrefillTokenBudget() const noexcept override { return kFlashNextPrefillRows; }
   uint32_t recommendedWarmupPrefillRows() const noexcept override { return 1; }
   StateAdmission begin(const ModelRequest &) override;
   void suspend(uint64_t) override;
@@ -30,6 +31,7 @@ public:
   ModelMemoryActual actualRuntimeMemory() const override;
   ModelTelemetry telemetry() const noexcept override;
 private:
+  std::unique_ptr<ModelBatchTicket> submitSynchronous(const BatchPlan &,std::span<const ModelBatchItem>);
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };

@@ -32,6 +32,7 @@ struct ModelDescriptor final {
   std::string name;
   TargetLayout target;
   std::optional<FlashNextLayout> flashNext;
+  bool flashNextMtp = false;
   DFlashDraftLayout draft;
   ops::VisionLayout vision;
   ModelCapabilities capabilities;

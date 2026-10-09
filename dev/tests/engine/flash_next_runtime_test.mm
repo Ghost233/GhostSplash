@@ -30,7 +30,8 @@ int main(int argc,char **argv) {
       // generation tensors are supplied or a model answer claimed here.
       test::writeFile(path,test::gguf::file({integers("qwen4exp.ple.layer_multipliers",{1,3,5}),
         integers("qwen4exp.ple.head_offsets",offsets),integers("qwen4exp.ple.head_vocab_sizes",vocabularies)},
-        {{"per_layer_token_embd.weight",{160,16},20,test::gguf::Bytes(90*16)}}));
+        {{"per_layer_token_embd.weight",{160,16},20,test::gguf::Bytes(90*16)},
+         {"token_embd.weight",{2560,16},20,test::gguf::Bytes(1440*16)}}));
       metal::MetalBackend backend(argv[1]);
       model::LoadedModel loaded;
       loaded.flashNext=std::make_shared<model::FlashNextWeights>();
@@ -49,8 +50,8 @@ int main(int argc,char **argv) {
       model::FlashNextRuntime runtime({backend,loaded,pages,nullptr,operators,nullptr,admit});
       require(!runtime.supportsPrefixCache() && runtime.snapshotBytes()==0 && !runtime.snapshot(1),
               "Flash Next must never publish or restore incomplete recurrent state");
-      require(runtime.maximumPrefillTokenBudget()==1 && runtime.recommendedWarmupPrefillRows()==1,
-              "SSD autoregressive work must stay bounded at one token per dispatch");
+      require(runtime.maximumPrefillTokenBudget()==model::kFlashNextPrefillRows && runtime.recommendedWarmupPrefillRows()==1,
+              "SSD prefill must use a bounded real-row batch and a cheap startup calibration");
       const auto base=backend.memoryStats().allocatedBytes;
       const uint32_t token=42;
       ModelRequest request;request.id=1;request.prompt={&token,1};request.maxNewTokens=8;

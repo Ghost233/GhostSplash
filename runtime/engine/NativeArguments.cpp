@@ -76,11 +76,8 @@ std::filesystem::path requireModelRoot(std::string_view argument) {
       std::filesystem::canonical(std::filesystem::path(argument), error);
   if (error || !std::filesystem::is_directory(root, error))
     throw UsageError("MODEL_DIRECTORY must name an existing directory");
-  for (const char *role : {"target", "draft"}) {
-    if (!std::filesystem::is_directory(root / role, error))
-      throw UsageError(
-          "MODEL_DIRECTORY must hold the model's target/ and draft/ directories");
-  }
+  if (!std::filesystem::is_directory(root / "target", error))
+    throw UsageError("MODEL_DIRECTORY must hold the model's target/ directory");
   return root;
 }
 
@@ -131,6 +128,9 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--cache-dir requires a MAX_CACHE_DISK_BYTES quota");
   result.modelRoot = requireModelRoot(argv[2]);
   result.model = model::inspectModelRoot(result.modelRoot);
+  if (!result.model.flashNext &&
+      !std::filesystem::is_directory(result.modelRoot / "draft"))
+    throw UsageError("MODEL_DIRECTORY must hold the model's draft/ directory");
   result.maxContext = parseMaxContext(argv[3], result.model.capabilities);
   result.maxMemoryBytes = parseMaxMemory(argv[4]);
   return result;

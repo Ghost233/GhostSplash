@@ -23,6 +23,8 @@ struct FlashNextWeights final {
   std::shared_ptr<GgufShardIndex> index;
   std::shared_ptr<WeightPageCache> hostPages;
   std::map<std::string, ops::Projection, std::less<>> projections;
+  std::map<std::string, std::pair<uint32_t,uint32_t>, std::less<>> mtpShapes;
+  bool hasMtp = false;
   std::map<std::string, metal::MetalBuffer, std::less<>> tensors;
   uint64_t actualAllocatedBytes = 0;
   std::string manifestFingerprintSha256;
@@ -44,5 +46,7 @@ struct FlashNextWeights final {
 [[nodiscard]] std::shared_ptr<const FlashNextWeights::ExpertPage> acquireFlashNextExpert(
     FlashNextWeights &, metal::MetalBackend &, std::string_view tensor, uint32_t expert);
 [[nodiscard]] WeightCacheTelemetry flashNextExpertTelemetry(const FlashNextWeights &);
+[[nodiscard]] uint64_t flashNextExpertBudget(const FlashNextWeights &) noexcept;
+void setFlashNextExpertBudget(FlashNextWeights &,uint64_t bytes);
 [[nodiscard]] uint64_t releaseFlashNextExpertPage(FlashNextWeights &) noexcept;
 } // namespace splash::model

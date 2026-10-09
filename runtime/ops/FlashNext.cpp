@@ -13,6 +13,28 @@ uint64_t bytes(uint32_t width, uint32_t streams, uint32_t rows) {
   return uint64_t{width} * streams * rows * 2;
 }
 } // namespace
+void FlashNext::addRepack(metal::CommandGraph &g,metal::MetalBuffer input,
+                          metal::MetalBuffer output,const GgufRepackParams &p) {
+  if(p.rows!=256 || !p.input_size || p.input_size%256 || !p.src_row_bytes)
+    throw std::invalid_argument("invalid Flash Next repack tile");
+  requireBytes(input,uint64_t{p.rows}*p.src_row_bytes,"Flash Next repack input");
+  requireBytes(output,uint64_t{p.dst_meta}+1,"Flash Next repack output");
+  g.add("gguf_repack",{input,output},p,{p.input_size/32,1,1},{256,1,1});
+}
+void FlashNext::addCopyRows(metal::CommandGraph &g, metal::MetalBuffer input,
+                            metal::MetalBuffer output, uint32_t width,
+                            uint32_t validRows, uint32_t storageRows,
+                            uint32_t inputStride, uint32_t outputStride,
+                            bool float32) {
+  if (!width || !validRows || storageRows < validRows || inputStride < width || outputStride < width)
+    throw std::invalid_argument("invalid Flash Next row copy shape");
+  const uint32_t element = float32 ? 4 : 2;
+  requireBytes(input, rowBytes(validRows, inputStride, width, element), "Flash Next row copy input");
+  requireBytes(output, uint64_t{storageRows} * outputStride * element, "Flash Next row copy output");
+  g.add(float32 ? "flash_next_copy_rows_f32" : "flash_next_copy_rows_bf16", {input, output},
+        FlashNextRowsParams{width, validRows, storageRows, inputStride, outputStride},
+        {(uint64_t{storageRows} * outputStride + 255) / 256, 1, 1});
+}
 void FlashNext::addGroupedRms(metal::CommandGraph &g, metal::MetalBuffer input,
                               const NormWeights &w, metal::MetalBuffer output,
                               uint32_t width, uint32_t streams, uint32_t rows,
@@ -97,6 +119,16 @@ void FlashNext::addPleConv(metal::CommandGraph &g, metal::MetalBuffer gated,
         {(uint64_t{width} * streams * rows + 255) / 256, 1, 1});
   g.add("flash_next_ple_commit", {norm, state, next}, p,
         {(uint64_t{width} * streams + 255) / 256, 1, 1});
+}
+void FlashNext::addPleCommit(metal::CommandGraph &g, metal::MetalBuffer normalized,
+                            metal::MetalBuffer state,uint32_t width,uint32_t streams,
+                            uint32_t rows,uint32_t taps,uint32_t dilation) {
+  shape(width,streams,rows);
+  if(taps<2 || !dilation)throw std::invalid_argument("invalid PLE history commit");
+  requireBytes(normalized,bytes(width,streams,rows),"PLE committed rows");
+  requireBytes(state,uint64_t{taps-1}*dilation*width*streams*2,"PLE committed history");
+  g.add("flash_next_ple_commit",{normalized,state,state},FlashNextConvParams{width,streams,rows,taps,dilation},
+        {(uint64_t{width}*streams+255)/256,1,1});
 }
 void FlashNext::addQsaPool(metal::CommandGraph &g, metal::MetalBuffer raw,
                            metal::MetalBuffer pooled, uint32_t width,

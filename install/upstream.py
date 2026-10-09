@@ -231,9 +231,10 @@ def _gguf_target(repo, variant, language_only, scratch):
         headers.append(part)
     header = headers[0]
     for part in headers[1:]:
-        if part.values.get("general.architecture") != header.values.get(
-            "general.architecture"
-        ):
+        # Split writers may keep model metadata only in the first shard.
+        if part.values.get(
+            "general.architecture", header.values.get("general.architecture")
+        ) != header.values.get("general.architecture"):
             raise models.ModelError("GGUF shards have different architectures")
         if header.tensors.keys() & part.tensors.keys():
             raise models.ModelError("GGUF shards contain duplicate tensors")
@@ -595,11 +596,17 @@ def _resolve_draft(family, selection, installed, target):
     cache holds for this selection; the installed draft also stands in, with
     the reason, when the draft cannot be resolved."""
     if family.draft_repo is None:
-        if selection.draft_model is not None:
+        if selection.draft_model is None:
+            return None
+        repo = hub.Repository.resolve(selection.draft_model)
+        if (
+            models.read_json(repo.file("config.json")).get("model_type")
+            != "qwen4_exp_mtp"
+        ):
             raise models.ModelError(
-                "Flash Next uses autoregressive decoding; an external draft is not supported"
+                "Flash Next external draft must be qwen4_exp_mtp, not DFlash2"
             )
-        return None
+        return repo
     name = selection.draft_model or family.draft_repo
     recorded = installed and installed["sources"]["draft"]
     asked = _answered(target)
@@ -664,7 +671,7 @@ def _at(repo):
 
 
 def _draft_files(repo, target):
-    """The DFlash2 checkpoint in repo for target's family, downloaded, by
+    """The draft checkpoint in repo for target's family, downloaded, by
     assembly path: config.json and the safetensors weights,
     model.safetensors or the shards its index names, at the root of the
     repository or --draft-model directory, as a DFlash2 release holds them.

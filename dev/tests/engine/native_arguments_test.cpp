@@ -182,6 +182,28 @@ void testNeuralEngine() {
           "--ane did not reach the arguments as given");
 }
 
+void testDraftlessFlashNext(const std::filesystem::path &fixture) {
+  const test::TemporaryDirectory model("splash-native-flash-next");
+  std::filesystem::create_directory(model.path() / "target");
+  test::writeFile(model.path() / "config.json", test::readFile(fixture));
+  test::writeFile(model.path() / "model.json",
+                  R"({"version":1,"model":"test-Flash-Next",)"
+                  R"("target_format":"gguf","vision_format":"none"})");
+  const auto arguments = parseCommand(
+      {"serve-native", model.path().string(), "auto", "auto"});
+  require(arguments.model.flashNext.has_value() && !arguments.model.draft.layers,
+          "Flash Next must accept its draftless assembly");
+  std::filesystem::create_directory(model.path() / "draft");
+  test::writeFile(model.path() / "draft/config.json",
+                  test::readFile(fixture.parent_path() / "flash_next_mtp_config.json"));
+  require(parseCommand({"serve-native",model.path().string(),"auto","auto"}).model.flashNextMtp,
+          "the released BF16 MTP config must be accepted, including its decimal RMS epsilon");
+  const ModelDirectory ordinary;
+  std::filesystem::remove(ordinary.path() / "draft");
+  rejects([&] { static_cast<void>(parse(ordinary, {"auto", "auto"})); },
+          "draft/", "ordinary models still require a draft directory");
+}
+
 // A command line the server never writes is refused with what is wrong.
 void testRefusals() {
   const ModelDirectory model;
@@ -240,7 +262,7 @@ void testRefusals() {
                  "MODEL_DIRECTORY must name an existing directory");
   const test::TemporaryDirectory empty("splash-native-arguments-empty");
   commandRefused({"serve-native", empty.path().string(), "auto", "auto"},
-                 "MODEL_DIRECTORY must hold the model's target/ and draft/ directories");
+                 "MODEL_DIRECTORY must hold the model's target/ directory");
 }
 
 } // namespace
@@ -253,6 +275,8 @@ int main(int argc, char **argv) {
   try {
     testServerCommandLines(argv[1]);
     testNeuralEngine();
+    testDraftlessFlashNext(std::filesystem::path(argv[1]).parent_path() /
+                           "flash_next_config.json");
     testRefusals();
     std::cout << "native arguments tests passed\n";
     return EXIT_SUCCESS;

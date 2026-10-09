@@ -27,6 +27,14 @@ struct FlashNextPoolParams {
   uint32_t blocks;
   uint32_t first_block;
 };
+struct FlashNextRowsParams {
+  uint32_t width;
+  uint32_t valid_rows;
+  uint32_t storage_rows;
+  uint32_t input_stride;
+  uint32_t output_stride;
+};
+static_assert(sizeof(FlashNextRowsParams) == 20, "Flash Next row copy params are 20 bytes");
 static_assert(sizeof(FlashNextPoolParams) == 16,
               "Flash Next pool params are 16 bytes");
 struct FlashNextRopeParams {

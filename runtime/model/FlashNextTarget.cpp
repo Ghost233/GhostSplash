@@ -2,6 +2,7 @@
 #include "model/FlashNextNgram.hpp"
 #include "Checked.hpp"
 #include "model/GgufImageLayout.hpp"
+#include "ops/FlashNext.hpp"
 #include "metal/abi/GgufRepack.h"
 #include <algorithm>
 #include <cstring>
@@ -54,27 +55,35 @@ ops::Projection prepareProjection(metal::MetalBackend &backend, WeightPageCache 
   const uint64_t rowBytes = ggufRowBytes(format, physicalColumns);
   const auto p = ggufPlaneBytes(format, padded, physicalColumns);
   auto packed = backend.allocateBuffer(p.plane0 + p.plane1 + p.meta, metal::BufferStorage::Shared, key.tensor);
-  // Staging contains at most one tile (up to 256 native rows), never a second
-  // full expert cache. Padding rows are true zero-scaled native blocks.
-  auto staging = backend.allocateBuffer(256 * rowBytes, metal::BufferStorage::Shared, "flash-weight-staging");
-  for (uint32_t first = 0; first < padded; first += 256) {
-    std::memset(staging.contents(), 0, staging.sizeBytes());
-    const uint32_t count = first < rows ? std::min(256u, rows - first) : 0;
-    if (count) {
-      auto native = tile(first, count, sourceRowBytes);
-      for (uint32_t row = 0; row < count; ++row)
-        std::memcpy(static_cast<uint8_t *>(staging.contents()) + row * rowBytes,
-                    native.data() + row * sourceRowBytes, sourceRowBytes);
+  // Bounded source staging groups repack tiles into one submission. Expert
+  // matrices normally fit one group; large heads stay below 16 MiB staging.
+  constexpr uint64_t stagingLimit=16ull<<20;
+  if(rowBytes>stagingLimit/256)throw GgufError("Flash Next weight row exceeds staging budget");
+  const uint32_t stageRows=static_cast<uint32_t>(std::min<uint64_t>(padded,
+      std::min<uint64_t>(4096,stagingLimit/rowBytes/256*256)));
+  auto staging=backend.allocateBuffer(uint64_t{stageRows}*rowBytes,metal::BufferStorage::Shared,"flash-weight-staging");
+  for(uint32_t first=0;first<padded;first+=stageRows) {
+    const uint32_t storage=std::min(stageRows,padded-first);
+    std::memset(staging.contents(),0,uint64_t{storage}*rowBytes);
+    const uint32_t count=first<rows?std::min(storage,rows-first):0;
+    if(count) {
+      auto native=tile(first,count,sourceRowBytes);
+      for(uint32_t row=0;row<count;++row)
+        std::memcpy(static_cast<uint8_t*>(staging.contents())+uint64_t{row}*rowBytes,
+                    native.data()+uint64_t{row}*sourceRowBytes,sourceRowBytes);
     }
-    const uint64_t groups = physicalColumns / 32;
-    const auto above = ggufPlaneBytes(format, first, physicalColumns);
-    const uint64_t begin = above.plane0;
-    const uint64_t metaAt = p.plane0 + p.plane1 + above.meta;
-    const uint64_t plane1At = p.plane0 + above.plane1;
-    GgufRepackParams params{256, physicalColumns, id, uint32_t(rowBytes),
-                            p.plane1 ? uint32_t(plane1At - begin) : 0, uint32_t(metaAt - begin)};
-    static_cast<void>(backend.submit({"gguf_repack", {{0, staging}, {1, backend.view(packed, begin, packed.sizeBytes() - begin)}},
-      {{2, &params, sizeof(params)}}, {groups, 1, 1}, {256, 1, 1}}));
+    metal::CommandGraph graph;
+    for(uint32_t row=0;row<storage;row+=256) {
+      const auto above=ggufPlaneBytes(format,first+row,physicalColumns);
+      const uint64_t begin=above.plane0;
+      const uint64_t metaAt=p.plane0+p.plane1+above.meta;
+      const uint64_t plane1At=p.plane0+above.plane1;
+      const GgufRepackParams params{256,physicalColumns,id,uint32_t(rowBytes),
+          p.plane1?uint32_t(plane1At-begin):0,uint32_t(metaAt-begin)};
+      ops::FlashNext::addRepack(graph,backend.view(staging,uint64_t{row}*rowBytes,256*rowBytes),
+          backend.view(packed,begin,packed.sizeBytes()-begin),params);
+    }
+    static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
   }
   auto segment = ops::QuantizedSegment::planes(id, rows, physicalColumns,
       backend.view(packed, 0, p.plane0), p.plane1 ? backend.view(packed, p.plane0, p.plane1) : metal::MetalBuffer{},
@@ -228,6 +237,13 @@ public:
   uint64_t budget_;
   std::mutex mutex;
 };
+uint64_t flashNextExpertBudget(const FlashNextWeights &w) noexcept { return w.expertPages?w.expertPages->budget_:w.layout.expertCacheBytes; }
+void setFlashNextExpertBudget(FlashNextWeights &w,uint64_t bytes) {
+  auto &cache=*w.expertPages;std::lock_guard lock(cache.mutex);
+  if(!bytes || bytes>w.layout.expertCacheBytes || cache.telemetry.residentBytes>bytes)
+    throw std::invalid_argument("invalid Flash Next expert cache budget");
+  cache.budget_=bytes;
+}
 std::shared_ptr<const FlashNextWeights::ExpertPage> acquireFlashNextExpert(
     FlashNextWeights &w, metal::MetalBackend &backend, std::string_view name, uint32_t expert) {
   const WeightPageKey key{WeightUnitKind::Expert, std::string(name), expert};

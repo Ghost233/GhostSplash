@@ -276,6 +276,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/FlashNextTarget.cpp \
 	runtime/model/FlashNextRuntime.cpp \
 	runtime/model/FlashNextNgram.cpp \
+	runtime/model/FlashNextMtp.cpp \
 	runtime/model/GgufImage.cpp \
 	runtime/model/GgufTarget.cpp \
 	runtime/model/AffineTarget.cpp \

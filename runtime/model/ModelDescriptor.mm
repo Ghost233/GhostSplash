@@ -506,8 +506,26 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   if (type == "qwen4_exp_text") {
     if (targetFormat != "gguf" || visionFormat != "none")
       throw std::invalid_argument("Flash Next currently requires language-only GGUF");
-    if (draft) throw std::invalid_argument("Flash Next has no compatible DFlash checkpoint");
     FlashNextLayout layout;
+    if (draft) {
+      requireEqual(requireString(draft,@"model_type","MTP model type"),"qwen4_exp_mtp","Flash Next draft","model_type");
+      NSDictionary *mtp=requireObject(draft,@"text_config","MTP text config");
+      requireNumbers(draft,"Flash Next MTP","config",{{"block_size",4}});
+      requireNumbers(mtp,"Flash Next MTP","text config",{
+          {"hidden_size",layout.hiddenSize},{"vocab_size",layout.vocabularySize},{"hc_count",layout.streams},
+          {"hc_lowrank",layout.lowRank},{"num_hidden_layers",1},{"mtp_num_hidden_layers",1},
+          {"num_attention_heads",layout.queryHeads},{"num_key_value_heads",layout.kvHeads},{"head_dim",layout.headDimension},
+          {"num_experts",layout.experts},{"num_experts_per_tok",layout.expertsPerToken},
+          {"moe_intermediate_size",layout.intermediateSize},{"shared_expert_intermediate_size",layout.intermediateSize},
+          {"indexer_n_heads",layout.indexHeads},{"indexer_kv_heads",1},{"indexer_head_dim",layout.indexWidth},
+          {"indexer_compress_ratio",layout.indexRatio},{"indexer_budget",layout.indexBudget},
+          {"max_position_embeddings",layout.maximumContextTokens},{"rms_norm_eps",1e-6},
+          {"partial_rotary_factor",0.25}});
+      requireBooleans(mtp,"Flash Next MTP",{{"mtp_use_dedicated_embeddings",false}});
+      requireEqual(requireString(mtp,@"dtype","MTP dtype"),"bfloat16","Flash Next MTP","dtype");
+      NSDictionary *rope=requireObject(mtp,@"rope_parameters","MTP rope parameters");
+      requireNumbers(rope,"Flash Next MTP","rope_parameters",{{"rope_theta",layout.rotaryTheta},{"partial_rotary_factor",0.25}});
+    }
     requireNumbers(text, "Flash Next", "text config",
         {{"hidden_size", layout.hiddenSize}, {"num_hidden_layers", layout.layers},
          {"vocab_size", layout.vocabularySize}, {"num_attention_heads", layout.queryHeads},
@@ -532,7 +550,7 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
     if (kinds.count != layout.layers) throw std::invalid_argument("Flash Next layer count mismatch");
     for (uint32_t i = 0; i < layout.layers; ++i)
       requireEqual(requireString(@{@"kind": kinds[i]}, @"kind", "Flash Next layer type"), layout.isAttention(i) ? "full_attention" : "linear_attention", "Flash Next", "layer_types");
-    ModelDescriptor result; result.name = std::move(name); result.flashNext = layout;
+    ModelDescriptor result; result.name = std::move(name); result.flashNext = layout; result.flashNextMtp = draft != nil;
     result.targetSource = TargetSource::Gguf; result.visionSource = VisionSource::None;
     result.capabilities = {layout.vocabularySize, layout.maximumContextTokens}; result.targetKvLayout = layout.kvLayout();
     result.draft = {}; result.vision = {}; result.stateLayout = {};
@@ -609,7 +627,8 @@ ModelDescriptor inspectSourceModel(const std::filesystem::path &root) {
   NSDictionary *config = readObject(root / "config.json", "upstream model config");
   NSDictionary *text = config[@"text_config"];
   const bool flash = [text[@"model_type"] isEqual:@"qwen4_exp_text"];
-  NSDictionary *draft = flash ? nil : readObject(root / "draft" / "config.json", "draft config");
+  NSDictionary *draft = !flash || std::filesystem::is_directory(root / "draft")
+      ? readObject(root / "draft" / "config.json", "draft config") : nil;
   ModelDescriptor result = describeSourceModel(std::move(name), targetFormat, visionFormat, config, draft);
   result.sourceIdentity = std::move(sourceIdentity);
   if (!result.valid()) throw std::invalid_argument("incompatible target and draft model");

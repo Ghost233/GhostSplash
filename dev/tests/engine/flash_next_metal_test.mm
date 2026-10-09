@@ -47,6 +47,30 @@ void groupedNorm(metal::MetalBackend &b) {
          1 / u, 1 / u, 1 / u, 1 / u},
         "group RMS");
 }
+void copyRows(metal::MetalBackend &b) {
+  for (bool fp32 : {false, true}) {
+    const uint32_t element = fp32 ? 4 : 2;
+    auto input = b.allocateBuffer(3 * 9 * element, metal::BufferStorage::Shared, {});
+    auto output = b.allocateBuffer(8 * 7 * element, metal::BufferStorage::Shared, {});
+    for (uint32_t i = 0; i < 27; ++i) {
+      if (fp32) static_cast<float *>(input.contents())[i] = float(i) + 0.125f;
+      else static_cast<uint16_t *>(input.contents())[i] = floatToBf16(float(i) + 0.125f);
+    }
+    std::memset(output.contents(), 0xff, output.sizeBytes());
+    CommandGraph graph;
+    FlashNext::addCopyRows(graph, input, output, 5, 3, 8, 9, 7, fp32);
+    static_cast<void>(b.submitCommandAsync(graph.dispatches()).wait());
+    for (uint32_t row = 0; row < 8; ++row) for (uint32_t col = 0; col < 7; ++col) {
+      const float expected = row < 3 && col < 5 ? float(row * 9 + col) + 0.125f : 0;
+      const float actual = fp32 ? static_cast<const float *>(output.contents())[row * 7 + col] :
+          bf16ToFloat(static_cast<const uint16_t *>(output.contents())[row * 7 + col]);
+      const float rounded = fp32 ? expected : bf16ToFloat(floatToBf16(expected));
+      test::require(actual == rounded, "projection row copies must preserve real values and zero padding");
+    }
+    test::rejects([&] { CommandGraph bad; FlashNext::addCopyRows(bad, input, output, 10, 3, 8, 9, 7, fp32); },
+                  "row copy shape", "invalid projection row copy must fail before GPU submission");
+  }
+}
 void hyperConnection(metal::MetalBackend &b) {
   // Zero logits: sigmoid=1/2, injection=1. Four streams average to a quarter
   // of their already halved sum. No numerical oracle shares a kernel loop.
@@ -110,6 +134,10 @@ void ple(metal::MetalBackend &b) {
   }
   check(output, expected, "PLE dilated causal convolution");
   check(next, {5, -5, 6, -6, 7, -7}, "PLE history commit");
+  CommandGraph retained;
+  FlashNext::addPleCommit(retained,normed,state,width,1,2,2,3);
+  static_cast<void>(b.submitCommandAsync(retained.dispatches()).wait());
+  check(state,{50,60,1,-1,2,-2},"PLE rejected suffix must leave only retained rows");
 }
 MetalBuffer floats(metal::MetalBackend &b, const std::vector<float> &v) {
   auto x = b.allocateBuffer(v.size() * sizeof(float),
@@ -431,6 +459,7 @@ int main(int argc, char **argv) {
         throw std::invalid_argument("flash-next-metal METALLIB");
       metal::MetalBackend backend(argv[1]);
       groupedNorm(backend);
+      copyRows(backend);
       hyperConnection(backend);
       ple(backend);
       qsa(backend);

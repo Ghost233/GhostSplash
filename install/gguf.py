@@ -164,7 +164,9 @@ def derived_files(target, vision=None, *, shards=()):
     for index, shard in enumerate(shards, start=1):
         part = Metadata(shard)
         if (
-            part.values.get("general.architecture")
+            part.values.get(
+                "general.architecture", metadata.values.get("general.architecture")
+            )
             != metadata.values.get("general.architecture")
             or part.values.get("split.no") != index
             or part.values.get("split.count") != len(shards) + 1

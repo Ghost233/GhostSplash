@@ -1,5 +1,6 @@
 #pragma once
 #include "metal/abi/KvExtent.h"
+#include "metal/abi/GgufRepack.h"
 #include "ops/Normalization.hpp"
 #include "ops/PagedKv.hpp"
 namespace splash::ops {
@@ -8,6 +9,14 @@ namespace splash::ops {
 // multipliers are the GGUF's already folded (1 + trained weight).
 class FlashNext final {
 public:
+  static void addRepack(metal::CommandGraph &,metal::MetalBuffer source,
+                        metal::MetalBuffer destination,const GgufRepackParams &);
+  // Copy real columns and zero padded columns/rows for the projection tiles.
+  static void addCopyRows(metal::CommandGraph &, metal::MetalBuffer input,
+                          metal::MetalBuffer output, uint32_t width,
+                          uint32_t validRows, uint32_t storageRows,
+                          uint32_t inputStride, uint32_t outputStride,
+                          bool float32 = false);
   static void addGroupedRms(metal::CommandGraph &, metal::MetalBuffer input,
                             const NormWeights &, metal::MetalBuffer output,
                             uint32_t width, uint32_t streams, uint32_t rows,
@@ -39,6 +48,10 @@ public:
              metal::MetalBuffer convWeights, metal::MetalBuffer output,
              metal::MetalBuffer nextState, uint32_t width, uint32_t streams,
              uint32_t rows, uint32_t taps, uint32_t dilation);
+  static void addPleCommit(metal::CommandGraph &, metal::MetalBuffer normalized,
+                           metal::MetalBuffer state, uint32_t width,
+                           uint32_t streams, uint32_t rows,
+                           uint32_t taps, uint32_t dilation);
   // Pool contiguous raw indexer key blocks before norm and RoPE. firstBlock
   // addresses both source and output so completed older blocks stay cached.
   static void addQsaPool(metal::CommandGraph &, metal::MetalBuffer rawKeys,
