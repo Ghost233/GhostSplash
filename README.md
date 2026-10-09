@@ -1,4 +1,93 @@
-# Splash
+# GhostSplash
+
+GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个人魔改版，
+主要用于在 Apple silicon Mac 上运行本地 GGUF 模型，适配第三方模型的量化权重、
+聊天模板和 draft，并保存本机性能测试记录。
+
+## 分支说明
+
+| 分支 | 用途 | 状态 |
+| --- | --- | --- |
+| `ghost` | 魔改主分支，继承原 `codex/splash-local-compat` 的完整提交历史 | 日常使用与兼容性维护 |
+| `main` | 保留上游基线 | 本次迁移未修改 |
+| [`codex/qwen38-flash-next-support`](https://github.com/Ghost233/GhostSplash/tree/codex/qwen38-flash-next-support) | Flash Next：SSD 专家权重缓存、原生 MTP、批量 prefill | **未完成，实验分支** |
+| [`codex/whittle27-support`](https://github.com/Ghost233/GhostSplash/tree/codex/whittle27-support) | Whittle 27B、Q5_0 适配及 64K 测速记录 | **未完成，实验分支** |
+
+两个实验分支按原提交复制，尚未合入 `ghost`，也不包含 `ghost` 后续新增的全部改动。
+它们保留已有实现与测试记录，分支存在不代表功能已完成验收。
+
+## 我们魔改了什么
+
+### GGUF 兼容性
+
+- 扩展 token embedding 的原生 GGUF 解码，覆盖线性层和专家层已支持的量化格式，
+  包括原先未覆盖的部分 IQ 格式与 MXFP4，减少第三方 GGUF 被加载器拒绝的情况。
+- 支持 GDN `ssm_alpha` / `ssm_beta` 使用混合 F32/Q3_K 权重，加载时统一解码为 F32。
+- 补充 GGUF 元数据、权重准备和投影测试；具体支持范围见
+  [开发文档](DEVELOPMENT.md#gguf-targets)。
+
+### 本地模型启动器
+
+增加直接复用本地 LM Studio 模型目录的启动脚本，并为不同模型保留独立配置：
+
+| 模型 | 启动脚本 |
+| --- | --- |
+| Qwen3.8 27B / Qwen3.6 35B-A3B | [qwen3.827bsplash.sh](qwen3.827bsplash.sh) / [qwen3.635ba3bsplash.sh](qwen3.635ba3bsplash.sh) |
+| Ternary Bonsai 2 / Swift Bonsai 2 | [bonsai227bsplash.sh](bonsai227bsplash.sh) / [swiftbonsai2splash.sh](swiftbonsai2splash.sh) |
+| Swift 1.5 Qwen3.8 27B | [swift1527bsplash.sh](swift1527bsplash.sh) / [swift1527biq3ssplash.sh](swift1527biq3ssplash.sh) |
+| Tiel Coder / Tiel MiniPlus | [tiel35ba3bsplash.sh](tiel35ba3bsplash.sh) / [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
+| Qwen3.8 35B-A3B Distill | [qwen38distill35ba3bsplash.sh](qwen38distill35ba3bsplash.sh) |
+| Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
+
+脚本中的模型路径、监听地址、端口和内存配置来自个人环境，使用前需要按本机修改。
+模型权重、Python 虚拟环境、生成的模型安装目录和编译产物不随 Git 分支迁移。
+
+### 模板与 draft 适配
+
+- **Tiel MiniPlus**：启动时生成独立 tokenizer 副本，将原模板的 JSON 工具调用
+  适配为 Splash 使用的 `<function=…>` / `<parameter=…>` 格式，并支持后续 system 消息。
+  原始模板及适配边界见 [模板存档](docs/templates/README.md)；已有离线验证，
+  真实模型的生成质量仍需单独验证。
+- **Coder390**：增加作者发布的逐张量 FP8 E4M3 DFlash2 draft 到 BF16 的
+  [转换工具](dev/tools/dequantize_coder390_dflash2.py)及对应测试。
+  启动器使用转换后的 draft；历史使用官方 DFlash2 的测速结果与作者 draft 的结果
+  在记录中分别注明。
+
+### 性能记录
+
+保存 [本地模型测速与诊断记录](docs/local-model-speed-notes-2026-10-08.md)、
+[模型对比](docs/model-benchmark-comparison-2026-10-03.md)和
+[Splash / Lily 对比](docs/splash-lily-comparison-2026-10-07.md)。
+这些记录对应当时的硬件、权重、量化格式、配置与构建版本；不作为所有模型的速度承诺。
+
+## 未完成的实验
+
+- **Flash Next**：实现分片 GGUF 加载、SSD 专家权重缓存、原生 BF16 MTP 和批量 prefill。
+  最后保存的 512 行 prefill 与 teacher-only KV/index 优化仅通过语法检查，
+  尚未完成编译及运行验收。历史 8K 长测已完成，16K 被取消；现有实验路径
+  尚不支持前缀状态缓存与工具约束。详见该分支的
+  [优化及验证记录](https://github.com/Ghost233/GhostSplash/blob/codex/qwen38-flash-next-support/docs/flash-next-optimization-2026-10-09.md)。
+- **Whittle 27B**：保存文本模型支持、Q5_0 权重适配、启动器与 64K 测速归档。
+  已有测试和测速记录，整体仍按未完成分支保留，未合入魔改主分支；实现说明见该分支的
+  [开发文档](https://github.com/Ghost233/GhostSplash/blob/codex/whittle27-support/DEVELOPMENT.md)。
+
+## 从源码使用魔改版
+
+在支持的 Apple silicon Mac 上准备 Xcode / Metal 工具链与 Python 3.12–3.14：
+
+```bash
+git switch ghost
+make install-environment
+make -j4
+# 按本机修改模型路径和监听配置，并准备对应模型与 draft 后启动：
+sh tielminiplus35ba3bsplash.sh
+```
+
+运行检查使用 `make check test-sanitizers`，详细构建和模型准备方式见
+[DEVELOPMENT.md](DEVELOPMENT.md)。下方保留上游使用说明；其中 Homebrew 安装命令
+安装的是上游 Splash，使用本仓库的魔改需要从源码构建。
+
+## 上游 Splash 说明
 
 [![CI](https://github.com/incoai/splash/actions/workflows/ci.yml/badge.svg)](https://github.com/incoai/splash/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
