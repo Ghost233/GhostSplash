@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS = sorted(ROOT.glob("*splash.sh"))
 GGUF_SCRIPTS = [script for script in SCRIPTS if "<<'PY'" in script.read_text()]
 EXPLICIT_DRAFTS = {
+    "ornith1535ba3bsplash.sh",
     "tiel35ba3bsplash.sh",
     "tielminiplus35ba3bsplash.sh",
     "qwen38distill35ba3bsplash.sh",
@@ -125,6 +127,7 @@ class LocalLauncherTests(unittest.TestCase):
                 self.assertEqual(parsed.port, 18004)
                 self.assertEqual(parsed.max_context, 262144)
                 self.assertEqual(parsed.queue_size, 4)
+                self.assertTrue(parsed.no_webui)
                 inherit.assert_called_once_with(99, True)
                 if script.name == "tielminiplus35ba3bsplash.sh":
                     template = (
@@ -148,6 +151,18 @@ class LocalLauncherTests(unittest.TestCase):
         for script in GGUF_SCRIPTS:
             with self.subTest(script=script.name):
                 self.launch(script)
+
+    def test_every_launcher_listens_without_a_specific_virtual_bridge_address(self):
+        for script in SCRIPTS:
+            with self.subTest(script=script.name):
+                host = next(
+                    line.split("=", 1)[1]
+                    for line in script.read_text().splitlines()
+                    if line.startswith("host=")
+                )
+                self.assertEqual(host, "0.0.0.0")
+                with socket.socket() as listener:
+                    listener.bind((host, 0))
 
     def test_every_gguf_launcher_reuses_an_installation_without_downloads(self):
         for script in GGUF_SCRIPTS:
@@ -226,3 +241,4 @@ class LocalLauncherTests(unittest.TestCase):
                 parsed = server.parse_args(command[3:])
                 self.assertEqual(parsed.model_root, str(target))
                 self.assertEqual(parsed.tokenizer, str(target / "tokenizer"))
+                self.assertTrue(parsed.no_webui)

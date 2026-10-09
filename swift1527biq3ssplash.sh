@@ -4,7 +4,7 @@ set -eu
 # Local Swift 1.5 IQ3_S target, text only; Splash uses its matching DFlash2 draft.
 model_dir=/Users/ghost233/.lmstudio/models/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF
 model_id=ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S-mtp
-host=192.168.64.1
+host=0.0.0.0
 port=8004
 max_context=262144
 max_memory=40G
@@ -55,14 +55,14 @@ else:
 root, record_lock = assembly.hold(selection.link, selection.models_root)
 if record_lock is not None:
     os.set_inheritable(record_lock.fileno(), True)
-print(f"Swift 1.5 Splash: http://{host}:{port} (API: /v1)", flush=True)
+print(f"Swift 1.5 Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
     str(root), "--tokenizer", str(root / "tokenizer"),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
-    "--queue-size", queue,
+    "--queue-size", queue, "--no-webui",
 ]
 os.chdir(repo)
 os.execv(command[0], command)

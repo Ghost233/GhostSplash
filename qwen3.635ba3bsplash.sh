@@ -3,7 +3,7 @@ set -eu
 
 model_dir=/Users/ghost233/.lmstudio/models/incoai/Qwen3.6-35B-A3B-Splash
 model_id=incoai/Qwen3.6-35B-A3B-Splash
-host=192.168.64.1
+host=0.0.0.0
 port=8003
 max_context=262144
 max_memory=40G
@@ -30,7 +30,7 @@ fi
 
 unset SPLASH_API_KEY
 echo "Starting $model_id from $model_dir"
-echo "WebUI: http://$host:$port (API suffix: /v1)"
+echo "API: http://127.0.0.1:$port/v1 (WebUI disabled; listening on $host)"
 cd "$repo"
 exec "$python" -u -m server.server \
     "$model_dir" \
@@ -38,4 +38,4 @@ exec "$python" -u -m server.server \
     --model "$model_id" --served-model-name "splash_${model_id}" \
     --binary "$binary" --host "$host" --port "$port" \
     --max-context "$max_context" --max-memory "$max_memory" \
-    --max-cache-disk "$max_cache_disk" --queue-size "$queue_size"
+    --max-cache-disk "$max_cache_disk" --queue-size "$queue_size" --no-webui

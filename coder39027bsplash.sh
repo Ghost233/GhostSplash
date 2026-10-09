@@ -4,7 +4,7 @@ set -eu
 # Local Coder390 target with the author's FP8 draft dequantized to BF16.
 model_dir=/Users/ghost233/.lmstudio/models/nerkyor/Qwen3.8-27B-Coder390-EfficientThink-Opus5.5-GPT6Astra-Grok4.7-DSV4Pro-K3-SFT-RLOO-GGUF-NInfer
 model_id=nerkyor/Qwen3.8-27B-Coder390-EfficientThink-Opus5.5-GPT6Astra-Grok4.7-DSV4Pro-K3-SFT-RLOO-GGUF-NInfer:Q4LynnStyle-MTP
-host=192.168.64.1
+host=0.0.0.0
 port=8007
 max_context=262144
 max_memory=40G
@@ -62,7 +62,7 @@ else:
 root, record_lock = assembly.hold(selection.link, selection.models_root)
 if record_lock is not None:
     os.set_inheritable(record_lock.fileno(), True)
-print(f"Coder390 Splash: http://{host}:{port} (API: /v1)", flush=True)
+print(f"Coder390 Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 print(f"Draft: {draft_dir} (author's FP8 weights dequantized to BF16)", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
@@ -70,7 +70,7 @@ command = [
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
-    "--queue-size", queue,
+    "--queue-size", queue, "--no-webui",
 ]
 os.chdir(repo)
 os.execv(command[0], command)

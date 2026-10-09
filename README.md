@@ -38,8 +38,13 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 | Tiel Coder / Tiel MiniPlus | [tiel35ba3bsplash.sh](tiel35ba3bsplash.sh) / [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
 | Qwen3.8 35B-A3B Distill | [qwen38distill35ba3bsplash.sh](qwen38distill35ba3bsplash.sh) |
 | Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
+| Ornith 1.5 35B-A3B 3bit（纯文本） | [ornith1535ba3bsplash.sh](ornith1535ba3bsplash.sh) |
 
 脚本中的模型路径、监听地址、端口和内存配置来自个人环境，使用前需要按本机修改。
+启动器监听 `0.0.0.0`（所有 IPv4 网卡），本机使用 `http://127.0.0.1:端口`，
+局域网或虚拟机使用这台 Mac 当前可达的 IP；不再依赖固定的虚拟网桥地址。
+所有自建启动器默认传入 `--no-webui`，关闭内置聊天页面，只提供 API，
+本机 API 地址为 `http://127.0.0.1:端口/v1`。
 模型权重、Python 虚拟环境、生成的模型安装目录和编译产物不随 Git 分支迁移。
 Coder390 还需要在 `install/models-local/drafts/coder390-dflash2-fp8/bf16/`
 准备转换后的 draft；新目录可复用已验证的 BF16 副本，或用下面的命令从作者的

@@ -5,7 +5,7 @@ set -eu
 model_dir=/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF
 chat_template="$model_dir/chat_template.jinja"
 model_id=IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF
-host=192.168.64.1
+host=0.0.0.0
 port=8004
 max_context=262144
 max_memory=40G
@@ -94,14 +94,14 @@ tokenizer_dir = repo / "build/tokenizer-overrides/tiel-miniplus" / identity
 shutil.copytree(root / "tokenizer", tokenizer_dir, dirs_exist_ok=True)
 (tokenizer_dir / "chat_template.jinja").write_text(template, encoding="utf-8")
 print(f"Chat template: {chat_template} (Splash XML tool calls, later system messages)", flush=True)
-print(f"Tiel MiniPlus Splash: http://{host}:{port} (API: /v1)", flush=True)
+print(f"Tiel MiniPlus Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
     str(root), "--tokenizer", str(tokenizer_dir),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
-    "--queue-size", queue,
+    "--queue-size", queue, "--no-webui",
 ]
 os.chdir(repo)
 os.execv(command[0], command)

@@ -7,7 +7,7 @@ output="$repo/build/context-speed-coder390-$(date +%Y%m%d-%H%M%S)"
 
 # Same exact-token protocol as the original 27B, Tiel and Whittle runs.
 exec "$repo/.venv/bin/python" - "$driver" \
-    --url http://192.168.64.1:8007 \
+    --url http://127.0.0.1:8007 \
     --output "$output" \
     --concurrency 1 2 3 4 --decode 512 \
     --contexts 8000 16000 32000 64000 "$@" <<'PY'
