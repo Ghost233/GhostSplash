@@ -15,7 +15,7 @@ python="$repo/.venv/bin/python"
 server="$repo/server/server.py"
 binary="$repo/build/splash"
 
-for path in "$model_dir/manifest.json" "$model_dir/layout.json" \
+for path in "$model_dir/manifest.json" \
     "$model_dir/target" "$model_dir/draft" "$model_dir/tokenizer" \
     "$model_dir/vision" "$python" "$server" "$binary"; do
     if [ ! -e "$path" ]; then

@@ -32,6 +32,7 @@ exec "$python" -u - "$repo" "$model_dir" "$model_id" "$host" "$port" \
 import os
 import socket
 import sys
+import tempfile
 from pathlib import Path
 
 repo, model_dir, model_id, host, port, context, memory, cache_disk, queue = sys.argv[1:]
@@ -45,6 +46,8 @@ with socket.socket() as listener:
 
 selection = models.Selection.of(repo / "install/models-local", model_id)
 if models.installation_kind(selection.link) is None:
+    with tempfile.TemporaryDirectory(prefix="splash-model-check-") as scratch:
+        upstream.inspect_target(hub.Repository.local_directory(Path(model_dir)), selection.variant, selection.language_only, Path(scratch))
     draft = hub.Repository.resolve("incoai/Qwen3.6-35B-A3B-DFlash2", revision="51ef7b6923ad6c14cb1bb41c37a9041446496ab6")
     upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None, draft=draft)
 else:

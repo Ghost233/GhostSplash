@@ -41,6 +41,17 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 
 脚本中的模型路径、监听地址、端口和内存配置来自个人环境，使用前需要按本机修改。
 模型权重、Python 虚拟环境、生成的模型安装目录和编译产物不随 Git 分支迁移。
+Coder390 还需要在 `install/models-local/drafts/coder390-dflash2-fp8/bf16/`
+准备转换后的 draft；新目录可复用已验证的 BF16 副本，或用下面的命令从作者的
+FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）转换：
+
+```bash
+.venv/bin/python dev/tools/dequantize_coder390_dflash2.py /path/to/fp8-source \
+  install/models-local/drafts/coder390-dflash2-fp8/bf16
+```
+
+启动器回归测试使用 `.venv/bin/python -m unittest dev.tests.install.test_local_launchers`，
+覆盖首次安装、已有安装复用、错误模型记录拒绝、模板适配和实际服务参数。
 
 ### 模板与 draft 适配
 
