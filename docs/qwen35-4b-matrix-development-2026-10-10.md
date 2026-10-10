@@ -1,12 +1,12 @@
 # Qwen3.5-4B 六维测试矩阵
 
-本轮开发测试入口、编译变体和正确性检查。用户要求隔壁性能测试结束后再测，因此当前不运行 32K 性能矩阵，也不运行 ANE 自动校准。
+本文记录测试入口、编译变体和验收证据。完整矩阵已按用户要求停止，后续先用 17 个配置逐项微调。ANE 自动校准始终关闭。
 
 ## 组合与固定条件
 
 | 维度 | 值 | 含义 |
 | --- | --- | --- |
-| KV 量化 | INT8、BF16、Q4_0 Hadamard、Q4_0 原始通道、Q4H | 目标模型的 KV 存储格式。目标权重固定为 UD-Q4_K_XL，drafter 权重固定为同一份 affine Q4。 |
+| KV 量化 | INT8、BF16、Q4_0 Hadamard、Q4_0 原始通道、Q4H | 目标模型的 KV 存储格式。目标权重固定为 UD-Q4_K_XL，drafter 权重固定为同一份 AF4G64 block images。 |
 | 实际输出长度 | 512、2048 | 强制生成到指定长度。现有 IgnoreEndOfSequence 选项会屏蔽 stop token。 |
 | ANE | off、on | on 固定 FFN share=0.5，minimum rows=512。禁用自动性能校准和 breaker。 |
 | drafter | off、block=2、4、8、16 | block 含一个 anchor，实际每轮 proposal 数分别为 1、3、7、15。使用 Standard DFlash。 |
@@ -23,7 +23,7 @@
 
 block=2、4、8、16 使用分别编译的 host 与 metallib，产物放在 `build/qwen4b-matrix-variants/block-B`。原有默认 block=8 保持不变。Standard drafter 接受这些变体，DFlash2 只接受原 block=8；不兼容的模型必须明确拒绝。
 
-矩阵入口使用生产 Engine，而不是在单 lane 上循环模拟并发。批宽允许随着请求结束下降，但必须实际出现请求的完整宽度；始终没有达到指定宽度的运行不能作为该并发的成功数据。
+矩阵入口使用生产 Engine。并发表示同时提交的请求数量，校验器要求对应数量的请求全部完成。长 prefill 会错开各请求的解码时间，实际 decode 批宽可以小于请求并发。记录批宽的最小值、最大值、平均值和分布，保留对非法批宽、漏请求和输出数量的检查。
 
 ANE on 必须报告实际 share、阈值和 evaluations。初始化退回 GPU、执行期间停止或没有实际 ANE 调用，都记录原因；不能将其计作 ANE on 的成功对照。最低 512 行意味着 32 行尾块仍由 GPU 执行，ANE 主要参与长 prefill 主体。
 
@@ -55,7 +55,7 @@ B4 的历史 tile 使用 N64，并将 softmax 列循环从固定四次改成 N/3
 
 这些设备访问与 fence 的性能影响尚未测量。旧版本的速度不能作为当前源码的速度结论。非默认变体仅用于本轮 4B Standard DFlash 测试；不支持的 legacy verify 形状和 DFlash2 block 必须明确拒绝。
 
-短正确性入口支持 `--block off/2/4/8/16`、`--concurrency 1/2/4` 和 `--tail-splits 1..16`。例如 `--run-correctness build/matrix-short-b16-c4.json --block 16 --concurrency 4 --tail-splits 16`。它只处理 64-token 输入、实际 32-token 输出，要求实际 tail 编码被调用、零缓存、事实 42 和完整批宽，不输出时长或吞吐；失败时保留原始输出。
+短正确性入口支持 `--block off/2/4/8/16`、`--concurrency 1/2/4` 和 `--tail-splits 1..16`。例如 `--run-correctness build/matrix-short-b16-c4.json --block 16 --concurrency 4 --tail-splits 16`。它只处理 64-token 输入、实际 32-token 输出，要求实际 tail 编码被调用、零缓存、事实 42、完整请求数和合法批宽，不输出时长或吞吐；失败时保留原始输出。
 
 真实 pipeline 元数据查询已确认 validation instrumentation 会把旧 B8 的共享内存从 16768 B 增至 33536 B；未启用 instrumentation 的旧内核没有超过 32768 B。修复后的数值为 16384 B／32768 B。当前统计迁移用于兼容仓库的 validation 门禁，不宣称带来速度收益；元数据证据为 `build/matrix-pipeline-memory-metadata.json`。
 
@@ -98,3 +98,48 @@ Standard 保留前五层 causal/sliding4096、最后一层 full/noncausal；投�
 两个新增算子测试的 inherited baseline 在 shader instrumentation 下超出设备共享内存限制：IQ4XS prefill 从 17408 B 被包装为 34816 B；GDN prefill scan 包装后为 35072 B。FP16 cache 与 single-token 用例因此保留 API validation、FP64/标量参考、padding/guard、恢复断言，关闭这两个用例的 shader wrapper；其余上述 block 与 ANE kernel 检查继续启用 shader validation。不能把这一结果写为所有 shader wrapper 或完整 KV GPU suite 都通过。
 
 合并后的 Python suite 已运行 1266 项测试、跳过4项。最终 source、CPU、native build、Python 门禁与最终源码身份的记录保存在 `build/ghost-merge-final-report.json`。本轮仍未执行 32K 性能矩阵，未推送远端。
+
+## 精简矩阵与并发校验修复
+
+CLI 默认使用精简方案，也可显式传入 `--profile compact`。参考参数取当前 4B 可执行默认值：INT8、ANE off、Standard DFlash block=8、32 行尾块 splits=1、并发 1。来源是 `qwen3.54bdflashsplash.sh`、`dev/tools/launcher_kv.sh`、`Makefile` 和 `runtime/ops/PagedAttention.cpp`。这些值是起始参考，尚未证明为最佳配置。
+
+输入保持 32,768 tokens，参考输出为 512。原启动脚本上下文为 33,792；测试统一使用 36,864，以容纳 2,048 输出。所有配置保持同一上下文、32 GiB 预算、greedy、固定实际输出、冷缓存及一次统一 warmup。
+
+| 参数 | 参考值 | 单独变化的值 | 新增配置数 |
+| --- | --- | --- | --- |
+| KV | INT8 | BF16、Q4_0 Hadamard、Q4_0 原始通道、Q4H | 4 |
+| 实际输出 | 512 | 2,048 | 1 |
+| ANE | off | on，share=0.5、minimum rows=512 | 1 |
+| Drafter | block=8 | off、block=2、4、16 | 4 |
+| 历史 splits | 1 | 2、4、8、16 | 4 |
+| 请求并发 | 1 | 2、4 | 2 |
+
+每个变体只改变表中一个参数，其余沿用参考配置。ANE 的 share 和阈值、drafter 的 enabled 和 block 属于对应开关的一组必要字段。加上参考配置，共 17 个配置。每个重复 3 次，共 51 批、63 个请求，比原来的 4,800 个配置减少约 99.65%。splits=16 保留旧策略对照；后续可在表现较好的范围内补测邻近值。
+
+输出报告同时列出 prefill/decode 秒数和 tokens/s、整批总时长、内存峰值、草稿接受率与实际 decode 最大批宽。每个配置须有 3 次有效结果才生成中位数与相对参考配置的变化百分比。内存使用 3 次中的最大峰值。失败、缺事实或 ANE fallback 的行保留状态，不能用来推荐参数。这个测试只比较单参数变化，不能证明多项参数组合后的效果。
+
+这次修复来自真实 32K 记录。原校验器把并发 4 误解为 decode 批宽必须达到 4，导致 3 次输出完整的运行标记 invalid。四个请求都正常生成 512 tokens，实际最大批宽为 2。真实 trace 已加入 portable fixture；回归先在旧校验器失败，再在新校验器通过。原始日志保持不变，离线重验记录单独保存。
+
+生成计划时不启动推理：
+
+```sh
+.venv/bin/python -m dev.benchmarks.qwen4b_matrix --profile compact --plan \
+  --inputs build/qwen4b-matrix-inputs.json --output build/compact-plan.json
+```
+
+需要测量时显式选择精简方案，结果写入新的文件：
+
+```sh
+.venv/bin/python -m dev.benchmarks.qwen4b_matrix --profile compact --run-performance \
+  --inputs build/qwen4b-matrix-inputs.json --output build/compact-results.jsonl
+```
+
+已有精简结果可离线汇总，不触发 backend：
+
+```sh
+.venv/bin/python -m dev.benchmarks.qwen4b_matrix --profile compact --summarize-performance \
+  --inputs build/qwen4b-matrix-inputs.json --results build/compact-results.jsonl \
+  --output build/compact-summary.json
+```
+
+原完整矩阵仍可通过 `--profile full` 显式选择。原记录中的 NUL 损坏段另行保留，不能当作有效测量。Q4H 的既有正确性失败仍按此前要求记录，不在这次校验器修复中处理。

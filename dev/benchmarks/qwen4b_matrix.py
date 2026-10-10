@@ -2,8 +2,14 @@
 
 --validate-correctness validates previously recorded responses offline. Only
 --run-performance invokes a backend. The default repository adapter implements
-qwen4b-matrix-v1 JSON stdin/stdout operations capabilities and run_batch. Missing capabilities yield unsupported records, never guessed
+qwen4b-matrix-v1 JSON stdin/stdout operations capabilities and run_batch.
+Missing capabilities yield unsupported records, never guessed
 settings. An ANE request that falls back is recorded as unsupported.
+
+--profile compact compares current 4B launcher defaults with one changed axis
+at a time (17 configurations, the CLI default); full retains the Cartesian matrix.
+--summarize-performance validates saved performance records offline and reports
+three-repeat medians and changes relative to the reference.
 
 Input JSON contains exactly four prompts with id, token_ids and expected_facts.
 All have 32768 tokens and distinct first 32-token pages; a shared chat BOS
@@ -21,9 +27,11 @@ import itertools
 import json
 import math
 import re
+import statistics
 import subprocess
 import sys
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 MANIFEST = Path(__file__).with_name("qwen4b_matrix_manifest.json")
@@ -80,7 +88,7 @@ def validate_manifest(config):
     return config
 
 
-def groups(config):
+def _full_groups(config):
     validate_manifest(config)
     for kv, ane, draft, output, splits, width in itertools.product(
         config["kv_formats"],
@@ -111,11 +119,63 @@ def groups(config):
         yield {"group_id": digest(parameters), "parameters": parameters}
 
 
-def plan(config, inputs=None):
-    rows = list(groups(config))
+def groups(config, profile="full"):
+    require(profile in ("full", "compact"), "unknown matrix profile")
+    if profile == "full":
+        yield from _full_groups(config)
+        return
+    # Current executable 4B launcher defaults. Keep benchmark lengths/budget
+    # fixed so the 2048-output variant fits the same context as every other row.
+    reference = next(
+        g
+        for g in _full_groups(config)
+        if g["parameters"]["kv_format"] == "int8"
+        and not g["parameters"]["ane_requested"]
+        and g["parameters"]["drafter_block_size"] == 8
+        and g["parameters"]["output_tokens"] == 512
+        and g["parameters"]["tail_prefill_splits"] == 1
+        and g["parameters"]["concurrency"] == 1
+    )
+    reference_id = reference["group_id"]
+    yield reference | {
+        "comparison": {"axis": "reference", "value": None},
+        "reference_group_id": reference_id,
+    }
+    variations = {
+        "kv_format": ["bf16", "q4_0", "q4_0_unrotated", "q4h"],
+        "output_tokens": [2048],
+        "ane_requested": [True],
+        "drafter_block_size": ["off", 2, 4, 16],
+        "tail_prefill_splits": [2, 4, 8, 16],
+        "concurrency": [2, 4],
+    }
+    for axis, values in variations.items():
+        for value in values:
+            parameters = reference["parameters"] | {axis: value}
+            if axis == "ane_requested":
+                parameters |= {
+                    "ane_share": config["ane_on"]["share"],
+                    "ane_minimum_rows": config["ane_on"]["minimum_rows"],
+                }
+            if axis == "drafter_block_size":
+                parameters |= {
+                    "drafter_enabled": value != "off",
+                    "drafter_block_size": None if value == "off" else value,
+                }
+            yield {
+                "group_id": digest(parameters),
+                "parameters": parameters,
+                "comparison": {"axis": axis, "value": value},
+                "reference_group_id": reference_id,
+            }
+
+
+def plan(config, inputs=None, profile="full"):
+    rows = list(groups(config, profile))
     return {
         "schema_version": 1,
         "mode": "plan",
+        "profile": profile,
         "starts_inference": False,
         "group_count": len(rows),
         "batch_count": len(rows) * config["repeats"],
@@ -262,6 +322,21 @@ def positive_seconds(value, label):
     return value
 
 
+def batch_width_summary(widths, request_count):
+    require(
+        isinstance(widths, list)
+        and widths
+        and all(type(w) is int and 1 <= w <= request_count for w in widths),
+        "invalid actual decode batch width",
+    )
+    return {
+        "min": min(widths),
+        "max": max(widths),
+        "mean": sum(widths) / len(widths),
+        "cycles_by_width": dict(sorted(Counter(widths).items())),
+    }
+
+
 def validate_batch(raw, job, inputs, identity, eos_ids, performance=False):
     parameters = job["parameters"]
     validate_identity(identity)
@@ -321,12 +396,7 @@ def validate_batch(raw, job, inputs, identity, eos_ids, performance=False):
         "record actual execution command argument arrays",
     )
     widths = raw.get("actual_batch_widths", [])
-    require(
-        widths
-        and all(type(w) is int and 1 <= w <= len(inputs) for w in widths)
-        and max(widths) == len(inputs),
-        "did_not_achieve_concurrency or invalid actual decode batch width",
-    )
+    width_summary = batch_width_summary(widths, len(inputs))
     ane = raw.get("ane_actual", {})
     require(
         type(ane.get("enabled")) is bool, "record actual ANE enabled/fallback state"
@@ -432,6 +502,7 @@ def validate_batch(raw, job, inputs, identity, eos_ids, performance=False):
         "ane_actual": ane,
         "commands": commands,
         "actual_batch_widths": widths,
+        "decode_batch_width_summary": width_summary,
         "requests": records,
         "facts_pass": all(r["facts_pass"] for r in records),
         "memory_peak_bytes": peak,
@@ -522,7 +593,7 @@ class Backend:
         return json.loads(result.stdout)
 
 
-def run_performance(config, prompts, backend, output):
+def run_performance(config, prompts, backend, output, profile="full"):
     capabilities = backend.call("capabilities", {})
     identity, eos_ids = (
         capabilities.get("identity"),
@@ -535,7 +606,7 @@ def run_performance(config, prompts, backend, output):
     )
     counts = {"complete": 0, "unsupported": 0, "incorrect": 0, "invalid": 0}
     with Path(output).open("x") as stream:
-        for group in groups(config):
+        for group in groups(config, profile):
             reasons = unsupported(group["parameters"], capabilities)
             for repeat in range(config["repeats"]):
                 selected = [
@@ -578,6 +649,9 @@ def run_performance(config, prompts, backend, output):
                         "error": str(error),
                         "raw_response": raw,
                     }
+                if "comparison" in group:
+                    record["comparison"] = group["comparison"]
+                    record["reference_group_id"] = group["reference_group_id"]
                 record["eos_token_ids"] = eos_ids
                 counts[record["status"]] += 1
                 stream.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -585,10 +659,10 @@ def run_performance(config, prompts, backend, output):
     return counts
 
 
-def validate_correctness(records, config, prompts):
+def validate_correctness(records, config, prompts, profile="full"):
     require(records, "no recorded batches to validate")
     results = []
-    valid_groups = {g["group_id"]: g for g in groups(config)}
+    valid_groups = {g["group_id"]: g for g in groups(config, profile)}
     seen = set()
     first_identity = records[0].get("identity")
     for stored in records:
@@ -622,15 +696,112 @@ def validate_correctness(records, config, prompts):
                 performance=False,
             )
         )
+    expected = len(valid_groups) * config["repeats"]
     return {
         "mode": "correctness",
+        "profile": profile,
         "starts_inference": False,
         "validated_batches": len(results),
-        "expected_batches": 14400,
-        "coverage_complete": len(results) == 14400,
-        "matrix_complete": len(results) == 14400
+        "expected_batches": expected,
+        "coverage_complete": len(results) == expected,
+        "matrix_complete": len(results) == expected
         and all(r["status"] == "complete" and r.get("facts_pass") for r in results),
         "results": results,
+    }
+
+
+def summarize_performance(records, config, prompts, profile="compact"):
+    require(records, "no performance records to summarize")
+    selected_groups = list(groups(config, profile))
+    require(profile == "compact", "one-factor summary requires compact profile")
+    by_id = {g["group_id"]: [] for g in selected_groups}
+    group_map = {g["group_id"]: g for g in selected_groups}
+    identity, seen = records[0]["identity"], set()
+    for stored in records:
+        key = (stored["group_id"], stored["repeat"])
+        require(key not in seen, "duplicate performance record")
+        require(stored["identity"] == identity, "mixed performance identities")
+        require(
+            key[0] in by_id and type(key[1]) is int and 0 <= key[1] < config["repeats"],
+            "performance record outside selected profile",
+        )
+        seen.add(key)
+        result = stored
+        if stored["status"] == "complete":
+            require(
+                stored.get("raw_response"), "summary needs raw performance evidence"
+            )
+            job = group_map[key[0]] | {"repeat": key[1]}
+            selected = [
+                prompts[(key[1] + i) % 4]
+                for i in range(job["parameters"]["concurrency"])
+            ]
+            result = validate_batch(
+                stored["raw_response"],
+                job,
+                selected,
+                identity,
+                stored["eos_token_ids"],
+                performance=True,
+            )
+        by_id[key[0]].append(result)
+    rows = []
+    for group in selected_groups:
+        observed = by_id[group["group_id"]]
+        valid = [r for r in observed if r["status"] == "complete" and r["facts_pass"]]
+        metrics = None
+        if len(valid) == config["repeats"]:
+            metrics = {
+                key: statistics.median(r["aggregate"][key] for r in valid)
+                for key in ("prefill_tok_s", "decode_tok_s", "request_tok_s")
+            }
+            metrics |= {
+                key: statistics.median(r["aggregate"]["timings"][key] for r in valid)
+                for key in (
+                    "prefill_wall_seconds",
+                    "decode_wall_seconds",
+                    "total_wall_seconds",
+                )
+            }
+            metrics["memory_peak_bytes"] = max(r["memory_peak_bytes"] for r in valid)
+        rows.append(
+            {
+                "group_id": group["group_id"],
+                "parameters": group["parameters"],
+                "comparison": group["comparison"],
+                "valid_repeats": len(valid),
+                "observed_repeats": len(observed),
+                "metrics": metrics,
+                "max_decode_batch_width": max(
+                    (r["decode_batch_width_summary"]["max"] for r in valid),
+                    default=None,
+                ),
+                "acceptance_rate": statistics.median(
+                    [r["acceptance_rate"] for r in valid]
+                )
+                if valid and all(r.get("acceptance_rate") is not None for r in valid)
+                else None,
+                "status_counts": dict(Counter(r["status"] for r in observed)),
+            }
+        )
+    reference = rows[0]["metrics"]
+    for row in rows:
+        row["changes_percent"] = (
+            {
+                key: 100 * (value / reference[key] - 1)
+                for key, value in row["metrics"].items()
+            }
+            if reference and row["metrics"]
+            else None
+        )
+    return {
+        "mode": "performance_summary",
+        "profile": profile,
+        "starts_inference": False,
+        "identity": identity,
+        "aggregation": "median of three valid repeats; memory peak is maximum",
+        "coverage_complete": all(r["valid_repeats"] == config["repeats"] for r in rows),
+        "rows": rows,
     }
 
 
@@ -640,6 +811,8 @@ def main(argv=None):
     mode.add_argument("--plan", action="store_true")
     mode.add_argument("--validate-correctness", action="store_true")
     mode.add_argument("--run-performance", action="store_true")
+    mode.add_argument("--summarize-performance", action="store_true")
+    parser.add_argument("--profile", choices=("full", "compact"), default="compact")
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--results", type=Path)
@@ -667,10 +840,16 @@ def main(argv=None):
                 str(args.variant_root),
             ]
         )
-        counts = run_performance(config, prompts, Backend(command), args.output)
+        counts = run_performance(
+            config, prompts, Backend(command), args.output, args.profile
+        )
         print(json.dumps({"mode": "performance", "batch_status_counts": counts}))
-        return 0 if counts["complete"] == 14400 else 2
-    if args.validate_correctness:
+        return (
+            0
+            if counts["complete"] == plan(config, profile=args.profile)["batch_count"]
+            else 2
+        )
+    if args.validate_correctness or args.summarize_performance:
         require(
             prompts and args.results,
             "correctness validation requires inputs and saved results",
@@ -678,9 +857,13 @@ def main(argv=None):
         records = [
             json.loads(line) for line in args.results.read_text().splitlines() if line
         ]
-        document = validate_correctness(records, config, prompts)
+        document = (
+            summarize_performance(records, config, prompts, args.profile)
+            if args.summarize_performance
+            else validate_correctness(records, config, prompts, args.profile)
+        )
     else:
-        document = plan(config, prompts)
+        document = plan(config, prompts, args.profile)
     with args.output.open("x") as stream:
         json.dump(document, stream, ensure_ascii=False, indent=2)
         stream.write("\n")
@@ -689,7 +872,7 @@ def main(argv=None):
             {
                 key: value
                 for key, value in document.items()
-                if key not in ("groups", "results", "manifest", "inputs")
+                if key not in ("groups", "results", "rows", "manifest", "inputs")
             }
         )
     )

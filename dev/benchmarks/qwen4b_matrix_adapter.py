@@ -524,12 +524,7 @@ def validate_short(raw, payload):
         "short request count differs",
     )
     widths = raw.get("actual_batch_widths", [])
-    matrix.require(
-        widths
-        and max(widths) == len(prompts)
-        and all(type(w) is int and 1 <= w <= len(prompts) for w in widths),
-        "did_not_achieve_concurrency in short fixture",
-    )
+    raw["decode_batch_width_summary"] = matrix.batch_width_summary(widths, len(prompts))
     matrix.require(
         raw.get("actual_drafter_block_size") == p["drafter_block_size"]
         and raw.get("actual_tail_prefill_splits") == p["tail_prefill_splits"]

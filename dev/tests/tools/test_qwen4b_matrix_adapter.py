@@ -336,6 +336,15 @@ class AdapterTests(unittest.TestCase):
                         payload, self.root, self.variant_root, self.standard, self.off
                     )
 
+    def test_four_submitted_short_requests_allow_decode_width_two(self):
+        payload = self.payload()
+        raw = self.native_response(payload)
+        raw["actual_batch_widths"] = [1, 2, 2, 1]
+        for response in raw["requests"]:
+            response["output_text"] = "42"
+        adapter.validate_short(raw, payload)
+        self.assertTrue(raw["facts_pass"])
+
     def test_short_math_fact_is_required_and_recorded(self):
         payload = self.payload()
         response = self.native_response(payload)

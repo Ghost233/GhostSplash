@@ -123,6 +123,156 @@ class MatrixTests(unittest.TestCase):
         self.assertFalse(result["starts_inference"])
         self.assertEqual(result["inputs_status"], "unprepared")
 
+    def test_compact_plan_changes_only_one_reference_axis(self):
+        document = matrix.plan(self.config, profile="compact")
+        self.assertEqual(
+            (
+                document["group_count"],
+                document["batch_count"],
+                document["request_count"],
+            ),
+            (17, 51, 63),
+        )
+        rows = document["groups"]
+        self.assertEqual(len({r["group_id"] for r in rows}), 17)
+        baseline = rows[0]["parameters"]
+        self.assertEqual(
+            (
+                baseline["kv_format"],
+                baseline["ane_requested"],
+                baseline["drafter_block_size"],
+                baseline["tail_prefill_splits"],
+                baseline["concurrency"],
+                baseline["output_tokens"],
+            ),
+            ("int8", False, 8, 1, 1, 512),
+        )
+        allowed = {
+            "kv_format": {"kv_format"},
+            "output_tokens": {"output_tokens"},
+            "ane_requested": {"ane_requested", "ane_share", "ane_minimum_rows"},
+            "drafter_block_size": {"drafter_enabled", "drafter_block_size"},
+            "tail_prefill_splits": {"tail_prefill_splits"},
+            "concurrency": {"concurrency"},
+        }
+        for row in rows[1:]:
+            changed = {k for k, v in row["parameters"].items() if v != baseline[k]}
+            self.assertTrue(changed)
+            self.assertLessEqual(changed, allowed[row["comparison"]["axis"]])
+            self.assertEqual(row["reference_group_id"], rows[0]["group_id"])
+        self.assertEqual(
+            [
+                r["parameters"]["tail_prefill_splits"]
+                for r in rows
+                if r["comparison"]["axis"] == "tail_prefill_splits"
+            ],
+            [2, 4, 8, 16],
+        )
+        self.assertFalse(document["starts_inference"])
+
+    def test_compact_performance_runs_only_selected_groups(self):
+        backend = mock.Mock()
+        backend.call.side_effect = lambda operation, payload: (
+            self.capabilities()
+            if operation == "capabilities"
+            else self.response(payload["job"], payload["prompts"])
+        )
+        with TemporaryDirectory() as temporary:
+            path = Path(temporary) / "results.jsonl"
+            counts = matrix.run_performance(
+                self.config, self.inputs, backend, path, profile="compact"
+            )
+            records = [json.loads(line) for line in path.read_text().splitlines()]
+        self.assertEqual(counts["complete"], 51)
+        self.assertEqual(len(records), 51)
+        self.assertEqual(backend.call.call_count, 52)
+        self.assertTrue(all("comparison" in r for r in records))
+        summary = matrix.summarize_performance(
+            records, self.config, self.inputs, profile="compact"
+        )
+        self.assertEqual(len(summary["rows"]), 17)
+        self.assertEqual(summary["rows"][0]["changes_percent"]["decode_tok_s"], 0)
+        self.assertTrue(summary["coverage_complete"])
+        longer = next(
+            r for r in summary["rows"] if r["comparison"]["axis"] == "output_tokens"
+        )
+        self.assertEqual(longer["changes_percent"]["decode_tok_s"], 300)
+        self.assertEqual(summary["rows"][-1]["max_decode_batch_width"], 4)
+        records[-1]["status"] = "invalid"
+        summary = matrix.summarize_performance(
+            records, self.config, self.inputs, profile="compact"
+        )
+        self.assertFalse(summary["coverage_complete"])
+        self.assertEqual(summary["rows"][-1]["valid_repeats"], 2)
+        self.assertIsNone(summary["rows"][-1]["metrics"])
+
+    def test_compact_cli_plan_never_starts_backend(self):
+        with (
+            TemporaryDirectory() as temporary,
+            mock.patch.object(matrix.Backend, "call") as call,
+        ):
+            output = Path(temporary) / "plan.json"
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    matrix.main(
+                        ["--profile", "compact", "--plan", "--output", str(output)]
+                    ),
+                    0,
+                )
+            call.assert_not_called()
+            self.assertEqual(json.loads(output.read_text())["batch_count"], 51)
+
+    def test_compact_summary_cli_is_offline_and_keeps_incomplete_rows(self):
+        baseline = next(matrix.groups(self.config, "compact"))
+        records = [
+            baseline
+            | {
+                "repeat": i,
+                "identity": self.identity,
+                "eos_token_ids": [99],
+                "status": "complete",
+                "raw_response": self.response(baseline),
+            }
+            for i in range(3)
+        ]
+        with (
+            TemporaryDirectory() as temporary,
+            mock.patch.object(matrix.Backend, "call") as call,
+        ):
+            root = Path(temporary)
+            inputs, results, output = (
+                root / "inputs.json",
+                root / "results.jsonl",
+                root / "summary.json",
+            )
+            inputs.write_text(json.dumps({"prompts": self.inputs}))
+            for i, record in enumerate(records):
+                record["raw_response"] = self.response(record, [self.inputs[i]])
+            results.write_text("".join(json.dumps(r) + "\n" for r in records))
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    matrix.main(
+                        [
+                            "--summarize-performance",
+                            "--profile",
+                            "compact",
+                            "--inputs",
+                            str(inputs),
+                            "--results",
+                            str(results),
+                            "--output",
+                            str(output),
+                        ]
+                    ),
+                    0,
+                )
+            call.assert_not_called()
+            document = json.loads(output.read_text())
+        self.assertFalse(document["starts_inference"])
+        self.assertFalse(document["coverage_complete"])
+        self.assertEqual(document["rows"][0]["valid_repeats"], 3)
+        self.assertIsNone(document["rows"][1]["metrics"])
+
     def test_manifest_pins_ane_and_forbids_calibration(self):
         on = next(
             g for g in matrix.groups(self.config) if g["parameters"]["ane_requested"]
@@ -271,7 +421,7 @@ class MatrixTests(unittest.TestCase):
         )
         job = group | {"repeat": 0}
         changes = (
-            lambda r: r.update(actual_batch_widths=[1, 1]),
+            lambda r: r.update(actual_batch_widths=[0, 2]),
             lambda r: r["requests"][0].update(cached_input_tokens=32),
             lambda r: r.update(memory_peak_bytes=(32 << 30) + 1),
             lambda r: r.update(identity=self.identity | {"code_sha256": "d" * 64}),
@@ -284,7 +434,26 @@ class MatrixTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(matrix.MatrixError):
                 matrix.validate_batch(raw, job, self.inputs[:2], self.identity, [99])
 
-    def test_finished_lanes_can_reduce_width_after_full_concurrency(self):
+    def test_recorded_32k_four_requests_with_decode_width_two_are_valid(self):
+        fixture = matrix.read_json(
+            Path(__file__).resolve().parents[1]
+            / "fixtures/qwen4b-matrix/concurrent4_decode2.json"
+        )
+        result = matrix.validate_batch(
+            fixture["raw_response"],
+            fixture["job"],
+            fixture["inputs"],
+            fixture["identity"],
+            fixture["eos_token_ids"],
+            performance=True,
+        )
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["parameters"]["concurrency"], 4)
+        self.assertEqual(len(result["requests"]), 4)
+        self.assertEqual(max(result["actual_batch_widths"]), 2)
+        self.assertTrue(result["facts_pass"])
+
+    def test_decode_width_is_independent_of_request_concurrency(self):
         group = next(
             g for g in matrix.groups(self.config) if g["parameters"]["concurrency"] == 4
         )
@@ -293,8 +462,21 @@ class MatrixTests(unittest.TestCase):
         raw["actual_batch_widths"] = [4, 4, 3, 2, 1]
         result = matrix.validate_batch(raw, job, self.inputs, self.identity, [99])
         self.assertEqual(result["actual_batch_widths"], [4, 4, 3, 2, 1])
-        raw["actual_batch_widths"] = [3, 2, 1]
-        with self.assertRaisesRegex(matrix.MatrixError, "did_not_achieve_concurrency"):
+        for widths in ([3, 2, 1], [1, 1]):
+            raw["actual_batch_widths"] = widths
+            result = matrix.validate_batch(raw, job, self.inputs, self.identity, [99])
+            self.assertEqual(result["status"], "complete")
+            self.assertEqual(result["decode_batch_width_summary"]["max"], max(widths))
+        for widths in ([], [0], [5], [True], [1.0]):
+            raw["actual_batch_widths"] = widths
+            with (
+                self.subTest(widths=widths),
+                self.assertRaisesRegex(matrix.MatrixError, "invalid actual"),
+            ):
+                matrix.validate_batch(raw, job, self.inputs, self.identity, [99])
+        raw["actual_batch_widths"] = [1, 2]
+        raw["requests"].pop()
+        with self.assertRaisesRegex(matrix.MatrixError, "request count mismatch"):
             matrix.validate_batch(raw, job, self.inputs, self.identity, [99])
 
     def test_capabilities_do_not_fake_compiled_block_support(self):
@@ -375,7 +557,7 @@ class MatrixTests(unittest.TestCase):
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(matrix.main(["--output", str(output)]), 0)
             call.assert_not_called()
-            self.assertEqual(json.loads(output.read_text())["request_count"], 33600)
+            self.assertEqual(json.loads(output.read_text())["request_count"], 63)
 
     def test_mocked_performance_interface_records_all_repeats_and_raw_data(self):
         backend = mock.Mock()
