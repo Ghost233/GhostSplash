@@ -81,4 +81,20 @@ B4 的历史 tile 使用 N64，并将 softmax 列循环从固定四次改成 N/3
 
 剩余工作是用户通知后再执行 4800 个配置的性能矩阵，比较 prefill/decode 秒数与 tokens/s、并发吞吐、内存和草稿接受率。尚无当前版本的 32K 性能排名。
 
-开发仍保存在 `codex/qwen35-4b-optimization` worktree；本轮没有提交或推送。主工作区 `ghost` 干净，当前本地 HEAD 为 `0cd3418f990951bfeab0a8c51798d64058a667bc`，远端为 `d166344b24077ef244dfcdc944ae13c76afbafd7`，领先 86、落后 0；保留已有提交和 worktree 中的并行改动。
+该验收阶段的开发保存在 `codex/qwen35-4b-optimization` worktree，当时尚未提交或推送；后续提交与 ghost 合并见下节。主工作区 `ghost` 干净，当前本地 HEAD 为 `0cd3418f990951bfeab0a8c51798d64058a667bc`，远端为 `d166344b24077ef244dfcdc944ae13c76afbafd7`，领先 86、落后 0；保留已有提交和 worktree 中的并行改动。
+
+## 合并 ghost 后的验证
+
+开发源码先保存为本地提交 `e12ad9f9a681568b3545337ae512fdeb7727620f`，然后合入 `ghost` 的 `0cd3418f990951bfeab0a8c51798d64058a667bc`。两侧共同祖先为 `d166344b24077ef244dfcdc944ae13c76afbafd7`；开发侧一个提交，ghost 侧 86 个提交，实际出现 46 个冲突路径。
+
+上游 `55efea4`、`c067dbd` 把 drafter 和 MLX 统一到 block 权重并删除旧 affine 后端；合并据此迁移 Standard 的全部 69 个 BF16 张量到 AF4G64 block images，保留 4B、NoDraft、四个 block、单 token 路径和 96 个 FP16 FFN cache。上游 `c1fc0aa` 使用压缩 context window 保存 DFlash2 状态；Standard 则保留各层完整 rings 与最后一层完整历史，避免把 2048 窗口策略套到 full-history 层。上游 `d95c865` 搬迁测试参考头，上游 `0cd3418` 删除失效旧启动脚本，这两项意图均保留。
+
+Standard 保留前五层 causal/sliding4096、最后一层 full/noncausal；投影先舍入 BF16 再单独加残差，相关 dispatch 位于 ops 层。新 AF4G64 staged 反量化在 half 精度下执行，与旧 uint4 group FP32 scale/bias 算术不保证逐 bit 一致。原来的速度与接受率不能作为这个合并版本的结论。
+
+合并版本已通过四个 block 的接受逻辑、GDN block、draft attention、Standard layer 与缓存恢复数值检查。Standard 的缓存检查覆盖 6144-token 历史、RAM/disk、跳过 draft restore 时的 promotion；NoDraft 仅存 GDN，DFlash2 保持 window/rebuild/admission。Engine 实际采用 Runtime 的动态 historyCapacity，4096→32768 的合法 Standard 缓存恢复不会受静态 2048 截断。Standard 与 DFlash2 的 independent native-row、每字节 writer、release/restore 和 loader oracle 均通过；Standard 七个 image hash 因有意格式迁移更新，其余 hash 保持。
+
+64 输入、32 实际输出的 30 组真实 Engine 检查再次通过，覆盖 off/2/4/8/16、并发1/2/4、splits1/16。手工 4B ANE verifier 在 share0.5、minimum512 下通过全部 chunk 数值检查，没有校准或速度对照。生产 launcher 仍默认关闭 ANE。
+
+两个新增算子测试的 inherited baseline 在 shader instrumentation 下超出设备共享内存限制：IQ4XS prefill 从 17408 B 被包装为 34816 B；GDN prefill scan 包装后为 35072 B。FP16 cache 与 single-token 用例因此保留 API validation、FP64/标量参考、padding/guard、恢复断言，关闭这两个用例的 shader wrapper；其余上述 block 与 ANE kernel 检查继续启用 shader validation。不能把这一结果写为所有 shader wrapper 或完整 KV GPU suite 都通过。
+
+合并后的 Python suite 已运行 1266 项测试、跳过4项。最终 source、CPU、native build、Python 门禁与最终源码身份的记录保存在 `build/ghost-merge-final-report.json`。本轮仍未执行 32K 性能矩阵，未推送远端。

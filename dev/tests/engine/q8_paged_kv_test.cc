@@ -1,6 +1,6 @@
 #include "Q8PageFormatReference.hpp"
 #include "TestChecks.hpp"
-#include "tuning/Q4KvReference.hpp"
+#include "Q4KvReference.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -85,18 +85,18 @@ void testByteAccounting() {
 
 void testStandardQ4Blocks() {
   std::array<float, 32> values{};
-  auto zero = splash::ops::tuning::q4KvReference(values);
+  auto zero = splash::test::q4KvReference(values);
   require(zero.d == 0x8000 && std::all_of(std::begin(zero.qs), std::end(zero.qs),
                                       [](uint8_t b) { return b == 0x88; }),
           "zero Q4_0 block changed its scale or offset-nibble representation");
   values[0] = -8; values[1] = 7; values[2] = 0.5f; values[3] = -0.5f;
   values[16] = 1; values[17] = -1;
-  auto block = splash::ops::tuning::q4KvReference(values);
+  auto block = splash::test::q4KvReference(values);
   require(block.d == 0x3c00 && block.qs[0] == 0x90 && block.qs[1] == 0x7f &&
               (block.qs[2] & 15) == 9 && (block.qs[3] & 15) == 8,
           "Q4_0 signed scale, split-half packing or rounding convention changed");
   values[0] = 8;
-  require(splash::ops::tuning::q4KvReference(values).d == 0xbc00,
+  require(splash::test::q4KvReference(values).d == 0xbc00,
           "Q4_0 first absolute maximum did not determine the signed scale");
 }
 

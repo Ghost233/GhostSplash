@@ -2,6 +2,7 @@
 // starting Metal, or calibrating an ANE split.
 #include "model/Runtime.hpp"
 #include "ops/AneFfn.hpp"
+#include "metal/abi/QuantFormat.h"
 
 #include <iostream>
 #include <string>
@@ -19,13 +20,14 @@ template <class Weights>
 void dense(const char *label, uint32_t expectedLayers) {
   Weights weights;
   weights.layers.resize(weights.layout.layers);
+  const auto projection = [](uint32_t n, uint32_t k) {
+    return ops::Projection(n, k, ops::BlockWeights{{
+        ops::QuantizedSegment::planes(GGUF_FMT_AF4G64, n, k, {}, {}, {})}});
+  };
   for (auto &layer : weights.layers) {
-    layer.gateProjection = ops::Projection(weights.layout.intermediateSize, weights.layout.hiddenSize,
-                                           ops::AffineWeights{});
-    layer.upProjection = ops::Projection(weights.layout.intermediateSize, weights.layout.hiddenSize,
-                                         ops::AffineWeights{});
-    layer.downProjection = ops::Projection(weights.layout.hiddenSize, weights.layout.intermediateSize,
-                                           ops::AffineWeights{});
+    layer.gateProjection = projection(weights.layout.intermediateSize, weights.layout.hiddenSize);
+    layer.upProjection = projection(weights.layout.intermediateSize, weights.layout.hiddenSize);
+    layer.downProjection = projection(weights.layout.hiddenSize, weights.layout.intermediateSize);
   }
   model::LoadedModel loaded;
   loaded.target = std::move(weights);

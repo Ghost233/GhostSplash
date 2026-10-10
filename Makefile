@@ -279,8 +279,8 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/GgufFile.cpp \
 	runtime/model/GgufImage.cpp \
 	runtime/model/GgufTarget.cpp \
-	runtime/model/AffineTarget.cpp \
-	runtime/model/AffinePreparation.cpp \
+	runtime/model/MlxImage.cpp \
+	runtime/model/MlxTarget.cpp \
 	runtime/model/DraftCheckpoint.cpp \
 	runtime/model/WeightSource.cpp \
 	runtime/model/WeightImages.cpp \
@@ -304,6 +304,7 @@ ENGINE_MM_SOURCES := \
 	runtime/ane/Program.mm \
 	runtime/model/SafetensorsCheckpoint.mm \
 	runtime/model/ModelDescriptor.mm \
+	runtime/engine/ThermalState.mm \
 	runtime/engine/RuntimeResources.mm \
 	runtime/engine/Bootstrap.mm
 ENGINE_OBJECTS := \

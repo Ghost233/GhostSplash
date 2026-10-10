@@ -1,15 +1,15 @@
 #include "ModelFactory.hpp"
-#include "model/AffineTarget.hpp"
 #include "model/DraftCheckpoint.hpp"
 #include "model/GgufTarget.hpp"
+#include "model/MlxTarget.hpp"
 #include "model/QwenTargetLoader.hpp"
 #include "model/VisionLoader.hpp"
 
 #include <functional>
-#include <limits>
+#include <algorithm>
 #include <optional>
-#include <stdexcept>
 #include <type_traits>
+#include <stdexcept>
 #include <vector>
 
 namespace splash::model {
@@ -36,39 +36,35 @@ std::unique_ptr<VisionLoader> planVisionLoader(const std::filesystem::path &root
 }
 
 QwenVisionWeights loadVisionWeights(metal::MetalBackend &backend, WeightImages &images,
-                                    const std::filesystem::path &root, const ModelDescriptor &descriptor,
                                     const VisionLoader *loader) {
-  if (loader) return loadQwenVisionWeights(backend, images, *loader);
-  if (descriptor.visionSource == VisionSource::Package)
-    return loadQwenVisionWeights(backend, images, root / "vision", descriptor.vision);
-  return {};
+  return loader ? loadQwenVisionWeights(backend, images, *loader) : QwenVisionWeights{};
 }
 
 namespace {
 
 TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_8Layout &layout,
-                         const QwenTargetFiles<Qwen3_8Layout> &files) {
+                         const QwenTargetFiles &files) {
   return loadQwen3_8Weights(backend, layout, files);
 }
 
 TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_6MoeLayout &layout,
-                         const QwenTargetFiles<Qwen3_6MoeLayout> &files) {
+                         const QwenTargetFiles &files) {
   return loadQwen3_6MoeWeights(backend, layout, files);
 }
 
-TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BDFlashLayout &layout,
-                         const QwenTargetFiles<Qwen3_5_4BDFlashLayout> &files) {
-  return loadQwen3_5_4BDFlashWeights(backend, layout, files);
-}
-
 TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BLayout &layout,
-                         const QwenTargetFiles<Qwen3_5_4BLayout> &files) {
+                         const QwenTargetFiles &files) {
   return loadQwen3_5_4BWeights(backend, layout, files);
 }
 
-template <class Image> uint64_t imageBytes(const std::vector<Image> &images) {
+TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BDFlashLayout &layout,
+                         const QwenTargetFiles &files) {
+  return loadQwen3_5_4BDFlashWeights(backend, layout, files);
+}
+
+uint64_t imageBytes(const std::vector<gguf::Image> &images) {
   uint64_t total = 0;
-  for (const Image &image : images) total += image.bytes;
+  for (const gguf::Image &image : images) total += image.bytes;
   return total;
 }
 
@@ -87,20 +83,18 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   // the vision tower's and the draft's here, the target's by its loader.
   const auto vision = planVisionLoader(root, result.descriptor);
   std::optional<DraftCheckpointLoader> draft;
-  if (result.descriptor.draftFromCheckpoint())
-    draft.emplace(images, root / "draft", result.descriptor.draft);
+  if (result.descriptor.hasDraft())
+    draft.emplace(backend, images, root / "draft", result.descriptor.draft);
   result.target = std::visit(
       [&](const auto &layout) -> TargetWeights {
         using Layout = std::remove_cvref_t<decltype(layout)>;
         const std::filesystem::path directory = root / "target";
         switch (result.descriptor.targetSource) {
-        case TargetSource::Package:
-          return readTarget(backend, layout, PackageTargetFiles<Layout>{images, directory, layout});
         case TargetSource::Mlx: {
           if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
             throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
           } else {
-            AffineTargetLoader loader(images, directory, layout);
+            MlxTargetLoader loader(backend, images, directory, layout);
             return readTarget(backend, layout, std::ref(loader));
           }
         }
@@ -112,12 +106,8 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         throw std::invalid_argument("unknown target source");
       },
       result.descriptor.target);
-  if (result.descriptor.hasDraft()) result.draft = loadDFlashDraftWeights(
-      backend,
-      draft ? DraftFiles(std::ref(*draft))
-            : DraftFiles(PackageDraftFiles{images, root / "draft", result.descriptor.draft}),
-      result.descriptor.draft);
-  result.vision = loadVisionWeights(backend, images, root, result.descriptor, vision.get());
+  if (draft) result.draft = loadDFlashDraftWeights(backend, *draft, result.descriptor.draft);
+  result.vision = loadVisionWeights(backend, images, vision.get());
   if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
     buildQwen3_5_4BPrefillCache(backend, images, *target);
   if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
@@ -156,30 +146,17 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
           return targetBytes;
         },
         descriptor.target);
-  } else if (descriptor.targetSource == TargetSource::Mlx) {
-    bytes = std::visit([](const auto &layout) -> uint64_t {
+  } else {
+    bytes = std::visit([&](const auto &layout) -> uint64_t {
       if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
-                        std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
+                    std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
         throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
-      else return imageBytes(affineTargetImages(layout));
+      else return mlxTargetImageBytes(root / "target", layout);
     }, descriptor.target);
   }
-  if (descriptor.draftFromCheckpoint())
-    bytes += imageBytes(draftCheckpointImages(descriptor.draft));
-  if (descriptor.visionSource == VisionSource::Mlx || descriptor.visionSource == VisionSource::Gguf)
+  if (descriptor.hasDraft()) bytes += draftImageBytes(root / "draft", descriptor.draft);
+  if (descriptor.hasVision())
     bytes += visionImageBytes(descriptor.vision);
-  for (std::string_view directory : {"target", "draft", "vision"}) {
-    if (directory == "vision" && descriptor.visionSource != VisionSource::Package) continue;
-    if (directory == "draft" && (!descriptor.hasDraft() || descriptor.draftFromCheckpoint())) continue;
-    if (directory == "target" && descriptor.targetSource != TargetSource::Package) continue;
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(root / directory)) {
-      if (!entry.is_regular_file()) continue;
-      const uint64_t size = entry.file_size();
-      if (size > std::numeric_limits<uint64_t>::max() - bytes) throw std::overflow_error("model weight size overflows");
-      bytes += size;
-    }
-  }
-  if (!bytes) throw std::invalid_argument("the model root holds no weight files");
   return bytes;
 }
 

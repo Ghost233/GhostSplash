@@ -4,7 +4,8 @@
 // CPU GEMM. Both causal and bidirectional proposal masks are exercised.
 #include "TestBuffers.hpp"
 #include "model/DFlashDraft.hpp"
-#include "tuning/LinearNumerics.hpp"
+#include "LinearNumerics.hpp"
+#include "GgufFormatReference.hpp"
 
 #include <array>
 #include <algorithm>
@@ -19,8 +20,8 @@ using namespace splash::model;
 using splash::metal::MetalBackend;
 using splash::metal::MetalBuffer;
 using splash::test::require;
-using splash::ops::tuning::bf16ToFloat;
-using splash::ops::tuning::floatToBf16;
+using splash::test::bf16ToFloat;
+using splash::test::floatToBf16;
 
 namespace {
 
@@ -43,20 +44,19 @@ MetalBuffer ones(MetalBackend &backend, uint32_t width) {
 }
 
 // W[n,k] = Scale * ((n + seed) % 3 - 1) * ((k + seed) % 3 - 1).
-// Nibbles 7/8/9 with an exactly represented BF16 scale/bias. Each plane is
-// independently encoded in the production 256-row affine storage layout.
+// Build independent MLX native rows, then repack their AF4G64 block planes.
+// Codes 7/8/9 and these power-of-two scale/bias values dequantize exactly in
+// both BF16 and the staged tile's half weights, preserving the closed form.
 Projection projection(MetalBackend &backend, uint32_t output, uint32_t input, uint32_t seed) {
   const uint32_t groups = input / 64;
   const uint64_t parameters = uint64_t{output} * groups;
-  Projection p(output, input, AffineWeights{allocated(backend, parameters * 32),
-                allocated(backend, parameters * 2), allocated(backend, parameters * 2)});
-  auto *weights = static_cast<uint8_t *>(p.affine().weights.contents());
-  auto *scales = static_cast<uint16_t *>(p.affine().scales.contents());
-  auto *biases = static_cast<uint16_t *>(p.affine().biases.contents());
+  std::vector<uint8_t> weights(parameters * 32), scales(parameters * 2), biases(parameters * 2);
+  const uint16_t scale = floatToBf16(Scale), bias = floatToBf16(-8 * Scale);
   for (uint32_t n = 0; n < output; ++n)
     for (uint32_t group = 0; group < groups; ++group) {
-      const uint64_t at = (uint64_t{n / 256} * groups + group) * 256 + n % 256;
-      scales[at] = floatToBf16(Scale); biases[at] = floatToBf16(-8 * Scale);
+      const uint64_t at = uint64_t{n} * groups + group;
+      std::memcpy(scales.data() + at * 2, &scale, 2);
+      std::memcpy(biases.data() + at * 2, &bias, 2);
       for (uint32_t pair = 0; pair < 32; ++pair) {
         const auto code = [&](uint32_t k) {
           return uint8_t(8 + (int((n + seed) % 3) - 1) * (int((k + seed) % 3) - 1));
@@ -64,7 +64,15 @@ Projection projection(MetalBackend &backend, uint32_t output, uint32_t input, ui
         weights[at * 32 + pair] = code(group * 64 + pair * 2) | (code(group * 64 + pair * 2 + 1) << 4);
       }
     }
-  return p;
+  const auto native = gguf_reference::mlxNative(true, 4, 64, output, input, weights, scales, biases);
+  const auto planes = gguf_reference::repack(gguf_reference::Fmt(GGUF_FMT_AF4G64), native, output, input, nullptr);
+  const auto upload = [&](const std::vector<uint8_t> &bytes) {
+    auto buffer = allocated(backend, bytes.size());
+    std::memcpy(buffer.contents(), bytes.data(), bytes.size());
+    return buffer;
+  };
+  return Projection(output, input, BlockWeights{{QuantizedSegment::planes(
+      GGUF_FMT_AF4G64, output, input, upload(planes.w0), {}, upload(planes.meta))}});
 }
 
 Values project(const Values &input, uint32_t width, uint32_t output, uint32_t seed, bool rounded = true) {
@@ -167,7 +175,7 @@ void run(MetalBackend &backend, bool causal) {
   DFlashDecodeBuffers buffers;
   buffers.linearScratch=scratch; buffers.hidden={hidden(), hidden()}; buffers.normalized=hidden();
   buffers.proposalQkv=allocated(backend, storageRows * Qkv * 2); buffers.attention=allocated(backend, aw.groupedQueriesBytes);
-  buffers.residual=hidden(); buffers.intermediate=allocated(backend, storageRows * Intermediate * 2); buffers.finalHidden=hidden();
+  buffers.residual=hidden(); buffers.projected=hidden(); buffers.intermediate=allocated(backend, storageRows * Intermediate * 2); buffers.finalHidden=hidden();
   buffers.logits=allocated(backend, storageRows * Vocabulary * 4); buffers.gateScratch=allocated(backend, storageRows * Intermediate * 2);
   buffers.queryKeys=allocated(backend,aw.queryKeysBytes); buffers.queryValues=allocated(backend,aw.queryValuesBytes);
   buffers.ropeCos=allocated(backend,Rows * (Head/2) * 4); buffers.ropeSin=allocated(backend,Rows * (Head/2) * 4);
@@ -248,7 +256,7 @@ void run(MetalBackend &backend, bool causal) {
   const auto mixed = project(norm(input,Hidden),Hidden,Qkv,1);
   Values preparedKeys;
   const auto attended = attention(mixed,causal,&preparedKeys);
-  // Affine Q4 matmul writes a BF16 result before the residual add, as
+  // The standard block projection writes a BF16 result before the residual add, as
   // torch/MLX BF16 projections do. Keep both rounding boundaries here.
   const auto residual=residualAdd(project(attended,Attention,Hidden,2),input);
   const auto normalized=norm(residual,Hidden);

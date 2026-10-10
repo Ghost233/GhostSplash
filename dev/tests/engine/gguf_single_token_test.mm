@@ -6,7 +6,7 @@
 #include "ops/SingleTokenLinear.hpp"
 #include "ops/GDN.hpp"
 #include "metal/abi/GDN.h"
-#include "tuning/LinearNumerics.hpp"
+#include "LinearNumerics.hpp"
 
 #include <algorithm>
 #include <array>
@@ -21,8 +21,8 @@ using namespace splash::ops;
 using namespace gguf_reference;
 using splash::metal::MetalBackend;
 using splash::metal::MetalBuffer;
-using splash::ops::tuning::bf16ToFloat;
-using splash::ops::tuning::floatToBf16;
+using splash::test::bf16ToFloat;
+using splash::test::floatToBf16;
 
 namespace {
 

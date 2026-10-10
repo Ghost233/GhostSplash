@@ -4,6 +4,8 @@
 
 namespace splash::model {
 
+class WeightImages;
+
 // Text-only Qwen3.5-4B, without a speculative draft. Its GDN geometry uses
 // the existing 32-value-head kernels; full attention is 16Q/4KV.
 struct Qwen3_5_4BLayout final : QwenHybridLayout<0> {
@@ -58,14 +60,14 @@ using Qwen3_5_4BWeights = QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeight
 using Qwen3_5_4BDFlashWeights = QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights>;
 [[nodiscard]] Qwen3_5_4BDFlashWeights
 loadQwen3_5_4BDFlashWeights(metal::MetalBackend &backend, Qwen3_5_4BDFlashLayout layout,
-                           const QwenTargetFiles<Qwen3_5_4BDFlashLayout> &files);
+                           const QwenTargetFiles &files);
 void buildQwen3_5_4BPrefillCache(metal::MetalBackend &backend, WeightImages &images,
                                 Qwen3_5_4BDFlashWeights &weights);
 
 
 [[nodiscard]] Qwen3_5_4BWeights
 loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
-                    const QwenTargetFiles<Qwen3_5_4BLayout> &files);
+                    const QwenTargetFiles &files);
 
 // Called after every source image is loaded, so restore rebuilds caches
 // only after all quantized source planes are available.

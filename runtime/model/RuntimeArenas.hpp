@@ -63,14 +63,6 @@ struct RuntimeGeometry final {
   [[nodiscard]] uint32_t maskWords() const noexcept {
     return maskWordsPerToken(target.vocabularySize);
   }
-  [[nodiscard]] uint32_t projectionSumsWidth() const noexcept {
-    uint32_t maximumInput = std::max(
-        {target.hiddenSize, target.attentionWidth,
-         target.capturedHiddenSize(), target.ffnScratchWidth(),
-         draft.targetHiddenSize, draft.hiddenSize,
-         draft.intermediateSize});
-    return (maximumInput + kQ4GroupElements - 1) / kQ4GroupElements;
-  }
 };
 
 template <class T> constexpr uint64_t bytesFor(uint64_t elements) noexcept {
@@ -101,8 +93,6 @@ enum class PrefillTensor : uint32_t {
   AttentionStatistics,
   AttentionHidden,
   AttentionOutput,
-  ProjectionSums,
-  DownProjectionSums,
   TargetPositions,
   DraftPositions,
   TargetInverseFrequencies,
@@ -344,12 +334,12 @@ public:
     const auto allocate = [&](uint64_t bytes, metal::BufferStorage storage, const char *label) {
       return bytes ? backend_.allocateBuffer(bytes, storage, label) : metal::MetalBuffer{};
     };
-    linearScratch_.input = allocate(linearSize.input, metal::BufferStorage::Private, "q4-input");
-    linearScratch_.sums = allocate(linearSize.sums, metal::BufferStorage::Private, "q4-sums");
+    linearScratch_.input = allocate(linearSize.input, metal::BufferStorage::Private, "linear-input");
+    linearScratch_.sums = allocate(linearSize.sums, metal::BufferStorage::Private, "linear-sums");
     linearScratch_.partials =
-        allocate(linearSize.partials, metal::BufferStorage::Private, "q4-partials");
+        allocate(linearSize.partials, metal::BufferStorage::Private, "linear-partials");
     linearScratch_.counters =
-        allocate(linearSize.counters, metal::BufferStorage::Shared, "q4-counters");
+        allocate(linearSize.counters, metal::BufferStorage::Shared, "linear-counters");
     linearScratch_.rotated = allocate(linearSize.rotated, metal::BufferStorage::Private, "linear-rotated");
     if (linearSize.counters)
       std::memset(linearScratch_.counters.contents(), 0, linearSize.counters);
@@ -402,7 +392,7 @@ public:
     // One private gate buffer is reused serially by the target dense FFN
     // and its draft when present. A target-only model has no draft workload.
     const uint64_t draft = geometry.draft.layers ? operators.gateUpWorkspace(
-        {geometry.draft.intermediateSize, geometry.draft.hiddenSize, ops::WeightLayout::Affine64}) : 0;
+        {geometry.draft.intermediateSize, geometry.draft.hiddenSize}) : 0;
     uint64_t target = 0;
     for (const auto &p : geometry.target.gateUpProjections)
       target = std::max(target, operators.gateUpWorkspace(p));

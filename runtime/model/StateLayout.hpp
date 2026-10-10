@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Checked.hpp"
+#include "metal/abi/DraftAttention.h"
 #include "metal/abi/ExecutionGeometry.h"
 #include "metal/abi/GDN.h"
 
@@ -59,6 +60,7 @@ struct DraftStateLayout final {
   uint32_t layers = 0;
   uint32_t kvHeads = 0;
   uint32_t headDimension = 0;
+  uint32_t contextWidth = 0;
   bool fullHistory = false;
   std::array<uint32_t, 8> layerContextTokens{};
 
@@ -72,8 +74,12 @@ struct DraftStateLayout final {
       for (uint32_t i = 0; i < layers; ++i) tokens = std::max(tokens, contextTokens(i));
     return tokens;
   }
+  [[nodiscard]] constexpr bool usesContextWindow() const noexcept {
+    return layers && !fullHistory;
+  }
   [[nodiscard]] constexpr bool valid() const noexcept {
     if (!layers || layers > layerContextTokens.size() || !kvHeads || !headDimension) return false;
+    if (usesContextWindow() && (!contextWidth || contextWidth % SPLASH_DRAFT_CONTEXT_GROUP)) return false;
     for (uint32_t i = 0; i < layers; ++i)
       if (contextTokens(i) % 128) return false;
     return true;
@@ -86,6 +92,13 @@ struct DraftStateLayout final {
     uint64_t bytes = 0;
     for (uint32_t i = 0; i < layers; ++i) bytes += 2 * tensorBytes(i);
     return bytes;
+  }
+
+  [[nodiscard]] constexpr uint64_t windowBytes() const noexcept {
+    return usesContextWindow() ? draft_context_window_bytes(contextWidth) : 0;
+  }
+  [[nodiscard]] constexpr uint64_t cachedBytes() const noexcept {
+    return fullHistory ? ringBytes() : windowBytes();
   }
 
   bool operator==(const DraftStateLayout &) const = default;
@@ -102,10 +115,10 @@ struct CompositeStateLayout final {
     return target.valid() && (draft.valid() || draft == DraftStateLayout{});
   }
   [[nodiscard]] constexpr uint64_t laneBytes() const noexcept {
-    return kLaneGdnCells * target.cellBytes() + draft.ringBytes();
+    return kLaneGdnCells * target.cellBytes() + draft.ringBytes() + draft.windowBytes();
   }
   [[nodiscard]] constexpr uint64_t cachedBytes() const noexcept {
-    return target.cellBytes() + draft.ringBytes();
+    return target.cellBytes() + draft.cachedBytes();
   }
 
   bool operator==(const CompositeStateLayout &) const = default;

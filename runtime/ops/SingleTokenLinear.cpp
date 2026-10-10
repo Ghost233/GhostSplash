@@ -43,8 +43,8 @@ uint64_t singleTokenLinearScratchBytes(const Projection &projection, uint32_t sp
 void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, const Projection &projection,
                           metal::MetalBuffer output, metal::MetalBuffer auxiliary, LinearEpilogue epilogue,
                           metal::MetalBuffer partials, uint32_t splits, uint32_t columnsPerThreadgroup) {
-  if (projection.layout() != WeightLayout::Block32 || projection.rotation)
-    throw std::invalid_argument("single-token projection requires unrotated Block32 weights");
+  if (projection.rotation)
+    throw std::invalid_argument("single-token projection requires unrotated block weights");
   requireSplits(projection.inputSize, splits);
   if (columnsPerThreadgroup != 32 && columnsPerThreadgroup != 64)
     throw std::invalid_argument("single-token column tile must be 32 or 64");

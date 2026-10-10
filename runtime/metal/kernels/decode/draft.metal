@@ -651,3 +651,15 @@ kernel void draft_attention_reorder(
                                 row_major + batch * Rows * Attention, group.x,
                                 thread_index);
 }
+
+// Standard Transformer projections round to BF16 before their residual sum.
+// The DFlash2 block epilogue keeps its existing FP32 fused residual path.
+kernel void draft_standard_residual_add(
+    device const bfloat *projected [[buffer(0)]],
+    device const bfloat *residual [[buffer(1)]],
+    device bfloat *output [[buffer(2)]],
+    constant uint &count [[buffer(3)]],
+    uint index [[thread_position_in_grid]]) {
+  if (index < count)
+    output[index] = bfloat(float(projected[index]) + float(residual[index]));
+}

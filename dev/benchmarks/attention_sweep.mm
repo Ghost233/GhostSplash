@@ -4,13 +4,13 @@
 // store + attention graph the executor encodes, reports the fused GPU time of
 // the whole graph and, with each dispatch submitted as its own command, the GPU
 // time of each pipeline over the deterministic synthetic history of
-// tuning/AttentionFixture.hpp. These are kernel timings, not a correctness
-// oracle (the attention kernel tests are). The KV sits in extents of the size
-// the memory plan picks for the model, or of --extent-pages pages, which must
-// hold whole alignment units of every swept shape; the swept layer is the
-// second of two so that its region starts past the first one's, and each case
-// prints a digest of its output: two builds that fill the same pages must print
-// the same digests, whatever their storage.
+// dev/tests/engine/AttentionFixture.hpp. These are kernel timings, not a
+// correctness oracle (the attention kernel tests are). The KV sits in extents
+// of the size the memory plan picks for the model, or of --extent-pages pages,
+// which must hold whole alignment units of every swept shape; the swept layer
+// is the second of two so that its region starts past the first one's, and each
+// case prints a digest of its output: two builds that fill the same pages must
+// print the same digests, whatever their storage.
 //
 // usage: attention-sweep METALLIB [--histories 0,2048,...] [--shapes 4b,27b,35b]
 //                        [--lanes 1,4] [--repeat N] [--phases both|verify|prefill]
@@ -20,11 +20,11 @@
 // The comparison library loads into a MetalBackend of its own, which needs
 // residency_kick (kernels/shared/residency.metal) in every library it loads:
 // build baselines from a tree that has that kernel.
+#include "../tests/engine/AttentionFixture.hpp"
 #include "DispatchReplay.hpp"
 #include "metal/CommandGraph.hpp"
 #include "metal/MetalBackend.hpp"
 #include "ops/PagedAttention.hpp"
-#include "tuning/AttentionFixture.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -47,9 +47,9 @@ namespace {
 using namespace splash;
 using namespace splash::ops;
 
-using tuning::AttentionFixture;
-using tuning::AttentionFixturePlan;
-using tuning::AttentionShape;
+using test::AttentionFixture;
+using test::AttentionFixturePlan;
+using test::AttentionShape;
 
 constexpr uint32_t kMaximumLanes = SPLASH_MAXIMUM_BATCH_WIDTH;
 constexpr uint32_t kVerifyRows = SPLASH_TARGET_VERIFY_ROWS;
@@ -181,7 +181,7 @@ std::vector<Case> measure(std::span<metal::MetalBackend *> backends,
       for (uint32_t row = 0; row < plan.rows; ++row)
         for (uint32_t dimension = 0; dimension < plan.shape.headDimension; ++dimension) {
           const uint64_t index = plan.queryIndex(0, head, row, dimension);
-          const float a = tuning::bf16ToFloat(left[index]), b = tuning::bf16ToFloat(right[index]);
+          const float a = test::bf16ToFloat(left[index]), b = test::bf16ToFloat(right[index]);
           if (!std::isfinite(a) || !std::isfinite(b))
             throw std::runtime_error("comparison attention output is nonfinite");
           maximumError = std::max(maximumError, std::abs(a - b));

@@ -28,17 +28,18 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 
 ### 本地模型启动器
 
-增加直接复用本地 LM Studio 模型目录的启动脚本，并为不同模型保留独立配置：
+本地启动脚本复用 LM Studio 模型目录，并为不同模型保留独立配置。
+目前保留 3 个模型的 4 个启动脚本：
 
 | 模型 | 启动脚本 |
 | --- | --- |
-| Qwen3.8 27B / Qwen3.6 35B-A3B | [qwen3.827bsplash.sh](qwen3.827bsplash.sh) / [qwen3.635ba3bsplash.sh](qwen3.635ba3bsplash.sh) |
-| Ternary Bonsai 2 / Swift Bonsai 2 | [bonsai227bsplash.sh](bonsai227bsplash.sh) / [swiftbonsai2splash.sh](swiftbonsai2splash.sh) |
-| Swift 1.5 Qwen3.8 27B | [swift1527bsplash.sh](swift1527bsplash.sh) / [swift1527biq3ssplash.sh](swift1527biq3ssplash.sh) |
-| Tiel Coder / Tiel MiniPlus | [tiel35ba3bsplash.sh](tiel35ba3bsplash.sh) / [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
-| Qwen3.8 35B-A3B Distill | [qwen38distill35ba3bsplash.sh](qwen38distill35ba3bsplash.sh) |
+| Swift 1.5 Qwen3.8 27B IQ3_S | [swift1527bsplash.sh](swift1527bsplash.sh) / [swift1527biq3ssplash.sh](swift1527biq3ssplash.sh) |
+| Tiel MiniPlus | [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
 | Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
-| Ornith 1.5 35B-A3B 3bit（纯文本） | [ornith1535ba3bsplash.sh](ornith1535ba3bsplash.sh) |
+
+旧 Splash 模型包已不受新版运行时支持，对应的两个 Qwen 启动器已删除。
+Bonsai、Swift Bonsai、Ornith、Qwen Distill 和普通 Tiel 的本地模型目录已删除，
+对应启动器也已移除。历史测速记录保留。
 
 脚本中的模型路径、监听地址、端口和内存配置来自个人环境，使用前需要按本机修改。
 启动器监听 `0.0.0.0`（所有 IPv4 网卡），本机使用 `http://127.0.0.1:端口`，
@@ -56,7 +57,7 @@ FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）�
 ```
 
 启动器回归测试使用 `.venv/bin/python -m unittest dev.tests.install.test_local_launchers`，
-覆盖首次安装、已有安装复用、错误模型记录拒绝、模板适配和实际服务参数。
+覆盖 GGUF 首次安装、已有安装复用、错误模型记录拒绝、模板适配和服务参数。
 
 ### 模板与 draft 适配
 
@@ -178,8 +179,8 @@ Unsloth GGUF variants span **1–8 bits**, including mixed-precision UD formats;
 `UD-Q8_K_XL` and BF16 targets are not supported.
 [Prism ML Ternary Bonsai 2](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf)
 is also supported in PQ2_0 (7.2 GB), including vision. Pass `OWNER/REPO:VARIANT`
-to `--model`, as in the quick start. MLX targets must be affine 4-bit with
-groups of 64, like the examples. Smaller variants run on
+to `--model`, as in the quick start. MLX targets can be affine 2–8-bit,
+including mixed precision, or mxfp4. Smaller variants run on
 [24 GB Macs](docs/performance.md#smaller-ggufs-on-24-gb-macs).
 [27B variants](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/tree/main) ·
 [35B variants](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/tree/main)

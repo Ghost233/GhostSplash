@@ -145,13 +145,26 @@ StateAdmission admitIdleLane(const QwenStateStorage &states,
   return {{}, StateFailure::ConcurrencyLimit};
 }
 
+// A prefill arena's linear scratch. Prefill plans read plain bf16 rows, so
+// there is no input table or sums.
+ops::LinearScratch prefillScratch(const PrefillArena &arena) {
+  return {.partials = arena.get(PrefillTensor::LinearPartials),
+          .counters = arena.get(PrefillTensor::LinearCounters),
+          .rotated = arena.get(PrefillTensor::LinearRotated)};
+}
+
+// A prefill arena's tensors as the draft's context prefill reads them.
+DFlashPrefillBuffers draftPrefillBuffers(const PrefillArena &arena) {
+  return {arena.get(PrefillTensor::Captured), prefillScratch(arena),
+          arena.get(PrefillTensor::ContextProjected), arena.get(PrefillTensor::ContextHidden),
+          arena.get(PrefillTensor::ContextKv), arena.get(PrefillTensor::DraftRopeCos),
+          arena.get(PrefillTensor::DraftRopeSin)};
+}
+
 // A prefill arena's tensors as the target's prefill reads them.
 QwenTargetPrefillBuffers prefillBuffers(const PrefillArena &arena) {
   QwenTargetPrefillBuffers buffers;
-  // Prefill plans read plain bf16 rows, so there is no input table or sums.
-  buffers.linearScratch = {.partials = arena.get(PrefillTensor::LinearPartials),
-                           .counters = arena.get(PrefillTensor::LinearCounters),
-                           .rotated = arena.get(PrefillTensor::LinearRotated)};
+  buffers.linearScratch = prefillScratch(arena);
   buffers.hidden = {arena.get(PrefillTensor::Hidden0), arena.get(PrefillTensor::Hidden1)};
   buffers.normalized = arena.get(PrefillTensor::Normalized);
   buffers.captured = arena.get(PrefillTensor::Captured);
@@ -173,8 +186,6 @@ QwenTargetPrefillBuffers prefillBuffers(const PrefillArena &arena) {
   buffers.attentionStatistics = arena.get(PrefillTensor::AttentionStatistics);
   buffers.attentionHidden = arena.get(PrefillTensor::AttentionHidden);
   buffers.attentionOutput = arena.get(PrefillTensor::AttentionOutput);
-  buffers.projectionSums = arena.get(PrefillTensor::ProjectionSums);
-  buffers.downProjectionSums = arena.get(PrefillTensor::DownProjectionSums);
   buffers.ropeCos = arena.get(PrefillTensor::RopeCos);
   buffers.ropeSin = arena.get(PrefillTensor::RopeSin);
   buffers.chunkKeys = arena.get(PrefillTensor::ChunkKeys);
@@ -257,6 +268,14 @@ struct Runtime::Impl {
     uint64_t rngCounter = 0;
     DecodeStage decodeStage = DecodeStage::Regular;
     std::optional<DraftContextPlan> draftContextPlan;
+    // The draft rings a restore left to compute from its context window:
+    // positions [begin, begin + rows), in the request's next prefill chunk,
+    // whose commit clears it.
+    struct DraftRebuild final {
+      uint32_t begin = 0;
+      uint32_t rows = 0;
+    };
+    std::optional<DraftRebuild> draftRebuild;
     std::vector<ImageState> images;
     // What its activation took from a cached state: the images that end
     // there were left out (ModelRequest::restoredTokens).
@@ -803,7 +822,7 @@ struct Runtime::Impl {
 
   QwenLogicalLengths
   advanceDraftContext(const QwenLogicalLengths &previous, uint64_t targetTokens,
-                      uint64_t begin, uint64_t end, bool reset) const {
+                      uint64_t begin, uint64_t end, bool reset, bool windowed) const {
     if (!reset && (!previous.draftLength || previous.draftEnd() != begin))
       throw std::logic_error("draft capture does not continue the draft ring");
     const uint64_t combined = (reset ? 0 : previous.draftLength) + (end - begin);
@@ -812,6 +831,9 @@ struct Runtime::Impl {
     next.draftLength =
         static_cast<uint32_t>(std::min<uint64_t>(combined, draftContextCapacity()));
     next.draftBase = end - next.draftLength;
+    if (states.layout().draft.usesContextWindow() && windowed &&
+        (reset || previous.hasCurrentContextWindow()))
+      next.windowEnd = end;
     return next;
   }
 
@@ -1165,11 +1187,21 @@ struct Runtime::Impl {
     return batch;
   }
 
+  // Computes a restored lane's draft rings from its context window.
+  void addDraftRebuild(CommandGraph &graph, uint32_t lane,
+                       const Request::DraftRebuild &rebuild) const {
+    auto p = [&](PrefillTensor tensor) { return prefillArena->get(tensor); };
+    ops::RoPE::addDraftRangeTables(graph, p(PrefillTensor::DraftInverseFrequencies),
+                                   p(PrefillTensor::DraftRopeCos), p(PrefillTensor::DraftRopeSin),
+                                   rebuild.rows, rebuild.begin, kPrefillRows);
+    draftModel->addContextRebuild(graph, draftPrefillBuffers(*prefillArena), states.window(lane),
+                                 states.draft(lane), rebuild.rows, rebuild.begin);
+  }
+
   void addRaggedDraftContext(CommandGraph &graph,
                              const RaggedPrefillBatch &batch) {
     if (!batch.capturedRows)
       return;
-    auto p = [&](PrefillTensor tensor) { return prefillArena->get(tensor); };
     std::array<DFlashPrefillSpan, kLaneCount * 2> spans{};
     uint32_t spanCount = 0;
     for (const RaggedPrefillSequence &sequence : batch.sequences) {
@@ -1179,15 +1211,12 @@ struct Runtime::Impl {
         span.rows = capture.absoluteEnd - capture.absoluteBegin;
         span.startPosition = capture.absoluteBegin;
         span.ring = states.draft(sequence.entry->stateLane);
+        if (states.layout().draft.usesContextWindow())
+          span.window = states.window(sequence.entry->stateLane);
       }
     }
-    draftModel->addContextPrefill(
-        graph,
-        {p(PrefillTensor::Captured), p(PrefillTensor::ProjectionSums),
-         p(PrefillTensor::ContextProjected), p(PrefillTensor::ContextHidden),
-         p(PrefillTensor::ContextKv), p(PrefillTensor::DraftRopeCos),
-         p(PrefillTensor::DraftRopeSin)},
-        batch.capturedRows, std::span(spans).first(spanCount));
+    draftModel->addContextPrefill(graph, draftPrefillBuffers(*prefillArena), batch.capturedRows,
+                                  std::span(spans).first(spanCount));
   }
 
   // Returns each lane's draft captures, indexed like `entries`.
@@ -1197,6 +1226,14 @@ struct Runtime::Impl {
                            std::array<Request *, kLaneCount> &entries, bool decoding = false) {
     RaggedPrefillBatch batch = prepareRaggedPrefill(items, entries, decoding);
     auto p = [&](PrefillTensor tensor) { return prefillArena->get(tensor); };
+
+    // A restored lane's rings first: they pass through the context buffers
+    // and the draft RoPE tables before this chunk's rows do. Once the window
+    // is full, this chunk's window store and ring writes reuse the slots of
+    // the oldest restored positions, so the rebuild comes before them too.
+    for (const RaggedPrefillSequence &sequence : batch.sequences)
+      if (const auto &rebuild = sequence.entry->draftRebuild)
+        addDraftRebuild(graph, sequence.entry->stateLane, *rebuild);
 
     addRopeTables(graph, p(PrefillTensor::TargetPositions), batch.rows,
                   p(PrefillTensor::DraftPositions), batch.capturedRows,
@@ -1577,6 +1614,8 @@ struct Runtime::Impl {
       throw std::invalid_argument("invalid draft state commit batch");
     }
     const uint32_t lanes = static_cast<uint32_t>(entries.size());
+    // The draft's projections take the target's storage rows, as in its
+    // decode (encodeDraftBatchGraph).
     const uint32_t storage = targetModel.decodeStorageLanes(lanes);
     auto d = [&](DecodeTensor tensor) {
       return decodeArena->batchSlice(tensor, storage);
@@ -1741,7 +1780,7 @@ struct Runtime::Impl {
           entry.stateLane,
           advanceDraftContext(states.metadata(entry.stateLane).lengths,
                               nextLength, items[lane].logicalPosition,
-                              nextLength, false));
+                              nextLength, false, false));
       entry.generatedTokens += laneResult.retained;
       commitSelected(entry, {targetTokens, laneResult.retained});
       entry.maskWords.clear();
@@ -1988,6 +2027,7 @@ void Runtime::suspend(uint64_t requestId) {
   impl_->pageTableBindings[entry.stateLane] = {};
   impl_->releaseImages(entry);
   entry.draftContextPlan.reset();
+  entry.draftRebuild.reset();
   entry.replayingGeneration |= entry.promptComplete;
   entry.promptComplete = false;
   entry.resident = false;
@@ -2097,6 +2137,10 @@ void Runtime::finishRestore(uint64_t requestId, uint32_t restoredPrefixLength,
     entry.pendingToken.reset();
   }
   entry.draftContextPlan.reset();
+  entry.draftRebuild.reset();
+  if (restoreDraftState && impl_->states.layout().draft.usesContextWindow())
+    entry.draftRebuild = Impl::Request::DraftRebuild{
+        static_cast<uint32_t>(lengths.draftBase), lengths.draftLength};
 }
 
 void Runtime::setDraftContextPlan(uint64_t requestId, DraftContextPlan plan) {
@@ -2166,14 +2210,17 @@ Runtime::prefillAsync(const BatchPlan &plan,
     // computes what it would have the first time. Nothing of the chunk is
     // committed before the code below: state parity, lengths, the selected
     // token and the image rows' state. The rerun writes the same KV and draft
-    // rows; clearForColdStart clears the current state again, which neither
-    // command writes; synchronizedPageTable writes nothing at the same
-    // revision; image rows the first command encoded are still `encoding` and
-    // are copied, not encoded again; and the requests' draws restored, a
-    // sampled first token draws the same uniform. The first ticket was
-    // released before this completion runs (DeferredMetalTicket::wait), so
-    // the backend takes the rerun's command, whose time counts in the
-    // chunk's.
+    // rows; a restored lane's rebuild may read window slots the failed run
+    // filled with its own rows, but each belongs to a position the rerun
+    // captures again, and that capture overwrites the ring slot after the
+    // rebuild; clearForColdStart clears the current state again, which
+    // neither command writes; synchronizedPageTable writes nothing at the
+    // same revision; image rows the first command encoded are still
+    // `encoding` and are copied, not encoded again; and the requests' draws
+    // restored, a sampled first token draws the same uniform. The first
+    // ticket was released before this completion runs
+    // (DeferredMetalTicket::wait), so the backend takes the rerun's command,
+    // whose time counts in the chunk's.
     if (impl->aneFfn && !impl->aneFfn->finish()) {
       for (uint32_t lane = 0; lane < items.size(); ++lane)
         entries[lane]->rngCounter = draws[lane];
@@ -2226,13 +2273,14 @@ Runtime::prefillAsync(const BatchPlan &plan,
         }
       }
       impl->states.swapParity(entry.stateLane);
+      entry.draftRebuild.reset();
       QwenLogicalLengths lengths = impl->states.metadata(entry.stateLane).lengths;
       lengths.targetTokens = nextLength;
       for (const DispatchDraftCaptureSpan &capture : captures[lane]) {
         lengths = impl->advanceDraftContext(lengths, nextLength,
                                             capture.absoluteBegin,
                                             capture.absoluteEnd,
-                                            capture.resetDraftState);
+                                            capture.resetDraftState, true);
         impl->counters.draftContextRowsActive += capture.activeRows;
         impl->counters.draftContextRowsMaterialization +=
             capture.materializationRows;
@@ -2333,6 +2381,8 @@ Runtime::decodeAsync(const BatchPlan &plan,
     }
     if (!entry.pendingToken)
       throw std::logic_error("decode request has no current anchor");
+    if (entry.draftRebuild)
+      throw std::logic_error("a restored lane computes its draft rings in a prefill chunk");
     const uint32_t remaining = entry.maxNewTokens - entry.generatedTokens;
     if (!remaining)
       throw std::logic_error("completed request was decoded");
@@ -2750,6 +2800,7 @@ ModelTelemetry Runtime::telemetry() const noexcept {
   result.stateAllocatedBytes = impl_->states.actualAllocatedBytes();
   result.idleGdnCells = impl_->states.idleCells();
   result.idleDraftRings = impl_->states.idleRings();
+  result.idleContextWindows = impl_->states.idleWindows();
   result.visionArenaBytes = impl_->vision ? impl_->vision->arenaBytes() : 0;
   result.embeddingCacheBytes = impl_->embeddingCacheBytes;
   result.stateHeldImageBytes = impl_->heldRowsBytes(false);

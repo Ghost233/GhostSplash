@@ -51,7 +51,7 @@ int main() {
     for (const uint32_t lanes : {1u, 2u, 4u}) {
       const uint32_t rows = lanes * block;
       const uint32_t targetStorageRows = linear.decodeStorageRows(
-          rows, {2560, 2560, splash::ops::WeightLayout::Block32});
+          rows, {2560, 2560});
       const uint32_t storageLanes = targetStorageRows / block;
       require(storageLanes >= lanes && storageLanes <= ExecutionLimits::maximumBatchWidth,
               "4B context storage cannot be represented by arena lane slices");
@@ -68,20 +68,16 @@ int main() {
                     uint64_t{requiredRows} * shape.inputSize * 2,
                 "drafter FC/proposal input capacity is below its physical tile");
       }
-      for (const auto layout : {splash::ops::WeightLayout::Affine64, splash::ops::WeightLayout::Block32}) {
-        const auto plan = linear.plan({{2560, 2560}, rows, splash::ops::LinearPhase::Decode,
-                                        splash::ops::LinearEpilogue::None, layout});
-        require(plan.storageRows() >= rows && plan.storageRows() <= 4 * block,
-                "projection padding exceeds the variant's complete decode arena");
-        require(block == 8 || plan.input() == splash::ops::LinearInput::Plain,
-                "a non-eight variant selected an eight-row register activation table");
-        if (layout == splash::ops::WeightLayout::Affine64 && block != 8)
-          require(plan.storageRows() == (rows + 7) / 8 * 8 &&
-                    plan.pipeline().find("block_l") != std::string_view::npos,
-                  "affine drafter projection did not reserve its legal padded row tile");
-        if (layout == splash::ops::WeightLayout::Block32 && block == 16 && lanes == 4)
-          require(plan.storageRows() == 64, "block16 concurrency4 did not allocate the M64 tile");
-      }
+      const auto plan = linear.plan({{2560, 2560}, rows, splash::ops::LinearPhase::Decode,
+                                     splash::ops::LinearEpilogue::None});
+      require(plan.storageRows() >= rows && plan.storageRows() <= 4 * block,
+              "projection padding exceeds the variant's complete decode arena");
+      require(block == 8 || plan.input() == splash::ops::LinearInput::Plain,
+              "a non-eight variant selected an eight-row register activation table");
+      require(plan.storageRows() == (rows <= 8 ? 8u : rows <= 16 ? 16u : rows <= 32 ? 32u : 64u),
+              "block projection did not reserve its legal staged row tile");
+      if (block == 16 && lanes == 4)
+        require(plan.storageRows() == 64, "block16 concurrency4 did not allocate the M64 tile");
     }
     const std::array<uint32_t, 1> histories{0};
     for (const auto format : {splash::kv::Format::Int8, splash::kv::Format::BFloat16,

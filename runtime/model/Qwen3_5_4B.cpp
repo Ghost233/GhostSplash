@@ -5,7 +5,7 @@
 namespace splash::model {
 
 Qwen3_5_4BWeights loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
-                                      const QwenTargetFiles<Qwen3_5_4BLayout> &files) {
+                                      const QwenTargetFiles &files) {
   const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
     layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
     layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
@@ -15,7 +15,7 @@ Qwen3_5_4BWeights loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4B
 }
 
 Qwen3_5_4BDFlashWeights loadQwen3_5_4BDFlashWeights(metal::MetalBackend &backend,
-    Qwen3_5_4BDFlashLayout layout, const QwenTargetFiles<Qwen3_5_4BDFlashLayout> &files) {
+    Qwen3_5_4BDFlashLayout layout, const QwenTargetFiles &files) {
   const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
     layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
     layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
@@ -28,7 +28,6 @@ template <class Weights>
 void buildPrefillCache(metal::MetalBackend &backend, WeightImages &images, Weights &weights) {
   const uint64_t baseline = backend.memoryStats().allocatedBytes;
   const auto cache = [&](ops::Projection &projection, uint32_t layer, const char *name) {
-    if (projection.layout() != ops::WeightLayout::Block32) return;
     ops::BlockWeights blocks = projection.blocks();
     for (ops::QuantizedSegment &segment : blocks.segments) {
       if (segment.isFloat()) continue;

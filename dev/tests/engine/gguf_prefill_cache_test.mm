@@ -2,9 +2,10 @@
 // BF16 epilogues, chunk tails and reconstruction after idle release.
 #include "GgufFormatReference.hpp"
 #include "TestBuffers.hpp"
+#include "TestAdmission.hpp"
 #include "model/WeightImages.hpp"
 #include "ops/GgufPrefillCache.hpp"
-#include "tuning/LinearNumerics.hpp"
+#include "LinearNumerics.hpp"
 
 #include <algorithm>
 #include <array>
@@ -19,12 +20,13 @@
 
 using namespace splash;
 using namespace gguf_reference;
-using ops::tuning::bf16ToFloat;
-using ops::tuning::floatToBf16;
-using ops::tuning::silu;
+using splash::test::bf16ToFloat;
+using splash::test::floatToBf16;
 using metal::MetalBuffer;
 
 namespace {
+
+float silu(float value) { return value / (1.0f + std::exp(-value)); }
 
 constexpr uint32_t N = 64, K = 256, Offset = 64;
 constexpr uint16_t Unwritten = 0xffff;
@@ -111,11 +113,22 @@ std::vector<uint16_t> run(metal::MetalBackend &backend, const Tensor &tensor, ui
     ops::addGgufHalfPrefill(graph, input, tensor.segment, output, params, epilogue,
                            epilogue == 'a' ? MetalBuffer{} : auxiliary, inputStep, tile);
   } else {
-    std::vector<MetalBuffer> buffers{input, tensor.segment.plane0, tensor.segment.plane1Slot(),
-                                    tensor.segment.meta, output};
-    if (epilogue != 'a') buffers.push_back(auxiliary);
-    graph.add(std::string("gguf_prefill_") + tensor.segment.name() + "_" + epilogue, std::move(buffers), params,
-              {storage / GGUF_PREFILL_ROWS, columns / GGUF_TILE_COLUMNS, 1}, {GGUF_PREFILL_THREADS, 1, 1});
+    const auto grid = metal::DispatchSize{storage / GGUF_PREFILL_ROWS, columns / GGUF_TILE_COLUMNS, 1};
+    if (epilogue == 'a') {
+      // Plain prefill now binds three segment slots, including the unused ones.
+      std::vector<MetalBuffer> buffers{input};
+      for (uint32_t i = 0; i < 3; ++i)
+        buffers.insert(buffers.end(), {tensor.segment.plane0, tensor.segment.plane1Slot(), tensor.segment.meta});
+      buffers.push_back(output);
+      graph.add(std::string("gguf_prefill_") + tensor.segment.name() + "_a", std::move(buffers),
+                GgufPrefillSegmentsParams{inputs, rows, stride, {columns, 0, 0}, {Offset, 0, 0}},
+                grid, {GGUF_PREFILL_THREADS, 1, 1});
+    } else {
+      std::vector<MetalBuffer> buffers{input, tensor.segment.plane0, tensor.segment.plane1Slot(),
+                                      tensor.segment.meta, output, auxiliary};
+      graph.add(std::string("gguf_prefill_") + tensor.segment.name() + "_" + epilogue,
+                std::move(buffers), params, grid, {GGUF_PREFILL_THREADS, 1, 1});
+    }
   }
   static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
   // Incomplete simdgroups compute their 32-row tile, as production does.
@@ -158,12 +171,12 @@ std::vector<uint16_t> run(metal::MetalBackend &backend, const Tensor &tensor, ui
       if (epilogue == 'r') reference += auxValue;
       if (epilogue == 'g') {
         reference = bf16ToFloat(floatToBf16(sum)) * silu(auxValue);
-        slack = (slack + ops::tuning::ulpBf16(sum)) * std::fabs(silu(auxValue));
+        slack = (slack + splash::test::ulpBf16(sum)) * std::fabs(silu(auxValue));
       }
       const float expected = bf16ToFloat(floatToBf16(reference));
       const float actual = bf16ToFloat(out[at]);
       require(std::isfinite(actual) && std::fabs(actual - expected) <=
-                  ops::tuning::ulpBf16(reference) + slack,
+                  splash::test::ulpBf16(reference) + slack,
               std::string(tensor.segment.name()) + " prefill CPU/BF16 reference mismatch");
     }
   return {out, out + uint64_t{storage + 128} * stride};
@@ -278,7 +291,7 @@ int main(int argc, char **argv) {
       images.release();
       require(backend.memoryStats().allocatedBytes == 0, "weight release left allocated memory");
       for (const auto &entry : images.contents()) require(entry.bytes.empty(), "released image retained bytes");
-      while (!images.restore()) {}
+      while (!images.restore(splash::test::admitAll)) {}
       require(backend.memoryStats().allocatedBytes == allocated, "restore changed allocation accounting");
       const auto restored = images.contents();
       for (size_t i = 0; i < restored.size(); ++i)

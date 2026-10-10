@@ -1,6 +1,7 @@
 // CPU-only plan/header checks for the audited standard 4B DFlash release.
 #include "TestChecks.hpp"
-#include "model/AffinePlan.hpp"
+#include "TestFiles.hpp"
+#include "model/GgufImageLayout.hpp"
 #include "model/DFlashDraft.hpp"
 #include "model/DraftCheckpoint.hpp"
 
@@ -9,6 +10,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <set>
 
 using namespace splash::model;
 using splash::test::require;
@@ -42,8 +45,6 @@ int main(int argc, char **argv) {
     }
     const uint32_t hidden = layout.hiddenSize, attention = layout.attentionSize,
                    kv = layout.kvHeads * layout.attentionHeadDimension, ffn = layout.intermediateSize;
-    auto images = draftCheckpointImages(layout);
-    require(images.size() == 7, "standard draft does not plan six layers and model.bin");
     std::map<std::string, std::vector<uint64_t>> expected;
     for (uint32_t layer = 0; layer < 6; ++layer) {
       const std::string p = "layers." + std::to_string(layer) + ".";
@@ -61,47 +62,76 @@ int main(int argc, char **argv) {
     expected["fc.weight"] = {hidden, layout.targetHiddenSize};
     expected["hidden_norm.weight"] = {hidden};
     expected["norm.weight"] = {hidden};
-    uint64_t bytes = 0;
-    size_t consumed = 0;
-    const auto input = [&](const affine::Input &field) {
-      const auto found = expected.find(field.name);
-      require(found != expected.end() && field.shape == found->second &&
-                  field.dtypes == std::vector<std::string>{"BF16"},
-              "standard draft source key, dtype or shape differs: " + field.name);
-      expected.erase(found);
-      ++consumed;
+    // Header-only planning checks the real release geometry without reading
+    // or allocating its weight payload. A sparse file supplies valid extents.
+    splash::test::TemporaryDirectory temporary("splash-standard-plan");
+    const auto root = argc >= 2 ? std::filesystem::path(argv[1]) : temporary.path();
+    if (argc == 1) {
+      std::ostringstream header;
+      header << "{";
+      uint64_t offset = 0;
+      bool first = true;
+      for (const auto &[name, shape] : expected) {
+        if (!first) header << ",";
+        first = false;
+        uint64_t count = 1;
+        header << "\"" << name << "\":{\"dtype\":\"BF16\",\"shape\":[";
+        for (size_t i = 0; i < shape.size(); ++i) {
+          if (i) header << ",";
+          header << shape[i];
+          count *= shape[i];
+        }
+        const auto next = offset + count * 2;
+        header << "],\"data_offsets\":[" << offset << "," << next << "]}";
+        offset = next;
+      }
+      header << "}";
+      auto json = header.str();
+      while (json.size() % 8) json += ' ';
+      const uint64_t length = json.size();
+      std::ofstream file(root / "model.safetensors", std::ios::binary);
+      file.write(reinterpret_cast<const char *>(&length), sizeof(length));
+      file.write(json.data(), json.size());
+      file.close();
+      std::filesystem::resize_file(root / "model.safetensors", 8 + length + offset);
+    }
+    const SafetensorsCheckpoint source(root);
+    require(source.tensorCount() == 69, "standard checkpoint has unexpected tensors");
+    const auto images = planDraftImages(source, layout);
+    require(images.size() == 7, "standard draft does not plan six layers and model.bin");
+    std::set<std::string> consumed;
+    const auto input = [&](const std::string &name) {
+      const auto found = expected.find(name);
+      const auto &field = source.require(name);
+      require(found != expected.end() && field.shape == found->second && field.dtype == "BF16",
+              "standard draft source key, dtype or shape differs: " + name);
+      consumed.insert(name);
     };
+    uint64_t bytes = 0;
     for (size_t index = 0; index < images.size(); ++index) {
       const auto &image = images[index];
-      require(image.magic == kDFlashStandardLayerMagic && image.layer == index &&
-                  image.type == (index == 6 ? 1u : 0u), "standard image header differs");
-      require(image.sections.size() == (index == 6 ? 3u : 9u), "standard image contains fabricated sections");
-      for (const auto &section : image.sections) {
-        require(section.offset % kWeightFileAlignment == 0, "standard section alignment differs");
-        if (section.parts.empty()) input(section.input);
-        for (const auto &part : section.parts)
-          for (const auto &field : part.fields) input(field);
+      require(image.magic == kGgufImageMagic && image.layer == index &&
+                  image.type == (index == 6 ? 1u : 0u), "standard block image header differs");
+      require(image.copies.size() == (index == 6 ? 2u : 4u) &&
+                  image.repacks.size() == (index == 6 ? 1u : 5u),
+              "standard block image contains fabricated sections");
+      for (const auto &copy : image.copies) {
+        require(copy.destination % kWeightFileAlignment == 0,
+                "standard copied section alignment differs");
+        input(copy.source.name);
+      }
+      for (const auto &step : image.repacks) {
+        require(step.format == GGUF_FMT_AF4G64 && step.plane0 % kWeightFileAlignment == 0 &&
+                    step.meta % kWeightFileAlignment == 0,
+                "standard projection block format or alignment differs");
+        for (const auto &part : step.sources) input(part.name + ".weight");
       }
       bytes += image.bytes;
     }
-    require(consumed == 69 && expected.empty(), "standard draft does not consume exactly 69 tensors");
-    require(tiny || bytes == 357384192, "standard draft prepared image byte count differs");
-    if (argc >= 2) {
-      SafetensorsCheckpoint source(argv[1]);
-      require(source.tensorCount() == 69, "standard checkpoint has unexpected tensors");
-      for (auto &image : images) {
-        affine::bind(image, source);
-        if (tiny) {
-          std::vector<uint8_t> prepared(image.bytes, 0xff);
-          affine::writeAffineImage(prepared, image);
-          std::ifstream file(std::filesystem::path(argv[1]) / "expected" / image.name, std::ios::binary);
-          const std::vector<uint8_t> expectedBytes{std::istreambuf_iterator<char>(file), {}};
-          require(prepared == expectedBytes, "standard affine quantization differs from independent oracle: " + image.name);
-        }
-      }
-      source.checkUnchanged();
-    }
-    std::cout << "standard DFlash: exact 69 BF16 tensors, seven images, no fabricated sections, "
+    require(consumed.size() == expected.size() && consumed.size() == 69,
+            "standard draft does not consume exactly 69 tensors");
+    source.checkUnchanged();
+    std::cout << "standard DFlash: exact 69 BF16 tensors, seven AF4G64 block images, no fabricated sections, "
               << bytes << " prepared bytes PASS\n";
   } catch (const std::exception &error) {
     std::cerr << error.what() << '\n';
