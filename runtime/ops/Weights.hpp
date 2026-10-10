@@ -94,6 +94,8 @@ struct QuantizedSegment final {
   uint32_t inputSize = 0;
   uint32_t columnOffset = 0;
   uint32_t formatId = kFloat32;
+  // Optional [outputSize][inputSize] FP16 cache for prefill only.
+  metal::MetalBuffer prefillHalf{};
 
   [[nodiscard]] bool isFloat() const noexcept { return formatId == kFloat32; }
   // The plane geometry of a quantized segment.

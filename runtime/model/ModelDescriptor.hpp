@@ -4,6 +4,7 @@
 #include "Model.hpp"
 #include "Qwen3_6Moe.hpp"
 #include "Qwen3_8.hpp"
+#include "Qwen3_5_4B.hpp"
 #include "ops/Vision.hpp"
 
 #include <cstdint>
@@ -15,7 +16,7 @@
 
 namespace splash::model {
 
-using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout>;
+using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout>;
 
 // Where a model's weights come from: a Splash package's files, read as they
 // are, or an MLX or GGUF checkpoint prepared into images when it loads. The
@@ -44,10 +45,12 @@ struct ModelDescriptor final {
   // image is written from (WeightFileRecord).
   std::string sourceIdentity;
 
+  [[nodiscard]] bool hasDraft() const noexcept { return draft.layers != 0; }
+
   // A source model's draft is a DFlash2 checkpoint; a package carries its
   // own draft.
   [[nodiscard]] bool draftFromCheckpoint() const noexcept {
-    return targetSource != TargetSource::Package;
+    return hasDraft() && targetSource != TargetSource::Package;
   }
 
   // A model installed with --language-only has no vision tower: it loads no

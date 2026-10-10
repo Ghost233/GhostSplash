@@ -404,6 +404,8 @@ QwenStateStorage::acquire(uint32_t cells, std::string_view label, Buffers &buffe
       std::min(cells, static_cast<uint32_t>(pool_->cells.size()));
   const bool pooledRing = !pool_->rings.empty();
   Buffers fresh;
+  if (!pooledRing && !layout_.draft.layers)
+    fresh.draft = std::make_shared<DFlashDraftRing>(backend_, allocations_, layout_.draft, label);
   if (const uint64_t bytes = missingBytes(cells) + extraBytes) {
     const auto admission = admitAllocation_(bytes, [&] {
       if (allocateExtra)
@@ -413,7 +415,7 @@ QwenStateStorage::acquire(uint32_t cells, std::string_view label, Buffers &buffe
             backend_, allocations_, layout_.target,
             std::string(label) + "-gdn-" + std::to_string(cell)));
       }
-      if (!pooledRing) {
+      if (!pooledRing && layout_.draft.layers) {
         fresh.draft = std::shared_ptr<DFlashDraftRing>(new DFlashDraftRing(
             backend_, allocations_, layout_.draft,
             std::string(label) + "-draft"));
@@ -497,8 +499,8 @@ std::shared_ptr<const CompositeState> QwenStateStorage::adopt(const SlotRecord &
                                                               uint32_t tokens) {
   if (!file_)
     throw std::logic_error("Qwen states are taken back only from a disk tier");
-  const uint32_t window = std::min(tokens, ExecutionLimits::draftContextTokens);
-  const QwenLogicalLengths lengths{tokens, tokens - window, window};
+  const uint32_t window = layout_.draft.layers ? std::min(tokens, layout_.draft.historyCapacity()) : 0;
+  const QwenLogicalLengths lengths{tokens, window ? tokens - window : 0, window};
   validateLengths(lengths, true);
   if (record.payloadBytes != layout_.cachedBytes())
     throw std::invalid_argument("a recorded Qwen state does not match the state layout");
@@ -522,13 +524,13 @@ const QwenStateStorage::Lane &QwenStateStorage::lane(uint32_t index) const {
 
 void QwenStateStorage::validateLengths(const QwenLogicalLengths &lengths,
                                        bool cacheSnapshot) const {
-  if (lengths.draftLength > ExecutionLimits::draftContextTokens ||
+  if (lengths.draftLength > layout_.draft.historyCapacity() ||
       lengths.draftEnd() > lengths.targetTokens) {
     throw std::invalid_argument("invalid draft ring metadata");
   }
   if (cacheSnapshot &&
       (!lengths.targetTokens ||
-       !lengths.hasCompleteDraftWindow(ExecutionLimits::draftContextTokens) ||
+       (layout_.draft.layers && !lengths.hasCompleteDraftWindow(layout_.draft.historyCapacity())) ||
        lengths.targetTokens % kv::kPageTokens)) {
     throw std::invalid_argument(
         "composite snapshot requires equal page-aligned committed lengths");

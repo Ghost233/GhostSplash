@@ -14,6 +14,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 #include <utility>
 
 namespace splash::model {
@@ -327,7 +328,8 @@ std::string_view sourceName(TargetSource source) {
 // from the family its config's model type names, or that it names none.
 std::invalid_argument unsupportedModel(const std::string &difference) {
   return std::invalid_argument("no supported model has this architecture (" + difference + "); supported: " +
-                               std::string(Qwen3_8Layout::family) + ", " + std::string(Qwen3_6MoeLayout::family));
+                               std::string(Qwen3_8Layout::family) + ", " + std::string(Qwen3_6MoeLayout::family) +
+                               ", " + std::string(Qwen3_5_4BLayout::family));
 }
 
 // The target's text configuration, of the family its model type names. Every
@@ -427,6 +429,47 @@ void validateQuantization(NSDictionary *config, const Layout &layout) {
 void validateDraftConfig(NSDictionary *draft, const DFlashDraftLayout &layout,
                          uint32_t maskToken,
                          std::span<const uint32_t> captureLayers) {
+  if (!layout.supportsExecutionBlock())
+    throw std::invalid_argument("DFlash2 requires an eight-row draft build");
+  if (layout.kind == DraftKind::Standard) {
+    NSArray *architectures = requireArray(draft, @"architectures", "draft architectures");
+    if (architectures.count != 1 || ![architectures[0] isEqual:@"DFlashDraftModel"])
+      throw std::invalid_argument("draft is not a standard DFlash model");
+    requireNumbers(draft, "checkpoint", "standard draft config",
+                   {{"num_hidden_layers", layout.layers}, {"hidden_size", layout.hiddenSize},
+                    {"vocab_size", layout.vocabularySize}, {"intermediate_size", layout.intermediateSize},
+                    {"num_attention_heads", 32}, {"num_key_value_heads", layout.kvHeads},
+                    {"head_dim", layout.attentionHeadDimension}, {"sliding_window", 4096},
+                    {"rms_norm_eps", SPLASH_RMS_EPSILON}, {"num_target_layers", 32}});
+    requireBooleans(draft, "standard draft config", {{"attention_bias", false}, {"tie_word_embeddings", true}});
+    requireEqual(requireString(draft, @"hidden_act", "standard draft hidden_act"), "silu", "checkpoint", "standard draft hidden_act");
+    NSDictionary *rope = requireObject(draft, @"rope_parameters", "standard draft rope_parameters");
+    requireEqual(requireString(rope, @"rope_type", "standard draft rope_type"), "default", "checkpoint", "standard draft rope_type");
+    requireNumbers(rope, "checkpoint", "standard draft rope_parameters", {{"rope_theta", layout.rotaryTheta}});
+    NSArray *layers = requireArray(draft, @"layer_types", "standard draft layer_types");
+    if (layers.count != layout.layers) throw std::invalid_argument("standard draft layer_types count mismatch");
+    for (uint32_t i = 0; i < layout.layers; ++i)
+      if (![layers[i] isEqual:i + 1 == layout.layers ? @"full_attention" : @"sliding_attention"])
+        throw std::invalid_argument("standard draft attention layer type mismatch");
+    NSDictionary *flash = requireObject(draft, @"dflash_config", "standard dflash_config");
+    id causal = draft[@"is_causal"];
+    if (causal && causal != [NSNull null])
+      throw std::invalid_argument("standard draft config is_causal must be absent or null");
+    for (NSDictionary *options in @[draft, flash]) {
+      const std::string label = options == draft ? "standard draft config" : "standard dflash_config";
+      for (NSString *key in @[@"input_embedding_scale", @"output_multiplier"])
+        if (id value = options[key])
+          requireNumber(value, 1, "checkpoint", label + " " + key.UTF8String);
+      id softcap = options[@"final_logit_softcapping"];
+      if (softcap && softcap != [NSNull null])
+        throw std::invalid_argument(label + " final_logit_softcapping must be absent or null");
+    }
+    // The trained checkpoint records 16; serving uses the supported 8-row block.
+    requireNumbers(flash, "checkpoint", "standard dflash_config", {{"block_size", 16}, {"mask_token_id", maskToken}});
+    requireNumbers(requireArray(flash, @"target_layer_ids", "standard target_layer_ids"), captureLayers,
+                   "checkpoint", "standard target_layer_ids");
+    return;
+  }
   NSArray *architectures =
       requireArray(draft, @"architectures", "draft architectures");
   if (architectures.count != 1 ||
@@ -515,9 +558,23 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   else throw std::invalid_argument("unsupported vision source format: " + std::string(visionFormat));
   ModelDescriptor result = moe ? qwen36Descriptor(std::move(name), targetSource, visionSource)
                                : qwen38Descriptor(std::move(name), targetSource, visionSource);
+  const bool smallDense = !moe && targetSource == TargetSource::Gguf &&
+      [text[@"hidden_size"] doubleValue] == 2560 && [text[@"num_hidden_layers"] doubleValue] == 32;
+  if (smallDense) {
+    if (visionSource != VisionSource::None)
+      throw std::invalid_argument("Qwen3.5-4B currently requires a text-only target");
+    if (draft)
+      result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BDFlashLayout{},
+                                   kQwen3_5_4BDFlashDraftLayout, {}, targetSource, visionSource);
+    else
+      result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BLayout{}, {}, {},
+                                   targetSource, visionSource);
+  }
   std::visit([&](const auto &layout) {
     validateTextConfig(text, layout, layout.family, result.targetSource);
-    if (result.targetSource == TargetSource::Mlx) validateQuantization(config, layout);
+    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
+                  !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
+      if (result.targetSource == TargetSource::Mlx) validateQuantization(config, layout);
     if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
   }, result.target);
   if (result.hasVision())
@@ -571,8 +628,11 @@ ModelDescriptor inspectSourceModel(const std::filesystem::path &root) {
   const std::string targetFormat = requireString(record, @"target_format", "target format");
   const std::string visionFormat = requireString(record, @"vision_format", "vision format");
   NSDictionary *config = readObject(root / "config.json", "upstream model config");
-  NSDictionary *draft = readObject(root / "draft" / "config.json", "draft config");
+  NSDictionary *draft = record[@"sources"][@"draft"] == [NSNull null]
+      ? nil : readObject(root / "draft" / "config.json", "draft config");
   ModelDescriptor result = describeSourceModel(std::move(name), targetFormat, visionFormat, config, draft);
+  if (!draft && result.hasDraft())
+    throw std::invalid_argument("this model requires its matching DFlash2 draft");
   result.sourceIdentity = std::move(sourceIdentity);
   if (!result.valid()) throw std::invalid_argument("incompatible target and draft model");
   return result;
@@ -604,12 +664,14 @@ ModelDescriptor makeModelDescriptor(std::string name, TargetLayout target,
 }
 
 bool ModelDescriptor::valid() const noexcept {
-  if (name.empty() || targetSource == TargetSource{} || visionSource == VisionSource{} ||
+  if (name.empty() || !draft.supportsExecutionBlock() || targetSource == TargetSource{} || visionSource == VisionSource{} ||
       !capabilities.vocabularySize ||
       !capabilities.maximumContextTokens ||
       !targetKvLayout.valid() || !stateLayout.valid() ||
       stateLayout.draft != draft.stateLayout() ||
-      vision.outputHiddenSize != draft.hiddenSize) {
+      (hasVision() && hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
+      (!hasDraft() && (!std::holds_alternative<Qwen3_5_4BLayout>(target) ||
+                      draft != DFlashDraftLayout{} || hasVision()))) {
     return false;
   }
   return std::visit(
@@ -617,7 +679,7 @@ bool ModelDescriptor::valid() const noexcept {
         return layout.vocabularySize == capabilities.vocabularySize &&
                layout.maximumContextTokens ==
                    capabilities.maximumContextTokens &&
-               layout.hiddenSize == draft.hiddenSize &&
+               (!hasDraft() || layout.hiddenSize == draft.hiddenSize) &&
                layout.capturedHiddenSize() == draft.targetHiddenSize &&
                layout.kvLayout() == targetKvLayout &&
                layout.gdnStateLayout() == stateLayout.target;

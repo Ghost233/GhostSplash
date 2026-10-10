@@ -2,10 +2,11 @@
 
 #include "metal/abi/KernelABI.h"
 #include "metal/kernels/common/rms_inverse.h"
+#include "metal/kernels/common/kv_hadamard.h"
 
 // q_norm and k_norm are read in their stored type W: bfloat in the affine
 // formats, float for a GGUF's F32 norms.
-template <uint QHeads, uint KHeads, class W>
+template <uint QHeads, uint KHeads, class W, bool Rotate = false>
 inline void full_qkv_storage_phase(
     device const bfloat *qkv, device const W *q_norm,
     device const W *k_norm, device const float *rope_cos,
@@ -13,7 +14,7 @@ inline void full_qkv_storage_phase(
     device bfloat *chunk_keys, device bfloat *chunk_values,
     FullPrefillParams params, threadgroup float *reductions,
     threadgroup bfloat *normalized, uint task, uint thread_index, uint lane,
-    uint simd_group) {
+    uint simd_group, threadgroup float *rotation = nullptr) {
   static_assert(QHeads % KHeads == 0);
   constexpr uint HeadDim = 256, RotaryPairs = SPLASH_TARGET_ROPE_PAIRS, QStride = 2 * HeadDim;
   constexpr uint PackedStride = QHeads * QStride + 2 * KHeads * HeadDim;
@@ -48,13 +49,32 @@ inline void full_qkv_storage_phase(
                                             simd_group);
   normalized[thread_index] =
       bfloat(element * inverse * float(weight[thread_index]));
-  if (!query) {
+  if (!query && !Rotate) {
     ulong value_offset =
         (ulong(head_index) * HeadDim + thread_index) * params.stride +
         position;
     chunk_values[value_offset] = source[KWidth + thread_index];
   }
   threadgroup_barrier(mem_flags::mem_threadgroup);
+  if constexpr (Rotate) {
+    float value = float(normalized[thread_index]);
+    if (thread_index < 2 * RotaryPairs) {
+      uint pair = thread_index % RotaryPairs;
+      float first = float(normalized[pair]);
+      float second = float(normalized[pair + RotaryPairs]);
+      float cosine = rope_cos[ulong(row) * RotaryPairs + pair];
+      float sine = rope_sin[ulong(row) * RotaryPairs + pair];
+      value = float(bfloat(thread_index < RotaryPairs
+          ? first * cosine - second * sine : second * cosine + first * sine));
+    }
+    destination[thread_index] = bfloat(splash_kv_hadamard<256>(value, rotation, thread_index));
+    if (!query) {
+      float v = float(source[KWidth + thread_index]);
+      v = splash_kv_hadamard<64>(v, rotation, thread_index);
+      chunk_values[(ulong(head_index) * HeadDim + thread_index) * params.stride + position] = bfloat(v);
+    }
+    return;
+  }
   if (thread_index < RotaryPairs) {
     float first = float(normalized[thread_index]);
     float second = float(normalized[thread_index + RotaryPairs]);

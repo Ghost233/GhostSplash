@@ -1,5 +1,6 @@
 #include "Q8PageFormatReference.hpp"
 #include "TestChecks.hpp"
+#include "tuning/Q4KvReference.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -18,6 +19,25 @@ using splash::test::require;
 namespace {
 
 void testByteAccounting() {
+  constexpr Layout q4{8, 4, 256, Format::Q4_0Hadamard};
+  static_assert(sizeof(SplashQ4Block) == 18 && alignof(SplashQ4Block) == 2);
+  static_assert(q4.valid() && q4.elementsPerScale() == 32);
+  static_assert(q4.dataBytesPerLayerPage() == 18'432 && q4.scaleBytesPerLayerPage() == 0);
+  static_assert(q4.bytesPerModelPage() == 294'912 && q4.extentAlignmentPages() == 32);
+  static_assert(1024 * q4.bytesPerModelPage() == 288ULL * 1024 * 1024);
+  constexpr Layout plain{8, 4, 256, Format::Q4_0Unrotated};
+  static_assert(plain.bytesPerModelPage() == q4.bytesPerModelPage());
+  static_assert(usesHadamard(q4.format) && !usesHadamard(plain.format));
+  static_assert(storageFormatName(q4.format) != storageFormatName(plain.format));
+  constexpr Layout q4h{8, 4, 256, Format::Int4Hadamard};
+  static_assert(q4h.valid() && q4h.elementsPerScale() == 256);
+  static_assert(q4h.dataBytesPerLayerPage() == 16'384);
+  static_assert(q4h.scaleBytesPerLayerPage() == 512);
+  static_assert(q4h.bytesPerModelPage() == 270'336);
+  static_assert(q4h.extentAlignmentPages() == 128);
+  static_assert(1024 * q4h.bytesPerModelPage() == 264ULL * 1024 * 1024);
+  static_assert(!Layout{8, 4, 128, Format::Int4Hadamard}.valid());
+  static_assert(formatName(Format::Int4Hadamard) == "q4h");
   constexpr Layout bf16{16, 4, 256, Format::BFloat16};
   static_assert(bf16.valid());
   static_assert(bf16.bytesPerModelPage() == 2'097'152);
@@ -61,6 +81,23 @@ void testByteAccounting() {
   static_assert(kOracleLayout.attentionLayers * kKeyScaleBytesPerLayerPage == 8 * 1024);
   static_assert(kBytesPerModelPage == 2 * (512 + 8) * 1024);
   static_assert(4608 * kBytesPerModelPage == 4'907'335'680ULL); // 147456 tokens.
+}
+
+void testStandardQ4Blocks() {
+  std::array<float, 32> values{};
+  auto zero = splash::ops::tuning::q4KvReference(values);
+  require(zero.d == 0x8000 && std::all_of(std::begin(zero.qs), std::end(zero.qs),
+                                      [](uint8_t b) { return b == 0x88; }),
+          "zero Q4_0 block changed its scale or offset-nibble representation");
+  values[0] = -8; values[1] = 7; values[2] = 0.5f; values[3] = -0.5f;
+  values[16] = 1; values[17] = -1;
+  auto block = splash::ops::tuning::q4KvReference(values);
+  require(block.d == 0x3c00 && block.qs[0] == 0x90 && block.qs[1] == 0x7f &&
+              (block.qs[2] & 15) == 9 && (block.qs[3] & 15) == 8,
+          "Q4_0 signed scale, split-half packing or rounding convention changed");
+  values[0] = 8;
+  require(splash::ops::tuning::q4KvReference(values).d == 0xbc00,
+          "Q4_0 first absolute maximum did not determine the signed scale");
 }
 
 void testLayouts() {
@@ -172,6 +209,7 @@ void testZeroAndInvalidInputs() {
 int main() {
   try {
     testByteAccounting();
+    testStandardQ4Blocks();
     testLayouts();
     testBFloat16();
     testQuantization(kPageTokens);

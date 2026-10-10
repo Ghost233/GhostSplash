@@ -24,7 +24,7 @@ The paths an assembly links, and what reads each:
                          tokenizer_config.json and chat_template.jinja derived
                          from the GGUF (server.py --tokenizer)
   draft/config.json, draft/<name>.safetensors
-                         the DFlash2 checkpoint (ModelDescriptor.mm,
+                         the selected draft checkpoint (ModelDescriptor.mm,
                          DraftCheckpoint.cpp)
   vision/<shard>         the MLX shards holding vision_tower.*
                          (VisionLoader.cpp, through SafetensorsCheckpoint.mm)
@@ -181,14 +181,17 @@ def _well_formed(record):
         and isinstance(sources, dict)
         and set(sources) == {"target", "draft"}
         and all(
-            isinstance(source, dict)
-            and set(source) == {"repo", "revision"}
-            and isinstance(source["repo"], str)
-            and (
-                source["revision"] is None
-                or models.is_hex_digest(source["revision"], 40)
+            (source is None and role == "draft" and record["family"] == "Qwen3.5-4B")
+            or (
+                isinstance(source, dict)
+                and set(source) == {"repo", "revision"}
+                and isinstance(source["repo"], str)
+                and (
+                    source["revision"] is None
+                    or models.is_hex_digest(source["revision"], 40)
+                )
             )
-            for source in sources.values()
+            for role, source in sources.items()
         )
         and isinstance(files, dict)
         and all(
@@ -216,7 +219,7 @@ def pins(record):
     sources = {
         (hub.folder_name(source["repo"]), source["revision"]): source["repo"]
         for source in record["sources"].values()
-        if source["revision"] is not None
+        if source is not None and source["revision"] is not None
     }
     snapshots = {}
     for entry in record["files"].values():

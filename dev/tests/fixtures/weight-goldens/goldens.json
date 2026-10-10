@@ -50,6 +50,15 @@
       "draft/layer-0.bin": "283c85c3c12a1777fc05ef1306a45fc3a180963f8477191d49abf09d0a1afb00",
       "draft/layer-1.bin": "5b5b0e09cba0218be18586751d4412ef689db465c1ac3976011365ff575c4d14",
       "draft/model.bin": "377d2766849aa742ad6a1027f9779ec5553b1c5a336a333b309207f26e94f901"
+    },
+    "standard-draft": {
+      "draft/layer-0.bin": "131a4fcd89179cd04ca9a1bb9c859dd91b8e3d4e51430c23285c36a11359a0fb",
+      "draft/layer-1.bin": "6644aae184fba7f08cd7d49ed1f9a4622eedb278e66858559407181a94a55523",
+      "draft/layer-2.bin": "017d1b34f39a939676efe09a320c76e0fa04bbfffd8ad498ff99d125ed9087f3",
+      "draft/layer-3.bin": "43db5429718da4f1c4907eecd9c222052dc8daa7580ca9eee2bba067697ce023",
+      "draft/layer-4.bin": "eac2c46efbb43d5bb21ccab6de081d58bb83984c99036ed045fe3522ad3fe9f9",
+      "draft/layer-5.bin": "0f543c1212c8af96c56e5923ea6cc8eaa20011768bdc5e6f2d67cf43ec1d6424",
+      "draft/model.bin": "2bcc1ccc063112555656f62dd2e40b934249402b9b99d364c9002e235860f9ed"
     }
   },
   "vision_image": "f1a165335c42384479f73d83e69146cfa46d4964d66ed13c663b158fed08cdd5"

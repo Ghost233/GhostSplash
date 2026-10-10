@@ -81,7 +81,8 @@ const char *AneFfn::unsupported(std::span<const SwiGluProjections> layers) {
   if (layers.empty()) return "ANE FFN split has no layers";
   const uint32_t hidden = layers.front().gate->inputSize, intermediate = layers.front().gate->outputSize;
   if (hidden % kSegment) return "ANE FFN split needs a hidden size of whole 2560-channel segments";
-  if (hidden % kRotateGroup || hidden / kRotateGroup > ANE_FFN_ROTATE_BLOCKS)
+  if (hidden % ANE_FFN_INPUT_BLOCK ||
+      hidden / kRotateGroup + (hidden % kRotateGroup != 0) > ANE_FFN_ROTATE_BLOCKS)
     return "ANE FFN split needs a hidden size ane_ffn_rotate takes";
   if (intermediate % kChannelUnit || intermediate < 2 * kChannelUnit)
     return "ANE FFN split needs two or more whole rotation blocks of intermediate channels";

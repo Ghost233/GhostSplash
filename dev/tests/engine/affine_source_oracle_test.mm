@@ -12,6 +12,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <type_traits>
 
 using namespace splash;
 
@@ -75,6 +76,10 @@ int main(int argc, char **argv) {
       const std::filesystem::path package(argv[3]);
       const auto descriptor = model::inspectModelRoot(package);
       std::visit([&](const auto &layout) {
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, model::Qwen3_5_4BLayout> ||
+                      std::is_same_v<std::remove_cvref_t<decltype(layout)>, model::Qwen3_5_4BDFlashLayout>) {
+          throw std::invalid_argument("4B has no MLX affine source path");
+        } else {
         // Each image is written into memory of its own, so one is held at a
         // time.
         const auto check = [&](const auto &load, uint64_t decayOffset = 0, uint32_t decayHeads = 0) {
@@ -96,6 +101,7 @@ int main(int argc, char **argv) {
         if (argc != 5) {
           check([](auto &loader) { return loader.head(); });
           check([](auto &loader) { return loader.embedding(); });
+        }
         }
       }, descriptor.target);
       std::cout << "affine source oracle PASS seconds="

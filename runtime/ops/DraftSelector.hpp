@@ -54,6 +54,14 @@ public:
            const DraftCodebooks &codebooks, std::span<const uint32_t> anchors,
            std::span<const SamplingPolicy> policies) const;
 
+  // Standard DFlash has independent unary logits and no selector/codebooks.
+  // One greedy lane streams the exact vocabulary argmax in two dispatches
+  // and uses no candidate/unary/uniform/Q buffers. Wider batches keep the
+  // measured top-16 path. Sampling draws from its
+  // true top-16 softmax Q and emits Q for target residual correction.
+  void addUnary(metal::CommandGraph &graph, const DraftSelectorBuffers &buffers,
+                std::span<const uint32_t> anchors, std::span<const SamplingPolicy> policies) const;
+
 private:
   uint32_t vocabulary_ = 0;
 };

@@ -45,27 +45,43 @@ class LocalLauncherTests(unittest.TestCase):
             (ROOT / "docs/templates/tiel-miniplus-v2.1.original.jinja").read_text()
         )
 
-    def launch(self, script, *, installed=False, invalid=False, wrong_target=False):
+    def launch(
+        self,
+        script,
+        *,
+        installed=False,
+        invalid=False,
+        wrong_target=False,
+        kv_format="int8",
+    ):
         text = script.read_text()
         source = text.split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
         source_line = text.split("<<'PY'\n", 1)[0].count("\n") + 1
         tree = ast.increment_lineno(ast.parse(source), source_line)
         model_id = "community/local-model"
         draft_dir = self.root / "draft"
+        if script.name == "qwen3.54bdflashsplash.sh":
+            draft_dir = (
+                self.root / "install/models-local/drafts/qwen35-4b-dflash/source"
+            )
+            draft_dir.mkdir(parents=True, exist_ok=True)
+            (draft_dir / "model.safetensors").touch()
         arguments = [str(self.root), str(self.target)]
         if script.name == "coder39027bsplash.sh":
             arguments.append(str(draft_dir))
         arguments.append(model_id)
         if script.name == "tielminiplus35ba3bsplash.sh":
             arguments.append(str(self.template))
-        arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4"])
+        arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4", kv_format])
         record = {
             "sources": {
                 "target": {
                     "repo": "wrong" if wrong_target else str(self.target),
                     "revision": None,
                 },
-                "draft": {"repo": str(draft_dir), "revision": None},
+                "draft": None
+                if script.name == "qwen3.54bsplash.sh"
+                else {"repo": str(draft_dir), "revision": None},
             }
         }
         scratches = []
@@ -127,6 +143,7 @@ class LocalLauncherTests(unittest.TestCase):
                 self.assertEqual(parsed.port, 18004)
                 self.assertEqual(parsed.max_context, 262144)
                 self.assertEqual(parsed.queue_size, 4)
+                self.assertEqual(parsed.kv_format, kv_format)
                 self.assertTrue(parsed.no_webui)
                 inherit.assert_called_once_with(99, True)
                 if script.name == "tielminiplus35ba3bsplash.sh":
@@ -143,6 +160,21 @@ class LocalLauncherTests(unittest.TestCase):
                 draft.assert_not_called()
             elif not invalid:
                 install.assert_called_once()
+                if script.name == "qwen3.54bdflashsplash.sh":
+                    chosen = install.call_args.args[0]
+                    self.assertEqual(chosen.draft_model, str(draft_dir))
+                    self.assertEqual(
+                        chosen.models_root,
+                        (self.root / "install/models-local").resolve(),
+                    )
+                    installed_draft = install.call_args.kwargs["draft"]
+                    self.assertEqual(installed_draft.directory, draft_dir)
+                    self.assertEqual(
+                        installed_draft.identity(),
+                        {"repo": str(draft_dir), "revision": None},
+                    )
+                    self.assertIn("model.safetensors", installed_draft.files)
+                    draft.assert_not_called()
             if script.name in EXPLICIT_DRAFTS and not installed:
                 self.assertEqual(len(scratches), 1)
             self.assertTrue(all(not scratch.exists() for scratch in scratches))
@@ -152,6 +184,12 @@ class LocalLauncherTests(unittest.TestCase):
             with self.subTest(script=script.name):
                 self.launch(script)
 
+    def test_every_gguf_launcher_forwards_each_kv_format(self):
+        for script in GGUF_SCRIPTS:
+            for kv_format in ("int8", "bf16", "q4_0", "q4_0_unrotated", "q4h"):
+                with self.subTest(script=script.name, kv_format=kv_format):
+                    self.launch(script, installed=True, kv_format=kv_format)
+
     def test_every_launcher_listens_without_a_specific_virtual_bridge_address(self):
         for script in SCRIPTS:
             with self.subTest(script=script.name):
@@ -160,7 +198,12 @@ class LocalLauncherTests(unittest.TestCase):
                     for line in script.read_text().splitlines()
                     if line.startswith("host=")
                 )
-                self.assertEqual(host, "0.0.0.0")
+                self.assertEqual(
+                    host,
+                    "127.0.0.1"
+                    if script.name in {"qwen3.54bsplash.sh", "qwen3.54bdflashsplash.sh"}
+                    else "0.0.0.0",
+                )
                 with socket.socket() as listener:
                     listener.bind((host, 0))
 
@@ -192,6 +235,10 @@ class LocalLauncherTests(unittest.TestCase):
                 (target / "manifest.json").write_text("{}")
                 for name in ("target", "draft", "tokenizer", "vision"):
                     (target / name).mkdir()
+                (repo / "dev/tools").mkdir(parents=True)
+                (repo / "dev/tools/launcher_kv.sh").write_text(
+                    (ROOT / "dev/tools/launcher_kv.sh").read_text()
+                )
                 (repo / "server").mkdir()
                 (repo / "server/server.py").touch()
                 (repo / "build").mkdir()
@@ -226,7 +273,7 @@ class LocalLauncherTests(unittest.TestCase):
                     + "\n"
                 )
                 completed = subprocess.run(
-                    ["sh", str(launcher)],
+                    ["sh", str(launcher), "--kv-format", "q4_0"],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -241,4 +288,5 @@ class LocalLauncherTests(unittest.TestCase):
                 parsed = server.parse_args(command[3:])
                 self.assertEqual(parsed.model_root, str(target))
                 self.assertEqual(parsed.tokenizer, str(target / "tokenizer"))
+                self.assertEqual(parsed.kv_format, "q4_0")
                 self.assertTrue(parsed.no_webui)

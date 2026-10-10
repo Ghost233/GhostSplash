@@ -16,7 +16,7 @@ prefill_draft_context_kv(device const bfloat *context_kv [[buffer(0)]],
   threadgroup float reductions[8];
   threadgroup bfloat normalized[SPLASH_DRAFT_HEAD_DIMENSION];
   draft_context_kv_phase(context_kv, k_norm, rope_cos, rope_sin, keys, values,
-                         params.start_position, params.tokens, task,
+                         params.start_position, params.tokens, params.capacity, params.sliding_window, task,
                          thread_index, lane, simd_group, reductions,
                          normalized);
 }

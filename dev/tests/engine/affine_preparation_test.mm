@@ -102,20 +102,21 @@ void openTarget(model::AffineTargetLoader &loader, const auto &check) {
 }
 
 // The draft fixture: two layers of width 256, one KV head.
-model::DFlashDraftLayout tinyDraftLayout() {
+model::DFlashDraftLayout tinyDraftLayout(bool standard = false) {
   model::DFlashDraftLayout layout;
-  layout.layers = 2;
+  layout.layers = standard ? 6 : 2;
   layout.hiddenSize = 256;
   layout.vocabularySize = 256;
-  layout.dynamicSize = 256;
-  layout.qkvSize = 256;
-  layout.attentionSize = 128;
-  layout.intermediateSize = 256;
+  layout.dynamicSize = standard ? 0 : 256;
+  layout.qkvSize = standard ? 768 : 256;
+  layout.attentionSize = standard ? 512 : 128;
+  layout.intermediateSize = standard ? 512 : 256;
   layout.attentionHeadDimension = 64;
   layout.rotaryTheta = 10'000'000.0F;
-  layout.targetHiddenSize = 256;
-  layout.selectorRank = 256;
-  layout.kvHeads = 1;
+  layout.targetHiddenSize = standard ? 2048 : 256;
+  layout.selectorRank = standard ? 0 : 256;
+  layout.kvHeads = standard ? 2 : 1;
+  layout.kind = standard ? model::DraftKind::Standard : model::DraftKind::DFlash2;
   return layout;
 }
 
@@ -125,15 +126,15 @@ int main(int argc, char **argv) {
   @autoreleasepool {
     try {
       const std::string_view kind = argc == 4 ? argv[3] : "";
-      if (kind != "dense" && kind != "moe" && kind != "draft")
-        throw std::runtime_error("usage: affine-preparation METALLIB FIXTURE dense|moe|draft");
+      if (kind != "dense" && kind != "moe" && kind != "draft" && kind != "standard-draft")
+        throw std::runtime_error("usage: affine-preparation METALLIB FIXTURE dense|moe|draft|standard-draft");
       const std::filesystem::path root(argv[2]);
       metal::MetalBackend backend(argv[1]);
-      if (kind == "draft") {
-        const model::DFlashDraftLayout layout = tinyDraftLayout();
-        prepare<model::DraftCheckpointLoader>(backend, root, layout, [](auto &loader, const auto &check) {
-          check(loader.layer(0));
-          check(loader.layer(1));
+      if (kind == "draft" || kind == "standard-draft") {
+        const bool standard = kind == "standard-draft";
+        const model::DFlashDraftLayout layout = tinyDraftLayout(standard);
+        prepare<model::DraftCheckpointLoader>(backend, root, layout, [standard](auto &loader, const auto &check) {
+          for (uint32_t index = 0; index < (standard ? 6u : 2u); ++index) check(loader.layer(index));
           check(loader.model());
         });
         writeEveryByte(root, model::draftCheckpointImages(layout));
@@ -146,12 +147,19 @@ int main(int argc, char **argv) {
         };
         bool read = draft.layers.size() == layout.layers && draft.files.size() == layout.layers + 1 &&
                     affine(draft.contextProjection, layout.hiddenSize, layout.targetHiddenSize) &&
-                    affine(draft.selectorProjection, layout.selectorRank, layout.hiddenSize);
-        for (const auto &layer : draft.layers)
-          read = read && affine(layer.attentionDynamic, layout.dynamicSize, layout.hiddenSize) &&
-                 affine(layer.qkvProjection, layout.qkvSize, layout.hiddenSize) &&
+                    (standard ? !draft.selectorProjection.outputSize && !draft.predecessorCodebook &&
+                                    !draft.successorCodebook
+                              : affine(draft.selectorProjection, layout.selectorRank, layout.hiddenSize));
+        for (const auto &layer : draft.layers) {
+          read = read && affine(layer.qkvProjection, layout.qkvSize, layout.hiddenSize) &&
                  affine(layer.outputProjection, layout.hiddenSize, layout.attentionSize) &&
+                 affine(layer.gateProjection, layout.intermediateSize, layout.hiddenSize) &&
+                 affine(layer.upProjection, layout.intermediateSize, layout.hiddenSize) &&
                  affine(layer.downProjection, layout.hiddenSize, layout.intermediateSize);
+          read = read && (standard ? !layer.attentionDynamic.outputSize && !layer.mlpDynamic.outputSize &&
+                                         !layer.attentionConvolution && !layer.mlpConvolution
+                                   : affine(layer.attentionDynamic, layout.dynamicSize, layout.hiddenSize));
+        }
         if (!read) throw std::runtime_error("the draft loader misread the draft images");
         std::cout << "affine preparation: exact independent draft fixture, quantization edge cases, fused qkv, "
                      "restore, draft read PASS\n";

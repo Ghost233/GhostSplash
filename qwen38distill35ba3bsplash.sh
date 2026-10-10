@@ -11,6 +11,9 @@ max_memory=40G
 max_cache_disk=50G
 queue_size=4
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+launcher_allow_baseline=0
+. "$repo/dev/tools/launcher_kv.sh"
+splash_parse_launcher_options "$@"
 python="$repo/.venv/bin/python"
 
 for path in "$model_dir/Qwen3.8-35B-A3B-Distill.APEX-I-MiniPlus-V2.1-Abliterated.gguf" \
@@ -26,15 +29,16 @@ if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 unset SPLASH_API_KEY
+echo "KV format: $kv_format"
 exec "$python" -u - "$repo" "$model_dir" "$model_id" "$host" "$port" \
-    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" <<'PY'
+    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" <<'PY'
 import os
 import socket
 import sys
 import tempfile
 from pathlib import Path
 
-repo, model_dir, model_id, host, port, context, memory, cache_disk, queue = sys.argv[1:]
+repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
 from install import assembly, hub, models, upstream
@@ -66,7 +70,7 @@ command = [
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
-    "--queue-size", queue, "--no-webui",
+    "--queue-size", queue, "--kv-format", kv_format, "--no-webui",
 ]
 os.chdir(repo)
 os.execv(command[0], command)

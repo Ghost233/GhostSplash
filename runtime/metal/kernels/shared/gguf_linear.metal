@@ -107,7 +107,8 @@ using GgufDecodeKernel = void(device bfloat *, device uchar *, device uchar *, d
 #define GGUF_DECODE(F, f, R, ep, Ep, Out) \
   template [[host_name("gguf_decode_" #f "_m" #R "_" #ep)]] kernel GgufDecodeKernel<Out> gguf_decode<F, R, Ep, Out>;
 #define GGUF_DECODE_ROWS(F, f, ep, Ep, Out) \
-  GGUF_DECODE(F, f, 8, ep, Ep, Out) GGUF_DECODE(F, f, 16, ep, Ep, Out) GGUF_DECODE(F, f, 32, ep, Ep, Out)
+  GGUF_DECODE(F, f, 8, ep, Ep, Out) GGUF_DECODE(F, f, 16, ep, Ep, Out) GGUF_DECODE(F, f, 32, ep, Ep, Out) \
+  GGUF_DECODE(F, f, 64, ep, Ep, Out)
 #define GGUF_DECODE_FORMAT(F, f)                                                                                  \
   GGUF_DECODE_ROWS(F, f, a, EpNone, bfloat) GGUF_DECODE_ROWS(F, f, a_f32, EpNone, float)                          \
   GGUF_DECODE_ROWS(F, f, r, EpResidual, bfloat) GGUF_DECODE_ROWS(F, f, g, EpUpWithGate, bfloat)
@@ -148,7 +149,7 @@ QUANT_FORMATS(GGUF_DECODE_FORMAT)
                        p.out_stride, column0, simd_group * 32 + simd_lane, &arrival,                              \
                        [&](uint row, uint column, float v) { output[ulong(row) * p.out_stride + column0 + column] = bfloat(v); }); \
   }
-GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32)
+GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32) GGUF_DECODE_FUSED(64)
 #undef GGUF_DECODE_FUSED
 #undef GGUF_SEGMENT
 

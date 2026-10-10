@@ -266,7 +266,7 @@ __attribute__((always_inline)) inline void q4_mpp_tile_sums(
 // q4_store_output.
 template <ushort Rows, ushort TileN, bool GateUp, bool AddResidual,
           bool MultiplySiluGate = false, ushort Simdgroups = 8,
-          bool Pipelined = false, class Out>
+          bool Pipelined = false, class Out, ushort LiveRows = Rows>
 inline void q4_mpp_tile(
     device bfloat *input, device uchar *weights_0, device bfloat *scales_0,
     device bfloat *biases_0, device Out *output_0, device uchar *weights_1,
@@ -281,6 +281,7 @@ inline void q4_mpp_tile(
           Q4Traversal traversal) __attribute__((always_inline)) {
     q4_visit(accumulated_0, traversal, [&](ushort i) {
       auto index = accumulated_0.get_multidimensional_index(i);
+      if constexpr (LiveRows < Rows) { if (index[1] >= LiveRows) return; }
       uint output_index = index[1] * output_size + output_origin + index[0];
       q4_store_output<GateUp, AddResidual, MultiplySiluGate>(
           accumulated_0, accumulated_1, i, residual, output_0, output_index);

@@ -15,7 +15,6 @@ namespace {
 
 constexpr uint32_t kMaximumLanes = SPLASH_MAXIMUM_BATCH_WIDTH;
 constexpr uint32_t kRows = SPLASH_DRAFT_QUERY_ROWS;
-constexpr uint32_t kWindow = SPLASH_DRAFT_SLIDING_WINDOW;
 constexpr uint32_t kThreads = metal::CommandGraph::kDefaultThreads;
 // Each split leaves a partial of its attention rows x (head dimensions + max
 // + sum) fp32 values behind the grouped queries.
@@ -36,9 +35,14 @@ uint64_t queryRowsBytes(const DraftAttentionPlan &plan) {
 }
 
 // One lane's keys, or values, of one layer: the kernels place a position in
-// slot position % kWindow of each KV head's ring.
-uint64_t ringBytes(DraftAttentionShape shape) {
-  return uint64_t{shape.kvHeads} * kWindow * shape.headDimension * 2;
+// slot position % capacity of each KV head's ring.
+uint64_t ringBytes(DraftAttentionShape shape, DraftAttentionGeometry geometry) {
+  return uint64_t{shape.kvHeads} * geometry.capacity * shape.headDimension * 2;
+}
+
+void requireGeometry(DraftAttentionGeometry geometry) {
+  if (!geometry.valid())
+    throw std::invalid_argument("invalid draft cache geometry");
 }
 
 // What the context writers read for `rows` rows: the key and value rows,
@@ -60,7 +64,7 @@ void requireLanes(uint32_t lanes) {
     throw std::invalid_argument("invalid draft batch width");
 }
 
-enum class KernelLayout : uint8_t { Hidden5120, Hidden2048 };
+enum class KernelLayout : uint8_t { Hidden5120, Hidden2048, Standard2560 };
 
 // The compiled draft (metal/abi/DraftAttention.h) of each hidden size the
 // convolution kernels take.
@@ -78,6 +82,11 @@ enum class KernelLayout : uint8_t { Hidden5120, Hidden2048 };
     return KernelLayout::Hidden5120;
   if (shape == compiled(2048))
     return KernelLayout::Hidden2048;
+  if (shape == DraftAttentionShape{2560, 0, SPLASH_DRAFT_QKV_WIDTH,
+                                  SPLASH_DRAFT_ATTENTION_WIDTH,
+                                  SPLASH_DRAFT_QUERY_HEADS, SPLASH_DRAFT_KV_HEADS,
+                                  SPLASH_DRAFT_HEAD_DIMENSION})
+    return KernelLayout::Standard2560;
   throw std::invalid_argument("unsupported compiled draft attention shape");
 }
 
@@ -88,7 +97,7 @@ DraftAttentionWorkspace DraftAttentionPlan::workspace() const noexcept {
   const uint64_t kvBytes = rows * shape_.kvHeads * shape_.headDimension * 2;
   const uint64_t partialBytes =
       uint64_t{lanes_} * shape_.kvHeads * kSplits * kPartialBytes;
-  return {rows * shape_.hiddenSize * 2, rows * shape_.qkvSize * 2,
+  return {shape_.dynamicSize ? rows * shape_.hiddenSize * 2 : 0, rows * shape_.qkvSize * 2,
           rows * shape_.attentionSize * 2 + partialBytes, kvBytes, kvBytes};
 }
 
@@ -113,6 +122,9 @@ void DraftAttention::addConvolution(metal::CommandGraph &graph,
     break;
   }
   const auto shape = plan.shape();
+  const KernelLayout kernel = kernelShape(shape);
+  if (kernel == KernelLayout::Standard2560)
+    throw std::invalid_argument("standard DFlash has no convolution");
   const auto workspace = plan.workspace();
   const uint32_t groups = phaseGroups(uint64_t{kRows} * shape.hiddenSize);
   const uint32_t lanes = plan.lanes();
@@ -123,7 +135,6 @@ void DraftAttention::addConvolution(metal::CommandGraph &graph,
   requireBytes(buffers.weights,
                uint64_t{SPLASH_DRAFT_CONVOLUTION_STAGES} * SPLASH_DRAFT_CONVOLUTION_TAPS * shape.hiddenSize * 2,
                "draft convolution weight");
-  const KernelLayout kernel = kernelShape(shape);
   const DraftConvBatchParams params{finish};
   graph.add(kernel == KernelLayout::Hidden5120 ? "draft_conv"
                                                : "draft_conv_h2048",
@@ -163,10 +174,12 @@ void DraftAttention::addPrepare(metal::CommandGraph &graph,
 
 void DraftAttention::addDecode(
     metal::CommandGraph &graph, DraftDecodeAttentionBuffers buffers,
-    std::span<const uint32_t> cacheLengths, const DraftAttentionPlan &plan) {
+    std::span<const uint32_t> cacheLengths, const DraftAttentionPlan &plan,
+    DraftAttentionGeometry geometry) {
   const auto shape = plan.shape();
   const auto workspace = plan.workspace();
   const uint32_t lanes = plan.lanes();
+  requireGeometry(geometry);
   if (cacheLengths.size() != lanes ||
       buffers.persistentKeys.size() != kMaximumLanes ||
       buffers.persistentValues.size() != kMaximumLanes)
@@ -177,10 +190,13 @@ void DraftAttention::addDecode(
   for (uint32_t lane = 0; lane < lanes; ++lane) {
     if (cacheLengths[lane] > SPLASH_MAXIMUM_CONTEXT_TOKENS)
       throw std::invalid_argument("draft attention cache length exceeds limit");
-    requireBytes(buffers.persistentKeys[lane], ringBytes(shape), "draft key ring");
-    requireBytes(buffers.persistentValues[lane], ringBytes(shape), "draft value ring");
+    if (!geometry.slidingWindow && cacheLengths[lane] > geometry.capacity)
+      throw std::invalid_argument("draft full attention history exceeds capacity");
+    requireBytes(buffers.persistentKeys[lane], ringBytes(shape, geometry), "draft key ring");
+    requireBytes(buffers.persistentValues[lane], ringBytes(shape, geometry), "draft value ring");
   }
-  DraftAttentionBatchParams params{kWindow, lanes, {}};
+  DraftAttentionBatchParams params{geometry.capacity, lanes, {}, geometry.capacity,
+                                  geometry.slidingWindow, uint32_t(geometry.causal)};
   std::copy(cacheLengths.begin(), cacheLengths.end(),
             std::begin(params.cache_length));
   std::vector<metal::MetalBuffer> bindings{buffers.groupedQueries};
@@ -192,7 +208,7 @@ void DraftAttention::addDecode(
   graph.add("draft_attention_bf16_split", std::move(bindings), params,
             {shape.kvHeads, lanes, kSplits});
   graph.add("draft_attention_bf16_reduce", {buffers.groupedQueries}, params,
-            {shape.kvHeads, lanes, 1});
+            {shape.kvHeads, lanes, 1}, {SPLASH_DRAFT_ATTENTION_ROWS * 8, 1, 1});
 }
 
 void DraftAttention::addReorder(metal::CommandGraph &graph,
@@ -214,14 +230,20 @@ void DraftAttention::addContextPrefill(
     metal::MetalBuffer keyNorm, metal::MetalBuffer ropeCos,
     metal::MetalBuffer ropeSin, metal::MetalBuffer keys,
     metal::MetalBuffer values, uint32_t tokens, uint32_t startPosition,
-    DraftAttentionShape shape) {
+    DraftAttentionShape shape, DraftAttentionGeometry geometry) {
   static_cast<void>(kernelShape(shape));
+  requireGeometry(geometry);
   if (!tokens)
     throw std::invalid_argument("invalid draft context prefill geometry");
+  if (tokens > geometry.capacity)
+    throw std::invalid_argument("draft context prefill exceeds cache capacity");
+  if (!geometry.slidingWindow && uint64_t{startPosition} + tokens > geometry.capacity)
+    throw std::invalid_argument("draft full context prefill exceeds capacity");
   requireContextInputs(contextKv, keyNorm, ropeCos, ropeSin, tokens, shape);
-  requireBytes(keys, ringBytes(shape), "draft key ring");
-  requireBytes(values, ringBytes(shape), "draft value ring");
-  const DraftContextParams params{tokens, startPosition};
+  requireBytes(keys, ringBytes(shape, geometry), "draft key ring");
+  requireBytes(values, ringBytes(shape, geometry), "draft value ring");
+  const DraftContextParams params{tokens, startPosition, geometry.capacity,
+                                  geometry.slidingWindow};
   graph.add("prefill_draft_context_kv",
             {std::move(contextKv), std::move(keyNorm), std::move(ropeCos),
              std::move(ropeSin), std::move(keys), std::move(values)},
@@ -235,9 +257,11 @@ void DraftAttention::addContextCommit(
     std::span<const metal::MetalBuffer> persistentKeys,
     std::span<const metal::MetalBuffer> persistentValues,
     metal::MetalBuffer retainedCounts,
-    std::span<const uint32_t> startPositions, DraftAttentionShape shape) {
+    std::span<const uint32_t> startPositions, DraftAttentionShape shape,
+    DraftAttentionGeometry geometry) {
   const auto lanes = static_cast<uint32_t>(startPositions.size());
   requireLanes(lanes);
+  requireGeometry(geometry);
   static_cast<void>(kernelShape(shape));
   if (persistentKeys.size() != kMaximumLanes ||
       persistentValues.size() != kMaximumLanes)
@@ -247,10 +271,12 @@ void DraftAttention::addContextCommit(
                        uint64_t{lanes} * SPLASH_TARGET_VERIFY_ROWS, shape);
   requireBytes(retainedCounts, uint64_t{lanes} * sizeof(uint32_t), "draft retained counts");
   for (uint32_t lane = 0; lane < lanes; ++lane) {
-    requireBytes(persistentKeys[lane], ringBytes(shape), "draft key ring");
-    requireBytes(persistentValues[lane], ringBytes(shape), "draft value ring");
+    if (!geometry.slidingWindow && startPositions[lane] > geometry.capacity)
+      throw std::invalid_argument("draft full context commit exceeds capacity");
+    requireBytes(persistentKeys[lane], ringBytes(shape, geometry), "draft key ring");
+    requireBytes(persistentValues[lane], ringBytes(shape, geometry), "draft value ring");
   }
-  DraftContextBatchParams params{};
+  DraftContextBatchParams params{{}, geometry.capacity, geometry.slidingWindow};
   std::copy(startPositions.begin(), startPositions.end(),
             std::begin(params.start_position));
   std::vector<metal::MetalBuffer> bindings{

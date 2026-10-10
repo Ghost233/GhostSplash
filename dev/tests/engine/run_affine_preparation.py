@@ -3,6 +3,7 @@ checkpoint, an independent byte-layout oracle of every prepared image and
 their golden hashes."""
 
 import argparse
+import hashlib
 import json
 import math
 import struct
@@ -193,11 +194,16 @@ def quantized_group(weights):
     return packed, struct.pack("<H", bf16(scale)), struct.pack("<H", bf16(bias))
 
 
-def draft_fixture(root):
+def draft_fixture(root, standard=False):
     """A two-layer DFlash2 checkpoint of width 256, its BF16 safetensors as
     its repository releases them, and the draft files its preparation must
     write: each projection quantized, every other tensor as stored."""
     tensors, values = {}, {}
+    layers = 6 if standard else 2
+    attention, kv = (512, 128) if standard else (128, 64)
+    intermediate = 512 if standard else 256
+    target_hidden = 2048 if standard else 256
+    magic = "MDFD0005" if standard else "MDFD0004"
 
     def add(name, shape, data=None):
         count = math.prod(shape)
@@ -236,11 +242,11 @@ def draft_fixture(root):
 
     expected = root / "expected"
     expected.mkdir()
-    for layer in range(2):
+    for layer in range(layers):
         p = f"layers.{layer}."
         a = p + "self_attn."
         dynamic = None
-        if layer == 0:
+        if layer == 0 and not standard:
             # Two first rows of edge cases: all zero, where no scale puts 0 on
             # a code; constant; 0 to 15 with halves, which round away from
             # zero; a minimum farther from zero than the maximum; then groups
@@ -254,12 +260,13 @@ def draft_fixture(root):
             dynamic += [-1 / 64, *(-(i % 32 + 1) / 8 for i in range(63))]
             dynamic += [-2.5, -8.5, *(-float(i % 15 + 1) for i in range(62))]
             dynamic += [((i * 37 + 11) % 509 - 254) / 64 for i in range(254 * 256)]
-        sections = [
-            add(p + "input_layernorm.weight", [256]),
-            add(p + "attention_conv.base_kernel", [2, 2, 256]),
-            projection(p + "attention_conv.kernel_projection", 256, 256, dynamic),
-        ]
-        for name, rows in (("q_proj", 128), ("k_proj", 64), ("v_proj", 64)):
+        sections = [add(p + "input_layernorm.weight", [256])]
+        if not standard:
+            sections += [
+                add(p + "attention_conv.base_kernel", [2, 2, 256]),
+                projection(p + "attention_conv.kernel_projection", 256, 256, dynamic),
+            ]
+        for name, rows in (("q_proj", attention), ("k_proj", kv), ("v_proj", kv)):
             add(a + name + ".weight", [rows, 256])
         sections.append(
             quantized([a + n + ".weight" for n in ("q_proj", "k_proj", "v_proj")], 256)
@@ -267,27 +274,88 @@ def draft_fixture(root):
         sections += [
             add(a + "q_norm.weight", [64]),
             add(a + "k_norm.weight", [64]),
-            projection(a + "o_proj", 256, 128),
+            projection(a + "o_proj", 256, attention),
             add(p + "post_attention_layernorm.weight", [256]),
-            add(p + "mlp_conv.base_kernel", [2, 2, 256]),
-            projection(p + "mlp_conv.kernel_projection", 256, 256),
-            projection(p + "mlp.gate_proj", 256, 256),
-            projection(p + "mlp.up_proj", 256, 256),
-            projection(p + "mlp.down_proj", 256, 256),
+        ]
+        if not standard:
+            sections += [
+                add(p + "mlp_conv.base_kernel", [2, 2, 256]),
+                projection(p + "mlp_conv.kernel_projection", 256, 256),
+            ]
+        sections += [
+            projection(p + "mlp.gate_proj", intermediate, 256),
+            projection(p + "mlp.up_proj", intermediate, 256),
+            projection(p + "mlp.down_proj", 256, intermediate),
         ]
         (expected / f"layer-{layer}.bin").write_bytes(
-            weight_file("MDFD0004", layer, 0, sections)
+            weight_file(magic, layer, 0, sections)
         )
     sections = [
-        projection("fc", 256, 256),
+        projection("fc", 256, target_hidden),
         add("hidden_norm.weight", [256]),
         add("norm.weight", [256]),
-        projection("candidate_selector.hidden_projection", 256, 256),
-        add("candidate_selector.predecessor_codebook", [256, 256]),
-        add("candidate_selector.successor_codebook", [256, 256]),
     ]
-    (expected / "model.bin").write_bytes(weight_file("MDFD0004", 2, 1, sections))
-    write_safetensors(root / "model.safetensors", tensors)
+    if not standard:
+        sections += [
+            projection("candidate_selector.hidden_projection", 256, 256),
+            add("candidate_selector.predecessor_codebook", [256, 256]),
+            add("candidate_selector.successor_codebook", [256, 256]),
+        ]
+    (expected / "model.bin").write_bytes(weight_file(magic, layers, 1, sections))
+    source = root / "model.safetensors"
+    write_safetensors(source, tensors)
+    if standard:
+        assert len(tensors) == 69
+        header, payload = read_safetensors(source)
+        header["__metadata__"] = {"format": "pt"}
+        source.write_bytes(safetensors_bytes(header, payload))
+
+
+def expected_hashes(root):
+    return {
+        "draft/" + path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted((root / "expected").glob("*.bin"))
+    }
+
+
+def reject_standard_metadata(command, source):
+    header, payload = read_safetensors(source)
+    key = "layers.0.self_attn.q_norm.weight"
+    mutations = []
+    missing = json.loads(json.dumps(header))
+    missing.pop(key)
+    mutations.append((missing, payload, "missing source tensor: " + key))
+    dtype = json.loads(json.dumps(header))
+    dtype[key]["dtype"] = "F16"
+    mutations.append(
+        (dtype, payload, "source tensor type or shape does not match: " + key)
+    )
+    shape = json.loads(json.dumps(header))
+    shape["fc.weight"]["shape"] = [512, 1024]
+    mutations.append(
+        (shape, payload, "source tensor type or shape does not match: fc.weight")
+    )
+    extra = json.loads(json.dumps(header))
+    extra["unexpected.weight"] = {
+        "dtype": "BF16",
+        "shape": [1],
+        "data_offsets": [len(payload), len(payload) + 2],
+    }
+    mutations.append(
+        (
+            extra,
+            payload + bytes(2),
+            "standard DFlash checkpoint contains unconsumed tensors",
+        )
+    )
+    for changed, data, refusal in mutations:
+        source.write_bytes(safetensors_bytes(changed, data))
+        result = subprocess.run(command, capture_output=True, text=True, check=False)
+        assert result.returncode != 0 and refusal in result.stderr, result.stderr
+    source.write_bytes(safetensors_bytes(header, payload))
+    print(
+        "standard draft preparation: strict 69 tensors, missing/dtype/shape/extra rejected PASS"
+    )
 
 
 def prepare(binary, metallib, root, kind, golden):
@@ -319,6 +387,17 @@ def main():
         root.mkdir()
         draft_fixture(root)
         prepare(args.binary, args.metallib, root, "draft", goldens["draft"])
+        root = Path(directory) / "standard-draft"
+        root.mkdir()
+        draft_fixture(root, standard=True)
+        command = prepare(
+            args.binary,
+            args.metallib,
+            root,
+            "standard-draft",
+            goldens["standard-draft"],
+        )
+        reject_standard_metadata(command, root / "model.safetensors")
         root = Path(directory) / "moe"
         root.mkdir()
         fixture(root, moe=True)

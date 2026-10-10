@@ -3,7 +3,7 @@
 #include "metal/kernels/common/attention_qkv_prepare.h"
 
 // W: the q/k norm weights' stored type (float: a GGUF's F32 norms, _f32).
-#define PREFILL_ATTENTION_QKV(Name, QHeads, KHeads, W)                        \
+#define PREFILL_ATTENTION_QKV(Name, QHeads, KHeads, W, Rotate)                        \
   kernel void Name(                                                           \
       device const bfloat *qkv [[buffer(0)]],                                 \
       device const W *q_norm [[buffer(1)]],                                   \
@@ -20,15 +20,24 @@
       uint simd_group [[simdgroup_index_in_threadgroup]]) {                   \
     threadgroup float reductions[8];                                          \
     threadgroup bfloat normalized[256];                                       \
-    full_qkv_storage_phase<QHeads, KHeads>(                                   \
+    threadgroup float rotation[Rotate ? 256 : 1];                                       \
+    full_qkv_storage_phase<QHeads, KHeads, W, Rotate>(                                   \
         qkv, q_norm, k_norm, rope_cos, rope_sin, queries, chunk_keys,         \
         chunk_values, params, reductions, normalized, task, thread_index,     \
-        lane, simd_group);                                                    \
+        lane, simd_group, rotation);                                                    \
   }
-PREFILL_ATTENTION_QKV(prefill_attention_qkv, 24, 4, bfloat)
-PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8, 16, 2, bfloat)
-PREFILL_ATTENTION_QKV(prefill_attention_qkv_f32, 24, 4, float)
-PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8_f32, 16, 2, float)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv, 24, 4, bfloat, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8, 16, 2, bfloat, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4, 16, 4, bfloat, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_f32, 24, 4, float, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8_f32, 16, 2, float, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4_f32, 16, 4, float, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h, 24, 4, bfloat, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_f32, 24, 4, float, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8, 16, 2, bfloat, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8_f32, 16, 2, float, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
 #undef PREFILL_ATTENTION_QKV
 
 template <uint QHeads, uint KHeads>
@@ -54,4 +63,5 @@ inline void full_attention_gate_prefill_phase(
   }
 PREFILL_ATTENTION_GATE(prefill_attention_gate, 24, 4)
 PREFILL_ATTENTION_GATE(prefill_attention_gate_kv2_g8, 16, 2)
+PREFILL_ATTENTION_GATE(prefill_attention_gate_kv4_g4, 16, 4)
 #undef PREFILL_ATTENTION_GATE

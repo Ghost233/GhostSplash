@@ -25,8 +25,17 @@ constant uint kDecodeSimdgroups = 8;
 template <uint HeadDim> struct GdnDecodeShared {
   bfloat queries[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
   bfloat keys[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
+#if SPLASH_TARGET_VERIFY_ROWS == 16
+  // Each state dimension consumes its value before writing its recurrent
+  // result to the same slot; other simdgroups own different dimensions.
+  union {
+    bfloat values[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
+    bfloat rows[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
+  };
+#else
   bfloat values[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
   bfloat rows[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
+#endif
   float decay[SPLASH_TARGET_VERIFY_ROWS];
   bfloat beta[SPLASH_TARGET_VERIFY_ROWS];
 };
@@ -53,18 +62,22 @@ inline void gdn_decode_prologue(
   constexpr uint BOffset = ConvDim + ValueWidth;
   constexpr uint AOffset = BOffset + ValueHeads;
   constexpr uint Groups = HeadDim / 32;
-  static_assert(Tokens == kDecodeSimdgroups && HeadDim == 128,
-                "one simdgroup per verify row, four channels per lane");
+  static_assert(HeadDim == 128, "four channels per lane");
   const uint key_head = value_head / HeadsPerKey;
   // The key head's q/k rows and conv carry are shared by HeadsPerKey value
   // heads; the first of them writes the shared copies.
   const bool shared_writer = value_head % HeadsPerKey == 0;
   const bool carrier = simd_group < SPLASH_GDN_CONVOLUTION_TAPS - 1;
+#if SPLASH_TARGET_VERIFY_ROWS == 8
   const uint token = simd_group;
+#endif
   const uint q_channel = key_head * HeadDim + lane;
   const uint k_channel = KeyWidth + q_channel;
   const uint v_channel = 2 * KeyWidth + value_head * HeadDim + lane;
 
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  for (uint token = simd_group; token < Tokens; token += kDecodeSimdgroups) {
+#endif
   float q[Groups], k[Groups];
   bfloat v[Groups], carry_v[Groups], carry_q[Groups], carry_k[Groups];
   for (uint g = 0; g < Groups; ++g) {
@@ -128,6 +141,24 @@ inline void gdn_decode_prologue(
       }
     }
   }
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  }
+  // A block of two tokens still advances all three convolution carry rows.
+  // The third simdgroup has no query token but owns carry row two.
+  if (carrier && simd_group >= Tokens) {
+    for (uint g = 0; g < Groups; ++g) {
+      conv_state_out[simd_group * ConvDim + v_channel + 32 * g] =
+          gdn_conv_carry(packed, conv_state_in, PackedWidth, ConvDim, Tokens, simd_group, v_channel + 32 * g);
+      if (shared_writer) {
+        conv_state_out[simd_group * ConvDim + q_channel + 32 * g] =
+            gdn_conv_carry(packed, conv_state_in, PackedWidth, ConvDim, Tokens, simd_group, q_channel + 32 * g);
+        conv_state_out[simd_group * ConvDim + k_channel + 32 * g] =
+            gdn_conv_carry(packed, conv_state_in, PackedWidth, ConvDim, Tokens, simd_group, k_channel + 32 * g);
+      }
+    }
+  }
+#endif
+
 }
 
 // Delta-rule recurrence over 128 state rows, four fp32 columns per lane.
@@ -428,9 +459,14 @@ inline void gdn_decode_batch_phase(
                                          lane, simd_group);
   threadgroup_barrier(mem_flags::mem_threadgroup);
   const bool tiled = params.tiled_heads != 0;
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  for (uint token = simd_group; token < Rows; token += kDecodeSimdgroups) {
+#else
+  const uint token = simd_group;
+#endif
   gdn_decode_gate<KeyHeads, ValueHeads, HeadDim, ConvDim, PackedWidth>(
       shared, packed, gdn_norm_weight, lane_hidden, tiled, group.x, lane,
-      simd_group);
+      token);
   if (table) {
     // Each group owns this head for all eight rows; each simdgroup writes
     // the table of the row it just gated.
@@ -438,12 +474,22 @@ inline void gdn_decode_batch_phase(
     const uint head = gdn_output_head<KeyHeads, ValueHeads>(group.x, tiled);
     for (uint g = 0; g < HeadDim / 64; ++g) {
       const uint column = head * HeadDim + g * 64 + 2 * lane;
-      const uint local = simd_group * HeadDim + g * 64 + 2 * lane;
+      const uint local = token * HeadDim + g * 64 + 2 * lane;
+#if SPLASH_TARGET_VERIFY_ROWS == 8
       Table::write(table + ulong(batch) * ValueWidth * Rows,
                    sums + ulong(batch) * Table::sums_per_tile(ValueWidth), ValueWidth,
                    column / 64, simd_group, lane, shared.rows[local], shared.rows[local + 1]);
+#else
+      const uint global_row = batch * Rows + token, tile = global_row / 8;
+      Table::write(table + ulong(tile) * ValueWidth * 8,
+                   sums + ulong(tile) * Table::sums_per_tile(ValueWidth), ValueWidth,
+                   column / 64, global_row % 8, lane, shared.rows[local], shared.rows[local + 1]);
+#endif
     }
   }
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  }
+#endif
 }
 
 // W: the norm weights' stored type (float: a GGUF's F32 norms, _f32).

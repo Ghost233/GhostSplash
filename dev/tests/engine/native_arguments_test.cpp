@@ -101,6 +101,19 @@ std::map<std::string, std::vector<std::string>> readGolden(const char *path) {
 
 // Every line the server writes reads as the server means it: what the
 // engine reads with no options, with what the line changes and nothing else.
+void testTargetOnlyModelDirectory() {
+  const test::TemporaryDirectory root("splash-native-target-only");
+  std::filesystem::create_directory(root.path() / "target");
+  test::writeFile(root.path() / "model.json",
+      R"({"version":1,"model":"local/qwen4b","target_format":"gguf","vision_format":"none","sources":{"draft":null}})");
+  test::writeFile(root.path() / "config.json",
+      R"({"text_config":{"model_type":"qwen3_5_text","hidden_size":2560,"max_position_embeddings":262144,"num_attention_heads":16,"num_key_value_heads":4,"head_dim":256,"num_hidden_layers":32,"vocab_size":248320}})");
+  const auto arguments = parseCommand({"serve-native", root.path().string(), "33792", "12884901888", "0", "--ane", "off"});
+  require(arguments.model.family() == "Qwen3.5-4B" && !arguments.model.hasDraft() &&
+              arguments.maxContext == 33792 && !std::filesystem::exists(root.path() / "draft"),
+          "ordinary 4B startup must accept its real assembly without a draft directory");
+}
+
 void testServerCommandLines(const char *path) {
   const ModelDirectory model;
   constexpr uint64_t kGiB = uint64_t{1} << 30;
@@ -121,6 +134,9 @@ void testServerCommandLines(const char *path) {
          read.persistentCacheRoot = "/srv/cache";
        }},
       {"bf16", [](NativeArguments &read) { read.kvFormat = kv::Format::BFloat16; }},
+      {"q4h", [](NativeArguments &read) { read.kvFormat = kv::Format::Int4Hadamard; }},
+      {"q4_0", [](NativeArguments &read) { read.kvFormat = kv::Format::Q4_0Hadamard; }},
+      {"q4_0_unrotated", [](NativeArguments &read) { read.kvFormat = kv::Format::Q4_0Unrotated; }},
       {"disk_bf16",
        [](NativeArguments &read) {
          read.maxCacheDiskBytes = 5 * kGiB;
@@ -191,9 +207,9 @@ void testRefusals() {
             "the engine read a command line it must refuse");
   };
   refuses({"auto", "auto", "--kv-format", "fp16"},
-          "--kv-format requires int8 or bf16");
+          "--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
   // An option's missing value fails its check.
-  refuses({"auto", "auto", "--kv-format"}, "--kv-format requires int8 or bf16");
+  refuses({"auto", "auto", "--kv-format"}, "--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
   for (const char *share : {"-1", "nan", "inf", "half"})
     refuses({"auto", "auto", "--decode-share", share},
             "--decode-share requires a nonnegative number");
@@ -240,7 +256,10 @@ void testRefusals() {
                  "MODEL_DIRECTORY must name an existing directory");
   const test::TemporaryDirectory empty("splash-native-arguments-empty");
   commandRefused({"serve-native", empty.path().string(), "auto", "auto"},
-                 "MODEL_DIRECTORY must hold the model's target/ and draft/ directories");
+                 "MODEL_DIRECTORY must hold the model's target/ directory");
+  std::filesystem::remove(model.path() / "draft");
+  commandRefused({"serve-native", model.path().string(), "auto", "auto"},
+                 "MODEL_DIRECTORY must hold the model's draft/ directory for this model");
 }
 
 } // namespace
@@ -251,6 +270,7 @@ int main(int argc, char **argv) {
     return 2;
   }
   try {
+    testTargetOnlyModelDirectory();
     testServerCommandLines(argv[1]);
     testNeuralEngine();
     testRefusals();

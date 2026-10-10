@@ -3,6 +3,7 @@
 #include "model/AffinePlan.hpp"
 #include "model/DFlashDraft.hpp"
 
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -36,7 +37,9 @@ void quantized(Image &image, std::initializer_list<std::pair<std::string, uint32
 
 // The sections of each file in the order DFlashDraft.cpp reads them.
 Image layerImage(const DFlashDraftLayout &layout, uint32_t layer) {
-  Image result = affine::image("layer-" + std::to_string(layer) + ".bin", kDFlashLayerMagic, layer, 0);
+  const bool standard = layout.kind == DraftKind::Standard;
+  Image result = affine::image("layer-" + std::to_string(layer) + ".bin",
+                              standard ? kDFlashStandardLayerMagic : kDFlashLayerMagic, layer, 0);
   const std::string prefix = "layers." + std::to_string(layer) + ".";
   const std::string attention = prefix + "self_attn.";
   const uint32_t hidden = layout.hiddenSize;
@@ -46,14 +49,14 @@ Image layerImage(const DFlashDraftLayout &layout, uint32_t layer) {
     quantized(result, {{name + ".kernel_projection", layout.dynamicSize}}, layout.dynamicSize, hidden);
   };
   copy(result, prefix + "input_layernorm.weight", {hidden});
-  convolution(prefix + "attention_conv");
+  if (!standard) convolution(prefix + "attention_conv");
   quantized(result, {{attention + "q_proj", layout.attentionSize}, {attention + "k_proj", kv}, {attention + "v_proj", kv}},
             layout.qkvSize, hidden);
   copy(result, attention + "q_norm.weight", {layout.attentionHeadDimension});
   copy(result, attention + "k_norm.weight", {layout.attentionHeadDimension});
   quantized(result, {{attention + "o_proj", hidden}}, hidden, layout.attentionSize);
   copy(result, prefix + "post_attention_layernorm.weight", {hidden});
-  convolution(prefix + "mlp_conv");
+  if (!standard) convolution(prefix + "mlp_conv");
   quantized(result, {{prefix + "mlp.gate_proj", layout.intermediateSize}}, layout.intermediateSize, hidden);
   quantized(result, {{prefix + "mlp.up_proj", layout.intermediateSize}}, layout.intermediateSize, hidden);
   quantized(result, {{prefix + "mlp.down_proj", hidden}}, hidden, layout.intermediateSize);
@@ -61,14 +64,17 @@ Image layerImage(const DFlashDraftLayout &layout, uint32_t layer) {
 }
 
 Image modelImage(const DFlashDraftLayout &layout) {
-  Image result = affine::image("model.bin", kDFlashLayerMagic, layout.layers, 1);
+  const bool standard = layout.kind == DraftKind::Standard;
+  Image result = affine::image("model.bin", standard ? kDFlashStandardLayerMagic : kDFlashLayerMagic, layout.layers, 1);
   const std::string selector = "candidate_selector.";
   quantized(result, {{"fc", layout.hiddenSize}}, layout.hiddenSize, layout.targetHiddenSize);
   copy(result, "hidden_norm.weight", {layout.hiddenSize});
   copy(result, "norm.weight", {layout.hiddenSize});
-  quantized(result, {{selector + "hidden_projection", layout.selectorRank}}, layout.selectorRank, layout.hiddenSize);
-  copy(result, selector + "predecessor_codebook", {layout.vocabularySize, layout.selectorRank});
-  copy(result, selector + "successor_codebook", {layout.vocabularySize, layout.selectorRank});
+  if (!standard) {
+    quantized(result, {{selector + "hidden_projection", layout.selectorRank}}, layout.selectorRank, layout.hiddenSize);
+    copy(result, selector + "predecessor_codebook", {layout.vocabularySize, layout.selectorRank});
+    copy(result, selector + "successor_codebook", {layout.vocabularySize, layout.selectorRank});
+  }
   return result;
 }
 
@@ -86,6 +92,18 @@ DraftCheckpointLoader::DraftCheckpointLoader(WeightImages &images, const std::fi
     : images_(images), planned_(std::make_shared<affine::PlannedCheckpoint>(directory)) {
   planned_->images = draftCheckpointImages(layout);
   for (Image &image : planned_->images) affine::bind(image, planned_->source);
+  if (layout.kind == DraftKind::Standard) {
+    std::set<std::string> consumed;
+    for (const Image &image : planned_->images)
+      for (const affine::Section &section : image.sections) {
+        if (section.parts.empty()) consumed.insert(section.input.name);
+        for (const auto &part : section.parts)
+          for (const auto &field : part.fields) consumed.insert(field.name);
+      }
+    if (consumed.size() != uint64_t{layout.layers} * 11 + 3 ||
+        planned_->source.tensorCount() != consumed.size())
+      throw WeightStoreError("standard DFlash checkpoint contains unconsumed tensors");
+  }
 }
 DraftCheckpointLoader::~DraftCheckpointLoader() = default;
 WeightFile DraftCheckpointLoader::layer(uint32_t index) {

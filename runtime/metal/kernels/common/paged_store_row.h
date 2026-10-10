@@ -42,6 +42,8 @@ inline ulong splash_current_value_index(uint stride, uint head, uint token,
 // simdgroup maxima for INT8; BF16 copies the source bits and has none.
 #define SPLASH_STORE_MAXIMA_int8_t threadgroup float maxima[8];
 #define SPLASH_STORE_MAXIMA_bfloat threadgroup float *maxima = nullptr;
+#define SPLASH_STORE_MAXIMA_uchar threadgroup float maxima[8];
+#define SPLASH_STORE_MAXIMA_SplashQ4Block threadgroup float *maxima = nullptr;
 
 // One lane per dimension stores a current row in its final page slot.
 // INT8 derives a per-row scale; BF16 copies the original bits. Slots are
@@ -66,7 +68,25 @@ __attribute__((always_inline)) inline void splash_store_kv_row(
                                                 chunk_token, dimension);
   bfloat source = value_tensor ? chunk_values[source_index] : chunk_keys[source_index];
 
-  if constexpr (is_same<CacheElement, bfloat>::value) {
+  if constexpr (is_same<CacheElement, SplashQ4Block>::value) {
+    // Each SIMD group quantizes one contiguous group of 32 dimensions.
+    // Tie-breaking takes the first absolute maximum, as the GGML reference.
+    float value = float(source);
+    float maximum = simd_max(abs(value));
+    uint first = simd_min(abs(value) == maximum ? simd_lane : 32u);
+    float signed_maximum = maximum == 0.0f ? 0.0f : simd_shuffle(value, first);
+    float d = signed_maximum * -0.125f;
+    float inverse = d != 0.0f ? 1.0f / d : 0.0f;
+    float normalized = value * inverse;
+    uint code = uint(clamp(int(normalized + 8.5f), 0, 15));
+    uint high = simd_shuffle(code, (simd_lane + 16) % 32);
+    ulong at = (ulong(page_token) * SplashKvHeadDimension + dimension) / 32;
+    device SplashQ4Block *blocks = value_tensor ? slab.values : slab.keys;
+    if (simd_lane == 0)
+      blocks[at].d = maximum == 0.0f ? as_type<half>(ushort(0x8000)) : half(d);
+    if (simd_lane < 16) blocks[at].qs[simd_lane] = uchar(code | (high << 4));
+    return;
+  } else if constexpr (is_same<CacheElement, bfloat>::value) {
     if (value_tensor)
       slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] = source;
     else
@@ -88,10 +108,33 @@ __attribute__((always_inline)) inline void splash_store_kv_row(
     }
     threadgroup_barrier(mem_flags::mem_threadgroup);
     float maximum = maxima[0];
-    float scale = maximum == 0.0f ? 0.0f : maximum / 127.0f;
+    constexpr bool Packed4 = is_same<CacheElement, uchar>::value;
+    constexpr float Limit = Packed4 ? 7.0f : 127.0f;
+    // Q4H's serialized FP32 scales must match the scalar quantizer exactly;
+    // fast division can also move half-integer codes across rint's boundary.
+    float scale = maximum == 0.0f ? 0.0f
+        : Packed4 ? precise::divide(maximum, Limit) : maximum / Limit;
     int quantized = maximum == 0.0f
                         ? 0
-                        : clamp(int(rint(value * 127.0f / maximum)), -127, 127);
+                        : clamp(int(rint(Packed4 ? precise::divide(value * Limit, maximum)
+                                             : value * Limit / maximum)), -int(Limit), int(Limit));
+    if constexpr (Packed4) {
+      // One even dimension owns both nibbles. Token-major V avoids races
+      // between concurrent token stores and byte read/modify/write.
+      int other = simd_shuffle_xor(quantized, 1);
+      if ((dimension & 1) == 0) {
+        uchar packed = uchar((quantized & 15) | ((other & 15) << 4));
+        ulong at = splash_kv_key_index<KVHeads>(0, 0, page_token, dimension) / 2;
+        if (value_tensor) slab.values[at] = packed;
+        else slab.keys[at] = packed;
+      }
+      if (dimension == 0) {
+        ulong at = splash_q8_scale_index<KVHeads>(0, 0, page_token);
+        if (value_tensor) slab.value_scales[at] = scale;
+        else slab.key_scales[at] = scale;
+      }
+      return;
+    }
 
     if (value_tensor) {
       slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] =

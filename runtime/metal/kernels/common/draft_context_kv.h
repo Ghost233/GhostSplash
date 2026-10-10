@@ -10,22 +10,24 @@ inline void draft_context_kv_phase(
     device const bfloat *context_kv, device const bfloat *k_norm,
     device const float *rope_cos, device const float *rope_sin,
     device bfloat *keys, device bfloat *values, uint start_position,
-    uint active_tokens, uint task,
+    uint active_tokens, uint capacity, uint sliding_window, uint task,
     uint thread_index, uint lane, uint simd_group,
     threadgroup float *reductions, threadgroup bfloat *normalized) {
-  constexpr uint KVHeads = SPLASH_DRAFT_KV_HEADS, HeadDim = SPLASH_DRAFT_HEAD_DIMENSION,
-                 Window = SPLASH_DRAFT_SLIDING_WINDOW;
+  constexpr uint KVHeads = SPLASH_DRAFT_KV_HEADS, HeadDim = SPLASH_DRAFT_HEAD_DIMENSION;
   constexpr uint KWidth = KVHeads * HeadDim, RowWidth = 2 * KWidth;
   uint row = task / KVHeads;
   if (row >= active_tokens)
     return;
   uint head_index = task % KVHeads;
   uint position = start_position + row;
-  uint slot = position % Window;
+  // Full-attention storage never wraps and must not overwrite its prefix.
+  if (!sliding_window && position >= capacity)
+    return;
+  uint slot = position % capacity;
   device const bfloat *source =
       context_kv + ulong(row) * RowWidth + head_index * HeadDim;
-  device bfloat *key = keys + (ulong(head_index) * Window + slot) * HeadDim;
-  device bfloat *value = values + ulong(head_index) * HeadDim * Window + slot;
+  device bfloat *key = keys + (ulong(head_index) * capacity + slot) * HeadDim;
+  device bfloat *value = values + ulong(head_index) * HeadDim * capacity + slot;
 
   float element = thread_index < HeadDim ? float(source[thread_index]) : 0.0f;
   const float inverse = rms_inverse_of_sums(element * element, HeadDim,
@@ -34,7 +36,7 @@ inline void draft_context_kv_phase(
   if (thread_index < HeadDim) {
     normalized[thread_index] =
         bfloat(element * inverse * float(k_norm[thread_index]));
-    value[ulong(thread_index) * Window] = source[KWidth + thread_index];
+    value[ulong(thread_index) * capacity] = source[KWidth + thread_index];
   }
   threadgroup_barrier(mem_flags::mem_threadgroup);
   if (thread_index < HeadDim / 2) {

@@ -1,6 +1,8 @@
 // GGUF projections: plan policy and dispatch (kernels/shared/gguf_linear.metal,
 // kernels/decode/linear_gguf_sgmatrix.metal).
 #include "Linear.hpp"
+#include "GgufPrefillCache.hpp"
+#include "SingleTokenLinear.hpp"
 
 #include "metal/abi/ExecutionGeometry.h"
 #include "metal/abi/Gguf.h"
@@ -22,7 +24,7 @@ constexpr size_t kFusedSegments = std::extent_v<decltype(GgufDecodeFusedParams::
 // The staged decode tile that holds `rows` rows: MPP computes 16-row
 // fragments, so the tile holds 8, 16 or 32 rows and a three-lane step runs
 // the 32-row tile over four lanes of storage.
-constexpr uint32_t stagedTileRows(uint32_t rows) noexcept { return rows <= 8 ? 8 : rows <= 16 ? 16 : 32; }
+constexpr uint32_t stagedTileRows(uint32_t rows) noexcept { return rows <= 8 ? 8 : rows <= 16 ? 16 : rows <= 32 ? 32 : 64; }
 
 std::string decodeKernel(const char *format, uint32_t rows, char epilogue) {
   return std::string("gguf_decode_") + format + "_m" + std::to_string(rows) + "_" + epilogue;
@@ -196,7 +198,7 @@ void LinearPlan::requireBlockConfiguration() const {
     throw std::invalid_argument("the GGUF tiles fix their threadgroups and take the default simdgroups");
   if (c.tile == LinearTile::GgufRegister) {
     // Split boundaries fall on 256-input coefficient units.
-    if (!decode || !c.validSplits() || k / 256 < c.splits)
+    if (SPLASH_TARGET_VERIFY_ROWS != 8 || !decode || !c.validSplits() || k / 256 < c.splits)
       throw std::invalid_argument("the register block decode tile takes a K unit per split");
     return;
   }
@@ -257,7 +259,7 @@ LinearConfig Linear::ggufBaseline(LinearWorkload w, std::span<const Projection *
         : LinearConfig{.tile = LinearTile::GgufPrefill};
   // Apple9 runs matrix operations on the FP32 pipe, so the exact register
   // kernel beats staging but for the projections apple9Stages names.
-  if (family_ == GpuFamilyClass::Apple9 && !apple9Stages(w, projections)) return registerDecode(n, k, gpuCores_);
+  if (SPLASH_TARGET_VERIFY_ROWS == 8 && family_ == GpuFamilyClass::Apple9 && !apple9Stages(w, projections)) return registerDecode(n, k, gpuCores_);
   return stagedDecode(n, k, gpuCores_, family_);
 }
 
@@ -289,6 +291,17 @@ void Linear::addGguf(metal::CommandGraph &graph, const LinearBuffers &b,
       quantized.rotation = p.rotation;
       addGguf(graph, b, quantized, plan, gate);
     }
+    return;
+  }
+  // The 4B's ordinary path supplies one row. Keep verify's eight-row
+  // plans intact and use the scalar projection only for its dense shapes.
+  if (w.phase == LinearPhase::Prefill && w.rows == 1 && !p.rotation && !p.planeInputs() &&
+      (k == 2560 || w.matrix.outputSize == 2560)) {
+    Projection single = p;
+    single.destination = plan.destination();
+    addSingleTokenLinear(graph, b.input, single, b.output,
+                         w.epilogue == LinearEpilogue::None ? metal::MetalBuffer{} : epilogueInput(b, w.epilogue),
+                         w.epilogue);
     return;
   }
   if (p.rotation) {
@@ -383,9 +396,15 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
   const auto [n, k] = w.matrix;
   const char epilogue = epilogueSuffix(w.epilogue);
   for (const QuantizedSegment &s : p.blocks().segments) {
+    const GgufPrefillParams params{k, w.rows, n, s.columnOffset};
+    if (s.prefillHalf && !p.planeInputs()) {
+      addGgufHalfPrefill(graph, b.input, s, b.output, params, epilogue,
+                        w.epilogue == LinearEpilogue::None ? metal::MetalBuffer{} : epilogueInput(b, w.epilogue),
+                        GGUF_PREFILL_STEP, w.rows >= 64 ? GgufHalfPrefillTile::M64N32 : GgufHalfPrefillTile::M32N64);
+      continue;
+    }
     std::vector<metal::MetalBuffer> bindings{b.input, s.plane0, s.plane1Slot(), s.meta, b.output};
     if (w.epilogue != LinearEpilogue::None) bindings.push_back(epilogueInput(b, w.epilogue));
-    const GgufPrefillParams params{k, w.rows, n, s.columnOffset};
     const metal::DispatchSize groups{plan.storageRows() / GGUF_PREFILL_ROWS, s.outputSize / GGUF_TILE_COLUMNS, 1};
     if (p.planeInputs())
       graph.add(leadingInputsInstance(prefillKernel(s.name(), epilogue)), std::move(bindings),

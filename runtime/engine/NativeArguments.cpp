@@ -76,11 +76,8 @@ std::filesystem::path requireModelRoot(std::string_view argument) {
       std::filesystem::canonical(std::filesystem::path(argument), error);
   if (error || !std::filesystem::is_directory(root, error))
     throw UsageError("MODEL_DIRECTORY must name an existing directory");
-  for (const char *role : {"target", "draft"}) {
-    if (!std::filesystem::is_directory(root / role, error))
-      throw UsageError(
-          "MODEL_DIRECTORY must hold the model's target/ and draft/ directories");
-  }
+  if (!std::filesystem::is_directory(root / "target", error))
+    throw UsageError("MODEL_DIRECTORY must hold the model's target/ directory");
   return root;
 }
 
@@ -102,9 +99,13 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     const std::string_view option(argv[next]);
     const std::string_view value(next + 1 < argc ? argv[next + 1] : "");
     if (option == "--kv-format") {
-      if (value != "int8" && value != "bf16")
-        throw UsageError("--kv-format requires int8 or bf16");
-      result.kvFormat = value == "int8" ? kv::Format::Int8 : kv::Format::BFloat16;
+      if (value != "int8" && value != "bf16" && value != "q4h" &&
+          value != "q4_0" && value != "q4_0_unrotated")
+        throw UsageError("--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
+      result.kvFormat = value == "int8" ? kv::Format::Int8
+          : value == "q4h" ? kv::Format::Int4Hadamard
+          : value == "q4_0" ? kv::Format::Q4_0Hadamard
+          : value == "q4_0_unrotated" ? kv::Format::Q4_0Unrotated : kv::Format::BFloat16;
     } else if (option == "--decode-share") {
       result.decodeShare = parseDecodeShare(value);
     } else if (option == "--max-image-patches") {
@@ -131,6 +132,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--cache-dir requires a MAX_CACHE_DISK_BYTES quota");
   result.modelRoot = requireModelRoot(argv[2]);
   result.model = model::inspectModelRoot(result.modelRoot);
+  if (result.model.hasDraft() && !std::filesystem::is_directory(result.modelRoot / "draft"))
+    throw UsageError("MODEL_DIRECTORY must hold the model's draft/ directory for this model");
   result.maxContext = parseMaxContext(argv[3], result.model.capabilities);
   result.maxMemoryBytes = parseMaxMemory(argv[4]);
   return result;

@@ -1,6 +1,6 @@
 // Per-kernel GPU time attribution for the production executor.
 //
-//   decode-profile METALLIB MODEL_ROOT [--prompt-tokens N] [--cycles K] [--kv-format int8|bf16]
+//   decode-profile METALLIB MODEL_ROOT [--prompt-tokens N] [--prompt-token-file PATH] [--context-tokens N] [--cycles K] [--kv-format int8|bf16] [--prefill-only 0|1] [--max-width 1..4]
 //
 // Drives the real model runtime with Metal dispatch profiling enabled, so
 // every dispatch of a prefill command and B1 through B4 DFlash cycles
@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <span>
@@ -160,6 +161,9 @@ struct CycleTiming final {
   double gpuSeconds = 0.0;
   double wallSeconds = 0.0;
   uint64_t commands = 0;
+  uint64_t outputTokens = 0;
+  uint64_t draftedTokens = 0;
+  uint64_t acceptedDraftTokens = 0;
 };
 
 CycleTiming decodeCycle(metal::MetalBackend &backend,
@@ -179,18 +183,24 @@ CycleTiming decodeCycle(metal::MetalBackend &backend,
   auto results = executor.decode(plan, items);
   if (results.size() != lanes.size())
     throw std::runtime_error("decode width changed");
+  uint64_t outputTokens = 0, draftedTokens = 0, acceptedDraftTokens = 0;
   for (size_t index = 0; index < lanes.size(); ++index) {
     if (!results[index].failure.empty())
       throw std::runtime_error(results[index].failure);
     if (results[index].finished)
       throw std::runtime_error("the answer ended before profiling finished");
-    lanes[index].position += results[index].outputTokens.size() -
-                             results[index].outputTokensWithoutKv;
+    const uint64_t committed = results[index].outputTokens.size() -
+                               results[index].outputTokensWithoutKv;
+    lanes[index].position += committed;
+    outputTokens += committed;
+    draftedTokens += results[index].draftedTokens;
+    acceptedDraftTokens += results[index].acceptedDraftTokens;
   }
   const auto finished = std::chrono::steady_clock::now();
   return {executor.telemetry().lastDecodeGpuSeconds,
           std::chrono::duration<double>(finished - started).count(),
-          BackendInstrumentation::submittedCommands(backend) - submissionsBefore};
+          BackendInstrumentation::submittedCommands(backend) - submissionsBefore,
+          outputTokens, draftedTokens, acceptedDraftTokens};
 }
 
 } // namespace
@@ -200,21 +210,37 @@ int main(int argc, char **argv) {
     try {
       if (argc < 3) {
         std::cerr << "usage: decode-profile METALLIB MODEL_ROOT "
-                     "[--prompt-tokens N] [--cycles K] [--kv-format int8|bf16]\n";
+                     "[--prompt-tokens N] [--prompt-token-file PATH] [--context-tokens N] [--cycles K] [--kv-format int8|bf16] [--prefill-only 0|1] [--max-width 1..4]\n";
         return 2;
       }
       uint32_t promptTokens = 512;
+      std::filesystem::path promptTokenFile;
+      uint32_t contextTokens = 0;
       uint32_t cycles = 4;
       kv::Format format = kv::Format::Int8;
+      bool prefillOnly = false;
+      uint32_t maxWidth = 4;
       for (int index = 3; index < argc; index += 2) {
         const std::string_view option(argv[index]);
         if (index + 1 >= argc)
           throw std::invalid_argument(std::string(option) + " requires a value");
         if (option == "--prompt-tokens")
           promptTokens = parseCount(argv[index + 1], "--prompt-tokens");
+        else if (option == "--prompt-token-file")
+          promptTokenFile = argv[index + 1];
+        else if (option == "--context-tokens")
+          contextTokens = parseCount(argv[index + 1], "--context-tokens");
         else if (option == "--cycles")
           cycles = parseCount(argv[index + 1], "--cycles");
-        else if (option == "--kv-format") {
+        else if (option == "--max-width") {
+          maxWidth = parseCount(argv[index + 1], "--max-width");
+          if (maxWidth > 4) throw std::invalid_argument("--max-width takes 1 through 4");
+        } else if (option == "--prefill-only") {
+          const std::string_view value(argv[index + 1]);
+          if (value != "0" && value != "1")
+            throw std::invalid_argument("--prefill-only takes 0 or 1");
+          prefillOnly = value == "1";
+        } else if (option == "--kv-format") {
           const std::string_view value(argv[index + 1]);
           if (value != "int8" && value != "bf16")
             throw std::invalid_argument("--kv-format takes int8 or bf16");
@@ -223,11 +249,59 @@ int main(int argc, char **argv) {
           throw std::invalid_argument("unknown option");
       }
 
-      metal::MetalBackend backend(argv[1]);
+      std::vector<uint32_t> prompt;
+      if (promptTokenFile.empty()) {
+        prompt = chatPrompt(promptTokens);
+      } else {
+        std::ifstream input(promptTokenFile);
+        if (!input) throw std::invalid_argument("cannot open prompt token file");
+        uint32_t token;
+        while (input >> token) prompt.push_back(token);
+        if (!input.eof() || prompt.size() != promptTokens)
+          throw std::invalid_argument("prompt token file must contain exactly --prompt-tokens unsigned token IDs");
+      }
       const std::filesystem::path root(argv[2]);
-      model::LoadedModel model =
-          model::loadModel(backend, root, model::inspectModelRoot(root));
+      model::ModelDescriptor descriptor = model::inspectModelRoot(root);
+      std::visit([&](const auto &target) {
+        for (const uint32_t token : prompt)
+          if (token >= target.vocabularySize)
+            throw std::invalid_argument("prompt token ID exceeds model vocabulary");
+      }, descriptor.target);
+      const uint64_t requestedContext = contextTokens ? contextTokens : uint64_t{promptTokens} + 1024;
+      const uint64_t roundedContext = (requestedContext + 127) / 128 * 128;
+      if (requestedContext < uint64_t{promptTokens} + 256 + model::ExecutionLimits::targetVerifyRows ||
+          roundedContext > descriptor.capabilities.maximumContextTokens)
+        throw std::invalid_argument("--context-tokens must hold the prompt, 256 generated tokens and a verify block, "
+                                    "without exceeding the model context limit after rounding to 128");
+      contextTokens = static_cast<uint32_t>(roundedContext);
+      if (descriptor.draft.kind == model::DraftKind::Standard) {
+        descriptor.draft.contextCapacity = contextTokens;
+        descriptor.stateLayout.draft = descriptor.draft.stateLayout();
+      }
+      metal::MetalBackend backend(argv[1]);
+      model::LoadedModel model = model::loadModel(backend, root, descriptor);
       ops::ExecutionPlans operators(backend.capabilities());
+      if (const auto *target = std::get_if<model::Qwen3_5_4BWeights>(&model.target)) {
+        const auto bytes = [](const ops::Projection &projection) {
+          uint64_t size = 0;
+          for (const auto &segment : projection.blocks().segments)
+            size += segment.plane0.sizeBytes() + segment.plane1.sizeBytes() + segment.meta.sizeBytes();
+          return size;
+        };
+        uint64_t ffn = 0, mixers = 0;
+        for (const auto &layer : target->layers) {
+          ffn += bytes(layer.gateProjection) + bytes(layer.upProjection) + bytes(layer.downProjection);
+          mixers += std::visit([&](const auto &mixer) {
+            return bytes(mixer.inputProjection) + bytes(mixer.outputProjection);
+          }, layer.mixer);
+        }
+        const uint64_t head = bytes(target->logitsProjection);
+        std::printf("4B logical projection weight bytes per token: %llu (FFN %llu, mixers %llu, head %llu)\n",
+                    static_cast<unsigned long long>(ffn + mixers + head),
+                    static_cast<unsigned long long>(ffn), static_cast<unsigned long long>(mixers),
+                    static_cast<unsigned long long>(head));
+      }
+
 
       // Enough Page32 pages for four lanes of prompt plus generated rows.
       const uint32_t pagesPerLane =
@@ -239,7 +313,7 @@ int main(int argc, char **argv) {
       const kv::Layout kvLayout = model.targetKvLayout(format);
       const uint32_t extentPages = kvLayout.maximumExtentPages();
       const uint32_t pageCount =
-          (pagesPerLane * 4 + extentPages - 1) / extentPages * extentPages;
+          (pagesPerLane * (prefillOnly ? 1U : maxWidth) + extentPages - 1) / extentPages * extentPages;
       MemoryGovernor governor(
           backend, backend.capabilities().recommendedMaxWorkingSetBytes, 1,
           queryHostAvailableMemory, 0);
@@ -255,8 +329,8 @@ int main(int argc, char **argv) {
       model::RuntimeContext context{backend, model, pages, states, operators};
       model::Runtime executor(context);
 
-      std::printf("device %s, %u prompt tokens, %u cycles per width\n",
-                  backend.capabilities().deviceName.c_str(), promptTokens,
+      std::printf("device %s, %u prompt tokens, %u context capacity, %u cycles per width\n",
+                  backend.capabilities().deviceName.c_str(), promptTokens, contextTokens,
                   cycles);
 
       std::array<Lane, 4> lanes;
@@ -264,11 +338,11 @@ int main(int argc, char **argv) {
         lanes[index] = {index + 1, index, 0,
                         pageRange(index * pagesPerLane, pagesPerLane)};
       }
-      const std::vector<uint32_t> prompt = chatPrompt(promptTokens);
 
       // Warm prefill and B1 decode with real work before measuring.
       prefill(executor, lanes[0], prompt);
-      static_cast<void>(decodeCycle(backend, executor, std::span<Lane>(&lanes[0], 1)));
+      if (!prefillOnly)
+        static_cast<void>(decodeCycle(backend, executor, std::span<Lane>(&lanes[0], 1)));
       executor.end(lanes[0].id);
 
       // Prefill: fused timing first, then the attributed replay. Both cover
@@ -286,6 +360,10 @@ int main(int argc, char **argv) {
                  BackendInstrumentation::takeDispatchProfile(backend));
       print("prefill " + std::to_string(promptTokens) + " rows", prefillTable,
             1.0, prefillFused);
+      if (prefillOnly) {
+        executor.end(lanes[0].id);
+        return 0;
+      }
 
       auto profileWidth = [&](const char *title, std::span<Lane> active) {
         std::vector<CycleTiming> fused;
@@ -295,11 +373,34 @@ int main(int argc, char **argv) {
                   [](const CycleTiming &left, const CycleTiming &right) {
                     return left.gpuSeconds < right.gpuSeconds;
                   });
+        CycleTiming total;
+        for (const CycleTiming &cycle : fused) {
+          total.gpuSeconds += cycle.gpuSeconds;
+          total.wallSeconds += cycle.wallSeconds;
+          total.commands += cycle.commands;
+          total.outputTokens += cycle.outputTokens;
+          total.draftedTokens += cycle.draftedTokens;
+          total.acceptedDraftTokens += cycle.acceptedDraftTokens;
+        }
         const CycleTiming median = fused[fused.size() / 2];
         std::printf("\n%s: median fused gpu %.2f ms, wall %.2f ms, %llu "
                     "command(s) per cycle\n",
                     title, median.gpuSeconds * 1e3, median.wallSeconds * 1e3,
                     static_cast<unsigned long long>(median.commands));
+        // Only the unprofiled cycles above contribute throughput and
+        // acceptance. Warmup and attributed replays are separate work.
+        std::printf("fused totals: %u cycles, %llu committed output tokens, %llu drafted, %llu accepted, "
+                    "%.3f ms gpu, %.3f ms wall, %llu commands\n",
+                    cycles, static_cast<unsigned long long>(total.outputTokens),
+                    static_cast<unsigned long long>(total.draftedTokens),
+                    static_cast<unsigned long long>(total.acceptedDraftTokens),
+                    total.gpuSeconds * 1e3, total.wallSeconds * 1e3,
+                    static_cast<unsigned long long>(total.commands));
+        std::printf("fused throughput: %.2f tok/s wall, %.2f tok/s gpu, %.3f output tokens/cycle, "
+                    "%.2f%% draft acceptance\n",
+                    total.outputTokens / total.wallSeconds, total.outputTokens / total.gpuSeconds,
+                    double(total.outputTokens) / cycles,
+                    total.draftedTokens ? 100.0 * total.acceptedDraftTokens / total.draftedTokens : 0.0);
         BackendInstrumentation::setDispatchProfiling(backend, true);
         for (uint32_t cycle = 0; cycle < cycles; ++cycle)
           static_cast<void>(decodeCycle(backend, executor, active));
@@ -311,14 +412,14 @@ int main(int argc, char **argv) {
       };
       profileWidth("B1 decode cycle", std::span<Lane>(&lanes[0], 1));
       // Add one lane at a time so M16 and M24 paths are measured too.
-      for (uint32_t index = 1; index < lanes.size(); ++index) {
+      for (uint32_t index = 1; index < maxWidth; ++index) {
         prefill(executor, lanes[index], prompt);
         const std::string title = "B" + std::to_string(index + 1) + " decode cycle";
         profileWidth(title.c_str(), std::span<Lane>(lanes.data(), index + 1));
       }
 
-      for (Lane &lane : lanes)
-        executor.end(lane.id);
+      for (uint32_t index = 0; index < maxWidth; ++index)
+        executor.end(lanes[index].id);
       return 0;
     } catch (const std::exception &error) {
       std::cerr << "decode-profile: " << error.what() << '\n';

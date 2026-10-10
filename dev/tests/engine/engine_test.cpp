@@ -1138,6 +1138,32 @@ void testLongSuffixSkipsDraftRestore() {
           "long suffix copied a draft ring that its final window overwrites");
 }
 
+void testFullHistoryLongSuffixRestoresDraft() {
+  test::TestKvStorage storage(256, 4096, 4);
+  KvPool pool(storage, 0);
+  engine::Cache resources(pool, nullptr, nullptr);
+  Executor executor(1);
+  executor.contextCapacity = 8192;
+  Events events;
+  engine::Engine engine(test::engineConfig(), resources, executor, events);
+  guardReleases(storage, engine);
+  std::vector<uint32_t> prefix(65);
+  for (uint32_t index = 0; index < prefix.size(); ++index) prefix[index] = index + 1;
+  engine.submit(request(10, prefix));
+  runUntilIdle(engine);
+  auto extended = prefix;
+  extended.resize(4097, 99);
+  engine.submit(request(11, extended));
+  runUntilIdle(engine);
+  const auto &plan = executor.plans.at(11);
+  require(executor.restoredDraft && plan.restoresDraftState && plan.replayBegin == 64 &&
+              plan.captureSpans.size() == 1 && plan.captureSpans[0].begin == 64 &&
+              plan.captureSpans[0].end == 4097 && !plan.captureSpans[0].resetDraftState,
+          "Engine discarded full-history prefix context when replaying a long suffix");
+  require(events.completedCount == 2 && events.failedCount == 0,
+          "full-history suffix restore did not complete both requests");
+}
+
 // A lane cancelled while the command that ends at its armed boundary is in
 // flight publishes nothing when that command drains: no snapshot is taken,
 // no failure is counted, and the blocks committed earlier stay cached.
@@ -8868,6 +8894,7 @@ int main() {
     testNoCheckpointWithinAChunkOfTheReplayBoundary();
     testSkippedCheckpointKeepsPreviousRecoveryPoint();
     testLongSuffixSkipsDraftRestore();
+    testFullHistoryLongSuffixRestoresDraft();
     testCancellationInFlightAtBoundaryPublishesNoState();
     testLaneStateGrowthReclaimsCachedStateAndRetries();
     testKvGrowthReclaimsIdleStateBeforeCache();

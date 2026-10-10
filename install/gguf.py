@@ -467,8 +467,8 @@ ATTENTION_TENSORS = {
 GDN_TENSORS = {
     "attn_qkv.weight": QUANTIZED_TYPES,
     "attn_gate.weight": QUANTIZED_TYPES,
-    "ssm_alpha.weight": QUANTIZED_TYPES | {"F32", "BF16"},
-    "ssm_beta.weight": QUANTIZED_TYPES | {"F32", "BF16"},
+    "ssm_alpha.weight": QUANTIZED_TYPES | {"F32", "BF16", "F16"},
+    "ssm_beta.weight": QUANTIZED_TYPES | {"F32", "BF16", "F16"},
     "ssm_conv1d.weight": F32,
     "ssm_a": F32,
     "ssm_dt.bias": F32,
@@ -500,6 +500,13 @@ def loaded_tensors(metadata):
     period = metadata.positive(arch + ".full_attention_interval")
     ffn = MOE_TENSORS if arch == "qwen35moe" else DENSE_TENSORS
     tensors = dict(MODEL_TENSORS)
+    if (
+        arch == "qwen35"
+        and metadata.values.get(arch + ".embedding_length") == 2560
+        and loaded_layers(metadata, arch) == 32
+        and "output.weight" not in metadata.tensors
+    ):
+        tensors.pop("output.weight")
     for layer in range(loaded_layers(metadata, arch)):
         mixer = ATTENTION_TENSORS if (layer + 1) % period == 0 else GDN_TENSORS
         for name, types in (LAYER_TENSORS | mixer | ffn).items():

@@ -24,6 +24,14 @@ struct Q4Params {
 static_assert(sizeof(Q4Params) == 8,
               "Q4 projection parameters are 8 bytes on both sides");
 
+// Non-eight blocks pad the matrix operand to a legal MPP row tile.
+struct Q4BlockPaddingParams {
+  uint32_t width;
+  uint32_t live_rows;
+  uint32_t storage_rows;
+};
+static_assert(sizeof(Q4BlockPaddingParams) == 12, "block padding params are three words");
+
 // The prefill residual kernels over a view of the leading inputs of wider
 // weight rows (prefill_linear_q4_*_leading_inputs): each row of the weight,
 // scale and bias planes holds plane_input_size inputs, of which the

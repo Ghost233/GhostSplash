@@ -11,6 +11,9 @@ max_cache_disk=50G
 queue_size=4
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+launcher_allow_baseline=0
+. "$repo/dev/tools/launcher_kv.sh"
+splash_parse_launcher_options "$@"
 python="$repo/.venv/bin/python"
 server="$repo/server/server.py"
 binary="$repo/build/splash"
@@ -28,6 +31,7 @@ if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 
 unset SPLASH_API_KEY
+echo "KV format: $kv_format"
 echo "Starting $model_id from $model_dir"
 echo "API: http://127.0.0.1:$port/v1 (WebUI disabled; listening on $host)"
 cd "$repo"
@@ -40,4 +44,5 @@ exec "$python" -u -m server.server \
     --host "$host" --port "$port" \
     --max-context "$max_context" --max-memory "$max_memory" \
     --max-cache-disk "$max_cache_disk" \
-    --queue-size "$queue_size" --no-webui
+    --queue-size "$queue_size" --no-webui \
+    --kv-format "$kv_format"

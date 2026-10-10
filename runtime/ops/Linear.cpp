@@ -18,8 +18,7 @@ namespace {
 
 constexpr uint32_t kAffinePrefillTileRows = 32;
 constexpr uint32_t kQuantGroup = 64;
-static_assert(SPLASH_TARGET_VERIFY_ROWS == 8,
-              "Q4 register tiles require eight verify rows per lane");
+// Register tables remain eight-row tiles; non-eight blocks use plain MPP inputs.
 // The kernels sum their input per block of four quant groups (256 inputs);
 // Split128 partitions K in whole blocks.
 constexpr uint32_t kInputSumBlock = 4 * kQuantGroup;
@@ -174,12 +173,12 @@ Projection Projection::leadingInputs(uint32_t inputs) const {
 // Table16 holds its sums per eight-row tile (metal/abi/Gguf.h), a lane's rows.
 uint64_t tableSumsBytes(LinearInput layout, uint32_t width, uint64_t rows) noexcept {
   return layout == LinearInput::Table16
-             ? rows / SPLASH_TARGET_VERIFY_ROWS * table16_sums_per_tile(width) * sizeof(float)
+             ? rows / 8 * table16_sums_per_tile(width) * sizeof(float)
        : layout == LinearInput::Table64 ? uint64_t{width} * rows / 16 : 0;
 }
 
 void requireTableScratch(const LinearScratch &scratch, LinearInput layout, uint32_t width, uint32_t rows) {
-  if (layout == LinearInput::Plain || !rows || rows % SPLASH_TARGET_VERIFY_ROWS || width % 64)
+  if (layout == LinearInput::Plain || !rows || rows % 8 || width % 64)
     throw std::invalid_argument("invalid linear table geometry");
   requireBytes(scratch.input, tableBytes(width, rows), "linear table");
   requireBytes(scratch.sums, tableSumsBytes(layout, width, rows), "linear table sums");
@@ -207,7 +206,13 @@ void requireAffineProjection(const Projection &p, LinearMatrix matrix) {
 
 uint32_t LinearPlan::storageRows() const noexcept {
   if (workload_.weightLayout == WeightLayout::Block32) return blockStorageRows();
-  if (workload_.phase != LinearPhase::Prefill) return workload_.rows;
+  if (workload_.phase != LinearPhase::Prefill) {
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+    return (workload_.rows + 7) / 8 * 8;
+#else
+    return workload_.rows;
+#endif
+  }
   return ((workload_.rows + kAffinePrefillTileRows - 1) / kAffinePrefillTileRows) * kAffinePrefillTileRows;
 }
 uint32_t LinearPlan::tileColumns() const noexcept {
@@ -329,6 +334,21 @@ LinearPlan::LinearPlan(LinearWorkload w, LinearConfig config, FloatOutput destin
     }
     return;
   }
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  const uint32_t variantLane = w.rows / SPLASH_TARGET_VERIFY_ROWS - 1;
+  if (config.splits != 1 || config.simdgroups != LinearSimdgroups::Eight ||
+      config.tile != (w.epilogue == LinearEpilogue::GateUp ? LinearTile::N256 : LinearTile::N128))
+    throw std::invalid_argument("non-eight affine decode uses the compiled plain-input block tile");
+  constexpr std::array variantPlain{"decode_linear_q4_block_l1", "decode_linear_q4_block_l2",
+      "decode_linear_q4_block_l3", "decode_linear_q4_block_l4"};
+  constexpr std::array variantResidual{"decode_linear_q4_block_residual_l1", "decode_linear_q4_block_residual_l2",
+      "decode_linear_q4_block_residual_l3", "decode_linear_q4_block_residual_l4"};
+  constexpr std::array variantGate{"decode_linear_q4_block_gate_up_l1", "decode_linear_q4_block_gate_up_l2",
+      "decode_linear_q4_block_gate_up_l3", "decode_linear_q4_block_gate_up_l4"};
+  pipeline_ = w.epilogue == LinearEpilogue::GateUp ? variantGate[variantLane]
+              : residual ? variantResidual[variantLane] : variantPlain[variantLane];
+  return;
+#endif
   const uint32_t lane = w.rows / SPLASH_TARGET_VERIFY_ROWS - 1;
   if (oneLaneTile(config.tile) && lane != 0)
     throw std::invalid_argument("paired Q4 tile requires one lane");
@@ -534,6 +554,13 @@ LinearConfig Linear::baseline(LinearWorkload w, std::span<const Projection *cons
     return {w.epilogue == LinearEpilogue::UpWithGate || wide ? LinearTile::N256
                                                               : LinearTile::N128, 0};
   }
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  if (w.phase == LinearPhase::Decode) {
+    const auto tile = w.epilogue == LinearEpilogue::GateUp ? LinearTile::N256 : LinearTile::N128;
+    const uint32_t columns = tile == LinearTile::N256 ? 256 : 128;
+    return {tile, std::min<uint32_t>(w.matrix.outputSize / columns, std::max(gpuCores_, 1u) * 4)};
+  }
+#endif
   const uint32_t lanes = w.rows / SPLASH_TARGET_VERIFY_ROWS;
   // Wide plain projections of three or four lanes take the broad-column tiles
   // below on every family, since independent row tiles would repeat the weight
@@ -655,6 +682,12 @@ PreparedInput Linear::add(metal::CommandGraph &graph, LinearBuffers b,
   requireBytes(b.scratch.sums, scratch.sums, "projection scratch sums");
   requireBytes(b.scratch.partials, scratch.partials, "projection partials");
   requireBytes(b.scratch.counters, scratch.counters, "projection counters");
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  if (w.phase == LinearPhase::Decode && rows > w.rows) {
+    graph.add("decode_linear_block_padding", {b.input}, Q4BlockPaddingParams{k, w.rows, static_cast<uint32_t>(rows)},
+              {(uint64_t{rows - w.rows} * k + 255) / 256, 1, 1});
+  }
+#endif
   if (p.layout() == WeightLayout::Block32) {
     if (p.rotation) requireBytes(b.scratch.rotated, rotatedBytes(k, rows), "projection rotated input");
     addGguf(graph, b, p, selected, gate);

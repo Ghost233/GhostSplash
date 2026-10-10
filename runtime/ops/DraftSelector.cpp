@@ -90,4 +90,55 @@ void DraftSelector::add(metal::CommandGraph &graph,
             params, {lanes, 1, 1}, {1, 1, 1});
 }
 
+void DraftSelector::addUnary(metal::CommandGraph &graph, const DraftSelectorBuffers &buffers,
+                              std::span<const uint32_t> anchors,
+                              std::span<const SamplingPolicy> policies) const {
+  if (anchors.empty() || anchors.size() != policies.size() || anchors.size() > SPLASH_MAXIMUM_BATCH_WIDTH)
+    throw std::invalid_argument("invalid draft selector batch");
+  const uint32_t lanes = static_cast<uint32_t>(anchors.size());
+  SelectorBatchParams params{};
+  params.lanes = lanes;
+  params.vocabulary = vocabulary_;
+  for (uint32_t lane = 0; lane < lanes; ++lane) {
+    params.anchor[lane] = anchors[lane];
+    params.temperature[lane] = policies[lane].temperature;
+    if (policies[lane].samples()) params.sampling_mask |= uint32_t{1} << lane;
+  }
+  const auto workspace = DraftSelector::workspace(lanes * kPositions);
+  const uint64_t rows = uint64_t{lanes} * SPLASH_DRAFT_QUERY_ROWS;
+  requireBytes(buffers.logits, rows * vocabulary_ * sizeof(float), "draft logits");
+  requireBytes(buffers.proposedTokens, uint64_t{lanes} * kPositions * sizeof(uint32_t), "proposed token");
+  if (lanes == 1 && !params.sampling_mask) {
+    const uint64_t partialBytes = uint64_t{lanes} * kPositions * kShards * sizeof(uint32_t);
+    requireBytes(buffers.partialIds, partialBytes, "draft selector partial id");
+    requireBytes(buffers.partialValues, partialBytes, "draft selector partial value");
+    graph.add("draft_select_argmax_sharded", {buffers.logits, buffers.partialIds, buffers.partialValues},
+              vocabulary_, {uint64_t{lanes} * kPositions * kShards, 1, 1});
+    graph.add("draft_select_argmax_merge", {buffers.partialIds, buffers.partialValues, buffers.proposedTokens},
+              {uint64_t{lanes} * kPositions, 1, 1}, {32, 1, 1});
+    return;
+  }
+  requireBytes(buffers.partialIds, workspace.partialIdsBytes, "draft selector partial id");
+  // Unary selection uses only the shard partials, no edge table.
+  requireBytes(buffers.partialValues, workspace.partialIdsBytes, "draft selector partial value");
+  requireBytes(buffers.candidates, workspace.candidatesBytes, "draft candidate");
+  requireBytes(buffers.unary, workspace.unaryBytes, "draft candidate score");
+  requireBytes(buffers.proposedTokens, uint64_t{lanes} * kPositions * sizeof(uint32_t), "proposed token");
+  if (const uint64_t sampledLanes = std::bit_width(params.sampling_mask)) {
+    requireBytes(buffers.uniforms,
+                 ((sampledLanes - 1) * SPLASH_SAMPLING_UNIFORMS + SPLASH_UNIFORM_PROPOSALS + kPositions) * sizeof(float),
+                 "proposal uniform");
+    requireBytes(buffers.proposalProbabilities, sampledLanes * kPositions * SPLASH_DRAFT_CANDIDATES * sizeof(float),
+                 "proposal probability");
+  }
+  graph.add("draft_select_top16_sharded", {buffers.logits, buffers.partialIds, buffers.partialValues},
+            vocabulary_, {uint64_t{lanes} * kPositions * kShards, 1, 1});
+  graph.add("draft_select_unary_merge", {buffers.partialIds, buffers.partialValues, buffers.candidates, buffers.unary},
+            uint32_t{lanes * kPositions}, {uint64_t{lanes} * kPositions, 1, 1}, {32, 1, 1});
+  graph.add("draft_select_unary", {buffers.candidates, buffers.unary,
+            buffers.uniforms ? buffers.uniforms : buffers.logits, buffers.proposedTokens,
+            buffers.proposalProbabilities ? buffers.proposalProbabilities : buffers.logits},
+            params, {lanes, 1, 1}, {1, 1, 1});
+}
+
 } // namespace splash::ops

@@ -36,7 +36,7 @@ constexpr kv::Layout compactBf16Layout{10, 2, 256, kv::Format::BFloat16};
 // the extent once, without gaps or overlaps.
 void requireSpansTileExtent(const kv::PageStorage &storage, uint32_t firstPage) {
     const kv::Layout layout = storage.layout();
-    const bool scaled = layout.format == kv::Format::Int8;
+    const bool scaled = layout.scaleBytesPerLayerPage() != 0;
     const uint32_t tensors = scaled ? 4 : 2;
     std::byte *const extent = storage.spans(firstPage).front().data();
     std::vector<std::span<std::byte>> all;
@@ -260,7 +260,9 @@ void run(const std::string &metallib) {
                     512 * compactLayout.bytesPerModelPage(),
             "model-provided compact Q8 geometry was not honored");
 
-    for (const auto layout : {bf16Layout, compactBf16Layout}) {
+    for (const auto layout : {bf16Layout, compactBf16Layout,
+                             kv::Layout{8, 4, 256, kv::Format::Q4_0Hadamard},
+                             kv::Layout{8, 4, 256, kv::Format::Q4_0Unrotated}}) {
         const uint32_t extent = layout.minimumExtentPages();
         kv::PageStorage bf16(backend, governor.allocationAdmission(), layout,
                              2 * extent, extent);

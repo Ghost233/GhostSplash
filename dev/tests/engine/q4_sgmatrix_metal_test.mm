@@ -321,6 +321,25 @@ void requireNorm(const NormCase &c, const metal::MetalBuffer &output, uint32_t k
     for (uint32_t i=0;i<k;++i) require(roundedOnceToBf16(out[r*k+i],exact[i]),what);
   }
 }
+void narrowNorm(metal::MetalBackend &backend) {
+  constexpr uint32_t width = 2560;
+  for (bool float32 : {false, true})
+    for (uint32_t rows : {1U, 8U, 65U, 2048U}) {
+      const NormCase c = normCase(backend, width, rows, float32);
+      auto baseline = test::sharedBuffer(backend, width * rows * 2);
+      auto specialized = test::sharedBuffer(backend, width * rows * 2);
+      metal::CommandGraph graph;
+      graph.add(normKernel("norm_rms", c.weight, width), {c.input, c.weight.buffer, baseline}, width, {rows, 1, 1});
+      (void)Normalization::addRms(graph, c.input, c.weight, specialized, width, rows);
+      require(graph.dispatches().back().pipelineName.starts_with("norm_rms_2560"),
+              "4B did not select the narrow register norm");
+      (void)backend.submitCommandAsync(graph.dispatches()).wait();
+      require(!std::memcmp(baseline.contents(), specialized.contents(), width * rows * 2),
+              "4B norm specialization changed rounded output");
+      requireNorm(c, specialized, width, rows, "4B norm differs from fp64 reference");
+    }
+}
+
 void fusedNorm(metal::MetalBackend &backend, uint32_t k, uint32_t rows, LinearInput layout, bool float32) {
   const uint64_t sumsBytes = tableSumsBytes(layout, k, rows);
   const NormCase c=normCase(backend,k,rows,float32);
@@ -484,6 +503,7 @@ int main(int argc,char **argv) {
       for (uint32_t lanes : {1U,2U,3U,4U}) {
         fusedAttentionGate(backend, 24, 4, lanes, layout);
         fusedAttentionGate(backend, 16, 2, lanes, layout);
+        fusedAttentionGate(backend, 16, 4, lanes, layout);
       }
     uint32_t cases=0;
     for (auto [n,k] : std::array<std::array<uint32_t,2>,4>{{{256,256},{768,768},{512,5120},{512,17408}}})
@@ -497,10 +517,11 @@ int main(int argc,char **argv) {
     // tables, F32 norms only Table16.
     for (auto [layout, float32] : {std::pair{LinearInput::Table64, false}, std::pair{LinearInput::Table16, false},
                                    std::pair{LinearInput::Table16, true}})
-      for (uint32_t width : {64U, 320U, 1984U, 2048U, 2112U, 5120U, 17408U})
+      for (uint32_t width : {64U, 320U, 1984U, 2048U, 2112U, 2560U, 5120U, 17408U})
         for (uint32_t rows : {8U,16U,24U,32U}) fusedNorm(backend, width, rows, layout, float32);
-    for (uint32_t width : {64U, 2048U, 5120U, 17408U})
+    for (uint32_t width : {64U, 2048U, 2560U, 5120U, 17408U})
       for (uint32_t rows : {1U,37U,64U,65U}) prefillNorm(backend, width, rows);
+    narrowNorm(backend);
     normExtents(backend);
     // 27B out_proj then down, and gdn_in then gate/up: K 6144, 17408 and 5120.
     for (uint32_t lanes : {1U, 4U}) {

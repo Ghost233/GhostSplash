@@ -478,6 +478,72 @@ void testPersistKeepsTheRamCopy(metal::MetalBackend &backend) {
   storage.releaseLane(0, 7);
 }
 
+void testTargetOnlyState(metal::MetalBackend &backend) {
+  constexpr model::CompositeStateLayout layout{{1, 3, 128, 1, 128, 128}, {}};
+  require(layout.valid() && layout.draft.ringBytes() == 0,
+          "target-only state allocated a draft ring");
+  MemoryGovernor governor(backend, backend.capabilities().recommendedMaxWorkingSetBytes, 1,
+                          queryHostAvailableMemory, 0);
+  model::QwenStateStorage storage(backend, governor.allocationAdmission(), layout, nullptr);
+  require(bool(storage.tryActivateLane(0, 701)), "target-only activation failed");
+  fill(storage.current(0).stateBase, 17);
+  const auto original = stateImage(storage, 0);
+  storage.updateLengths(0, {32, 0, 0});
+  auto snapshot = storage.snapshot(0);
+  require(snapshot != nullptr && storage.draft(0).empty(), "target-only snapshot failed");
+  snapshot.reset();
+  // The cached GDN cell and its empty ring return to the pool. A second
+  // snapshot must work without a nonzero-byte draft allocation.
+  snapshot = storage.snapshot(0);
+  require(snapshot != nullptr, "target-only pooled snapshot lost its empty ring");
+  storage.releaseLane(0, 701);
+  require(bool(storage.tryActivateLane(1, 702)), "target-only lane move failed");
+  bool committed = false;
+  auto read = storage.beginRestore(1, *snapshot, true, {}, [&] { committed = true; });
+  require(!read && committed && stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths.targetTokens == 32,
+          "target-only prefix restore changed state or lengths");
+  storage.releaseLane(1, 702);
+}
+
+void testFullHistoryState(metal::MetalBackend &backend) {
+  constexpr model::CompositeStateLayout layout{{1, 3, 128, 1, 128, 128},
+      {6, 1, 16, true, {4096, 4096, 4096, 4096, 4096, 8192}}};
+  require(layout.valid() && layout.draft.historyCapacity() == 8192,
+          "full-history state layout lost the final layer capacity");
+  MemoryGovernor governor(backend, backend.capabilities().recommendedMaxWorkingSetBytes, 1,
+                          queryHostAvailableMemory, 0);
+  model::QwenStateStorage storage(backend, governor.allocationAdmission(), layout, nullptr);
+  require(bool(storage.tryActivateLane(0, 801)), "full-history state activation failed");
+  fill(storage.current(0).stateBase, 29);
+  for (uint32_t layer = 0; layer < layout.draft.layers; ++layer) {
+    require(storage.draft(0)[layer].capacity == layout.draft.contextTokens(layer) &&
+                storage.draft(0)[layer].keys.sizeBytes() == layout.draft.tensorBytes(layer) &&
+                storage.draft(0)[layer].values.sizeBytes() == layout.draft.tensorBytes(layer),
+            "full-history per-layer cache sizes are incorrect");
+    fill(storage.draft(0)[layer].keys, 41 + layer);
+    fill(storage.draft(0)[layer].values, 71 + layer);
+  }
+  const auto original = stateImage(storage, 0);
+  storage.updateLengths(0, {6144, 0, 6144});
+  auto cached = storage.snapshot(0);
+  require(cached != nullptr && cached->bytes() >= layout.cachedBytes(), "full-history snapshot allocation failed");
+  require(bool(storage.tryActivateLane(1, 802)), "full-history restore activation failed");
+  bool committed = false;
+  require(!storage.beginRestore(1, *cached, true, {}, [&] { committed = true; }) && committed &&
+              stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths == model::QwenLogicalLengths{6144, 0, 6144} &&
+              storage.metadata(1).lengths.hasCompleteDraftWindow(8192),
+          "full-history restore lost prefix cache bytes or metadata");
+  // A legacy-looking last-2048 prefix cannot be cached as a complete full
+  // attention state, even though it still satisfies the old window rule.
+  storage.updateLengths(1, {6144, 4096, 2048});
+  rejects([&] { static_cast<void>(storage.snapshot(1)); },
+          "composite snapshot requires equal page-aligned committed lengths",
+          "partial sliding prefix was accepted as a full-history snapshot");
+  storage.releaseLane(0, 801); storage.releaseLane(1, 802);
+}
+
 void run(const std::string &metallib) {
   using model::QwenCompositeState;
   using model::QwenLogicalLengths;
@@ -485,6 +551,8 @@ void run(const std::string &metallib) {
 
   testLayoutFormulas();
   metal::MetalBackend backend(metallib);
+  testTargetOnlyState(backend);
+  testFullHistoryState(backend);
   testOffloadAllocationFailure(backend);
   testDiskRestore(backend);
   testDirectDiskSnapshot(backend);

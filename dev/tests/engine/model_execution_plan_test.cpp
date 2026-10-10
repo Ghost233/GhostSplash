@@ -23,11 +23,15 @@ template <class Weights>
 model::LoadedModel package() {
   model::LoadedModel result;
   Weights target;
-  const model::DFlashDraftLayout draft = std::is_same_v<Weights, model::Qwen3_6MoeWeights>
+  constexpr bool targetOnly = std::is_same_v<Weights, model::Qwen3_5_4BWeights>;
+  const model::DFlashDraftLayout draft = targetOnly ? model::DFlashDraftLayout{}
+                                      : std::is_same_v<Weights, model::Qwen3_6MoeWeights>
                                              ? model::kQwen3_6MoeDraftLayout
                                              : model::kQwen3_8DraftLayout;
   const auto projection = [](uint32_t n, uint32_t k) {
-    return ops::Projection(n, k, ops::AffineWeights{});
+    if constexpr (targetOnly)
+      return ops::Projection(n, k, ops::BlockWeights{{ops::QuantizedSegment::planes(GGUF_FMT_Q4K, n, k, {}, {}, {})}});
+    else return ops::Projection(n, k, ops::AffineWeights{});
   };
   const auto &layout = target.layout;
   target.logitsProjection = projection(layout.vocabularySize, layout.hiddenSize);
@@ -45,20 +49,52 @@ model::LoadedModel package() {
       gdn.outputProjection = projection(layout.hiddenSize, layout.attentionWidth);
       layer.mixer = std::move(gdn);
     }
-    if constexpr (std::is_same_v<Weights, model::Qwen3_8Weights>) {
+    if constexpr (std::is_same_v<Weights, model::Qwen3_8Weights> || targetOnly) {
       layer.gateProjection = projection(layout.intermediateSize, layout.hiddenSize);
       layer.upProjection = layer.gateProjection;
       layer.downProjection = projection(layout.hiddenSize, layout.intermediateSize);
     }
   }
   ops::VisionLayout vision;
-  vision.outputHiddenSize = target.layout.hiddenSize;
+  vision.outputHiddenSize = targetOnly ? 0 : target.layout.hiddenSize;
   result.descriptor = model::makeModelDescriptor(
       "operator workspace test", target.layout, draft, vision,
-      model::TargetSource::Package, model::VisionSource::Package);
+      targetOnly ? model::TargetSource::Gguf : model::TargetSource::Package,
+      targetOnly ? model::VisionSource::None : model::VisionSource::Package);
   result.target = std::move(target);
   result.draft.layout = draft;
   return result;
+}
+
+// The 4B has no draft. Sizing its arenas must never plan a zero-width
+// affine draft projection, and every scratch bound must come from the target.
+void checkTargetOnlyWorkspaces() {
+  const auto loaded = package<model::Qwen3_5_4BWeights>();
+  require(loaded.descriptor.valid() && !loaded.descriptor.hasDraft(), "invalid target-only fixture");
+  model::requireCompatibleModel(loaded);
+  const auto geometry = model::RuntimeGeometry::from(loaded, kv::Format::Int8);
+  for (uint32_t family : {9U, 10U, 11U})
+    for (uint32_t cores : {16U, 20U, 40U}) {
+      DeviceCapabilities device;
+      device.appleGpuFamily = family;
+      device.gpuCoreCount = cores;
+      const ops::ExecutionPlans plans(device);
+      ops::LinearScratchSize expected;
+      for (const auto &projection : geometry.target.decodeProjections)
+        expected.include(plans.linear().decodeScratchSize(projection));
+      const auto actual = model::DecodeArena::linearScratchSize(geometry, plans);
+      require(actual.partials == expected.partials && actual.counters == expected.counters &&
+                  actual.rotated == expected.rotated,
+              "target-only linear scratch included nonexistent draft work");
+      uint64_t gateBytes = 0;
+      for (const auto &projection : geometry.target.gateUpProjections)
+        gateBytes = std::max(gateBytes, plans.gateUpWorkspace(projection));
+      require(model::DecodeArena::gateScratchBytes(geometry, plans) == gateBytes,
+              "target-only gate scratch included nonexistent draft work");
+      require(model::plannedPrefillBytes(geometry, plans) > 0 &&
+                  model::plannedDecodeBytes(geometry, plans) > 0,
+              "target-only arena planning omitted real target work");
+    }
 }
 
 void checkMixedLayouts() {
@@ -127,6 +163,35 @@ void checkMixedLayouts() {
 // Split128 plan's partials grow with the rows. The arena must hold every
 // lane's plan of every affine target and draft projection at the measured
 // core counts.
+void checkStandardDraftScratch() {
+  auto geometry = model::RuntimeGeometry::from(package<model::Qwen3_5_4BWeights>(), kv::Format::Int8);
+  geometry.draft = {.layers=6, .hiddenSize=2560, .vocabularySize=248320, .dynamicSize=0,
+      .qkvSize=6144, .attentionSize=4096, .intermediateSize=9216, .attentionHeadDimension=128,
+      .rotaryTheta=1000000, .targetHiddenSize=20480, .selectorRank=0, .kvHeads=8,
+      .kind=model::DraftKind::Standard};
+  DeviceCapabilities device;
+  device.appleGpuFamily = 10; device.gpuCoreCount = 20;
+  const ops::ExecutionPlans plans(device);
+  ops::LinearScratchSize expected;
+  for (const auto &projection : geometry.target.decodeProjections)
+    expected.include(plans.linear().decodeScratchSize(projection));
+  for (const ops::ProjectionShape shape : {ops::ProjectionShape{6144,2560}, {2048,2560},
+      {2560,4096}, {9216,2560}, {2560,9216}, {2560,20480}})
+    expected.include(plans.linear().decodeScratchSize(shape));
+  const auto actual = model::DecodeArena::linearScratchSize(geometry, plans);
+  require(actual.input == expected.input && actual.sums == expected.sums && actual.partials == expected.partials &&
+              actual.counters == expected.counters && actual.rotated == expected.rotated,
+          "standard DFlash scratch planning included nonexistent dynamic/selector projections");
+  const auto tensors = model::decodeTensorBytes(geometry, plans);
+  require(tensors[static_cast<uint32_t>(model::DecodeTensor::DraftDynamic)] == 0 &&
+              tensors[static_cast<uint32_t>(model::DecodeTensor::DraftConvolved)] == 0 &&
+              tensors[static_cast<uint32_t>(model::DecodeTensor::SelectorHidden)] == 0,
+          "standard DFlash arenas allocated fake dynamic/conv/selector buffers");
+  geometry.draft.qkvSize = 0;
+  rejects([&] { static_cast<void>(model::DecodeArena::linearScratchSize(geometry, plans)); },
+          "invalid linear matrix", "missing required standard QKV matrix was silently skipped");
+}
+
 void checkLaneScratch(const model::LoadedModel &package) {
   const auto geometry = model::RuntimeGeometry::from(package, kv::Format::Int8);
   const auto &d = geometry.draft;
@@ -198,8 +263,10 @@ int main() {
     checkUnsizedProjection();
     checkGdnWidths();
     checkMixedLayouts();
+    checkTargetOnlyWorkspaces();
     const auto dense = package<model::Qwen3_8Weights>();
     const auto sparse = package<model::Qwen3_6MoeWeights>();
+    checkStandardDraftScratch();
     checkLaneScratch(dense);
     checkLaneScratch(sparse);
     std::cout << "model execution plans: PASS (two paired geometries)\n";

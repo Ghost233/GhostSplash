@@ -12,6 +12,7 @@
 #include "TestFiles.hpp"
 #include "model/ModelDescriptor.hpp"
 
+#include <array>
 #include <filesystem>
 #include <initializer_list>
 #include <iostream>
@@ -102,7 +103,7 @@ void testFamilies(const std::filesystem::path &fixtures) {
   // The model type names the family; the sizes every source's config states
   // tell its target from other models of the architecture, which Splash does
   // not serve, such as Qwen3.5-4B.
-  constexpr std::string_view supported = "; supported: Qwen3.8-27B, Qwen3.6-35B-A3B";
+  constexpr std::string_view supported = "; supported: Qwen3.8-27B, Qwen3.6-35B-A3B, Qwen3.5-4B";
   struct Refused final {
     std::string_view from, to, difference;
   };
@@ -122,6 +123,85 @@ void testFamilies(const std::filesystem::path &fixtures) {
 // A descriptor states where its weights come from: one that leaves either
 // source unset, which draftFromCheckpoint and hasVision would read as a
 // checkpoint draft and a vision tower, is not valid.
+void testDraftFree4B() {
+  const SourceModel source{
+      R"({"version":1,"model":"local/qwen4b","target_format":"gguf","vision_format":"none","sources":{"draft":null}})",
+      R"({"text_config":{"model_type":"qwen3_5_text","hidden_size":2560,"max_position_embeddings":262144,"num_attention_heads":16,"num_key_value_heads":4,"head_dim":256,"num_hidden_layers":32,"vocab_size":248320}})",
+      ""};
+  const auto descriptor = inspect(source);
+  require(descriptor.valid() && !descriptor.hasDraft() && !descriptor.hasVision() &&
+              descriptor.family() == "Qwen3.5-4B" && descriptor.stateLayout.draft.ringBytes() == 0 &&
+              descriptor.targetKvLayout.attentionLayers == 8 && descriptor.stateLayout.target.layers == 24,
+          "4B must execute its exact target geometry without draft state");
+  refuses(source.with(&SourceModel::config, R"("num_attention_heads":16)", R"("num_attention_heads":24)"),
+          "text config num_attention_heads", "4B accepted a mismatched attention geometry");
+  refuses(source.with(&SourceModel::record, R"("vision_format":"none")", R"("vision_format":"gguf")"),
+          "Qwen3.5-4B currently requires a text-only target", "4B accepted an unimplemented vision path");
+}
+
+// The standard draft captures eight exact target layers and keeps full history
+// only in its final layer; its preceding five layers use 4096-token rings.
+void testStandardDraft4B(const std::filesystem::path &fixtures) {
+  const SourceModel source{
+      R"({"version":1,"model":"local/qwen4b-dflash","target_format":"gguf","vision_format":"none"})",
+      R"({"text_config":{"model_type":"qwen3_5_text","hidden_size":2560,"max_position_embeddings":262144,"num_attention_heads":16,"num_key_value_heads":4,"head_dim":256,"num_hidden_layers":32,"vocab_size":248320}})",
+      text(fixtures / "qwen3.5-4b" / "draft" / "config.json")};
+  const auto descriptor = inspect(source);
+  require(descriptor.valid() && descriptor.hasDraft() && !descriptor.hasVision() &&
+              std::holds_alternative<model::Qwen3_5_4BDFlashLayout>(descriptor.target) &&
+              descriptor.draft.kind == model::DraftKind::Standard,
+          "4B standard draft made a draft-free or DFlash2 descriptor");
+  const auto &target = std::get<model::Qwen3_5_4BDFlashLayout>(descriptor.target);
+  require(target.hiddenCaptureLayers == std::array<uint32_t, 8>{1, 5, 9, 13, 17, 21, 25, 29} &&
+              descriptor.draft.targetHiddenSize == 20480,
+          "4B standard draft lost its eight ordered target captures");
+  const auto &state = descriptor.stateLayout.draft;
+  require(state.layers == 6 && state.fullHistory && state.contextTokens(5) == 262144,
+          "4B standard draft lost its final full-history cache");
+  for (uint32_t layer = 0; layer < 5; ++layer)
+    require(state.contextTokens(layer) == 4096,
+            "4B standard draft changed a sliding layer's physical capacity");
+  // Upstream can store these defaults at the root or inside dflash_config.
+  require(inspect(source.with(&SourceModel::draft, R"("architectures":)",
+                             R"("is_causal":null,"input_embedding_scale":1,"output_multiplier":1.0,"final_logit_softcapping":null,"architectures":)")
+                        .with(&SourceModel::draft, R"("block_size": 16)",
+                              R"("input_embedding_scale":1.0,"output_multiplier":1,"final_logit_softcapping":null,"block_size": 16)"))
+              .valid(),
+          "4B standard draft rejected explicit default scales or null optional overrides");
+  struct Refused final {
+    std::string_view from, to, error;
+  };
+  for (const Refused &refused : std::initializer_list<Refused>{
+           {R"("num_hidden_layers": 6)", R"("num_hidden_layers": 5)",
+            "standard draft config num_hidden_layers mismatch"},
+           {"      29\n", "      30\n", "standard target_layer_ids 7 mismatch"},
+           {R"("sliding_attention")", R"("full_attention")",
+            "standard draft attention layer type mismatch"},
+           {R"("sliding_window": 4096)", R"("sliding_window": 2048)",
+            "standard draft config sliding_window mismatch"},
+           {R"("rope_theta": 10000000)", R"("rope_theta": 1000000)",
+            "standard draft rope_parameters rope_theta mismatch"},
+           {R"("architectures":)", R"("is_causal":false,"architectures":)",
+            "standard draft config is_causal must be absent or null"},
+           {R"("architectures":)", R"("is_causal":true,"architectures":)",
+            "standard draft config is_causal must be absent or null"},
+           {R"("architectures":)", R"("input_embedding_scale":2,"architectures":)",
+            "standard draft config input_embedding_scale mismatch"},
+           {R"("architectures":)", R"("output_multiplier":2,"architectures":)",
+            "standard draft config output_multiplier mismatch"},
+           {R"("architectures":)", R"("final_logit_softcapping":30,"architectures":)",
+            "standard draft config final_logit_softcapping must be absent or null"},
+           {R"("block_size": 16)", R"("input_embedding_scale":2,"block_size": 16)",
+            "standard dflash_config input_embedding_scale mismatch"},
+           {R"("block_size": 16)", R"("output_multiplier":2,"block_size": 16)",
+            "standard dflash_config output_multiplier mismatch"},
+           {R"("block_size": 16)", R"("final_logit_softcapping":30,"block_size": 16)",
+            "standard dflash_config final_logit_softcapping must be absent or null"},
+       })
+    refuses(source.with(&SourceModel::draft, refused.from, refused.to), refused.error,
+            "4B standard draft accepted an incompatible " + std::string(refused.to));
+}
+
 void testSources() {
   const auto described = [](model::TargetSource target, model::VisionSource vision) {
     return model::makeModelDescriptor("sources", model::Qwen3_8Layout{}, model::kQwen3_8DraftLayout,
@@ -343,6 +423,8 @@ int main(int argc, char **argv) {
     if (argc != 2) throw std::invalid_argument("usage: model-configuration FIXTURES");
     testFamilies(argv[1]);
     testSources();
+    testDraftFree4B();
+    testStandardDraft4B(argv[1]);
     testOneRulePerValue(argv[1]);
     testQuantization(argv[1]);
     testVisionConfig(argv[1]);

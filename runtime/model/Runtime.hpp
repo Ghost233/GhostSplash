@@ -29,6 +29,7 @@ public:
       uint64_t requestId, uint32_t boundary,
       std::shared_ptr<const CompositeState> state, bool restoreDraft,
       std::function<void()> completion) override;
+  [[nodiscard]] uint32_t draftContextCapacity() const noexcept override;
   void setDraftContextPlan(uint64_t requestId, DraftContextPlan plan) override;
   [[nodiscard]] std::vector<ModelStepResult>
   prefill(const BatchPlan &plan, std::span<const ModelBatchItem> items);

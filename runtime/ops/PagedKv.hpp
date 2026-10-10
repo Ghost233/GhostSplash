@@ -13,16 +13,30 @@ namespace splash::kv {
 
 // Selected once for a runtime and its entire page pool. Weight storage is
 // independent of the KV format; requests never change it while serving.
-enum class Format : uint32_t { Int8 = 1, BFloat16 = 2 };
+enum class Format : uint32_t {
+  Int8 = 1, BFloat16 = 2, Int4Hadamard = 3, Q4_0Hadamard = 4, Q4_0Unrotated = 5
+};
+
+[[nodiscard]] constexpr bool isQ4_0(Format format) noexcept {
+  return format == Format::Q4_0Hadamard || format == Format::Q4_0Unrotated;
+}
+
+[[nodiscard]] constexpr bool usesHadamard(Format format) noexcept {
+  return format == Format::Int4Hadamard || format == Format::Q4_0Hadamard;
+}
 
 [[nodiscard]] constexpr bool validFormat(Format format) noexcept {
-  return format == Format::Int8 || format == Format::BFloat16;
+  return format == Format::Int8 || format == Format::BFloat16 ||
+         format == Format::Int4Hadamard || isQ4_0(format);
 }
 
 [[nodiscard]] constexpr std::string_view formatName(Format format) noexcept {
   switch (format) {
   case Format::Int8: return "int8";
   case Format::BFloat16: return "bf16";
+  case Format::Int4Hadamard: return "q4h";
+  case Format::Q4_0Hadamard: return "q4_0";
+  case Format::Q4_0Unrotated: return "q4_0_unrotated";
   }
   return "invalid";
 }
@@ -33,6 +47,12 @@ enum class Format : uint32_t { Int8 = 1, BFloat16 = 2 };
     return "q8s8_f32_scale_per_token_head_k_token_major_v_dimension_major";
   case Format::BFloat16:
     return "bf16_k_token_major_v_dimension_major";
+  case Format::Int4Hadamard:
+    return "q4h_v1_symmetric_int4_f32_scale_per_token_head_kv_token_major_hqk256_hv64";
+  case Format::Q4_0Hadamard:
+    return "ggml_q4_0_v1_block32_inline_f16_kv_token_major_hqk256_hv64";
+  case Format::Q4_0Unrotated:
+    return "ggml_q4_0_v1_block32_inline_f16_kv_token_major_no_rotation";
   }
   return "invalid";
 }
@@ -112,7 +132,10 @@ namespace detail {
 
 } // namespace detail
 
-// Physical KV geometry: Page32, either BF16 or per-(token, head) symmetric INT8.
+// Physical KV geometry: Page32, BF16 or per-(token, head) symmetric integers.
+// q4h uses signed adjacent nibbles and token-major K/V after H256/H64.
+// It is an experimental per-head quantizer, not GGML q4_0.
+// Q4_0 variants store the standard half-scale/16-byte-payload block inline.
 // Layer and head counts vary by target.
 struct Layout final {
   uint32_t attentionLayers = 0;
@@ -121,19 +144,23 @@ struct Layout final {
   Format format = Format::Int8;
 
   [[nodiscard]] constexpr bool valid() const noexcept {
-    return attentionLayers && kvHeads && headDimension && validFormat(format);
+    return attentionLayers && kvHeads && headDimension && validFormat(format) &&
+           ((format != Format::Int4Hadamard && !isQ4_0(format)) || headDimension == 256);
   }
   [[nodiscard]] constexpr uint32_t elementsPerScale() const noexcept {
-    return format == Format::Int8 ? headDimension : 0;
+    return isQ4_0(format) ? 32 : format != Format::BFloat16 ? headDimension : 0;
   }
   [[nodiscard]] constexpr uint64_t elementsPerLayerPage() const noexcept {
     return uint64_t{kPageTokens} * kvHeads * headDimension;
   }
   [[nodiscard]] constexpr uint64_t scalesPerTensorLayerPage() const noexcept {
-    return format == Format::Int8 ? uint64_t{kPageTokens} * kvHeads : 0;
+    // Q4_0 scales are embedded in its 18-byte blocks, not a separate region.
+    return format != Format::BFloat16 && !isQ4_0(format) ? uint64_t{kPageTokens} * kvHeads : 0;
   }
   // Keys and values share one data and one scale geometry per layer page.
   [[nodiscard]] constexpr uint64_t dataBytesPerLayerPage() const noexcept {
+    if (isQ4_0(format)) return elementsPerLayerPage() / 32 * 18;
+    if (format == Format::Int4Hadamard) return elementsPerLayerPage() / 2;
     return elementsPerLayerPage() * (format == Format::Int8 ? 1 : 2);
   }
   [[nodiscard]] constexpr uint64_t scaleBytesPerLayerPage() const noexcept {
@@ -152,7 +179,7 @@ struct Layout final {
   // needs only 1 or 2 pages. This is allocation geometry only; prefix
   // matching remains Page32 in both cases.
   [[nodiscard]] constexpr uint32_t extentAlignmentPages() const noexcept {
-    if (format == Format::BFloat16)
+    if (!scaleBytesPerLayerPage())
       return static_cast<uint32_t>(
           detail::pagesForAlignedRegion(dataBytesPerLayerPage()));
     return static_cast<uint32_t>(detail::lcm(

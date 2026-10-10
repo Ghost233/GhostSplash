@@ -187,8 +187,9 @@ void submitPrefill(MetalBackend &backend, const GdnPrefillBuffers &buffers,
                    GdnHeadOrder order = GdnHeadOrder::Grouped) {
   CommandGraph graph;
   GDN::addPrefill(graph, buffers, shape, tokens, order);
-  require(graph.dispatches().size() == 3,
-          label + "prefill is not three dispatches");
+  const uint32_t dispatches = tokens == 1 && shape.valueHeads == 32 ? 1 : 3;
+  require(graph.dispatches().size() == dispatches,
+          label + "prefill dispatch count differs from the selected GDN path");
   (void)backend.submitCommandAsync(graph.dispatches()).wait();
 }
 

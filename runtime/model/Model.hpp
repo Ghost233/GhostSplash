@@ -251,7 +251,8 @@ struct DispatchDraftCapturePlan final {
 // there.
 [[nodiscard]] DraftContextPlan
 planDraftContext(uint32_t replayBegin, uint32_t replayEnd,
-                 std::span<const uint32_t> materializationBoundaries);
+                 std::span<const uint32_t> materializationBoundaries,
+                 uint32_t contextCapacity = 2048);
 
 [[nodiscard]] DispatchDraftCapturePlan
 draftCaptureSpansForDispatch(const DraftContextPlan &plan,
@@ -384,9 +385,9 @@ struct ExecutionLimits final {
   // pool allocates when it is built.
   static constexpr uint32_t warmupKvPages =
       (prefillTokenBudget + kv::kPageTokens - 1) / kv::kPageTokens;
-  static constexpr uint32_t draftQueryRows = 8;
-  static constexpr uint32_t draftProposalTokens = 7;
-  static constexpr uint32_t targetVerifyRows = 8;
+  static constexpr uint32_t draftQueryRows = SPLASH_DRAFT_QUERY_ROWS;
+  static constexpr uint32_t draftProposalTokens = SPLASH_DRAFT_PROPOSAL_TOKENS;
+  static constexpr uint32_t targetVerifyRows = SPLASH_TARGET_VERIFY_ROWS;
   static constexpr uint32_t draftContextTokens = 2048;
   static constexpr uint32_t speculativeScratchTokens = targetVerifyRows - 1;
   // One step emits at most its retained verify rows plus a terminal anchor
@@ -521,6 +522,9 @@ public:
   beginRestore(uint64_t requestId, uint32_t boundary,
                std::shared_ptr<const CompositeState> state, bool restoreDraft,
                std::function<void()> completion) = 0;
+  [[nodiscard]] virtual uint32_t draftContextCapacity() const noexcept {
+    return model::ExecutionLimits::draftContextTokens;
+  }
   virtual void setDraftContextPlan(uint64_t requestId,
                                    DraftContextPlan plan) = 0;
   // Optional async wake hook; an immediately ready ticket need not call it.

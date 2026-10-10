@@ -52,7 +52,17 @@ OPTIONS = {
         {effort: effort for effort in serve_options.REASONING_EFFORTS},
         ("", "turbo", "XHIGH"),
     ),
-    "--kv-format": values("--kv-format", {"int8": "int8", "bf16": "bf16"}, ("fp16",)),
+    "--kv-format": values(
+        "--kv-format",
+        {
+            "int8": "int8",
+            "bf16": "bf16",
+            "q4h": "q4h",
+            "q4_0": "q4_0",
+            "q4_0_unrotated": "q4_0_unrotated",
+        },
+        ("fp16",),
+    ),
     "--disable-ane": ([(["--disable-ane"], True)], []),
     "--max-memory": values(
         "--max-memory",

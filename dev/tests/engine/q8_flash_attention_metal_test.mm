@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <iomanip>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -644,7 +645,7 @@ void runCase(id<MTLDevice> device, id<MTLCommandQueue> queue,
 // fewer rows run the prefill entry alone.
 void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
                  id<MTLLibrary> library, Shape shape, uint32_t splits,
-                 uint32_t activeRows) {
+                 uint32_t activeRows, bool benchmark = false) {
   const uint32_t m = shape.fusedRows(), d = kHeadDimension;
   auto partials = makeBuffer(device, uint64_t{shape.kvHeads} * splits * m * d * 4);
   auto stats = makeBuffer(device, uint64_t{shape.kvHeads} * splits * m * 2 * 4);
@@ -663,6 +664,7 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
           p[index * d + dim] = float(int((split * 71 + dim * 37 + row * 13) % 257) - 128) * 0.125f;
       }
   // One entry's merge of the partials into a poisoned output.
+  double lastGpuMilliseconds = 0.0;
   const auto reduce = [&](const std::string &entry, const auto &params) {
     id<MTLBuffer> output = makeBuffer(device, uint64_t{shape.kvHeads} * kStride *
                                                  shape.queryHeadsPerKvHead * d * 2);
@@ -678,6 +680,11 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
            threadsPerThreadgroup:MTLSizeMake(256, 1, 1)];
     [encoder endEncoding];
     finish(command);
+    if (benchmark) {
+      lastGpuMilliseconds = (command.GPUEndTime - command.GPUStartTime) * 1000.0;
+      require(std::isfinite(lastGpuMilliseconds) && lastGpuMilliseconds > 0.0,
+              "reduce benchmark has no valid GPU command timing");
+    }
     return output;
   };
   // The fp64 merge of each active row, the inactive rows' zeros and the
@@ -722,12 +729,58 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
   };
   // The prefill tile holds as many rows as a verify lane.
   static_assert(SPLASH_PREFILL_ATTENTION_TILE_ROWS == SPLASH_TARGET_VERIFY_ROWS);
-  const uint32_t committed = splits * 32 - activeRows;
+  const uint32_t committed = benchmark ? 32768 : splits * 32 - activeRows;
+  const uint32_t pages = (committed + activeRows + kPageTokens - 1) / kPageTokens;
   id<MTLBuffer> verify;
   if (activeRows == kRows) {
-    const VerifyAttentionParams params{committed, splits, {1, 0}, splits, splits};
+    const VerifyAttentionParams params{committed, pages, {1, 0}, splits, splits};
     verify = reduce("verify_attention_reduce", params);
     check(verify);
+    if (shape.kvHeads == 4 && shape.queryHeadsPerKvHead == 4) {
+      const auto candidate = reduce("verify_attention_reduce_shared_denom", params);
+      check(candidate);
+      require(!std::memcmp(verify.contents, candidate.contents, verify.length),
+              "shared denominator changed kv4_g4 reduction output bits or poison");
+      if (benchmark) {
+        const std::array<std::string, 2> entries{
+            "verify_attention_reduce", "verify_attention_reduce_shared_denom"};
+        std::array<std::vector<double>, 2> samples;
+        const auto measure = [&](uint32_t variant, bool retain) {
+          const auto output = reduce(entries[variant], params);
+          require(!std::memcmp(verify.contents, output.contents, verify.length),
+                  "reduce benchmark changed output bits or wrote into its poison guard");
+          if (retain) samples[variant].push_back(lastGpuMilliseconds);
+        };
+        for (uint32_t variant : {0U, 1U, 1U, 0U}) measure(variant, false);
+        // Twenty alternating AB/BA pairs form ten ABBA rounds. Both entries
+        // consume the same immutable partial/statistics tensors throughout.
+        for (uint32_t pair = 0; pair < 20; ++pair) {
+          measure(pair % 2, true);
+          measure(1 - pair % 2, true);
+        }
+        const auto median = [](std::vector<double> values) {
+          std::sort(values.begin(), values.end());
+          return (values[values.size() / 2 - 1] + values[values.size() / 2]) * 0.5;
+        };
+        const double baseline = median(samples[0]), shared = median(samples[1]);
+        std::cout << std::setprecision(9)
+                  << "{\"kind\":\"reduce65\",\"query_heads\":16,\"kv_heads\":4,"
+                     "\"head_dimension\":256,\"active_rows\":8,\"splits\":65,"
+                     "\"committed_tokens\":32768,\"fixture\":\"synthetic\","
+                     "\"pairs\":20,\"samples_per_variant\":20,"
+                     "\"baseline_median_gpu_ms\":" << baseline
+                  << ",\"shared_median_gpu_ms\":" << shared
+                  << ",\"shared_over_baseline\":" << shared / baseline
+                  << ",\"outputs_and_guards_identical\":true,\"gpu_ms_samples\":[";
+        for (uint32_t variant = 0; variant < 2; ++variant) {
+          std::cout << (variant ? ",[" : "[");
+          for (size_t i = 0; i < samples[variant].size(); ++i)
+            std::cout << (i ? "," : "") << samples[variant][i];
+          std::cout << ']';
+        }
+        std::cout << "]}\n";
+      }
+    }
   }
   if (splits <= SPLASH_PREFILL_ATTENTION_MAXIMUM_SPLITS) {
     const PrefillAttentionParams params{committed, activeRows, kStride, splits, {1, 0}, splits};
@@ -739,7 +792,7 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
   }
 }
 
-void run(const char *libraryPath) {
+void run(const char *libraryPath, bool benchmarkReduce65) {
   testContract();
   id<MTLDevice> device = MTLCreateSystemDefaultDevice();
   if (!device)
@@ -751,6 +804,12 @@ void run(const char *libraryPath) {
   if (!library)
     throw std::runtime_error(error.localizedDescription.UTF8String);
   id<MTLCommandQueue> queue = [device newCommandQueue];
+  if (benchmarkReduce65) {
+    checkReduce(device, queue, library, Shape{4, 4, "_kv4_g4"}, 65, kRows, true);
+    return;
+  }
+  for (uint32_t splits : {1U, 3U, 7U, 32U, 65U, 128U})
+    checkReduce(device, queue, library, Shape{4, 4, "_kv4_g4"}, splits, kRows);
   for (const Shape shape : kShapes) {
     for (uint32_t splits : {1U, 3U, 7U, 32U, 65U, 128U}) {
       checkReduce(device, queue, library, shape, splits, kRows);
@@ -789,10 +848,11 @@ void run(const char *libraryPath) {
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
     try {
-      if (argc != 2)
+      if ((argc != 2 && argc != 3) ||
+          (argc == 3 && std::string(argv[2]) != "--benchmark-reduce65"))
         throw std::runtime_error(
-            "usage: q8_flash_attention_metal_test <metallib>");
-      run(argv[1]);
+            "usage: q8_flash_attention_metal_test <metallib> [--benchmark-reduce65]");
+      run(argv[1], argc == 3);
       return 0;
     } catch (const std::exception &error) {
       std::cerr << "q8_flash_attention_metal_test: " << error.what() << '\n';

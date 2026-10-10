@@ -36,7 +36,7 @@ bool embeddingType(uint32_t type) { return gguf_embedding_format(gguf_format_of(
 // alpha/beta run as one segment of their shared type: any format of the
 // projections (one repacked tensor) or F32 (one float tensor), which BF16
 // becomes exactly.
-bool alphaBetaType(uint32_t type) { return quantizedType(type) || type == ggml::kF32 || type == ggml::kBF16; }
+bool alphaBetaType(uint32_t type) { return quantizedType(type) || type == ggml::kF32 || type == ggml::kBF16 || type == ggml::kF16; }
 
 // Plans one image. A missing tensor or one of a type this build cannot load
 // is added to `problems` and left out of the image, so the planner can name
@@ -90,13 +90,14 @@ public:
     for (const GgufTensor *t : {beta, alpha})
       if (t->rows() != heads || t->columns() != hidden)
         throw GgufError("alpha/beta must be [" + std::to_string(heads) + ", hidden]: " + t->name);
-    if (beta->type == ggml::kF32 || beta->type == ggml::kBF16 || mixed) {
+    if (beta->type == ggml::kF32 || beta->type == ggml::kBF16 || beta->type == ggml::kF16 || mixed) {
       const uint64_t tensorBytes = uint64_t{heads} * hidden * sizeof(float);
       const uint64_t bytes = 2 * tensorBytes;
       descriptor(ggml::kF32, 2ull * heads, hidden, {}, {bytes, 0, 0}, betaName);
       uint64_t destination = section(bytes);
       for (const GgufTensor *t : {beta, alpha}) {
         const Conversion conversion = t->type == ggml::kBF16 ? Conversion::WidenToFloat32
+            : t->type == ggml::kF16 ? Conversion::WidenHalfToFloat32
             : t->type == q3k ? Conversion::DequantizeQ3KToFloat32 : Conversion::None;
         image_.copies.push_back({destination, tensorRows(*t, heads, t->bytes / heads, grouped(0, 1)),
                                  conversion});
@@ -375,7 +376,9 @@ std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &
     images.push_back(layerImage(file, geometry, problems, layer));
   Builder head(file, geometry, problems, "head.bin", geometry.layers, 2);
   head.floatNorm("output_norm.weight", geometry.hiddenSize);
-  head.quantized("output.weight", geometry.vocabularySize, geometry.hiddenSize);
+  const std::string output = geometry.tiedWordEmbeddings && !file.find("output.weight")
+      ? "token_embd.weight" : "output.weight";
+  head.quantized(output, geometry.vocabularySize, geometry.hiddenSize);
   images.push_back(head.finish());
   Builder embedding(file, geometry, problems, "embedding.bin", geometry.vocabularySize, geometry.hiddenSize);
   embedding.embeddingRows("token_embd.weight");

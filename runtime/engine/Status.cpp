@@ -110,10 +110,18 @@ std::string runtimeStatusJson(
       << json::quote(cacheIdentity.targetModelSha256)
       << ",\"format\":" << json::quote(kv::formatName(kvFormat))
       << ",\"quantization\":"
-      << json::quote(kvFormat == kv::Format::Int8 ? "symmetric_int8" : "none")
-      << ",\"scale_type\":" << json::quote(kvFormat == kv::Format::Int8 ? "float32" : "none")
+      << json::quote(kvFormat == kv::Format::Int8 ? "symmetric_int8"
+                           : kvFormat == kv::Format::Int4Hadamard ? "symmetric_int4_hadamard"
+                           : kv::isQ4_0(kvFormat) ? "ggml_q4_0" : "none")
+      << ",\"scale_type\":" << json::quote(kv::isQ4_0(kvFormat) ? "float16_group32"
+                           : kvFormat != kv::Format::BFloat16 ? "float32" : "none")
       << ",\"key_layout\":\"token_major\""
-      << ",\"value_layout\":\"dimension_major\"}},"
+      << ",\"value_layout\":"
+      << json::quote((kvFormat == kv::Format::Int4Hadamard || kv::isQ4_0(kvFormat)) ? "token_major" : "dimension_major")
+      << (kv::isQ4_0(kvFormat) ? (kv::usesHadamard(kvFormat)
+          ? ",\"rotation\":\"hadamard_qk256_v64_v1\""
+          : ",\"rotation\":\"none\"") : "")
+      << "}},"
       << "\"memory_plan\":" << plan.toStatusJson()
       << ",\"memory_actual\":{\"allocated_bytes\":" << metalMemory.allocatedBytes
       << ",\"current_bytes\":" << currentBytes

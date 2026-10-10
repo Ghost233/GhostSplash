@@ -22,10 +22,10 @@ constant constexpr uint kNormChunk = kNormThreads * kNormColumns;
 constant constexpr uint kNormStreamingWidth = kNormThreads * 8;
 
 // Columns begin + tid + 256 i of a row, zero past its end.
-template <class T>
+template <class T, uint Columns>
 inline void load_norm_chunk(device const T *row, uint width, uint begin,
-                            uint tid, thread T (&x)[kNormColumns]) {
-  for (uint i = 0; i < kNormColumns; ++i) {
+                            uint tid, thread T (&x)[Columns]) {
+  for (uint i = 0; i < Columns; ++i) {
     const uint column = begin + tid + kNormThreads * i;
     x[i] = column < width ? row[column] : T(0.0f);
   }
@@ -33,9 +33,10 @@ inline void load_norm_chunk(device const T *row, uint width, uint begin,
 
 // The thread's squares in column order, as rms_inverse adds them (zeros past
 // the row's end add nothing).
-inline float add_squares(thread const bfloat (&x)[kNormColumns], float sum) {
+template <uint Columns>
+inline float add_squares(thread const bfloat (&x)[Columns], float sum) {
 #pragma clang fp reassociate(off)
-  for (uint i = 0; i < kNormColumns; ++i) {
+  for (uint i = 0; i < Columns; ++i) {
     const float value = float(x[i]);
     sum += value * value;
   }
@@ -43,20 +44,21 @@ inline float add_squares(thread const bfloat (&x)[kNormColumns], float sum) {
 }
 
 // The row's inverse RMS from its first chunk (in registers) and the rest.
-inline float rms_inverse_of(thread const bfloat (&first)[kNormColumns],
+template <uint Columns>
+inline float rms_inverse_of(thread const bfloat (&first)[Columns],
                             device const bfloat *row, uint width,
                             threadgroup float *reductions, uint tid, uint lane,
                             uint sg) {
   float sum = add_squares(first, 0.0f);
-  for (uint begin = kNormChunk; begin < width; begin += kNormChunk) {
-    bfloat x[kNormColumns];
+  for (uint begin = kNormThreads * Columns; begin < width; begin += kNormThreads * Columns) {
+    bfloat x[Columns];
     load_norm_chunk(row, width, begin, tid, x);
     sum = add_squares(x, sum);
   }
   return rms_inverse_of_sums(sum, width, reductions, tid, lane, sg);
 }
 
-template <class W>
+template <class W, uint Columns>
 inline void norm_rms_row(device const bfloat *input, device const W *weight,
                          device bfloat *output, uint width, uint row,
                          uint thread_index, uint lane, uint simd_group,
@@ -71,18 +73,18 @@ inline void norm_rms_row(device const bfloat *input, device const W *weight,
     return;
   }
   device const bfloat *row_input = input + row * width;
-  bfloat x[kNormColumns];
-  W w[kNormColumns];
+  bfloat x[Columns];
+  W w[Columns];
   load_norm_chunk(row_input, width, 0, thread_index, x);
   load_norm_chunk(weight, width, 0, thread_index, w);
   const float inverse_rms = rms_inverse_of(x, row_input, width, reductions,
                                            thread_index, lane, simd_group);
-  for (uint begin = 0; begin < width; begin += kNormChunk) {
+  for (uint begin = 0; begin < width; begin += kNormThreads * Columns) {
     if (begin) {
       load_norm_chunk(row_input, width, begin, thread_index, x);
       load_norm_chunk(weight, width, begin, thread_index, w);
     }
-    for (uint i = 0; i < kNormColumns; ++i) {
+    for (uint i = 0; i < Columns; ++i) {
       const uint column = begin + thread_index + kNormThreads * i;
       if (column < width)
         output[row * width + column] =
@@ -90,17 +92,20 @@ inline void norm_rms_row(device const bfloat *input, device const W *weight,
     }
   }
 }
-#define NORM_RMS(Name, W) \
+#define NORM_RMS(Name, W, Columns) \
   kernel void Name(device const bfloat *input [[buffer(0)]], \
       device const W *weight [[buffer(1)]], device bfloat *output [[buffer(2)]], \
       constant uint &width [[buffer(3)]], uint row [[threadgroup_position_in_grid]], \
       uint tid [[thread_index_in_threadgroup]], uint lane [[thread_index_in_simdgroup]], \
       uint sg [[simdgroup_index_in_threadgroup]]) { \
     threadgroup float reductions[8]; \
-    norm_rms_row(input, weight, output, width, row, tid, lane, sg, reductions); \
+    norm_rms_row<W, Columns>(input, weight, output, width, row, tid, lane, sg, reductions); \
   }
-NORM_RMS(norm_rms, bfloat)
-NORM_RMS(norm_rms_f32, float)
+NORM_RMS(norm_rms, bfloat, kNormColumns)
+NORM_RMS(norm_rms_f32, float, kNormColumns)
+// Qwen3.5-4B: 10 live values per thread fit in a 16-column register chunk.
+NORM_RMS(norm_rms_2560, bfloat, 16)
+NORM_RMS(norm_rms_2560_f32, float, 16)
 #undef NORM_RMS
 
 // Plain norms of few rows of at most 2048 columns (ops/Normalization.cpp)

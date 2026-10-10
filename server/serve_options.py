@@ -387,9 +387,10 @@ SERVE_OPTIONS = (
         "--kv-format",
         "memory",
         dict(
-            choices=("int8", "bf16"),
+            choices=("int8", "bf16", "q4h", "q4_0", "q4_0_unrotated"),
             default="int8",
-            help="target KV cache storage (default: int8); bf16 uses more memory",
+            help="target KV cache storage (default: int8); q4_0 uses fixed rotation, "
+            "q4_0_unrotated is its validation control, q4h is experimental",
         ),
     ),
     ServeOption(

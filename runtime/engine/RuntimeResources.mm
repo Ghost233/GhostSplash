@@ -164,7 +164,8 @@ std::array<uint8_t, 32> parseSha256(std::string_view value) {
 
 void requireLoadedModel(const model::LoadedModel &loaded) {
   if (!loaded.targetActualAllocatedBytes() ||
-      !loaded.draft.actualAllocatedBytes ||
+      (loaded.descriptor.hasDraft() && !loaded.draft.actualAllocatedBytes) ||
+      (!loaded.descriptor.hasDraft() && loaded.draft.actualAllocatedBytes) ||
       (loaded.descriptor.hasVision() && !loaded.vision.actualAllocatedBytes) ||
       loaded.manifestFingerprintSha256.empty() ||
       loaded.targetManifestFingerprint().empty()) {
@@ -227,6 +228,14 @@ std::string persistentCacheNamespace(const RuntimeCacheIdentity &identity,
             << ' ' << gdn.recurrentColumns << '\n'
             << "draft " << draft.layers << ' ' << draft.kvHeads << ' ' << draft.headDimension << ' '
             << SPLASH_DRAFT_SLIDING_WINDOW << '\n';
+  if (draft.fullHistory) {
+    canonical << "draft-full-history";
+    for (uint32_t layer = 0; layer < draft.layers; ++layer)
+      canonical << ' ' << draft.contextTokens(layer);
+    canonical << '\n';
+  }
+  if (kv.format == kv::Format::Int4Hadamard || kv::isQ4_0(kv.format))
+    canonical << "rotation-quantizer " << kv::storageFormatName(kv.format) << '\n';
   // 128 bits name it.
   return model::weightDigest(canonical.str()).substr(0, 32);
 }
@@ -263,8 +272,14 @@ RuntimeResources::RuntimeResources(
       aneFfnOutcome_(std::move(aneFfnOutcome)), hostAvailableAtStart_(hostAvailableAtStart) {}
 
 std::unique_ptr<RuntimeResources>
-RuntimeResources::create(const RuntimeResourcesConfig &config,
+RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                          uint32_t requestedContextTokens) {
+  RuntimeResourcesConfig config = inputConfig;
+  if (config.model.draft.kind == model::DraftKind::Standard) {
+    const uint32_t maximum = requestedContextTokens ? requestedContextTokens : config.model.capabilities.maximumContextTokens;
+    config.model.draft.contextCapacity = (maximum + 127) / 128 * 128;
+    config.model.stateLayout.draft = config.model.draft.stateLayout();
+  }
   if (config.metallibPath.empty() || config.modelRoot.empty() ||
       !kv::validFormat(config.kvFormat) ||
       !config.model.valid() || !config.hostAvailableMemory ||

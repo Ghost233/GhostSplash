@@ -102,6 +102,15 @@ void GDN::addPrefill(metal::CommandGraph &graph, GdnPrefillBuffers buffers,
   requireBytes(buffers.recurrentOut, recurrentBytes(shape), "GDN next recurrent state");
   requireBytes(buffers.recurrentRows, valueRows, "GDN recurrent row");
   requireBytes(buffers.hidden, valueRows, "GDN hidden");
+  if (tokens == 1 && kernel == KernelLayout::Value32) {
+    graph.add(normKernel("gdn_single_vh32", buffers.mixerNorm, shape.headDimension),
+              {buffers.packed, buffers.convolutionWeights, buffers.convolutionIn, buffers.convolutionOut,
+               buffers.queries, buffers.keys, buffers.values, buffers.decayWeights, buffers.timeBias,
+               buffers.decay, buffers.beta, buffers.recurrentIn, buffers.recurrentOut, buffers.recurrentRows,
+               buffers.mixerNorm.buffer, buffers.hidden},
+              GDNGatePrefillParams{order == GdnHeadOrder::Tiled}, {shape.valueHeads, 1, 1}, {128, 1, 1});
+    return;
+  }
   const GDNPrefillParams params{tokens};
   graph.add(kernelName(kernel, "prefill_gdn_prepare",
                        "prefill_gdn_prepare_vh32"),

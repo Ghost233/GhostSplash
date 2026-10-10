@@ -115,7 +115,6 @@ std::optional<std::string> ModelMemoryProfile::validationError() const {
   }
   if (!targetKvLayout.valid()) return "invalid_target_kv_layout";
   if (!footprint.targetWeightsBytes) return "target_weight_bytes_required";
-  if (!footprint.draftWeightsBytes) return "draft_weight_bytes_required";
   if (!footprint.runtime.laneStatePlannedAllocatedBytes) {
     return "lane_state_bytes_required";
   }

@@ -299,6 +299,37 @@ void testRestoresDraftStateFlag() {
     require(!plan.restoresDraftState, "cold plan claimed a restored draft ring");
 }
 
+void testFullHistoryCapacity() {
+  constexpr uint32_t capacity = 33792, tokens = 32768;
+  const std::array<uint32_t, 3> boundaries{4096, 8192, 24576};
+  const auto cold = planDraftContext(0, tokens, boundaries, capacity);
+  require(cold.captureSpans.size() == 1 && cold.captureSpans[0].begin == 0 &&
+              cold.captureSpans[0].end == tokens && cold.captureSpans[0].resetDraftState &&
+              draftContextRows(cold) == tokens && !cold.restoresDraftState,
+          "full-history cold prefill did not capture the complete prefix");
+  uint64_t captured = 0;
+  for (uint32_t begin = 0; begin < tokens; begin += 2048)
+    for (const auto &span : draftCaptureSpansForDispatch(cold, begin, std::min(begin + 2048, tokens))) {
+      require(span.absoluteBegin == begin && span.absoluteEnd == begin + 2048,
+              "full-history dispatch lost target rows before the old sliding window");
+      captured += span.absoluteEnd - span.absoluteBegin;
+    }
+  require(captured == tokens, "full-history dispatch accounting did not cover the whole prefix");
+  const auto restored = planDraftContext(4096, tokens, {}, capacity);
+  require(restored.restoresDraftState && restored.captureSpans.size() == 1 &&
+              restored.captureSpans[0].begin == 4096 && restored.captureSpans[0].end == tokens &&
+              !restored.captureSpans[0].resetDraftState && draftContextRows(restored) == tokens - 4096,
+          "full-history long suffix discarded prefix state required by full attention");
+  const auto exact = planDraftContext(tokens, tokens, {}, capacity);
+  require(exact.restoresDraftState && exact.captureSpans.empty(),
+          "full-history exact prefix hit rebuilt its persistent context");
+  const auto legacy = planDraftContext(4096, tokens, {});
+  require(!legacy.restoresDraftState && draftContextRows(legacy) == 2048,
+          "full-history planning changed the default DFlash2 window");
+  rejects([] { (void)planDraftContext(0, 32, {}, 0); }, "draft context capacity is zero",
+          "zero draft context capacity was accepted");
+}
+
 void testInvalidInputs() {
   const auto plan = activePlan(0, 4096);
   rejects([&] { (void)draftCaptureSpansForDispatch(plan, 0, 2049); },
@@ -323,6 +354,7 @@ int main() {
     testSparseCheckpointWindowsAndShortResume();
     testCheckpointWindowsAcrossSmallDispatches();
     testRestoresDraftStateFlag();
+    testFullHistoryCapacity();
     testInvalidInputs();
     std::cout << "draft context plan tests passed\n";
     return EXIT_SUCCESS;

@@ -78,6 +78,15 @@ void widenToFloat32(const uint8_t *values, uint64_t count, uint8_t *to) {
   }
 }
 
+void widenHalfToFloat32(const uint8_t *values, uint64_t count, uint8_t *to) {
+  for (uint64_t i = 0; i < count; ++i) {
+    __fp16 half;
+    std::memcpy(&half, values + 2 * i, sizeof half);
+    const float value = static_cast<float>(half);
+    std::memcpy(to + 4 * i, &value, sizeof value);
+  }
+}
+
 // Decode native block_q3_K values without rounding, for mixed F32/Q3_K GDN gates.
 void dequantizeQ3KToFloat32(const uint8_t *values, uint64_t bytes, uint8_t *to) {
   constexpr uint64_t blockBytes = kQuantFormats[GGUF_FMT_Q3K].block_bytes;
@@ -104,7 +113,8 @@ void dequantizeQ3KToFloat32(const uint8_t *values, uint64_t bytes, uint8_t *to) 
 uint64_t copiedBytes(const gguf::Copy &copy, uint64_t sourceBytes) {
   switch (copy.conversion) {
   case gguf::Conversion::NarrowToBfloat16: return sourceBytes / 2;
-  case gguf::Conversion::WidenToFloat32: return sourceBytes * 2;
+  case gguf::Conversion::WidenToFloat32:
+  case gguf::Conversion::WidenHalfToFloat32: return sourceBytes * 2;
   case gguf::Conversion::DequantizeQ3KToFloat32:
     return sourceBytes / kQuantFormats[GGUF_FMT_Q3K].block_bytes * kGgufBlockColumns * sizeof(float);
   case gguf::Conversion::None: break;
@@ -124,7 +134,9 @@ void addCopyTasks(const WeightSource &source, uint8_t *image, const gguf::Copy &
                   std::vector<std::function<void(std::vector<uint8_t> &)>> &tasks) {
   const gguf::TensorRows &rows = copy.source;
   const uint64_t alignment = copy.conversion == gguf::Conversion::DequantizeQ3KToFloat32
-      ? kQuantFormats[GGUF_FMT_Q3K].block_bytes : sizeof(float);
+      ? kQuantFormats[GGUF_FMT_Q3K].block_bytes
+      : (copy.conversion == gguf::Conversion::WidenToFloat32 ||
+         copy.conversion == gguf::Conversion::WidenHalfToFloat32) ? sizeof(uint16_t) : sizeof(float);
   const uint64_t span = std::min<uint64_t>(rows.rowBytes, kLoadStepBytes / alignment * alignment);
   const uint64_t batch = span == rows.rowBytes ? kLoadStepBytes / rows.rowBytes : 1;
   for (uint64_t first = 0; first < rows.rows; first += batch) {
@@ -142,6 +154,8 @@ void addCopyTasks(const WeightSource &source, uint8_t *image, const gguf::Copy &
         readRows(source, rows, first, count, column, width, staging.data());
         if (copy.conversion == gguf::Conversion::NarrowToBfloat16)
           narrowToBfloat16(staging.data(), count * width / 4, to, rows.name);
+        else if (copy.conversion == gguf::Conversion::WidenHalfToFloat32)
+          widenHalfToFloat32(staging.data(), count * width / 2, to);
         else if (copy.conversion == gguf::Conversion::DequantizeQ3KToFloat32)
           dequantizeQ3KToFloat32(staging.data(), count * width, to);
         else

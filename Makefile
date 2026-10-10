@@ -36,7 +36,12 @@ MODEL_ROOT = $(if $(MODEL),$(shell $(MODEL_INSTALL) link))
 # CI's artifact upload refuses paths holding one.
 MODEL_RESULTS = build/release/$(subst :,--,$(subst /,--,$(MODEL)))
 
-BUILD := build
+DRAFT_BLOCK_SIZE ?= 8
+ifeq ($(filter $(DRAFT_BLOCK_SIZE),2 4 8 16),)
+$(error DRAFT_BLOCK_SIZE must be 2, 4, 8 or 16)
+endif
+DRAFT_BLOCK_FLAGS := -DSPLASH_DRAFT_BLOCK_SIZE=$(DRAFT_BLOCK_SIZE)
+BUILD := $(if $(filter 8,$(DRAFT_BLOCK_SIZE)),build,build/qwen4b-matrix-variants/block-$(DRAFT_BLOCK_SIZE))
 TARGET := $(BUILD)/splash
 METAL_BUILD := $(BUILD)/metal
 # Production kernels are grouped by execution phase under
@@ -58,9 +63,9 @@ KERNEL_HEADERS := $(sort $(wildcard runtime/metal/abi/*.h \
 # macOS 26.2 or newer, and MPP chooses its code path by this target.
 MACOS_MIN_VERSION := 26.4
 MACOS_TARGET_FLAG := -mmacosx-version-min=$(MACOS_MIN_VERSION)
-PROD_METALFLAGS := -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime \
+PROD_METALFLAGS := -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime $(DRAFT_BLOCK_FLAGS) \
 	$(MACOS_TARGET_FLAG)
-ENGINE_CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime \
+ENGINE_CXXFLAGS := -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime $(DRAFT_BLOCK_FLAGS) \
 	$(MACOS_TARGET_FLAG)
 ENGINE_OBJCXXFLAGS := $(ENGINE_CXXFLAGS) -fobjc-arc
 LIB := $(BUILD)/splash.metallib
@@ -237,6 +242,8 @@ ENGINE_CPP_SOURCES := \
 	runtime/ops/Embedding.cpp \
 	runtime/ops/ExecutionPlans.cpp \
 	runtime/ops/GDN.cpp \
+	runtime/ops/GgufPrefillCache.cpp \
+	runtime/ops/SingleTokenLinear.cpp \
 	runtime/ops/Linear.cpp \
 	runtime/ops/LinearGguf.cpp \
 	runtime/ops/MoE.cpp \
@@ -280,6 +287,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/GgufPreparation.cpp \
 	runtime/model/Qwen3_6Moe.cpp \
 	runtime/model/Qwen3_8.cpp \
+	runtime/model/Qwen3_5_4B.cpp \
 	runtime/model/QwenVision.cpp \
 	runtime/model/VisionPreparation.cpp \
 	runtime/model/VisionLoader.cpp \

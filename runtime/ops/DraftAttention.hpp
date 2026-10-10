@@ -20,6 +20,19 @@ struct DraftAttentionShape final {
   bool operator==(const DraftAttentionShape &) const = default;
 };
 
+// One layer's physical cache and attention mask. The defaults preserve DFlash2.
+struct DraftAttentionGeometry final {
+  uint32_t capacity = SPLASH_DRAFT_SLIDING_WINDOW;
+  uint32_t slidingWindow = SPLASH_DRAFT_SLIDING_WINDOW;
+  bool causal = false;
+
+  [[nodiscard]] constexpr bool valid() const noexcept {
+    return capacity >= 128 && capacity <= SPLASH_MAXIMUM_CONTEXT_TOKENS &&
+           capacity % 128 == 0 && slidingWindow <= capacity;
+  }
+  bool operator==(const DraftAttentionGeometry &) const = default;
+};
+
 struct DraftAttentionWorkspace final {
   uint64_t convolutionBytes = 0;
   uint64_t qkvBytes = 0;
@@ -92,7 +105,8 @@ public:
   static void addDecode(metal::CommandGraph &graph,
                         DraftDecodeAttentionBuffers buffers,
                         std::span<const uint32_t> cacheLengths,
-                        const DraftAttentionPlan &plan);
+                        const DraftAttentionPlan &plan,
+                        DraftAttentionGeometry geometry = {});
   static void addReorder(metal::CommandGraph &graph,
                          metal::MetalBuffer grouped,
                          metal::MetalBuffer rowMajor,
@@ -105,7 +119,7 @@ public:
       metal::MetalBuffer keyNorm, metal::MetalBuffer ropeCos,
       metal::MetalBuffer ropeSin, metal::MetalBuffer keys,
       metal::MetalBuffer values, uint32_t tokens, uint32_t startPosition,
-      DraftAttentionShape shape);
+      DraftAttentionShape shape, DraftAttentionGeometry geometry = {});
   static void addContextCommit(
       metal::CommandGraph &graph, metal::MetalBuffer contextKv,
       metal::MetalBuffer keyNorm, metal::MetalBuffer ropeCos,
@@ -113,7 +127,8 @@ public:
       std::span<const metal::MetalBuffer> persistentKeys,
       std::span<const metal::MetalBuffer> persistentValues,
       metal::MetalBuffer retainedCounts,
-      std::span<const uint32_t> startPositions, DraftAttentionShape shape);
+      std::span<const uint32_t> startPositions, DraftAttentionShape shape,
+      DraftAttentionGeometry geometry = {});
 };
 
 } // namespace splash::ops

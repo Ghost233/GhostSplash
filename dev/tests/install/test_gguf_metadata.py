@@ -365,6 +365,43 @@ class GgufMetadataTests(unittest.TestCase):
                 path = write_gguf(self.root / "mixed.gguf", values, mixed.items())
                 gguf.require_loadable(gguf.Metadata(path, tensors=True))
 
+    def test_screening_accepts_only_4b_shared_output_weights(self):
+        values = fixture()
+        tensors = loadable_tensors(values, self.root)
+        tensors.pop("output.weight")
+        path = write_gguf(self.root / "untied.gguf", values, tensors.items())
+        with self.assertRaisesRegex(models.ModelError, "output.weight missing"):
+            gguf.require_loadable(gguf.Metadata(path, tensors=True))
+        values.update(
+            {
+                "general.architecture": "qwen35",
+                "qwen35.embedding_length": 2560,
+                "qwen35.block_count": 32,
+                "qwen35.full_attention_interval": 4,
+            }
+        )
+        path = write_gguf(self.root / "4b-header.gguf", values)
+        header = gguf.Metadata(path)
+        tensors = {
+            name: GGML[next(kind for kind in ("Q4_K", "F32") if kind in types)]
+            for name, types in gguf.loaded_tensors(header).items()
+        }
+        path = write_gguf(self.root / "tied.gguf", values, tensors.items())
+        gguf.require_loadable(gguf.Metadata(path, tensors=True))
+
+    def test_screening_accepts_f16_gdn_projections(self):
+        values = fixture()
+        tensors = loadable_tensors(values, self.root)
+        tensors.update(
+            {
+                name: GGML["F16"]
+                for name in tensors
+                if name.endswith((".ssm_alpha.weight", ".ssm_beta.weight"))
+            }
+        )
+        path = write_gguf(self.root / "half.gguf", values, tensors.items())
+        gguf.require_loadable(gguf.Metadata(path, tensors=True))
+
     def test_screening_accepts_all_quantized_embeddings(self):
         values = fixture()
         tensors = loadable_tensors(values, self.root)
@@ -449,13 +486,6 @@ class GgufMetadataTests(unittest.TestCase):
             (
                 {"blk.1.ssm_alpha.weight": GGML["Q8_0"]},
                 "ssm_alpha.weight and ssm_beta.weight of different types",
-            ),
-            (
-                {
-                    "blk.1.ssm_alpha.weight": GGML["F16"],
-                    "blk.1.ssm_beta.weight": GGML["F16"],
-                },
-                "ssm_alpha.weight F16",
             ),
             # An all-F32 file, whose types the loader reads somewhere.
             (f32, "attn_output.weight F32 [(]10 tensors[)]"),

@@ -1004,7 +1004,7 @@ DraftContextPlan Engine::pendingDraftStatePlan(const Request &active,
   boundaries.reserve(active.stateBoundaries.size() - active.stateBoundaryCursor);
   for (size_t i = active.stateBoundaryCursor; i < active.stateBoundaries.size(); ++i)
     boundaries.push_back(active.stateBoundaries[i].tokens);
-  return planDraftContext(stateBoundary, active.replayTokens, boundaries);
+  return planDraftContext(stateBoundary, active.replayTokens, boundaries, model_.draftContextCapacity());
 }
 
 void Engine::armNextStateBoundary(Request &active) {

@@ -484,7 +484,7 @@ runDecodeThroughput(engine::Engine &engine, Driver &driver,
                     model::RuntimeModel &executor, Events &events,
                     ProgressJournal *progress, uint64_t &requestId,
                     uint32_t width, uint32_t sample,
-                    std::span<const uint32_t> tokens) {
+                    std::span<const uint32_t> tokens, uint32_t proposalsPerCycle) {
   if (!width || width > model::ExecutionLimits::maximumBatchWidth) {
     throw std::invalid_argument("invalid decode throughput width");
   }
@@ -624,10 +624,9 @@ runDecodeThroughput(engine::Engine &engine, Driver &driver,
       decodeOutputTokens > completedTokens) {
     throw std::runtime_error("decode throughput work accounting is invalid");
   }
-  if (draftedTokens != uint64_t{width} * decodeBatches *
-                           model::ExecutionLimits::draftProposalTokens ||
+  if (draftedTokens != uint64_t{width} * decodeBatches * proposalsPerCycle ||
       acceptedDraftTokens > draftedTokens) {
-    throw std::runtime_error("decode throughput DFlash accounting is invalid");
+    throw std::runtime_error("decode throughput proposal accounting is invalid");
   }
   result.outputTokensPerLaneBatch =
       static_cast<double>(decodeOutputTokens) /
@@ -794,7 +793,7 @@ int main(int argc, char **argv) {
       std::cerr << "usage: backend-benchmark METALLIB MODEL_ROOT "
                    "[--samples COUNT] [--progress PATH] "
                    "[--scenario NAME[,NAME...]] [--ane-ffn-share SHARE "
-                   "[--ane-ffn-minimum-rows ROWS]] [--max-context TOKENS]\n"
+                   "[--ane-ffn-minimum-rows ROWS]] [--max-context TOKENS] [--kv-format int8|bf16|q4h|q4_0|q4_0_unrotated]\n"
                    "  NAME: decode, partial, short, context or exact "
                    "(default: decode,partial,context)\n"
                    "  SHARE: the prefill FFN's Neural Engine share in [0, 1) "
@@ -811,6 +810,7 @@ int main(int argc, char **argv) {
     std::optional<double> aneFfnShare;
     std::optional<uint32_t> aneFfnMinimumRows;
     uint32_t maxContext = 0;
+    kv::Format kvFormat = kv::Format::Int8;
     for (int index = 3; index < argc; index += 2) {
       if (index + 1 >= argc)
         throw std::invalid_argument("benchmark option requires a value");
@@ -825,6 +825,15 @@ int main(int argc, char **argv) {
         aneFfnShare = parseAneFfnShare(argv[index + 1]);
       } else if (option == "--ane-ffn-minimum-rows") {
         aneFfnMinimumRows = parseAneFfnMinimumRows(argv[index + 1]);
+      } else if (option == "--kv-format") {
+        const std::string_view value(argv[index + 1]);
+        if (value != "int8" && value != "bf16" && value != "q4h" &&
+          value != "q4_0" && value != "q4_0_unrotated")
+          throw std::invalid_argument("--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
+        kvFormat = value == "int8" ? kv::Format::Int8
+            : value == "q4h" ? kv::Format::Int4Hadamard
+          : value == "q4_0" ? kv::Format::Q4_0Hadamard
+          : value == "q4_0_unrotated" ? kv::Format::Q4_0Unrotated : kv::Format::BFloat16;
       } else if (option == "--max-context") {
         maxContext = parseMaxContext(argv[index + 1]);
       } else {
@@ -842,6 +851,7 @@ int main(int argc, char **argv) {
     config.modelRoot = std::filesystem::path(argv[2]);
     config.model = model::inspectModelRoot(config.modelRoot);
     config.buildId = SPLASH_BUILD_ID;
+    config.kvFormat = kvFormat;
     config.aneFfn = engine::AneFfnSetting::fromGiven(aneFfnShare, aneFfnMinimumRows);
     bootstrapConfig.nativeLoop.engine.maxContext = maxContext;
     const std::string modelRoot = config.modelRoot.string();
@@ -955,7 +965,8 @@ int main(int argc, char **argv) {
           evictAllCache(resources->cache());
           decodeThroughput.push_back(runDecodeThroughput(
               engine, driver, *executor, events, progress.get(), requestId,
-              width, sample, decodeThroughputPrompt));
+              width, sample, decodeThroughputPrompt,
+              config.model.hasDraft() ? model::ExecutionLimits::draftProposalTokens : 0));
         }
       }
       // A wider batch must not lose aggregate throughput. A dense model can
@@ -1117,8 +1128,9 @@ int main(int argc, char **argv) {
         }
         continuationResult.coldOutputMatch =
             continuationResult.outputTokens == continuationCold.outputTokens;
-        if (coldResult.draftContextRows != expectedDraftContextRows(
-                length, engine::kPrefillCheckpointTokens)) {
+        const uint64_t expectedColdDraftRows = config.model.hasDraft()
+            ? expectedDraftContextRows(length, engine::kPrefillCheckpointTokens) : 0;
+        if (coldResult.draftContextRows != expectedColdDraftRows) {
           throw std::runtime_error(
               "cold prefill performed unnecessary draft-context work");
         }
@@ -1163,9 +1175,9 @@ int main(int argc, char **argv) {
         const uint32_t partialBoundary =
             ((partialBase.size() - 1) / kv::kPageTokens) *
             kv::kPageTokens;
-        const uint64_t expectedPartialRows = expectedDraftContextRows(
+        const uint64_t expectedPartialRows = config.model.hasDraft() ? expectedDraftContextRows(
             partialPrompt.size(), engine::kPrefillCheckpointTokens,
-            partialBoundary);
+            partialBoundary) : 0;
         if (partialSeed.cacheStatus != "miss" ||
             partialHit.cacheStatus != "prefix_hit" ||
             partialHit.matchedTokens != partialBoundary ||
@@ -1286,7 +1298,8 @@ int main(int argc, char **argv) {
     std::array<char, 32> share{};
     const auto written = std::to_chars(share.data(), share.data() + share.size(), ranAneFfnShare);
     std::cout << "{\"schema_version\":2,\"build_id\":\"" << SPLASH_BUILD_ID
-              << "\",\"identity\":" << identity
+              << "\",\"kv_format\":" << json::quote(kv::formatName(kvFormat))
+              << ",\"identity\":" << identity
               << ",\"ane_ffn_share\":" << std::string_view(share.data(), written.ptr - share.data())
               << ",\"ane_ffn_minimum_rows\":" << ranAneFfnMinimumRows
               << ",\"geometry\":{\"prefill_rows\":"

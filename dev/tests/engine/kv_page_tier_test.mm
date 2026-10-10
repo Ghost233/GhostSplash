@@ -519,6 +519,11 @@ void run(const std::string &metallib) {
     besideACommand(backend, governor, format);
     teardown(backend, governor, format);
   }
+  for (const auto format : {kv::Format::Int4Hadamard, kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
+    const kv::Layout layout{8, 4, 256, format};
+    roundTrip(backend, governor, layout);
+    persistentRoundTrip(backend, governor, layout);
+  }
   std::cout << "kv page tier tests passed\n";
 }
 

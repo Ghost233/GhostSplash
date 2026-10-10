@@ -2,6 +2,7 @@
 
 #include "model/WeightSource.hpp"
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string_view>
@@ -19,6 +20,7 @@ public:
   ~SafetensorsCheckpoint();
   [[nodiscard]] const SourceTensor *find(std::string_view name) const noexcept;
   [[nodiscard]] const SourceTensor &require(std::string_view name) const;
+  [[nodiscard]] size_t tensorCount() const noexcept;
   void checkUnchanged() const;
 private:
   struct Impl;

@@ -15,7 +15,7 @@ namespace affine {
 struct PlannedCheckpoint;
 }
 
-// A DFlash2 checkpoint as its repository releases it, config.json and BF16
+// A DFlash or DFlash2 checkpoint as released, config.json and BF16
 // safetensors -> the draft files of a Splash package (DFlashDraft.cpp):
 // every projection quantized to affine Q4 as those drafts were, every other
 // tensor copied as stored. The checkpoint is planned once; each file is

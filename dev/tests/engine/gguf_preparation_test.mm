@@ -288,7 +288,8 @@ void checkMoe(MetalBackend &backend, const std::filesystem::path &directory, con
 
 // The MoE layer with BF16 alpha/beta, which preparation widens to the F32
 // values they equal.
-void checkWidenedAlphaBeta(MetalBackend &backend, const std::filesystem::path &directory) {
+void checkWidenedAlphaBeta(MetalBackend &backend, const std::filesystem::path &directory,
+                           bool half = false) {
   SmallTarget target = smallTarget(true);
   const model::QwenTargetDimensions &g = target.geometry;
   const auto path = directory / "moe-bf16.gguf";
@@ -297,15 +298,27 @@ void checkWidenedAlphaBeta(MetalBackend &backend, const std::filesystem::path &d
   for (const std::string name : {"blk.0.ssm_beta.weight", "blk.0.ssm_alpha.weight"}) {
     floats[name] = floatValues(uint64_t{g.gdnValueHeads} * g.hiddenSize, ++seed, true);
     Tensor &tensor = tensorNamed(target.tensors, name);
-    tensor.type = model::ggml::kBF16;
+    tensor.type = half ? model::ggml::kF16 : model::ggml::kBF16;
     tensor.data = bfloat16Halves(floats[name]);
+    if (half) {
+      const std::array<uint16_t, 8> bits{0, 0x8000, 1, 0x8001, 0x3c01, 0xbc01, 0x0400, 0x7bff};
+      for (uint64_t i = 0; i < tensor.data.size() / 2; ++i) {
+        const uint16_t encoded = bits[i % bits.size()];
+        std::memcpy(tensor.data.data() + 2 * i, &encoded, 2);
+        __fp16 value;
+        std::memcpy(&value, &encoded, 2);
+        const float expected = static_cast<float>(value);
+        std::memcpy(floats[name].data() + 4 * i, &expected, 4);
+      }
+    }
   }
   writeGguf(path, target.tensors, g);
   const std::vector<model::gguf::Image> images = planned(path, g);
   const auto *beta = copyOf(images[0], "blk.0.ssm_beta.weight"), *alpha = copyOf(images[0], "blk.0.ssm_alpha.weight");
   if (!beta || !alpha) throw std::runtime_error("the plan has no alpha/beta tensor");
-  check(beta->conversion == model::gguf::Conversion::WidenToFloat32 &&
-            alpha->conversion == model::gguf::Conversion::WidenToFloat32 &&
+  const auto conversion = half ? model::gguf::Conversion::WidenHalfToFloat32
+                               : model::gguf::Conversion::WidenToFloat32;
+  check(beta->conversion == conversion && alpha->conversion == conversion &&
             alpha->destination == beta->destination + 2 * target.data(beta->source.name).size(),
         "planner widens BF16 alpha/beta into one F32 tensor");
   const std::vector<uint8_t> image = preparedImages(backend, path, g).front();
@@ -513,6 +526,7 @@ int main(int argc, char **argv) {
     guarded("preparation of the dense target", [&] { checkDense(backend, directory.path(), hashes); });
     guarded("preparation of the MoE target", [&] { checkMoe(backend, directory.path(), hashes); });
     guarded("preparation of BF16 alpha/beta", [&] { checkWidenedAlphaBeta(backend, directory.path()); });
+    guarded("preparation of F16 alpha/beta", [&] { checkWidenedAlphaBeta(backend, directory.path(), true); });
     guarded("preparation of quantized alpha/beta", [&] { checkQuantizedAlphaBeta(backend, directory.path()); });
     guarded("preparation of mixed alpha/beta", [&] { checkMixedAlphaBeta(backend, directory.path()); });
     guarded("the target loader", [&] { checkDenseTarget(backend, directory.path()); });

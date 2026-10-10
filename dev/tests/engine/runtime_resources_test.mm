@@ -127,6 +127,19 @@ void testPersistentCacheNamespace() {
                                        model.stateLayout) != name &&
               persistentCacheNamespace(identity('a', "build", kv::Format::Int8), states) != name,
           "other models or layouts shared a cache namespace");
+  auto standard = model.stateLayout;
+  standard.draft.fullHistory = true;
+  standard.draft.layerContextTokens[0] = 8192;
+  const auto shortHistory = persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard);
+  standard.draft.layerContextTokens[0] = 32768;
+  require(shortHistory != name &&
+              shortHistory != persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard),
+          "standard draft history capacities shared a persistent namespace");
+  const auto rotatedQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Hadamard), model.stateLayout);
+  const auto plainQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Unrotated), model.stateLayout);
+  const auto q4h = persistentCacheNamespace(identity('a', "build", kv::Format::Int4Hadamard), model.stateLayout);
+  require(rotatedQ4 != plainQ4 && rotatedQ4 != q4h && plainQ4 != name,
+          "different Q4 quantizers or rotation bases shared a persistent namespace");
 }
 
 void testWeightBudgetBeforeLoading(const char *metallibPath) {
@@ -328,6 +341,21 @@ void testLoadedVisionIsRequiredOnlyWithVision() {
   requireLoadedModel(package);
 }
 
+void testLoadedDraftIsRequiredOnlyWithDraft() {
+  model::LoadedModel loaded;
+  model::Qwen3_5_4BWeights target;
+  target.actualAllocatedBytes = 1;
+  target.manifestFingerprintSha256 = "target";
+  loaded.descriptor = model::makeModelDescriptor("target-only", target.layout, {}, {},
+      model::TargetSource::Gguf, model::VisionSource::None);
+  loaded.target = std::move(target);
+  loaded.manifestFingerprintSha256 = "model";
+  requireLoadedModel(loaded);
+  loaded.draft.actualAllocatedBytes = 1;
+  rejects([&] { requireLoadedModel(loaded); }, "incomplete allocation accounting",
+          "target-only loader reported nonexistent draft weights");
+}
+
 // A small model whose package loads and whose geometry the runtime plans:
 // four target and two draft layers of the 2048-wide hidden state a compiled
 // draft attention takes, with Qwen3.8-27B's attention and GDN heads and a
@@ -458,6 +486,7 @@ int main(int argc, char **argv) {
   @autoreleasepool {
     try {
       require(argc == 2, "expected metallib path");
+      testLoadedDraftIsRequiredOnlyWithDraft();
       testLoadedVisionIsRequiredOnlyWithVision();
       testPersistentCacheNamespace();
       testWeightBudgetBeforeLoading(argv[1]);

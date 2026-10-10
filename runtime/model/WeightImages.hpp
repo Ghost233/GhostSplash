@@ -57,6 +57,9 @@ public:
 
   // Allocates the image's buffer, writes it and returns its file.
   [[nodiscard]] WeightFile load(ImagePlan image);
+  // A derived raw weight buffer, restored after the source images loaded
+  // before it. Its writer may bind those images through their stable views.
+  [[nodiscard]] metal::MetalBuffer loadAuxiliary(std::string component, uint64_t bytes, ImageWriter write);
   [[nodiscard]] bool released() const noexcept override { return released_; }
   void release() override;
   [[nodiscard]] bool restore() override;

@@ -20,8 +20,8 @@ void requireCompatibleModel(const LoadedModel &model) {
       !std::visit(
           [&](const auto &target) {
             return model.descriptor.target == TargetLayout{target.layout} &&
-                   target.layout.vocabularySize ==
-                       model.draft.layout.vocabularySize;
+                   (!model.descriptor.hasDraft() || target.layout.vocabularySize ==
+                       model.draft.layout.vocabularySize);
           },
           model.target)) {
     throw std::invalid_argument(
@@ -56,6 +56,16 @@ TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_6MoeLayout &l
   return loadQwen3_6MoeWeights(backend, layout, files);
 }
 
+TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BDFlashLayout &layout,
+                         const QwenTargetFiles<Qwen3_5_4BDFlashLayout> &files) {
+  return loadQwen3_5_4BDFlashWeights(backend, layout, files);
+}
+
+TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BLayout &layout,
+                         const QwenTargetFiles<Qwen3_5_4BLayout> &files) {
+  return loadQwen3_5_4BWeights(backend, layout, files);
+}
+
 template <class Image> uint64_t imageBytes(const std::vector<Image> &images) {
   uint64_t total = 0;
   for (const Image &image : images) total += image.bytes;
@@ -87,8 +97,12 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         case TargetSource::Package:
           return readTarget(backend, layout, PackageTargetFiles<Layout>{images, directory, layout});
         case TargetSource::Mlx: {
-          AffineTargetLoader loader(images, directory, layout);
-          return readTarget(backend, layout, std::ref(loader));
+          if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
+            throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
+          } else {
+            AffineTargetLoader loader(images, directory, layout);
+            return readTarget(backend, layout, std::ref(loader));
+          }
         }
         case TargetSource::Gguf: {
           GgufTargetLoader loader(backend, images, findTargetGguf(directory), layout);
@@ -98,12 +112,16 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         throw std::invalid_argument("unknown target source");
       },
       result.descriptor.target);
-  result.draft = loadDFlashDraftWeights(
+  if (result.descriptor.hasDraft()) result.draft = loadDFlashDraftWeights(
       backend,
       draft ? DraftFiles(std::ref(*draft))
             : DraftFiles(PackageDraftFiles{images, root / "draft", result.descriptor.draft}),
       result.descriptor.draft);
   result.vision = loadVisionWeights(backend, images, root, result.descriptor, vision.get());
+  if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
+    buildQwen3_5_4BPrefillCache(backend, images, *target);
+  if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
+    buildQwen3_5_4BPrefillCache(backend, images, *target);
 
   std::vector<WeightFileRecord> records(result.targetFiles().begin(),
                                         result.targetFiles().end());
@@ -122,10 +140,29 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
     WeightSource source(findTargetGguf(root / "target"));
     const GgufFile file(source);
     bytes = std::visit(
-        [&](const auto &layout) { return imageBytes(gguf::planImages(file, layout)); },
+        [&](const auto &layout) {
+          const auto plans = gguf::planImages(file, layout);
+          uint64_t targetBytes = imageBytes(plans);
+          if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+                        std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>) {
+            for (const auto &image : plans)
+              for (const auto &repack : image.repacks)
+                if (std::ranges::any_of(repack.sources, [](const auto &source) {
+                      return source.name.ends_with(".ffn_gate.weight") || source.name.ends_with(".ffn_up.weight") ||
+                             source.name.ends_with(".ffn_down.weight");
+                    }))
+                  targetBytes += repack.rows * repack.columns * sizeof(uint16_t);
+          }
+          return targetBytes;
+        },
         descriptor.target);
   } else if (descriptor.targetSource == TargetSource::Mlx) {
-    bytes = std::visit([](const auto &layout) { return imageBytes(affineTargetImages(layout)); }, descriptor.target);
+    bytes = std::visit([](const auto &layout) -> uint64_t {
+      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+                        std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
+        throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
+      else return imageBytes(affineTargetImages(layout));
+    }, descriptor.target);
   }
   if (descriptor.draftFromCheckpoint())
     bytes += imageBytes(draftCheckpointImages(descriptor.draft));
@@ -133,7 +170,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
     bytes += visionImageBytes(descriptor.vision);
   for (std::string_view directory : {"target", "draft", "vision"}) {
     if (directory == "vision" && descriptor.visionSource != VisionSource::Package) continue;
-    if (directory == "draft" && descriptor.draftFromCheckpoint()) continue;
+    if (directory == "draft" && (!descriptor.hasDraft() || descriptor.draftFromCheckpoint())) continue;
     if (directory == "target" && descriptor.targetSource != TargetSource::Package) continue;
     for (const auto &entry : std::filesystem::recursive_directory_iterator(root / directory)) {
       if (!entry.is_regular_file()) continue;

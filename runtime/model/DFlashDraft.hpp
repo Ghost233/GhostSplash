@@ -27,6 +27,7 @@ struct DFlashDraftRingLayer final {
   metal::MetalBuffer keys;
   // V is [head][dimension][ring_position].
   metal::MetalBuffer values;
+  uint32_t capacity = SPLASH_DRAFT_SLIDING_WINDOW;
 };
 
 // Draft-owned persistent context, paired with target state in composite caches.
@@ -50,7 +51,9 @@ private:
   uint64_t actualAllocatedBytes_ = 0;
 };
 
-// The dimensions of a DFlash2 draft. Each target's draft is defined beside
+enum class DraftKind : uint8_t { DFlash2, Standard };
+
+// The dimensions of a DFlash draft. Each target's draft is defined beside
 // the target (Qwen3_8.hpp, Qwen3_6Moe.hpp).
 struct DFlashDraftLayout final {
   uint32_t layers = 0;
@@ -65,9 +68,27 @@ struct DFlashDraftLayout final {
   uint32_t targetHiddenSize = 0;
   uint32_t selectorRank = 0;
   uint32_t kvHeads = 0;
+  DraftKind kind = DraftKind::DFlash2;
+  uint32_t contextCapacity = 262144;
+
+  [[nodiscard]] constexpr uint32_t queryRows() const noexcept {
+    return layers ? ExecutionLimits::draftQueryRows : 0;
+  }
+  [[nodiscard]] constexpr uint32_t proposalTokens() const noexcept {
+    return layers ? ExecutionLimits::draftProposalTokens : 0;
+  }
+  [[nodiscard]] constexpr bool supportsExecutionBlock() const noexcept {
+    return !layers || kind == DraftKind::Standard || ExecutionLimits::draftQueryRows == 8;
+  }
 
   [[nodiscard]] constexpr DraftStateLayout stateLayout() const noexcept {
-    return {layers, kvHeads, attentionHeadDimension};
+    DraftStateLayout result{layers, kvHeads, attentionHeadDimension};
+    if (kind == DraftKind::Standard) {
+      result.fullHistory = true;
+      for (uint32_t i = 0; i < layers; ++i)
+        result.layerContextTokens[i] = i + 1 == layers ? contextCapacity : 4096;
+    }
+    return result;
   }
   [[nodiscard]] constexpr ops::DraftAttentionShape attentionShape() const noexcept {
     return {hiddenSize, dynamicSize, qkvSize, attentionSize,
@@ -154,6 +175,8 @@ struct DFlashDraftLayerWeights final {
   ops::Projection gateProjection;
   ops::Projection upProjection;
   ops::Projection downProjection;
+  bool causal = false;
+  uint32_t slidingWindow = 0;
 };
 
 struct DFlashDraftWeights final {
@@ -170,6 +193,7 @@ struct DFlashDraftWeights final {
 };
 
 inline constexpr std::string_view kDFlashLayerMagic = "MDFD0004";
+inline constexpr std::string_view kDFlashStandardLayerMagic = "MDFD0005";
 
 // A Splash package's draft files: layer-<N>.bin and model.bin.
 struct PackageDraftFiles final {

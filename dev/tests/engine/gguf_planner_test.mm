@@ -283,11 +283,31 @@ void checkRotation(const std::filesystem::path &directory) {
   }
 }
 
+void checkTiedOutput(const std::filesystem::path &directory) {
+  auto target = smallTarget(false);
+  target.geometry.tiedWordEmbeddings = true;
+  std::erase_if(target.tensors, [](const Tensor &tensor) { return tensor.name == "output.weight"; });
+  const auto path = directory / "tied.gguf";
+  writeGguf(path, target.tensors, target.geometry);
+  const Plan tied = plan(path, target.geometry);
+  check(!tied.error, "planner accepts a shared embedding/output tensor");
+  if (!tied.error) {
+    const auto &head = tied.images.at(target.geometry.layers);
+    check(head.repacks.size() == 1 && head.repacks[0].sources.size() == 1 &&
+              head.repacks[0].sources[0].name == "token_embd.weight",
+          "shared output projection must read the actual embedding weights");
+  }
+  target.geometry.tiedWordEmbeddings = false;
+  check(names(plan(path, target.geometry), {"output.weight"}),
+        "an untied model must still reject a missing output projection");
+}
+
 } // namespace
 
 int main() {
   @autoreleasepool {
     const splash::test::TemporaryDirectory directory("splash-gguf-planner");
+    guarded("planner on shared output weights", [&] { checkTiedOutput(directory.path()); });
     guarded("planner on the dense target", [&] { checkDense(directory.path()); });
     guarded("planner on the MoE target", [&] { checkMoe(directory.path()); });
     guarded("planner on quantized alpha/beta", [&] { checkQuantizedAlphaBeta(directory.path()); });

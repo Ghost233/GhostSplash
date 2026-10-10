@@ -5,6 +5,8 @@
 #include "metal/abi/GDN.h"
 
 #include <cstdint>
+#include <array>
+#include <algorithm>
 
 namespace splash::model {
 
@@ -57,16 +59,33 @@ struct DraftStateLayout final {
   uint32_t layers = 0;
   uint32_t kvHeads = 0;
   uint32_t headDimension = 0;
+  bool fullHistory = false;
+  std::array<uint32_t, 8> layerContextTokens{};
 
-  [[nodiscard]] constexpr bool valid() const noexcept {
-    return layers && kvHeads && headDimension;
+  [[nodiscard]] constexpr uint32_t contextTokens(uint32_t layer = 0) const noexcept {
+    return layer < layerContextTokens.size() && layerContextTokens[layer]
+               ? layerContextTokens[layer] : SPLASH_DRAFT_SLIDING_WINDOW;
   }
-  [[nodiscard]] constexpr uint64_t tensorBytes() const noexcept {
-    return uint64_t{kvHeads} * SPLASH_DRAFT_SLIDING_WINDOW * headDimension *
+  [[nodiscard]] constexpr uint32_t historyCapacity() const noexcept {
+    uint32_t tokens = SPLASH_DRAFT_SLIDING_WINDOW;
+    if (fullHistory)
+      for (uint32_t i = 0; i < layers; ++i) tokens = std::max(tokens, contextTokens(i));
+    return tokens;
+  }
+  [[nodiscard]] constexpr bool valid() const noexcept {
+    if (!layers || layers > layerContextTokens.size() || !kvHeads || !headDimension) return false;
+    for (uint32_t i = 0; i < layers; ++i)
+      if (contextTokens(i) % 128) return false;
+    return true;
+  }
+  [[nodiscard]] constexpr uint64_t tensorBytes(uint32_t layer = 0) const noexcept {
+    return uint64_t{kvHeads} * contextTokens(layer) * headDimension *
            bfloat16Bytes;
   }
   [[nodiscard]] constexpr uint64_t ringBytes() const noexcept {
-    return uint64_t{layers} * 2 * tensorBytes();
+    uint64_t bytes = 0;
+    for (uint32_t i = 0; i < layers; ++i) bytes += 2 * tensorBytes(i);
+    return bytes;
   }
 
   bool operator==(const DraftStateLayout &) const = default;
@@ -80,7 +99,7 @@ struct CompositeStateLayout final {
   DraftStateLayout draft;
 
   [[nodiscard]] constexpr bool valid() const noexcept {
-    return target.valid() && draft.valid();
+    return target.valid() && (draft.valid() || draft == DraftStateLayout{});
   }
   [[nodiscard]] constexpr uint64_t laneBytes() const noexcept {
     return kLaneGdnCells * target.cellBytes() + draft.ringBytes();

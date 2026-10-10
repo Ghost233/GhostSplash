@@ -3,14 +3,14 @@
 #include "metal/kernels/common/attention_gate.h"
 #include "metal/kernels/common/attention_qkv_prepare.h"
 
-template <uint QHeads, uint KHeads, class W>
+template <uint QHeads, uint KHeads, class W, bool Rotate = false>
 inline void full_qkv_decode_phase(
     device const bfloat *qkv, device const W *q_norm,
     device const W *k_norm, device const float *rope_cos,
     device const float *rope_sin, device bfloat *queries,
     device bfloat *keys, device bfloat *values, threadgroup float *reductions,
     threadgroup bfloat *normalized, uint2 group, uint thread_index, uint lane,
-    uint simd_group) {
+    uint simd_group, threadgroup float *rotation) {
   constexpr uint HeadDim = 256, RotaryPairs = SPLASH_TARGET_ROPE_PAIRS, QStride = 2 * HeadDim;
   constexpr uint PackedStride = QHeads * QStride + 2 * KHeads * HeadDim;
   constexpr uint Rows = SPLASH_TARGET_VERIFY_ROWS;
@@ -18,18 +18,18 @@ inline void full_qkv_decode_phase(
   uint batch = group.y;
   constexpr ulong kv_lane_stride = ulong(KHeads) * Stride * HeadDim;
   FullPrefillParams lane_params{Rows, Stride};
-  full_qkv_storage_phase<QHeads, KHeads>(
+  full_qkv_storage_phase<QHeads, KHeads, W, Rotate>(
       qkv + ulong(batch) * Rows * PackedStride, q_norm, k_norm,
       rope_cos + ulong(batch) * Rows * RotaryPairs,
       rope_sin + ulong(batch) * Rows * RotaryPairs,
       queries + ulong(batch) * QHeads * Stride * HeadDim,
       keys + ulong(batch) * kv_lane_stride,
       values + ulong(batch) * kv_lane_stride, lane_params, reductions,
-      normalized, group.x, thread_index, lane, simd_group);
+      normalized, group.x, thread_index, lane, simd_group, rotation);
 }
 
 // W: the q/k norm weights' stored type (float: a GGUF's F32 norms, _f32).
-#define VERIFY_ATTENTION_QKV(Name, QHeads, KHeads, W)                         \
+#define VERIFY_ATTENTION_QKV(Name, QHeads, KHeads, W, Rotate)                         \
   kernel void Name(                                                           \
       device const bfloat *qkv [[buffer(0)]],                                 \
       device const W *q_norm [[buffer(1)]],                                   \
@@ -44,14 +44,23 @@ inline void full_qkv_decode_phase(
       uint simd_group [[simdgroup_index_in_threadgroup]]) {                   \
     threadgroup float reductions[8];                                          \
     threadgroup bfloat normalized[256];                                       \
-    full_qkv_decode_phase<QHeads, KHeads>(                                    \
+    threadgroup float rotation[Rotate ? 256 : 1];                                       \
+    full_qkv_decode_phase<QHeads, KHeads, W, Rotate>(                                    \
         qkv, q_norm, k_norm, rope_cos, rope_sin, queries, keys, values,       \
-        reductions, normalized, group, thread_index, lane, simd_group);       \
+        reductions, normalized, group, thread_index, lane, simd_group, rotation);       \
   }
-VERIFY_ATTENTION_QKV(verify_attention_qkv, 24, 4, bfloat)
-VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8, 16, 2, bfloat)
-VERIFY_ATTENTION_QKV(verify_attention_qkv_f32, 24, 4, float)
-VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8_f32, 16, 2, float)
+VERIFY_ATTENTION_QKV(verify_attention_qkv, 24, 4, bfloat, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8, 16, 2, bfloat, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_kv4_g4, 16, 4, bfloat, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_f32, 24, 4, float, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8_f32, 16, 2, float, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_kv4_g4_f32, 16, 4, float, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h, 24, 4, bfloat, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_f32, 24, 4, float, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g8, 16, 2, bfloat, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g8_f32, 16, 2, float, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
 #undef VERIFY_ATTENTION_QKV
 
 // Element `element` of every verify lane's rows, lane by lane.
@@ -90,6 +99,7 @@ inline void full_attention_gate_decode_phase(
   }
 VERIFY_ATTENTION_GATE(verify_attention_gate, 24, 4)
 VERIFY_ATTENTION_GATE(verify_attention_gate_kv2_g8, 16, 2)
+VERIFY_ATTENTION_GATE(verify_attention_gate_kv4_g4, 16, 4)
 #undef VERIFY_ATTENTION_GATE
 
 #define ATTENTION_GATE_TABLE(Name, QHeads, KHeads, Layout) \
@@ -111,6 +121,8 @@ VERIFY_ATTENTION_GATE(verify_attention_gate_kv2_g8, 16, 2)
   }
 ATTENTION_GATE_TABLE(verify_attention_gate_table64, 24, 4, q4sg::Table64)
 ATTENTION_GATE_TABLE(verify_attention_gate_table64_kv2_g8, 16, 2, q4sg::Table64)
+ATTENTION_GATE_TABLE(verify_attention_gate_table64_kv4_g4, 16, 4, q4sg::Table64)
 ATTENTION_GATE_TABLE(verify_attention_gate_table16, 24, 4, gguf_sg::Table16)
 ATTENTION_GATE_TABLE(verify_attention_gate_table16_kv2_g8, 16, 2, gguf_sg::Table16)
+ATTENTION_GATE_TABLE(verify_attention_gate_table16_kv4_g4, 16, 4, gguf_sg::Table16)
 #undef ATTENTION_GATE_TABLE

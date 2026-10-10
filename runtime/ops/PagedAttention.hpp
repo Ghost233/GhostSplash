@@ -106,6 +106,7 @@ struct PrefillAttentionPlan final {
   const kv::Layout layout;
   const uint32_t queryHeads;
   const uint32_t rows;
+  const uint32_t tileRows;
   const uint32_t splits;
   const AttentionWorkspace workspace;
   const std::string_view splitPipeline;
@@ -115,11 +116,11 @@ struct PrefillAttentionPlan final {
 
 private:
   friend class PagedAttention;
-  PrefillAttentionPlan(uint32_t rows, uint32_t splits, AttentionWorkspace workspace,
+  PrefillAttentionPlan(uint32_t rows, uint32_t tileRows, uint32_t splits, AttentionWorkspace workspace,
                        std::string_view splitPipeline, std::string_view reducePipeline,
                        metal::DispatchSize splitGroups, metal::DispatchSize reduceGroups,
                        kv::Layout layout, uint32_t queryHeads)
-      : layout(layout), queryHeads(queryHeads), rows(rows),
+      : layout(layout), queryHeads(queryHeads), rows(rows), tileRows(tileRows),
         splits(splits), workspace(workspace),
         splitPipeline(splitPipeline), reducePipeline(reducePipeline),
         splitGroups(splitGroups), reduceGroups(reduceGroups) {}
@@ -169,15 +170,18 @@ struct PagedVerifyBuffers final {
   std::span<const metal::MetalBuffer> pageTables;
 };
 
-// Target attention over paged INT8 or BF16 history. Prefill and verify both
+// Target attention over paged INT8, BF16, standard Q4_0 or experimental q4h.
+// Prefill and verify both
 // read the history one Page32 at a time; neither changes cache ownership or
 // commit semantics.
 class PagedAttention final {
 public:
   // The kernels read a sequence's history from its chunk parameters, so a
-  // plan depends on the rows only.
+  // plan depends on the rows only. tileRows=0 selects the production tile;
+  // explicit tiles let numerical tests and benchmarks compare the 4B kernels.
   [[nodiscard]] static PrefillAttentionPlan
-  prefillPlan(uint32_t rows, uint32_t queryHeads, kv::Layout layout);
+  prefillPlan(uint32_t rows, uint32_t queryHeads, kv::Layout layout,
+              uint32_t tileRows = 0);
   // historyTokens holds each lane's committed tokens before its verify rows,
   // one entry per lane.
   [[nodiscard]] static VerifyAttentionPlan

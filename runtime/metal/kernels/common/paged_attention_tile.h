@@ -2,6 +2,7 @@
 
 #include "metal/abi/PagedAttention.h"
 #include "metal/kernels/common/kv_extent.h"
+#include "metal/kernels/common/kv_hadamard.h"
 #include "metal/kernels/common/kv_paging.h"
 #include <MetalPerformancePrimitives/MetalPerformancePrimitives.h>
 #include <metal_stdlib>
@@ -9,7 +10,7 @@
 using namespace metal;
 using namespace mpp::tensor_ops;
 
-// Paged attention over INT8 or BF16 KV. INT8 has one fp32 scale per
+// Paged attention over INT8, BF16, q4h or standard Q4_0 KV. INT8 has one fp32 scale per
 // (token, KV head); BF16 reads the stored values directly. The preceding
 // store writes current rows to their final slots; committed_tokens controls
 // visibility, and the next command overwrites rejected verify rows.
@@ -19,6 +20,45 @@ using namespace mpp::tensor_ops;
 // fp32 partials and statistics for a fixed-order reduce.
 //
 // Prefill and verify share this device-operand page loop.
+template <class CacheElement> struct SplashKvMatmulElement { using Type = CacheElement; };
+template <> struct SplashKvMatmulElement<uchar> { using Type = int4b_format; };
+
+// Q4_0 scale and packing are decoded only inside one attention page. A
+// single 16 KiB stage is reused for K and V; cache storage remains compressed.
+inline bfloat2 splash_q4_0_pair(device const SplashQ4Block *block, uint lane) {
+  uint code = block->qs[lane];
+  float scale = float(block->d);
+  return bfloat2(bfloat(scale * (int(code & 15) - 8)), bfloat(scale * (int(code >> 4) - 8)));
+}
+
+template <class CacheElement>
+inline auto splash_attention_key_operand(device CacheElement *data,
+                                          threadgroup bfloat *stage) {
+  constexpr uint D = SplashKvHeadDimension, N = SplashKvPageTokens;
+  if constexpr (is_same<CacheElement, SplashQ4Block>::value)
+    return tensor(stage, dextents<int, 2>{D, N}, array<int, 2>{1, D});
+  else {
+    using Element = typename SplashKvMatmulElement<CacheElement>::Type;
+    return tensor<device Element, dextents<int, 2>, tensor_inline>(
+        data, dextents<int, 2>{D, N}, array<int, 2>{1, D});
+  }
+}
+
+template <class CacheElement>
+inline auto splash_attention_value_operand(device CacheElement *data,
+                                            threadgroup bfloat *stage) {
+  constexpr uint D = SplashKvHeadDimension, N = SplashKvPageTokens;
+  if constexpr (is_same<CacheElement, SplashQ4Block>::value)
+    return tensor(stage, dextents<int, 2>{D, N}, array<int, 2>{1, D});
+  else {
+    using Element = typename SplashKvMatmulElement<CacheElement>::Type;
+    constexpr bool Packed4 = is_same<CacheElement, uchar>::value;
+    constexpr uint K = Packed4 ? D : N, Columns = Packed4 ? N : D;
+    return tensor<device Element, dextents<int, 2>, tensor_inline>(
+        data, dextents<int, 2>{K, Columns}, array<int, 2>{1, K});
+  }
+}
+
 constant uint SplashVerifyMaximumSplits =
     SPLASH_VERIFY_ATTENTION_MAXIMUM_SPLITS;
 constant uint SplashPrefillTileRows = SPLASH_PREFILL_ATTENTION_TILE_ROWS;
@@ -170,8 +210,8 @@ inline void splash_attention_page_softmax(
   probabilities4[1] = bfloat4(high);
 }
 
-// One tile over its split's pages, whose K/V (INT8 with their scales, or
-// BF16) it consumes in place as device tensor operands: the prefill tile of
+// One tile over its split's pages: direct device operands for INT8/BF16/q4h,
+// and one reused local conversion stage for Q4_0. This is the prefill tile of
 // SPLASH_PREFILL_ATTENTION_TILE_ROWS rows and the verify tile of
 // SPLASH_TARGET_VERIFY_ROWS (RowsPerTile). Queries are KV-head-major
 // [kv head][row][query head in group][dimension], so the tile's fused rows
@@ -188,11 +228,15 @@ inline void splash_paged_attention_tile(
     threadgroup float *scores, threadgroup bfloat *probabilities,
     threadgroup float *row_max, threadgroup float *row_sum,
     threadgroup float *previous_scale, threadgroup atomic_uint *rescale,
-    uint thread_index) {
+    uint thread_index, threadgroup bfloat *stage = nullptr) {
   constexpr ushort M = RowsPerTile * QueryHeadsPerKVHead;
-  constexpr bool Quantized = is_same<CacheElement, int8_t>::value;
+  constexpr bool Blocked4 = is_same<CacheElement, SplashQ4Block>::value;
+  constexpr bool Quantized = !is_same<CacheElement, bfloat>::value && !Blocked4;
+  constexpr bool Packed4 = is_same<CacheElement, uchar>::value;
   constexpr ushort N = SplashKvPageTokens;
   constexpr ushort D = SplashKvHeadDimension;
+  constexpr bool TokenMajorV = Packed4 || Blocked4;
+  constexpr uint VK = TokenMajorV ? D : N, VN = TokenMajorV ? N : D;
   uint visible_tokens = committed_tokens + active_rows;
   uint pages = splash_attention_pages(visible_tokens);
   uint per_split = splash_attention_pages_per_split(pages, splits);
@@ -210,21 +254,19 @@ inline void splash_paged_attention_tile(
   auto st = tensor(scores, dextents<int, 2>{N, M}, array<int, 2>{1, N});
   auto pt = tensor(probabilities, dextents<int, 2>{N, M}, array<int, 2>{1, N});
   auto p0 = pt.slice<N, M>(0, 0);
-  auto key_type = tensor(static_cast<device CacheElement *>(nullptr),
-                         dextents<int, 2>{D, N}, array<int, 2>{1, D});
-  auto value_type = tensor(static_cast<device CacheElement *>(nullptr),
-                           dextents<int, 2>{N, D}, array<int, 2>{1, N});
+  auto key_type = splash_attention_key_operand(static_cast<device CacheElement *>(nullptr), stage);
+  auto value_type = splash_attention_value_operand(static_cast<device CacheElement *>(nullptr), stage);
   const SplashKvAddressing<KVHeads, CacheElement> addressing(kv, kv_head);
   auto q0 = qt.slice<D, M>(0, 0);
   auto k0 = key_type.template slice<D, N>(0, 0);
-  auto v0 = value_type.template slice<N, D>(0, 0);
+  auto v0 = value_type.template slice<VK, VN>(0, 0);
   // QK writes a complete page score tile, the softmax applies an INT8 page's
   // key scales and PV accumulates the running output.
   constexpr auto qk_descriptor =
       matmul2d_descriptor(M, N, D, false, true, false,
                           matmul2d_descriptor::mode::multiply);
   constexpr auto pv_descriptor =
-      matmul2d_descriptor(M, D, N, false, true, true,
+      matmul2d_descriptor(M, D, N, false, !TokenMajorV, true,
                           matmul2d_descriptor::mode::multiply_accumulate);
   matmul2d<qk_descriptor, execution_simdgroups<8>> qk;
   matmul2d<pv_descriptor, execution_simdgroups<8>> pv;
@@ -244,8 +286,19 @@ inline void splash_paged_attention_tile(
     const SplashKvPageTensors<CacheElement> tensors =
         addressing.page(page_table[page]);
     uint token_start = page * N;
-    auto kt = tensor(tensors.keys, dextents<int, 2>{D, N}, array<int, 2>{1, D});
-    auto vt = tensor(tensors.values, dextents<int, 2>{N, D}, array<int, 2>{1, N});
+    if constexpr (Blocked4) {
+      // Each payload byte supplies two dimensions; load its scale once.
+      for (uint i = thread_index; i < D * N / 2; i += 256) {
+        uint element = i / 16 * 32 + i % 16;
+        bfloat2 pair = token_start + element / D < visible_tokens
+            ? splash_q4_0_pair(tensors.keys + i / 16, i % 16) : bfloat2(bfloat(0.0f));
+        stage[element] = pair.x;
+        stage[element + 16] = pair.y;
+      }
+      threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+    auto kt = splash_attention_key_operand(tensors.keys, stage);
+    auto vt = splash_attention_value_operand(tensors.values, stage);
     device const float *key_scales = tensors.key_scales;
     device const float *value_scales = tensors.value_scales;
 
@@ -273,7 +326,18 @@ inline void splash_paged_attention_tile(
         running[index] *= previous_scale[coordinates[1]];
       }
     }
-    auto vs = vt.template slice<N, D>(0, 0);
+    if constexpr (Blocked4) {
+      // Keep the local V tile token-major; TensorOps consumes this layout directly.
+      for (uint i = thread_index; i < D * N / 2; i += 256) {
+        uint element = i / 16 * 32 + i % 16;
+        bfloat2 pair = token_start + element / D < visible_tokens
+            ? splash_q4_0_pair(tensors.values + i / 16, i % 16) : bfloat2(bfloat(0.0f));
+        stage[element] = pair.x;
+        stage[element + 16] = pair.y;
+      }
+      threadgroup_barrier(mem_flags::mem_threadgroup);
+    }
+    auto vs = vt.template slice<VK, VN>(0, 0);
     pv.run(p0, vs, running);
     threadgroup_barrier(mem_flags::mem_threadgroup);
   }
@@ -295,12 +359,15 @@ inline void splash_paged_attention_tile(
 // computed once per row, then each lane streams one dimension of the
 // partials. A row past the tile's active rows is written as zeros; a
 // threadgroup owns one fused row, so it returns uniformly.
-template <uint QueryHeadsPerKVHead, uint RowsPerTile>
+template <uint QueryHeadsPerKVHead, uint RowsPerTile, bool Rotate = false,
+          bool SharedDenominator = false>
 inline void splash_attention_reduce_row(
     device const float *partials, device const float *statistics,
     device bfloat *tile_output, uint committed_tokens, uint active_rows,
     uint splits, ulong head_slot, uint fused_row, uint thread_index,
-    threadgroup float *weights, threadgroup float *group_values) {
+    threadgroup float *weights, threadgroup float *group_values,
+    threadgroup float *rotation = nullptr,
+    threadgroup float *shared_denominator = nullptr) {
   constexpr uint M = RowsPerTile * QueryHeadsPerKVHead;
   constexpr uint D = SplashKvHeadDimension;
   if (fused_row / QueryHeadsPerKVHead >= active_rows) {
@@ -328,8 +395,19 @@ inline void splash_attention_reduce_row(
     const ulong stat = ((head_slot + split) * M + fused_row) * 2;
     numerator += weight *
         partials[((head_slot + split) * M + fused_row) * D + thread_index];
-    denominator += weight * statistics[stat + 1];
+    if constexpr (SharedDenominator) {
+      if (thread_index == 0)
+        denominator += weight * statistics[stat + 1];
+    } else {
+      denominator += weight * statistics[stat + 1];
+    }
   }
-  tile_output[fused_row * D + thread_index] =
-      bfloat(denominator > 0.0f ? numerator / denominator : 0.0f);
+  if constexpr (SharedDenominator) {
+    if (thread_index == 0) *shared_denominator = denominator;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    denominator = *shared_denominator;
+  }
+  float value = denominator > 0.0f ? numerator / denominator : 0.0f;
+  if constexpr (Rotate) value = splash_kv_hadamard<64>(value, rotation, thread_index);
+  tile_output[fused_row * D + thread_index] = bfloat(value);
 }

@@ -15,7 +15,8 @@ namespace {
 using splash::test::require;
 
 EngineMemoryPlan plan(uint64_t visionBytes = kGiB,
-                      uint64_t stateStagingBytes = 0, uint64_t aneFfnBytes = 0) {
+                      uint64_t stateStagingBytes = 0, uint64_t aneFfnBytes = 0,
+                      uint64_t draftBytes = kGiB) {
   DeviceCapabilities device;
   device.deviceName = "test";
   device.appleGpuFamily = 9;
@@ -28,7 +29,7 @@ EngineMemoryPlan plan(uint64_t visionBytes = kGiB,
   device.maxThreadgroupWidth = 1024;
   device.hasUnifiedMemory = true;
   ModelMemoryProfile model =
-      test::modelMemoryProfile(2 * kGiB, 1 * kGiB, visionBytes);
+      test::modelMemoryProfile(2 * kGiB, draftBytes, visionBytes);
   model.footprint.stateStagingBytes = stateStagingBytes;
   model.footprint.aneFfnBytes = aneFfnBytes;
   return test::requireMemoryPlan(device, model);
@@ -80,6 +81,17 @@ void testUnifiedDynamicAudit() {
   require(!rejected.valid &&
               rejected.error == MemoryAuditError::CategoryExceedsPlan,
           "dynamic state/KV budget overflow was accepted");
+}
+
+void testOptionalDraftAudit() {
+  const auto targetOnly = plan(0, 0, 0, 0);
+  require(auditActualMemory(targetOnly, report(targetOnly)).valid,
+          "target-only memory planning or audit requires nonexistent draft weights");
+  const auto paired = plan(0);
+  auto missing = report(paired);
+  missing.draftWeightsBytes = 0;
+  require(auditActualMemory(paired, missing).error == MemoryAuditError::MissingMeasurement,
+          "a paired model's missing draft measurement was accepted");
 }
 
 void testOptionalVisionAudit() {
@@ -239,6 +251,7 @@ void testDevicePeakDeviationExcludesReserves() {
 int main() {
   try {
     testUnifiedDynamicAudit();
+    testOptionalDraftAudit();
     testOptionalVisionAudit();
     testUnreportedAllocationsCountAgainstReserves();
     testStateStagingHasItsOwnBound();

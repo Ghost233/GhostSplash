@@ -325,7 +325,7 @@ struct Runtime::Impl {
   ModelTelemetry counters;
   ops::Sampling sampling;
   QwenTarget targetModel;
-  DFlashDraft draftModel;
+  std::unique_ptr<DFlashDraft> draftModel;
   ops::AneFfn *aneFfn;
   explicit Impl(RuntimeContext value)
       : backend(value.backend),
@@ -341,7 +341,9 @@ struct Runtime::Impl {
                                             value.backend, operators);
                         },
                         value.model.target)),
-        draftModel(value.model.draft, value.backend, operators),
+        draftModel(value.model.descriptor.hasDraft()
+                       ? std::make_unique<DFlashDraft>(value.model.draft, value.backend, operators)
+                       : nullptr),
         aneFfn(value.aneFfn) {
     if (states.layout() != model.stateLayout() ||
         kvPages.layout() != model.targetKvLayout(kvPages.layout().format)) {
@@ -773,8 +775,9 @@ struct Runtime::Impl {
                                    source + geometry.target.hiddenSize);
   }
 
-  static DispatchDraftCapturePlan
-  activeDraftCaptures(const Request &entry, const ModelBatchItem &item) {
+  DispatchDraftCapturePlan
+  activeDraftCaptures(const Request &entry, const ModelBatchItem &item) const {
+    if (!draftModel) return {};
     if (!entry.draftContextPlan) {
       throw std::logic_error("prefill request has no draft context plan");
     }
@@ -794,16 +797,20 @@ struct Runtime::Impl {
   // The lengths after the draft ring takes rows [begin, end) at target
   // length targetTokens. Unless `reset` starts a new window there, the rows
   // continue the ring, which must hold rows ending at `begin`.
-  static QwenLogicalLengths
+  [[nodiscard]] uint32_t draftContextCapacity() const noexcept {
+    return states.layout().draft.historyCapacity();
+  }
+
+  QwenLogicalLengths
   advanceDraftContext(const QwenLogicalLengths &previous, uint64_t targetTokens,
-                      uint64_t begin, uint64_t end, bool reset) {
+                      uint64_t begin, uint64_t end, bool reset) const {
     if (!reset && (!previous.draftLength || previous.draftEnd() != begin))
       throw std::logic_error("draft capture does not continue the draft ring");
     const uint64_t combined = (reset ? 0 : previous.draftLength) + (end - begin);
     QwenLogicalLengths next = previous;
     next.targetTokens = targetTokens;
     next.draftLength =
-        static_cast<uint32_t>(std::min<uint64_t>(combined, kDraftCacheStride));
+        static_cast<uint32_t>(std::min<uint64_t>(combined, draftContextCapacity()));
     next.draftBase = end - next.draftLength;
     return next;
   }
@@ -945,10 +952,14 @@ struct Runtime::Impl {
     auto d = [&](DecodeTensor tensor) {
       return decodeArena->batchSlice(tensor, storage);
     };
-    targetModel.addHeadBatch(graph, d(DecodeTensor::Hidden0),
-                             d(DecodeTensor::FinalHidden),
-                             d(DecodeTensor::Logits), width,
-                             decodeArena->linearScratch());
+    if (!draftModel && width == 1)
+      targetModel.addHeadOne(graph, d(DecodeTensor::Hidden0), d(DecodeTensor::FinalHidden),
+                            d(DecodeTensor::Logits));
+    else
+      targetModel.addHeadBatch(graph, d(DecodeTensor::Hidden0),
+                              d(DecodeTensor::FinalHidden),
+                              d(DecodeTensor::Logits), width,
+                              decodeArena->linearScratch());
     if (std::ranges::none_of(lanes, &InitialSelection::select))
       return;
     std::array<ops::SamplingPolicy, kLaneCount> policies{};
@@ -1065,7 +1076,7 @@ struct Runtime::Impl {
 
   RaggedPrefillBatch
   prepareRaggedPrefill(std::span<const ModelBatchItem> items,
-                       std::array<Request *, kLaneCount> &entries) {
+                       std::array<Request *, kLaneCount> &entries, bool decoding = false) {
     RaggedPrefillBatch batch;
     batch.sequences.reserve(items.size());
     uint64_t queryOffset = 0;
@@ -1074,8 +1085,9 @@ struct Runtime::Impl {
       const ModelBatchItem &item = items[lane];
       Request &entry = request(item.requestId);
       if (item.tokenCount > kPrefillRows ||
-          item.logicalPosition > entry.promptTokens ||
-          item.tokenCount > entry.promptTokens - item.logicalPosition ||
+          (!decoding && (item.logicalPosition > entry.promptTokens ||
+                         item.tokenCount > entry.promptTokens - item.logicalPosition)) ||
+          (decoding && (item.tokenCount != 1 || !entry.promptComplete || !entry.pendingToken)) ||
           !entry.resident) {
         throw std::invalid_argument("invalid ragged Qwen prefill item");
       }
@@ -1169,7 +1181,7 @@ struct Runtime::Impl {
         span.ring = states.draft(sequence.entry->stateLane);
       }
     }
-    draftModel.addContextPrefill(
+    draftModel->addContextPrefill(
         graph,
         {p(PrefillTensor::Captured), p(PrefillTensor::ProjectionSums),
          p(PrefillTensor::ContextProjected), p(PrefillTensor::ContextHidden),
@@ -1182,8 +1194,8 @@ struct Runtime::Impl {
   std::array<DispatchDraftCapturePlan, kLaneCount>
   encodeRaggedPrefillGraph(CommandGraph &graph,
                            std::span<const ModelBatchItem> items,
-                           std::array<Request *, kLaneCount> &entries) {
-    RaggedPrefillBatch batch = prepareRaggedPrefill(items, entries);
+                           std::array<Request *, kLaneCount> &entries, bool decoding = false) {
+    RaggedPrefillBatch batch = prepareRaggedPrefill(items, entries, decoding);
     auto p = [&](PrefillTensor tensor) { return prefillArena->get(tensor); };
 
     addRopeTables(graph, p(PrefillTensor::TargetPositions), batch.rows,
@@ -1264,8 +1276,8 @@ struct Runtime::Impl {
     for (const RaggedPrefillSequence &sequence : batch.sequences) {
       Request &entry = *sequence.entry;
       const ModelBatchItem &item = *sequence.item;
-      if (entry.replayingGeneration ||
-          item.logicalPosition + item.tokenCount != entry.promptTokens)
+      if (!decoding && (entry.replayingGeneration ||
+          item.logicalPosition + item.tokenCount != entry.promptTokens))
         continue;
       const uint32_t hidden = geometry.target.hiddenSize;
       ops::RowCopy::add(
@@ -1292,6 +1304,51 @@ struct Runtime::Impl {
     return captures;
   }
 
+  std::unique_ptr<ModelBatchTicket>
+  submitOrdinaryDecode(std::span<const ModelBatchItem> items, std::function<void()> completion) {
+    const uint32_t width = static_cast<uint32_t>(items.size());
+    std::array<uint32_t, kLaneCount> anchors{};
+    std::array<Request *, kLaneCount> entries{};
+    std::vector<ModelBatchItem> rows(items.begin(), items.end());
+    for (uint32_t lane = 0; lane < width; ++lane) {
+      Request &entry = request(items[lane].requestId);
+      if (!entry.pendingToken || entry.maxNewTokens - entry.generatedTokens <= 1 ||
+          entry.constraint != ConstraintMode::None || isStopToken(geometry, *entry.pendingToken))
+        throw std::logic_error("ordinary decode request is not ready");
+      anchors[lane] = *entry.pendingToken;
+      rows[lane].tokenCount = 1;
+      rows[lane].inputTokens = {&anchors[lane], 1};
+    }
+    CommandGraph graph;
+    static_cast<void>(encodeRaggedPrefillGraph(graph, rows, entries, true));
+    CommandTicket command = backend.submitCommandAsync(graph.command(), std::move(completion));
+    auto finish = [this, entries, anchors, width](CommandTiming &timing) {
+      std::vector<ModelStepResult> results;
+      for (uint32_t lane = 0; lane < width; ++lane) {
+        Request &entry = *entries[lane];
+        ModelStepResult &result = results.emplace_back();
+        result.requestId = entry.id;
+        const uint32_t selected = initialToken(lane);
+        result.failure = invalidSelection({&selected, 1});
+        if (!result.failure.empty()) continue;
+        states.swapParity(entry.stateLane);
+        auto lengths = states.metadata(entry.stateLane).lengths;
+        ++lengths.targetTokens;
+        states.updateLengths(entry.stateLane, lengths);
+        result.outputTokens.push_back(anchors[lane]);
+        ++entry.generatedTokens;
+        commitSelected(entry, {&selected, 1});
+        emitTerminalAnchor(entry, result);
+      }
+      counters.lastDecodeGpuSeconds = timing.gpuSeconds;
+      counters.totalDecodeGpuSeconds += timing.gpuSeconds;
+      counters.lastDecodeWallSeconds = timing.wallSeconds;
+      counters.totalDecodeWallSeconds += timing.wallSeconds;
+      return results;
+    };
+    return std::make_unique<DeferredMetalTicket>(std::move(command), std::move(finish));
+  }
+
   void prepareDecodeLane(Request &entry, const ModelBatchItem &item,
                          uint32_t lane) {
     if (!entry.resident || !entry.promptComplete || !entry.pendingToken) {
@@ -1299,7 +1356,7 @@ struct Runtime::Impl {
     }
     const QwenLaneMetadata &metadata = states.metadata(entry.stateLane);
     if (metadata.lengths.targetTokens != item.logicalPosition ||
-        !metadata.lengths.hasCompleteDraftWindow(kDraftCacheStride)) {
+        !metadata.lengths.hasCompleteDraftWindow(draftContextCapacity())) {
       throw std::logic_error("decode state length is not exact");
     }
     static_cast<void>(synchronizedPageTable(entry, item));
@@ -1383,14 +1440,14 @@ struct Runtime::Impl {
     buffers.intermediate = d(DecodeTensor::DraftIntermediate);
     buffers.finalHidden = d(DecodeTensor::DraftFinalHidden);
     buffers.logits = d(DecodeTensor::Logits);
-    buffers.selectorHidden = d(DecodeTensor::SelectorHidden);
+    buffers.selectorHidden = geometry.draft.selectorRank ? d(DecodeTensor::SelectorHidden) : MetalBuffer{};
     buffers.queryKeys = d(DecodeTensor::DraftQueryKeys);
     buffers.queryValues = d(DecodeTensor::DraftQueryValues);
     buffers.ropeCos = d(DecodeTensor::DraftRopeCos);
     buffers.ropeSin = d(DecodeTensor::DraftRopeSin);
     buffers.gateScratch = decodeArena->gateScratch();
     bindDraftRings(entries, buffers.persistentKeys, buffers.persistentValues);
-    draftModel.addDecode(graph, std::move(buffers),
+    draftModel->addDecode(graph, std::move(buffers),
                          targetModel.vocabularyProjection(),
                          std::span(cacheLengths).first(lanes));
     std::array<uint32_t, kLaneCount> anchors{};
@@ -1402,11 +1459,11 @@ struct Runtime::Impl {
       anchors[lane] = *entry.pendingToken;
       policies[lane] = samplingPolicy(entry);
     }
-    draftModel.addSelection(
+    draftModel->addSelection(
         graph,
         {d(DecodeTensor::Logits), d(DecodeTensor::TopPartialIds),
          d(DecodeTensor::TopPartialValues), d(DecodeTensor::Candidates),
-         d(DecodeTensor::Unary), d(DecodeTensor::SelectorHidden),
+         d(DecodeTensor::Unary), geometry.draft.selectorRank ? d(DecodeTensor::SelectorHidden) : MetalBuffer{},
          d(DecodeTensor::SamplingUniforms), d(DecodeTensor::ProposedTokens),
          d(DecodeTensor::ProposalProbs)},
         std::span(anchors).first(lanes), std::span(policies).first(lanes));
@@ -1520,8 +1577,9 @@ struct Runtime::Impl {
       throw std::invalid_argument("invalid draft state commit batch");
     }
     const uint32_t lanes = static_cast<uint32_t>(entries.size());
+    const uint32_t storage = targetModel.decodeStorageLanes(lanes);
     auto d = [&](DecodeTensor tensor) {
-      return decodeArena->batchSlice(tensor, lanes);
+      return decodeArena->batchSlice(tensor, storage);
     };
 
     std::array<uint32_t, kLaneCount> startPositions{};
@@ -1537,7 +1595,7 @@ struct Runtime::Impl {
     buffers.ropeSin = d(DecodeTensor::DraftRopeSin);
     buffers.retainedCounts = d(DecodeTensor::RetainedCount);
     bindDraftRings(entries, buffers.persistentKeys, buffers.persistentValues);
-    draftModel.addContextCommit(graph, std::move(buffers),
+    draftModel->addContextCommit(graph, std::move(buffers),
                                 std::span(startPositions).first(lanes));
   }
 
@@ -1906,7 +1964,7 @@ void Runtime::beginColdRequest(const ModelRequest &request,
   try {
     setDraftContextPlan(
         request.id,
-        planDraftContext(0, static_cast<uint32_t>(request.prompt.size()), {}));
+        planDraftContext(0, static_cast<uint32_t>(request.prompt.size()), {}, draftContextCapacity()));
   } catch (...) {
     end(request.id);
     throw;
@@ -1964,6 +2022,8 @@ StateAdmission Runtime::beginAt(const ModelRequest &request, uint32_t stateLane)
   if (!request.id || stateLane >= kLaneCount || request.prompt.empty()) {
     throw std::invalid_argument("invalid executor request activation");
   }
+  if (!impl_->draftModel && request.constraint != ConstraintMode::None)
+    throw std::invalid_argument("Qwen3.5-4B ordinary decoding currently requires unconstrained text requests");
   if (impl_->requests.contains(request.id)) {
     throw std::logic_error("request is already active");
   }
@@ -2016,8 +2076,8 @@ void Runtime::finishRestore(uint64_t requestId, uint32_t restoredPrefixLength,
   const QwenLogicalLengths &lengths =
       impl_->states.metadata(entry.stateLane).lengths;
   if (lengths.targetTokens != restoredPrefixLength ||
-      (restoreDraftState &&
-       !lengths.hasCompleteDraftWindow(kDraftCacheStride)) ||
+      (restoreDraftState && impl_->draftModel &&
+       !lengths.hasCompleteDraftWindow(draftContextCapacity())) ||
       (!restoreDraftState && lengths.draftLength != 0)) {
     throw std::invalid_argument("prefix logical length does not match state");
   }
@@ -2169,7 +2229,7 @@ Runtime::prefillAsync(const BatchPlan &plan,
       QwenLogicalLengths lengths = impl->states.metadata(entry.stateLane).lengths;
       lengths.targetTokens = nextLength;
       for (const DispatchDraftCaptureSpan &capture : captures[lane]) {
-        lengths = Impl::advanceDraftContext(lengths, nextLength,
+        lengths = impl->advanceDraftContext(lengths, nextLength,
                                             capture.absoluteBegin,
                                             capture.absoluteEnd,
                                             capture.resetDraftState);
@@ -2252,6 +2312,9 @@ Runtime::decodeAsync(const BatchPlan &plan,
     }
     return impl_->submitInitialSelection(items, std::move(completion));
   }
+
+  if (!impl_->draftModel)
+    return impl_->submitOrdinaryDecode(items, std::move(completion));
 
   const uint32_t width = static_cast<uint32_t>(items.size());
   std::vector<Impl::DecodeLaneResult> lanes(width);
@@ -2369,6 +2432,10 @@ Runtime::snapshotToDisk(uint64_t requestId, std::function<void()> completion) {
 
 uint32_t Runtime::statesToActivate() const noexcept {
   return impl_->states.statesToActivate();
+}
+
+uint32_t Runtime::draftContextCapacity() const noexcept {
+  return impl_->draftContextCapacity();
 }
 
 uint64_t Runtime::reclaimIdleState(bool keepLane, IdleMemory scope) noexcept {
@@ -2567,7 +2634,7 @@ WarmupStepResult Runtime::warmupDecodeBatch(uint32_t width) {
                            lengths.targetTokens ==
                                1 + decoded[lane].outputTokens.size() -
                                    decoded[lane].outputTokensWithoutKv &&
-                           lengths.hasCompleteDraftWindow(kDraftCacheStride);
+                           (!impl_->draftModel || lengths.hasCompleteDraftWindow(draftContextCapacity()));
     }
     if (!committedEveryLane) {
       throw std::runtime_error(
@@ -2621,10 +2688,10 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
     beginColdRequest(request, 1);
     if (beginRestore(id, prefixTokens, cachedState, true, {}))
       throw std::logic_error("a resident state restore returned a read");
-    setDraftContextPlan(id, planDraftContext(prefixTokens, promptTokens, {}));
+    setDraftContextPlan(id, planDraftContext(prefixTokens, promptTokens, {}, draftContextCapacity()));
     const auto &restored = impl_->states.metadata(1).lengths;
     if (restored.targetTokens != prefixTokens ||
-        !restored.hasCompleteDraftWindow(kDraftCacheStride)) {
+        (impl_->draftModel && !restored.hasCompleteDraftWindow(draftContextCapacity()))) {
       throw std::runtime_error("prefix restore length mismatch");
     }
 
@@ -2655,7 +2722,7 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
     wallSeconds += historicalDecodeWallSeconds;
     const auto &continued = impl_->states.metadata(1).lengths;
     if (decoded.size() != 1 || decoded[0].outputTokens.empty() ||
-        !continued.hasCompleteDraftWindow(kDraftCacheStride) ||
+        (impl_->draftModel && !continued.hasCompleteDraftWindow(draftContextCapacity())) ||
         continued.targetTokens <= promptTokens ||
         continued.targetTokens !=
             promptTokens + decoded[0].outputTokens.size() -
@@ -2695,9 +2762,14 @@ ModelTelemetry Runtime::telemetry() const noexcept {
 
 std::vector<ops::SwiGluProjections> aneFfnLayers(const LoadedModel &model) {
   std::vector<ops::SwiGluProjections> layers;
-  if (const auto *dense = std::get_if<Qwen3_8Weights>(&model.target))
-    for (const Qwen3_8LayerWeights &layer : dense->layers)
-      layers.push_back({&layer.gateProjection, &layer.upProjection, &layer.downProjection});
+  std::visit([&](const auto &target) {
+    using Weights = std::remove_cvref_t<decltype(target)>;
+    if constexpr (std::is_same_v<Weights, Qwen3_8Weights> ||
+                  std::is_same_v<Weights, Qwen3_5_4BWeights> ||
+                  std::is_same_v<Weights, Qwen3_5_4BDFlashWeights>)
+      for (const Qwen3_8LayerWeights &layer : target.layers)
+        layers.push_back({&layer.gateProjection, &layer.upProjection, &layer.downProjection});
+  }, model.target);
   return layers;
 }
 

@@ -6,7 +6,9 @@
 namespace splash {
 DraftContextPlan
 planDraftContext(uint32_t replayBegin, uint32_t replayEnd,
-                 std::span<const uint32_t> materializationBoundaries) {
+                 std::span<const uint32_t> materializationBoundaries, uint32_t contextCapacity) {
+  if (!contextCapacity)
+    throw std::invalid_argument("draft context capacity is zero");
   if (replayEnd < replayBegin) {
     throw std::invalid_argument("draft replay range is reversed");
   }
@@ -30,7 +32,7 @@ planDraftContext(uint32_t replayBegin, uint32_t replayEnd,
   result.replayBegin = replayBegin;
   result.replayEnd = replayEnd;
 
-  constexpr uint32_t window = model::ExecutionLimits::draftContextTokens;
+  const uint32_t window = contextCapacity;
   uint32_t stateBoundary = replayBegin;
   bool haveState = replayBegin != 0;
 

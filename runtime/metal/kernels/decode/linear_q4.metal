@@ -119,6 +119,36 @@ Q4_DECODE_AUXILIARY(decode_linear_q4_n256_up_silu_m32, gate,
                     (q4_mpp_tile<32, 256, false, false, true>), 256, 256)
 Q4_DECODE_AUXILIARY(decode_linear_q4_n256_up_silu_m24, gate,
                     (q4_mpp_tile<24, 256, false, false, true>), 192, 256)
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+kernel void decode_linear_block_padding(device bfloat *input [[buffer(0)]],
+                                         constant Q4BlockPaddingParams &p [[buffer(1)]],
+                                         uint index [[thread_position_in_grid]]) {
+  const uint count = (p.storage_rows - p.live_rows) * p.width;
+  if (index < count) input[ulong(p.live_rows) * p.width + index] = bfloat(0.0f);
+}
+
+template <ushort LiveRows, ushort StorageRows, ushort TileN, bool GateUp, bool Residual, class Out>
+inline void q4_block_tile(device bfloat *input, device uchar *w0, device bfloat *s0, device bfloat *b0,
+                          device Out *output, device uchar *w1, device bfloat *s1, device bfloat *b1,
+                          device bfloat *residual, uint n, uint k, threadgroup float *sums,
+                          uint origin, uint lane, uint sg) {
+  q4_mpp_tile<StorageRows, TileN, GateUp, Residual, false, 8, false, Out, LiveRows>(
+      input, w0, s0, b0, output, w1, s1, b1, residual, n, k, sums, origin, lane, sg);
+}
+
+// Matrix storage is a multiple of eight; only live rows reach the output.
+#define Q4_BLOCK_VARIANT(Lane, LiveRows, StorageRows) \
+  Q4_DECODE_AFFINE(decode_linear_q4_block_l##Lane, (q4_block_tile<LiveRows, StorageRows, 128, false, false>), 8 * StorageRows, 128) \
+  Q4_DECODE_AUXILIARY(decode_linear_q4_block_residual_l##Lane, residual, (q4_block_tile<LiveRows, StorageRows, 128, false, true>), 8 * StorageRows, 128) \
+  Q4_DECODE_GATE_UP(decode_linear_q4_block_gate_up_l##Lane, (q4_block_tile<LiveRows, StorageRows, 256, true, false>), 8 * StorageRows, 256)
+#define Q4_BLOCK_LANE(Lane) Q4_BLOCK_VARIANT(Lane, Lane * SPLASH_TARGET_VERIFY_ROWS, ((Lane * SPLASH_TARGET_VERIFY_ROWS + 7) / 8) * 8)
+Q4_BLOCK_LANE(1)
+Q4_BLOCK_LANE(2)
+Q4_BLOCK_LANE(3)
+Q4_BLOCK_LANE(4)
+#undef Q4_BLOCK_LANE
+#undef Q4_BLOCK_VARIANT
+#endif
 #undef Q4_DECODE_AFFINE
 #undef Q4_DECODE_OUTPUT
 #undef Q4_DECODE_AUXILIARY

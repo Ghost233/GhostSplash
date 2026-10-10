@@ -966,9 +966,19 @@ void rejectsInvalid(MetalBackend &backend) {
 
 int main(int argc, char **argv) {
   try {
-    if (argc != 2)
-      throw std::invalid_argument("usage: gdn-decode METALLIB");
+    const bool blockOnly = argc == 3 && std::string_view(argv[2]) == "--block-only";
+    if (argc != 2 && !blockOnly)
+      throw std::invalid_argument("usage: gdn-decode METALLIB [--block-only]");
     MetalBackend backend(argv[1]);
+    if (blockOnly) {
+      const GdnShape shape{16, 32, 128, 8192, 12544};
+      for (const uint32_t lanes : {1u, 2u, 4u}) {
+        for (const bool float32 : {false, true}) runDecode(backend, shape, lanes, float32);
+        tiledHeadOrder(backend, shape, lanes, LinearInput::Plain, true);
+      }
+      std::cout << "gdn block correctness: PASS rows=" << kRows << " lanes=1,2,4\n";
+      return 0;
+    }
     rejectsInvalid(backend);
     // A commit's layers are a full batch of rows apart, so one lane's commit
     // reaches past the rows of the lanes it runs.
