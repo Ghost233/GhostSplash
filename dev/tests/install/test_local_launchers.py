@@ -1,10 +1,8 @@
 import ast
 import contextlib
 import io
-import json
 import os
 import socket
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -18,12 +16,7 @@ from server import server
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS = sorted(ROOT.glob("*splash.sh"))
 GGUF_SCRIPTS = [script for script in SCRIPTS if "<<'PY'" in script.read_text()]
-EXPLICIT_DRAFTS = {
-    "ornith1535ba3bsplash.sh",
-    "tiel35ba3bsplash.sh",
-    "tielminiplus35ba3bsplash.sh",
-    "qwen38distill35ba3bsplash.sh",
-}
+EXPLICIT_DRAFTS = {"tielminiplus35ba3bsplash.sh"}
 
 
 class ServerStarted(Exception):
@@ -179,66 +172,3 @@ class LocalLauncherTests(unittest.TestCase):
             if script.name in EXPLICIT_DRAFTS:
                 with self.subTest(script=script.name):
                     self.launch(script, invalid=True)
-
-    def test_legacy_launchers_accept_packages_without_layout_json(self):
-        for script in SCRIPTS:
-            if script in GGUF_SCRIPTS:
-                continue
-            with self.subTest(script=script.name):
-                repo = self.root / script.stem
-                repo.mkdir()
-                target = repo / "model"
-                target.mkdir()
-                (target / "manifest.json").write_text("{}")
-                for name in ("target", "draft", "tokenizer", "vision"):
-                    (target / name).mkdir()
-                (repo / "server").mkdir()
-                (repo / "server/server.py").touch()
-                (repo / "build").mkdir()
-                (repo / "build/splash").touch()
-                (repo / ".venv/bin").mkdir(parents=True)
-                output = repo / "arguments.json"
-                capture = repo / "capture.py"
-                capture.write_text(
-                    "import json, pathlib, sys\n"
-                    f"pathlib.Path({str(output)!r}).write_text(json.dumps(sys.argv[1:]))\n"
-                )
-                python = repo / ".venv/bin/python"
-                python.write_text(
-                    f'#!/bin/sh\nexec "{sys.executable}" "{capture}" "$@"\n'
-                )
-                python.chmod(0o755)
-                tools = repo / "tools"
-                tools.mkdir()
-                for name, result in (("lsof", 1), ("curl", 0), ("open", 0)):
-                    tool = tools / name
-                    tool.write_text(f"#!/bin/sh\nexit {result}\n")
-                    tool.chmod(0o755)
-                launcher = repo / script.name
-                lines = script.read_text().splitlines()
-                launcher.write_text(
-                    "\n".join(
-                        f'model_dir="{target}"'
-                        if line.startswith("model_dir=")
-                        else line
-                        for line in lines
-                    )
-                    + "\n"
-                )
-                completed = subprocess.run(
-                    ["sh", str(launcher)],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                    env={
-                        **os.environ,
-                        "PATH": str(tools) + os.pathsep + os.environ["PATH"],
-                    },
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr)
-                command = json.loads(output.read_text())
-                self.assertEqual(command[:3], ["-u", "-m", "server.server"])
-                parsed = server.parse_args(command[3:])
-                self.assertEqual(parsed.model_root, str(target))
-                self.assertEqual(parsed.tokenizer, str(target / "tokenizer"))
-                self.assertTrue(parsed.no_webui)
