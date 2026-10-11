@@ -1,0 +1,71 @@
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1.py", line 11, in <module>
+    from dev.benchmarks import qwen4b_ffn_cache as isolation
+ModuleNotFoundError: No module named 'dev'
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/install/models-local/.resolved/dae35a717bda8642d409dbb0ce8655296cd37aaa2288c2bd2893ca02244c4f43/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+START 1/32 output=512 mode=lookup_compact
+END 1/32 prefill=2336.76tok/s decode=138.36tok/s peak=5.672GiB
+START 2/32 output=512 mode=lookup
+END 2/32 prefill=2357.63tok/s decode=137.39tok/s peak=5.477GiB
+START 3/32 output=2048 mode=lookup_compact
+END 3/32 prefill=2227.79tok/s decode=251.24tok/s peak=5.672GiB
+START 4/32 output=2048 mode=lookup
+END 4/32 prefill=1893.34tok/s decode=217.72tok/s peak=5.477GiB
+START 5/32 output=512 mode=lookup_compact
+END 5/32 prefill=1975.72tok/s decode=123.38tok/s peak=5.672GiB
+START 6/32 output=512 mode=lookup
+END 6/32 prefill=1997.14tok/s decode=122.57tok/s peak=5.477GiB
+START 7/32 output=2048 mode=lookup_compact
+END 7/32 prefill=2046.71tok/s decode=227.73tok/s peak=5.672GiB
+START 8/32 output=2048 mode=lookup
+END 8/32 prefill=2042.78tok/s decode=238.32tok/s peak=5.477GiB
+START 9/32 output=512 mode=lookup_compact
+END 9/32 prefill=2030.12tok/s decode=120.05tok/s peak=5.672GiB
+START 10/32 output=512 mode=lookup
+END 10/32 prefill=2137.41tok/s decode=136.33tok/s peak=5.477GiB
+START 11/32 output=2048 mode=lookup_compact
+END 11/32 prefill=2039.45tok/s decode=224.42tok/s peak=5.672GiB
+START 12/32 output=2048 mode=lookup
+END 12/32 prefill=1956.68tok/s decode=237.24tok/s peak=5.477GiB
+START 13/32 output=512 mode=lookup_compact
+END 13/32 prefill=2142.28tok/s decode=121.88tok/s peak=5.672GiB
+START 14/32 output=512 mode=lookup
+END 14/32 prefill=2150.13tok/s decode=125.21tok/s peak=5.477GiB
+START 15/32 output=2048 mode=lookup_compact
+END 15/32 prefill=2272.93tok/s decode=269.36tok/s peak=5.672GiB
+START 16/32 output=2048 mode=lookup
+END 16/32 prefill=2393.56tok/s decode=275.48tok/s peak=5.477GiB
+START 17/32 output=512 mode=lookup_compact
+END 17/32 prefill=2344.13tok/s decode=140.18tok/s peak=5.672GiB
+START 18/32 output=512 mode=lookup
+END 18/32 prefill=2403.65tok/s decode=148.97tok/s peak=5.477GiB
+START 19/32 output=2048 mode=lookup_compact
+END 19/32 prefill=2440.72tok/s decode=278.11tok/s peak=5.672GiB
+START 20/32 output=2048 mode=lookup
+END 20/32 prefill=2344.40tok/s decode=259.80tok/s peak=5.477GiB
+START 21/32 output=512 mode=lookup_compact
+END 21/32 prefill=2142.80tok/s decode=141.16tok/s peak=5.672GiB
+START 22/32 output=512 mode=lookup
+END 22/32 prefill=2233.98tok/s decode=143.39tok/s peak=5.477GiB
+START 23/32 output=2048 mode=lookup_compact
+END 23/32 prefill=2243.02tok/s decode=260.77tok/s peak=5.672GiB
+START 24/32 output=2048 mode=lookup
+END 24/32 prefill=2345.47tok/s decode=279.54tok/s peak=5.477GiB
+START 25/32 output=512 mode=lookup_compact
+END 25/32 prefill=2471.16tok/s decode=144.40tok/s peak=5.672GiB
+START 26/32 output=512 mode=lookup
+END 26/32 prefill=2344.25tok/s decode=149.06tok/s peak=5.477GiB
+START 27/32 output=2048 mode=lookup_compact
+END 27/32 prefill=2479.78tok/s decode=279.77tok/s peak=5.672GiB
+START 28/32 output=2048 mode=lookup
+END 28/32 prefill=2284.50tok/s decode=263.59tok/s peak=5.477GiB
+START 29/32 output=512 mode=lookup_compact
+END 29/32 prefill=2369.75tok/s decode=147.75tok/s peak=5.672GiB
+START 30/32 output=512 mode=lookup
+END 30/32 prefill=2412.42tok/s decode=141.93tok/s peak=5.477GiB
+START 31/32 output=2048 mode=lookup_compact
+END 31/32 prefill=2401.91tok/s decode=283.59tok/s peak=5.672GiB
+START 32/32 output=2048 mode=lookup
+END 32/32 prefill=2418.78tok/s decode=276.37tok/s peak=5.477GiB
+COMPLETE

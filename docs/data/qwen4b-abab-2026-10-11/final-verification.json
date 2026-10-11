@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "controller_exit_code": 0,
+  "report_exit_code": 0,
+  "completed": 32,
+  "owned_processes_remaining": [],
+  "weights": {
+    "target": {
+      "sha256": "b252c5610a42ca82d20fe2a12813e9d069eed89292907e26c783eeb0bc961bc7",
+      "unchanged": true
+    },
+    "draft": {
+      "sha256": "1eb221d36abb13a5f1b972f8d031a9723fad8cbb7d275abe548b60e77577eb42",
+      "unchanged": true
+    }
+  }
+}
