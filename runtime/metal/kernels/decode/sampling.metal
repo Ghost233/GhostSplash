@@ -1646,3 +1646,108 @@ kernel void decode_accept_dflash(
                        accepted_count[batch], lane_params);
   }
 }
+
+
+// Opt-in small top-k: exact top-32 shard lists replace full softmax mass and
+// vocabulary partition searches. The existing draw/acceptance kernels still
+// perform the residual correction in token order.
+kernel void decode_sample_topk32_sharded(
+    device const float *logits [[buffer(0)]],
+    device const uint *token_mask [[buffer(1)]],
+    device TopKCandidate *partials [[buffer(2)]],
+    constant TargetSamplingParams &params [[buffer(3)]],
+    uint group [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],
+    uint simd_group [[simdgroup_index_in_threadgroup]]) {
+  constexpr uint Shards = SPLASH_TARGET_SAMPLING_SHARDS;
+  const uint s = group / Shards;
+  if (!lane_samples(params, s)) return;
+  const TargetRow row = selected_row(logits, token_mask, params, s);
+  const uint k = params.top_k[selected_lane(params, s)];
+  TopKCandidate own[32];
+  for (uint i = 0; i < 32; ++i) own[i] = {-INFINITY, 0xffffffffu};
+  for (uint token = (group % Shards) * 256 + tid; token < row.vocabulary;
+       token += Shards * 256) {
+    if (!row.admits(token)) continue;
+    const float value = row.logits[token];
+    if (isnan(value) || value == -INFINITY) continue;
+    for (uint i = 0; i < k; ++i)
+      if (value > own[i].value || (value == own[i].value && token < own[i].id)) {
+        for (uint j = k - 1; j > i; --j) own[j] = own[j - 1];
+        own[i] = {value, token};
+        break;
+      }
+  }
+  threadgroup float values[8];
+  threadgroup uint ids[8];
+  threadgroup TopKCandidate winner;
+  uint at = 0;
+  for (uint i = 0; i < k; ++i) {
+    const float value = at < k ? own[at].value : -INFINITY;
+    const float best = simd_max(value);
+    const uint id = simd_min(value == best && at < k ? own[at].id : 0xffffffffu);
+    if (!lane) { values[simd_group] = best; ids[simd_group] = id; }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    if (!tid) {
+      winner = {-INFINITY, 0xffffffffu};
+      for (uint j = 0; j < 8; ++j)
+        if (values[j] > winner.value || (values[j] == winner.value && ids[j] < winner.id))
+          winner = {values[j], ids[j]};
+      partials[ulong(group) * 32 + i] = winner;
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    if (at < k && own[at].id == winner.id) ++at;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+  }
+}
+
+kernel void decode_sample_topk32_merge(
+    device const TopKCandidate *partials [[buffer(0)]],
+    device TargetVocabularyRow *records [[buffer(1)]],
+    constant TargetSamplingParams &params [[buffer(2)]],
+    uint s [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]]) {
+  if (!lane_samples(params, s) || tid) return;
+  constexpr uint Shards = SPLASH_TARGET_SAMPLING_SHARDS;
+  const uint batch = selected_lane(params, s), k = params.top_k[batch];
+  uint offsets[Shards] = {};
+  TopKCandidate ranked[32];
+  float weights[32], mass = 0.0f, maximum = -FLT_MAX;
+  uint count = 0;
+  for (uint i = 0; i < k; ++i) {
+    TopKCandidate best{-INFINITY, 0xffffffffu};
+    uint shard = 0;
+    for (uint j = 0; j < Shards; ++j) {
+      const TopKCandidate value = offsets[j] < k
+          ? partials[(ulong(s) * Shards + j) * 32 + offsets[j]]
+          : TopKCandidate{-INFINITY, 0xffffffffu};
+      if (value.value > best.value || (value.value == best.value && value.id < best.id)) {
+        best = value; shard = j;
+      }
+    }
+    if (best.id == 0xffffffffu) break;
+    ++offsets[shard];
+    if (!i) maximum = best.value;
+    ranked[i] = best;
+    weights[i] = exp((best.value - maximum) / params.temperature[batch]);
+    mass += weights[i];
+    ++count;
+  }
+  OrderBoundary end{kNoKey, 0};
+  if (count) {
+    end = {logit_key(ranked[count - 1].value), ranked[count - 1].id};
+    if (params.top_p[batch] < 1.0f) {
+      float walked = 0.0f;
+      const float nucleus = params.top_p[batch] * mass;
+      for (uint i = 0; i < count; ++i) {
+        walked += weights[i];
+        if (walked > nucleus) {
+          end = {logit_key(ranked[i].value), ranked[i].id};
+          break;
+        }
+      }
+    }
+  }
+  records[s] = {maximum, end.key, end.last, 0.0f};
+}

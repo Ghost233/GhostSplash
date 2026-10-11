@@ -62,7 +62,7 @@ using Qwen3_5_4BDFlashWeights = QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_
 loadQwen3_5_4BDFlashWeights(metal::MetalBackend &backend, Qwen3_5_4BDFlashLayout layout,
                            const QwenTargetFiles &files);
 void buildQwen3_5_4BPrefillCache(metal::MetalBackend &backend, WeightImages &images,
-                                Qwen3_5_4BDFlashWeights &weights);
+                                Qwen3_5_4BDFlashWeights &weights, uint64_t budgetBytes = UINT64_MAX);
 
 
 [[nodiscard]] Qwen3_5_4BWeights
@@ -72,6 +72,6 @@ loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
 // Called after every source image is loaded, so restore rebuilds caches
 // only after all quantized source planes are available.
 void buildQwen3_5_4BPrefillCache(metal::MetalBackend &backend, WeightImages &images,
-                               Qwen3_5_4BWeights &weights);
+                               Qwen3_5_4BWeights &weights, uint64_t budgetBytes = UINT64_MAX);
 
 } // namespace splash::model

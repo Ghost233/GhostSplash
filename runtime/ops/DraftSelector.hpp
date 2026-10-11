@@ -28,6 +28,8 @@ struct DraftSelectorBuffers final {
   metal::MetalBuffer uniforms;
   metal::MetalBuffer proposedTokens;
   metal::MetalBuffer proposalProbabilities;
+  metal::MetalBuffer compactMapping{};
+  uint32_t compactVocabulary = 0, compactValidRows = 0;
 };
 
 // The draft's selector codebooks, which score the edge from a proposal

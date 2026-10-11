@@ -59,6 +59,12 @@ static_assert(sizeof(TargetSamplingParams) == 112,
 // One shard's share of a sampled row's softmax denominator: the largest
 // logit it admits, the sum of exp((logit - maximum) / temperature) over its
 // admitted tokens, and how many it admits.
+struct TopKCandidate {
+  float value;
+  uint32_t id;
+};
+static_assert(sizeof(TopKCandidate) == 8);
+
 struct TargetShardMass {
   float maximum;
   float sum;

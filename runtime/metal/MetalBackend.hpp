@@ -163,6 +163,10 @@ struct ComputeDispatch {
   DispatchSize threadgroups;
   DispatchSize threadsPerThreadgroup;
   IndirectGrid indirectThreadgroups = {};
+  // Host-only metadata, appended to preserve existing aggregate initializers.
+  std::string attribution{};
+  uint32_t logicalRows = 0;
+  bool commandBufferBoundaryAfter = false;
 };
 
 // Orders a command against another agent, such as the Neural Engine, after
@@ -185,6 +189,20 @@ struct EventStep {
 struct Command {
   std::span<const ComputeDispatch> dispatches;
   std::span<const EventStep> events;
+};
+
+struct DispatchTimestamp final {
+  std::string pipelineName, attribution;
+  uint32_t logicalRows = 0;
+  uint64_t beginTicks = 0, endTicks = 0;
+  bool followsEventWait = false;
+};
+struct CommandTimestampProfile final {
+  std::vector<DispatchTimestamp> dispatches;
+  double gpuSpanSeconds = 0;
+  bool encoderBoundarySamples = false;
+  bool valid = false;
+  std::string error;
 };
 
 struct CommandTiming {
@@ -372,6 +390,12 @@ public:
   // dispatches would compile. Validates them as submission does and throws
   // as it would, but encodes and commits nothing.
   void preparePipelines(std::span<const ComputeDispatch> dispatches);
+  // Called on the submitting thread after a successful commit, without a GPU wait.
+  // The observer must not throw, submit work or retain the borrowed command.
+  void setSubmissionObserver(std::function<void(const Command &)> observer);
+  // Diagnostic only: barriers around samples perturb execution. Resolved at the
+  // existing ticket wait, not by adding host waits. Returns why unavailable.
+  [[nodiscard]] std::string setTimestampObserver(std::function<void(const CommandTimestampProfile &)> observer);
 
   [[nodiscard]] MetalMemoryStats memoryStats() const noexcept;
   // Explicit safe-point refresh for memory admission/reclamation code. A

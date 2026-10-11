@@ -33,27 +33,6 @@ inline void gguf_store_sums(thread Acc &acc, uint splits, uint split, device coh
 // a multiple of the tile) skip their matmuls and stores, so a chunk costs its rows rounded up to RowsPerSG rather than
 // to the tile (a 33-row Q4_K 17408 x 5120 chunk: 1.7x faster on M5 and M3 than a 128-row tile). Full tiles run this
 // loop too; a branch-free copy for them is no faster (M3 Max, M5 Max).
-template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone>
-inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device bfloat *output,
-                    uint input_size, uint output_origin, uint rows, threadgroup half *stage, threadgroup half2 *tl,
-                    uint simd_lane, uint simd_group, uint out_stride, uint out_offset, device bfloat *aux = nullptr) {
-  const bool owns_rows = simd_group * RowsPerSG < rows;   // uniform per simdgroup
-  device bfloat *rows_input = input + ulong(simd_group) * RowsPerSG * input_size;
-  auto acc = staged_accumulator<RowsPerSG, TileN, KS>(rows_input, input_size, stage);
-  gguf_zero(acc);
-  gguf_staged_steps<F, RowsPerSG, TileN, KS, Simdgroups * 32>(rows_input, w0, w1, meta, input_size, output_origin, stage, tl,
-                                                              simd_group * 32 + simd_lane, 0, input_size / KS, 0, owns_rows,
-                                                              acc);
-  if (!owns_rows) return;
-#pragma unroll
-  for (ushort i = 0; i < acc.get_capacity(); ++i) {
-    if (!acc.is_valid_element(i)) continue;
-    auto index = acc.get_multidimensional_index(i);
-    const ulong o = (ulong(simd_group) * RowsPerSG + index[1]) * out_stride + out_offset + output_origin + index[0];
-    output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
-  }
-}
-
 // The two stages of a prefill tile.
 constant constexpr uint kPrefillStages = 2 * GGUF_TILE_COLUMNS * GGUF_PREFILL_STEP;
 

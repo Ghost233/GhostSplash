@@ -257,6 +257,9 @@ public:
   [[nodiscard]] uint64_t actualAllocatedBytes() const noexcept {
     return allocations_->bytes.load(std::memory_order_relaxed);
   }
+  [[nodiscard]] uint64_t draftAllocatedBytes() const noexcept {
+    return allocations_->draftBytes.load(std::memory_order_relaxed);
+  }
   // The buffer a state's write to the disk tier stages through; zero without
   // a tier.
   [[nodiscard]] uint64_t stagingBytes() const noexcept {

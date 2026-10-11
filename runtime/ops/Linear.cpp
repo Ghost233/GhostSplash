@@ -78,12 +78,15 @@ Projection Projection::leadingRows(const metal::MetalBackend &backend, uint32_t 
   const QuantizedSegment &segment = weights_.segments.front();
   const QuantFormat &format = segment.format();
   const uint64_t groups = inputSize / 32;
-  return Projection(rows, inputSize,
+  Projection result(rows, inputSize,
                     BlockWeights{{QuantizedSegment::planes(segment.formatId, rows, inputSize,
                                                            view(segment.plane0, groups * format.plane0_bytes),
                                                            view(segment.plane1, groups * format.plane1_bytes),
                                                            view(segment.meta,
                                                                 groups / format.meta_groups * format.meta_bytes))}});
+  result.ffn = ffn;
+  result.ffn.leadingView = true;
+  return result;
 }
 
 Projection Projection::leadingInputs(uint32_t inputs) const {
@@ -95,6 +98,8 @@ Projection Projection::leadingInputs(uint32_t inputs) const {
                     BlockWeights{{QuantizedSegment::planes(segment.formatId, outputSize, inputs, segment.plane0,
                                                            segment.plane1, segment.meta)}});
   result.planeInputs_ = inputSize;
+  result.ffn = ffn;
+  result.ffn.leadingView = true;
   return result;
 }
 
@@ -222,7 +227,13 @@ PreparedInput Linear::add(metal::CommandGraph &graph, LinearBuffers b,
   }
 #endif
   if (p.rotation) requireBytes(b.scratch.rotated, rotatedBytes(k, rows), "projection rotated input");
+  const size_t firstDispatch = graph.dispatches().size();
   addGguf(graph, b, p, selected, gate);
+  if (p.ffn.trace && p.ffn.role != FfnRole::None) {
+    const char *scope = w.phase == LinearPhase::Decode ? "target_ffn/decode" :
+        p.ffn.leadingView ? "target_ffn/prefill/ane_view" : "target_ffn/prefill/full";
+    graph.attributeFrom(firstDispatch, scope, w.rows);
+  }
   // A rotated projection's plan prepares its table, if any, from the rotated
   // rows, which no other plan reads.
   if (p.rotation) return {};
@@ -247,8 +258,10 @@ void Linear::addPrefillResidual(metal::CommandGraph &graph, metal::MetalBuffer i
 void Linear::addPrefillSwiGlu(metal::CommandGraph &graph, const SwiGluProjections &ffn,
                               const PrefillFfnBuffers &b, metal::MetalBuffer residual, metal::MetalBuffer output,
                               uint32_t rows) const {
-  addPrefill(graph, b.normalized, *ffn.gate, b.gateScratch, rows, b.scratch);
-  addPrefillUpWithGate(graph, b.normalized, *ffn.up, b.gateScratch, b.intermediate, rows, b.scratch);
+  if (!addFfnPrefillGateUp(graph, ffn, b, rows)) {
+    addPrefill(graph, b.normalized, *ffn.gate, b.gateScratch, rows, b.scratch);
+    addPrefillUpWithGate(graph, b.normalized, *ffn.up, b.gateScratch, b.intermediate, rows, b.scratch);
+  }
   addPrefillResidual(graph, b.intermediate, *ffn.down, residual, output, rows, b.scratch);
 }
 void Linear::addPrefillUpWithGate(metal::CommandGraph &graph, metal::MetalBuffer input, const Projection &up,

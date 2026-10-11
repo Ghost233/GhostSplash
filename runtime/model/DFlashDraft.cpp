@@ -101,9 +101,11 @@ DFlashDraftRing::DFlashDraftRing(
   if (actualAllocatedBytes_ < layout.ringBytes())
     throw std::logic_error("draft ring allocation is below declared bytes");
   tracker_->bytes.fetch_add(actualAllocatedBytes_, std::memory_order_relaxed);
+  tracker_->draftBytes.fetch_add(actualAllocatedBytes_, std::memory_order_relaxed);
 }
 
 DFlashDraftRing::~DFlashDraftRing() {
+  tracker_->draftBytes.fetch_sub(actualAllocatedBytes_, std::memory_order_relaxed);
   tracker_->bytes.fetch_sub(actualAllocatedBytes_, std::memory_order_relaxed);
 }
 
@@ -120,9 +122,11 @@ DFlashContextWindow::DFlashContextWindow(
   if (actualAllocatedBytes_ < layout.windowBytes())
     throw std::logic_error("context window allocation is below declared bytes");
   tracker_->bytes.fetch_add(actualAllocatedBytes_, std::memory_order_relaxed);
+  tracker_->draftBytes.fetch_add(actualAllocatedBytes_, std::memory_order_relaxed);
 }
 
 DFlashContextWindow::~DFlashContextWindow() {
+  tracker_->draftBytes.fetch_sub(actualAllocatedBytes_, std::memory_order_relaxed);
   tracker_->bytes.fetch_sub(actualAllocatedBytes_, std::memory_order_relaxed);
 }
 
@@ -136,8 +140,17 @@ DFlashDraft::DFlashDraft(const DFlashDraftWeights &weights,
 void DFlashDraft::addSelection(
     metal::CommandGraph &graph, const ops::DraftSelectorBuffers &buffers,
     std::span<const uint32_t> anchors,
-    std::span<const ops::SamplingPolicy> policies) const {
-  if (weights_.layout.kind == DraftKind::Standard)
+    std::span<const ops::SamplingPolicy> policies, uint32_t compactVocabulary,
+    metal::MetalBuffer compactMapping, uint32_t compactValidRows) const {
+  if (compactVocabulary && weights_.layout.kind == DraftKind::Standard) {
+    ops::DraftSelector(compactVocabulary).addUnary(graph, buffers, anchors, policies);
+  } else if (compactVocabulary) {
+    auto mapped = buffers;
+    mapped.compactMapping = std::move(compactMapping);
+    mapped.compactVocabulary = compactVocabulary;
+    mapped.compactValidRows = compactValidRows;
+    selector_.add(graph, mapped, {weights_.predecessorCodebook, weights_.successorCodebook}, anchors, policies);
+  } else if (weights_.layout.kind == DraftKind::Standard)
     selector_.addUnary(graph, buffers, anchors, policies);
   else
     selector_.add(graph, buffers,

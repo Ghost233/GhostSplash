@@ -54,6 +54,8 @@ using splash::metal::MetalBackend;
 using splash::metal::MetalBuffer;
 using namespace splash::ops;
 
+bool fastMode = false;
+bool correctnessOnly = false;
 constexpr uint32_t kRows = SPLASH_TARGET_VERIFY_ROWS;
 constexpr uint32_t kPositions = SPLASH_DRAFT_PROPOSAL_TOKENS;
 constexpr uint32_t kLanes = SPLASH_MAXIMUM_BATCH_WIDTH;
@@ -152,7 +154,8 @@ Batch makeBatch(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes) {
               allocate(backend, proposals.candidatesBytes),
               allocate(backend, proposals.proposalProbabilitiesBytes),
               allocate(backend, space.vocabularyRangesBytes),
-              allocate(backend, space.vocabularyArrivalsBytes)},
+              allocate(backend, space.vocabularyArrivalsBytes),
+              fastMode ? allocate(backend, Sampling::fastWorkspaceBytes(rows)) : MetalBuffer{}},
           vocabulary, rows};
 }
 
@@ -532,7 +535,7 @@ const std::array<SamplingPolicy, kLanes> kMixedPolicies{
 void penalties(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes,
                bool argmaxPath, uint32_t &changedSelections) {
   Random random(0x70656e + uint64_t{vocabulary} * 8 + lanes * 2 + argmaxPath);
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const MetalBuffer table = penaltyTable(backend, vocabulary);
   for (uint32_t row = 0; row < batch.rows; ++row) {
@@ -661,7 +664,7 @@ void speculativeExactness(MetalBackend &backend, uint32_t samplingMask) {
   const std::array<SamplingPenalties, lanes> penalties{
       SamplingPenalties{1.2F, 2.0F, 2.0F}, SamplingPenalties{1.0F, 1.5F, 0.0F}};
   Random random(0x73706563 + samplingMask);
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const MetalBuffer table = penaltyTable(backend, vocabulary);
   AcceptanceBuffers acceptance{
@@ -797,7 +800,7 @@ void extremes(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 1003;
   constexpr uint32_t kSaturated = 50;
   constexpr uint32_t kTopK = 20;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const MetalBuffer table = allocate(backend, uint64_t{kLanes} * vocabulary * 4);
   const std::span<uint32_t> words = tableRow(table, vocabulary, 2);
@@ -885,7 +888,7 @@ void extremes(MetalBackend &backend) {
 // eight.
 void bufferExtents(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 1003, lanes = 3;
-  const Sampling sampling(vocabulary);
+  const Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const MetalBuffer table = penaltyTable(backend, vocabulary);
   const uint64_t logitsRow = uint64_t{vocabulary} * 4, maskRow = uint64_t{batch.maskWords()} * 4;
@@ -1025,7 +1028,7 @@ void bufferExtents(MetalBackend &backend) {
 // encodes nothing.
 void invalidPenalties(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 1003;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const MetalBuffer table = penaltyTable(backend, vocabulary);
   const SamplingPolicy penalized{1, 0.0F, 1.0F, false, false,
@@ -1117,7 +1120,7 @@ void sampledRows(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes,
                  bool minP) {
   Random random(0x77696465 + uint64_t{vocabulary} * 8 + lanes +
                 (minP ? 64 : 0));
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const SamplingPolicy narrow{20, 0.9F, 0.95F, false};
   const SamplingPolicy disabled{0, 1.0F, 0.95F, false};
@@ -1243,7 +1246,7 @@ void sampledRows(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes,
 // are poisoned, so a missing argmax or draw cannot pass by reading old data.
 void mixedVerify(MetalBackend &backend, uint32_t lanes, uint32_t samplingMask) {
   constexpr uint32_t vocabulary = 1003;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   batch.poison();
   Random random(9831 + lanes);
@@ -1307,7 +1310,7 @@ void mixedVerify(MetalBackend &backend, uint32_t lanes, uint32_t samplingMask) {
 void unconstrainedRowsIgnoreMasks(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 1003;
   constexpr uint32_t lanes = 2;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const std::array<SamplingPolicy, lanes> policies{
       SamplingPolicy{},
       SamplingPolicy{
@@ -1361,7 +1364,7 @@ void unconstrainedRowsIgnoreMasks(MetalBackend &backend) {
 // their values, which decide the argmax among equal integer parts: reading
 // them rounded would pick the lowest id instead.
 void targetTop1(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes) {
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const uint32_t words = batch.maskWords();
   for (uint32_t row = 0; row < batch.rows; ++row)
@@ -1458,7 +1461,7 @@ void targetTop1(MetalBackend &backend, uint32_t vocabulary, uint32_t lanes) {
 // them selects one; the other lanes take the row's best remaining token.
 void excludedStopTokens(MetalBackend &backend, uint32_t vocabulary) {
   const auto stops = shardEdgeStopTokens(vocabulary);
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, kLanes);
   const auto best = [&](uint32_t row) {
     return 5 + row * 7919 % (vocabulary - 8);
@@ -1584,7 +1587,7 @@ void excludedStopTokens(MetalBackend &backend, uint32_t vocabulary) {
 // the first one cut has none.
 void ties(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 248320;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const MetalBuffer table = allocate(backend, uint64_t{kLanes} * vocabulary * 4);
   const std::array<uint32_t, 1> tableRows{1};
@@ -1663,7 +1666,7 @@ void ties(MetalBackend &backend) {
 // from both sides: one has its probability, the other none.
 void minPCuts(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 4096;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   struct Class final {
     uint32_t first;
@@ -1741,7 +1744,7 @@ void speculativeWholeVocabulary(MetalBackend &backend) {
   constexpr uint32_t lanes = 4;
   constexpr std::array<uint32_t, lanes> kWrongAt{2, kPositions, 4, 6};
   Random random(0x77686f6c);
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, lanes);
   const std::vector<SamplingPolicy> policies{
       {0, 1.0F, 1.0F, false},
@@ -1848,7 +1851,7 @@ void speculativeWholeVocabulary(MetalBackend &backend) {
 // as the next anchor.
 void overProposedResidual(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 4096;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const SamplingPolicy policy{0, 1.0F, 1.0F, false};
   AcceptanceBuffers acceptance{
@@ -1927,7 +1930,7 @@ void overProposedResidual(MetalBackend &backend) {
 // of the temperature alone once took thousands and stalled the batch.
 void extremeSearches(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 248320;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const MetalBuffer table = allocate(backend, uint64_t{kLanes} * vocabulary * 4);
   const std::array<uint32_t, 1> tableRows{2};
@@ -1951,7 +1954,7 @@ void extremeSearches(MetalBackend &backend) {
   // The fastest of a few runs, with the logits the penalties rewrite restored.
   const auto run = [&](const SamplingPolicy &policy) {
     double fastest = std::numeric_limits<double>::infinity();
-    for (uint32_t attempt = 0; attempt < 3; ++attempt) {
+    for (uint32_t attempt = 0; attempt < (correctnessOnly ? 1U : 3U); ++attempt) {
       std::copy(original.begin(), original.end(), batch.logits());
       batch.poison();
       CommandGraph verify;
@@ -1962,9 +1965,10 @@ void extremeSearches(MetalBackend &backend) {
     }
     return fastest;
   };
-  const double ordinary = run({1000, 1.0F, 1.0F, false});
+  const double ordinary = correctnessOnly ? 0.0 : run({1000, 1.0F, 1.0F, false});
   // The default request and Qwen's recommended non-thinking sampling, timed
   // beside it.
+  if (!correctnessOnly)
   for (const SamplingPolicy &policy : {SamplingPolicy{20, 1.0F, 0.95F, false},
                                        SamplingPolicy{20, 0.7F, 0.8F, false}})
     std::cout << "sampling search top_k 20 temperature " << policy.temperature
@@ -1984,14 +1988,14 @@ void extremeSearches(MetalBackend &backend) {
         Case{"top_k in a saturated tail at temperature 1e-5",
              {kTail, 1e-5F, 1.0F, false, false, {1e38F, 0.0F, 0.0F}}}}) {
     const double seconds = run(c.policy);
-    std::cout << "extreme search " << c.name << ": " << seconds * 1e3
+    if (!correctnessOnly) std::cout << "extreme search " << c.name << ": " << seconds * 1e3
               << " ms, ordinary " << ordinary * 1e3 << " ms\n";
     for (uint32_t row = 0; row < kRows; ++row)
       requireSampledRow(batch, row,
                         referenceDistribution(batch.row(row), vocabulary,
                                               c.policy),
                         std::string(c.name) + " row " + std::to_string(row));
-    require(seconds <= 8.0 * ordinary,
+    if (!correctnessOnly) require(seconds <= 8.0 * ordinary,
             std::string(c.name) + ": the search took " +
                 std::to_string(seconds / ordinary) + " times an ordinary one");
   }
@@ -2005,7 +2009,7 @@ void extremeSearches(MetalBackend &backend) {
 void nonFiniteRowsSelectTheSentinel(MetalBackend &backend) {
   constexpr uint32_t vocabulary = 1003;
   constexpr uint32_t kSentinel = 0xFFFFFFFFU;
-  Sampling sampling(vocabulary);
+  Sampling sampling(vocabulary, fastMode);
   const Batch batch = makeBatch(backend, vocabulary, 1);
   const AcceptanceBuffers acceptance{
       allocate(backend, kPositions * sizeof(uint32_t)),
@@ -2179,13 +2183,51 @@ void penaltyLifecycle() {
   }
 }
 
+
+void fastTopKCoverage(MetalBackend &backend) {
+  for (uint32_t vocabulary : {1003U, 248320U}) {
+    Sampling sampling(vocabulary, true);
+    Batch batch = makeBatch(backend, vocabulary, 1);
+    Random random(4731 + vocabulary);
+    fillShaped(batch.row(0), vocabulary, Shape::Graded, random);
+    for (uint32_t word = 0; word < (kRows + 1) * batch.maskWords(); ++word)
+      batch.masks()[word] = 0xB6DB6DB6U;
+    for (uint32_t k = 1; k <= 32; ++k) {
+      const SamplingPolicy policy{k, 0.8F, k % 2 ? 0.95F : 1.0F, k % 3 == 0, true};
+      const Distribution reference = referenceDistribution(batch.row(0), vocabulary, policy,
+          {policy.constrained ? batch.masks() : nullptr, true});
+      for (float uniform : {0.0F, 0.372F, 0.999F}) {
+        batch.uniforms()[SPLASH_UNIFORM_INITIAL] = uniform;
+        batch.poison();
+        CommandGraph graph;
+        sampling.addInitial(graph, {&policy, 1}, batch.buffers, 0, kStopTokens[0], kStopTokens[1], {});
+        require(graph.dispatches()[0].pipelineName == "decode_sample_topk32_sharded",
+                "eligible top-k must use its fast path");
+        static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
+        requireInitialDraw(batch, 0, reference, "fast top-k " + std::to_string(k));
+      }
+    }
+    require(sampling.fastSelections() == 96, "all top-k values 1..32 were exercised");
+    SamplingPolicy unsupported{32, 0.8F, 0.95F, false, false, {}, 0.05F};
+    CommandGraph fallback;
+    sampling.addInitial(fallback, {&unsupported, 1}, batch.buffers, 0, kStopTokens[0], kStopTokens[1], {});
+    require(fallback.dispatches()[0].pipelineName == "decode_sample_mass_sharded" &&
+            sampling.fastFallbacks() == 1, "min-p must fall back to the general sampler");
+  }
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
   std::string stage = "setup";
   try {
-    if (argc != 2)
-      throw std::invalid_argument("usage: target-sampling METALLIB");
+    if (argc < 2 || argc > 4)
+      throw std::invalid_argument("usage: target-sampling METALLIB [--fast-topk] [--correctness-only]");
+    for (int i = 2; i < argc; ++i) {
+      if (std::string_view(argv[i]) == "--fast-topk") fastMode = true;
+      else if (std::string_view(argv[i]) == "--correctness-only") correctnessOnly = true;
+      else throw std::invalid_argument("unknown sampling test option");
+    }
     stage = "penalty words";
     penaltyWords();
     stage = "penalty lifecycle";
@@ -2202,6 +2244,7 @@ int main(int argc, char **argv) {
               std::to_string(samplingMask);
       speculativeExactness(backend, samplingMask);
     }
+    if (fastMode) { stage = "fast top-k values 1..32"; fastTopKCoverage(backend); }
     stage = "non-finite rows";
     nonFiniteRowsSelectTheSentinel(backend);
     stage = "ties";

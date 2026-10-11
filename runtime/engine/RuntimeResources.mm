@@ -273,7 +273,11 @@ RuntimeResources::RuntimeResources(
 std::unique_ptr<RuntimeResources>
 RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                          uint32_t requestedContextTokens) {
+  const auto startupStarted = AwakeClock::now();
   RuntimeResourcesConfig config = inputConfig;
+  if (config.optionalFeatures.compactDraftHead && config.optionalFeatures.compactRanking.empty())
+    config.optionalFeatures.compactRanking = config.modelRoot / "head-ranked.splash";
+  RuntimeStartupTimings startupTimings;
   if (config.model.draft.kind == model::DraftKind::Standard) {
     const uint32_t maximum = requestedContextTokens ? requestedContextTokens : config.model.capabilities.maximumContextTokens;
     config.model.draft.contextCapacity = (maximum + 127) / 128 * 128;
@@ -304,6 +308,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                                 error.what());
   }
 
+  backend->setSubmissionObserver(config.submissionObserver);
   const DeviceCapabilities &device = backend->capabilities();
   if (auto error = device.validationError()) {
     throw RuntimeResourcesError(RuntimeResourceStage::CapabilityValidation,
@@ -366,7 +371,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     kvLayout.format = config.kvFormat;
     uint64_t fixedBytes = 0;
     for (const uint64_t bytes :
-         {model::modelWeightBytes(config.modelRoot, config.model),
+         {model::modelWeightBytes(config.modelRoot, config.model, config.ffnLoading),
           model::kPipelineReserveBytes, model::kRuntimeOverheadReserveBytes,
           stateStagingBytes}) {
       if (!checkedAdd(fixedBytes, bytes, fixedBytes))
@@ -403,7 +408,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   model::LoadedModel loaded;
   try {
     const auto started = AwakeClock::now();
-    loaded = model::loadModel(*backend, config.modelRoot, config.model);
+    loaded = model::loadModel(*backend, config.modelRoot, config.model, config.ffnLoading);
     requireLoadedModel(loaded);
     const std::chrono::duration<double> loading = AwakeClock::now() - started;
     logLine("Weights loaded in ", std::fixed, std::setprecision(2),
@@ -478,10 +483,13 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
       memoryGovernor->setPressure(config.memoryPressure());
     logLine("Kernel policy for GPU family ", device.appleGpuFamily,
             " with ", device.gpuCoreCount, " cores.");
+    const auto aneStarted = AwakeClock::now();
     AneFfnStart aneFfn =
         startAneFfn(aneFfnModel(*backend, loaded, operators, config.kvFormat, config.buildId, config.cancelled),
                     config.aneFfn,
                     requestedContextTokens, planMemory, config.cancelled);
+    startupTimings.anePrepareSeconds = std::chrono::duration<double>(AwakeClock::now() - aneStarted).count();
+    const auto storageStarted = AwakeClock::now();
     if (aneFfn.plan)
       memoryPlan = std::move(*aneFfn.plan);
     const EngineMemoryBreakdown &budget = memoryPlan.breakdown();
@@ -555,7 +563,11 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
         std::move(memoryGovernor), std::move(kvPages), std::move(stateStorage),
         std::move(kvTier), std::move(kvPool), std::move(cache),
         std::move(aneFfn.split), std::move(aneFfn.outcome), hostAvailableAtStart));
+    result->optionalFeatures_ = config.optionalFeatures;
     result->adoptPersistentCache();
+    startupTimings.storageSeconds = std::chrono::duration<double>(AwakeClock::now() - storageStarted).count();
+    startupTimings.totalSeconds = std::chrono::duration<double>(AwakeClock::now() - startupStarted).count();
+    result->startupTimings_ = startupTimings;
     return result;
   } catch (const metal::MetalAllocationError &error) {
     throw RuntimeResourcesError(RuntimeResourceStage::StorageAllocation,
@@ -668,6 +680,7 @@ model::RuntimeContext RuntimeResources::modelContext() noexcept {
       *stateStorage_,
       operators_,
       aneFfn_.get(),
+      optionalFeatures_,
   };
 }
 
@@ -686,7 +699,7 @@ AneFfnSnapshot RuntimeResources::aneFfnSnapshot() const {
 }
 
 ActualMemoryReport RuntimeResources::actualMemoryReport(
-    const model::ModelMemoryActual &modelMemory) const {
+    const model::ModelMemoryActual &modelMemory, bool refresh) const {
   ActualMemoryReport report;
   report.targetWeightsBytes = model_.targetActualAllocatedBytes();
   report.draftWeightsBytes = model_.draft.actualAllocatedBytes;
@@ -702,7 +715,7 @@ ActualMemoryReport RuntimeResources::actualMemoryReport(
   report.aneFfnBytes = aneFfn_ ? aneFfn_->allocatedBytes() : 0;
   // Optional warmup may end with a rolled-back allocation and no subsequent
   // command. Refresh the current counts after that rollback; peaks stay intact.
-  metal::MetalMemoryStats memory = backend_->refreshMemoryStats();
+  metal::MetalMemoryStats memory = refresh ? backend_->refreshMemoryStats() : backend_->memoryStats();
   report.backendAllocatedBytes = memory.allocatedBytes;
   report.deviceCurrentAllocatedBytes = memory.deviceCurrentAllocatedBytes;
   report.devicePeakAllocatedBytes = memory.devicePeakAllocatedBytes;

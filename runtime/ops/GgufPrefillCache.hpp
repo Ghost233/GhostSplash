@@ -10,7 +10,7 @@ namespace splash::ops {
 // FP32 coefficients, in row-major [output][input] order.
 [[nodiscard]] uint64_t ggufPrefillCacheBytes(const QuantizedSegment &segment);
 void writeGgufPrefillCache(metal::MetalBackend &backend, const QuantizedSegment &segment,
-                           const metal::MetalBuffer &destination);
+                           const metal::MetalBuffer &destination, bool trace = false);
 
 // M64N32 is an explicit candidate with the same accumulator element count
 // per simdgroup as M32N64; it currently supports only the 64-input step.

@@ -12,6 +12,16 @@ struct QuantFormat;
 
 namespace splash::ops {
 
+// Explicit target FFN candidates; other projections keep the baseline.
+enum class FfnPrefillVariant : uint8_t { Baseline, M64N32, FusedM64N32, Q4KGroupScale };
+enum class FfnRole : uint8_t { None, Gate, Up, Down };
+struct FfnPolicy final {
+  FfnRole role = FfnRole::None;
+  FfnPrefillVariant variant = FfnPrefillVariant::Baseline;
+  bool trace = false;
+  bool leadingView = false;
+};
+
 struct ProjectionShape final {
   uint32_t outputSize = 0;
   uint32_t inputSize = 0;
@@ -86,6 +96,7 @@ struct BlockWeights final {
 // holds no segments, which a reader replaces.
 class Projection final {
 public:
+  FfnPolicy ffn{};
   Projection() = default;
   Projection(uint32_t output, uint32_t input, BlockWeights weights)
       : outputSize(output), inputSize(input), weights_(std::move(weights)) {

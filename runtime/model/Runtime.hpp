@@ -60,6 +60,7 @@ public:
 
   [[nodiscard]] ModelTelemetry
   telemetry() const noexcept override;
+  [[nodiscard]] OptionalFeatureReport optionalFeatureReport() const;
 
 private:
   // The state lane of a resident request; the storage checks that its

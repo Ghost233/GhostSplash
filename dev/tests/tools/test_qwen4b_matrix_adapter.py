@@ -289,6 +289,56 @@ class AdapterTests(unittest.TestCase):
                     )
                 native.assert_not_called()
 
+    def test_explicit_long_ffn_correctness_allows_only_pinned_lengths(self):
+        from dev.benchmarks import qwen4b_ffn_cache as experiment
+
+        payload = self.payload()
+        payload["ffn_long_correctness"] = True
+        p = payload["job"]["parameters"]
+        p.update(
+            input_tokens=32768,
+            output_tokens=512,
+            concurrency=1,
+            ffn_weight_mode="quantized",
+        )
+        payload["prompts"] = payload["prompts"][:1]
+        prompt = payload["prompts"][0]
+        prompt["token_ids"] = [7] * 32768
+        prompt["input_sha256"] = matrix.digest(prompt["token_ids"])
+        raw = self.native_response(payload)
+        raw["actual_batch_widths"] = [1]
+        raw["actual_ffn_weight_mode"] = "quantized"
+        report = {key: 0 for key in experiment.CATEGORIES}
+        report.update(
+            target_source_weights_bytes=1024,
+            backend_current_bytes=1024,
+            backend_peak_bytes=2048,
+            ffn_cached_matrices=0,
+        )
+        raw["memory_report"] = report
+        result = SimpleNamespace(returncode=0, stdout=json.dumps(raw), stderr="")
+        codec = mock.Mock()
+        codec.decode.return_value = "42"
+        with (
+            mock.patch.object(adapter.subprocess, "run", return_value=result) as native,
+            mock.patch.object(adapter, "tokenizer", return_value=codec),
+        ):
+            observed = adapter.run_batch(
+                payload, self.root, self.variant_root, self.standard, self.off
+            )
+        self.assertTrue(observed["facts_pass"])
+        self.assertEqual(
+            json.loads(native.call_args.kwargs["input"])["mode"], "correctness"
+        )
+        for tokens in (32, 511, 2047, 2049):
+            p["output_tokens"] = tokens
+            with mock.patch.object(adapter.subprocess, "run") as native:
+                with self.assertRaises(matrix.MatrixError):
+                    adapter.run_batch(
+                        payload, self.root, self.variant_root, self.standard, self.off
+                    )
+                native.assert_not_called()
+
     def test_mock_native_mode_and_paths_are_forwarded_and_decode_keeps_specials(self):
         payload = self.payload()
         response = self.native_response(payload)

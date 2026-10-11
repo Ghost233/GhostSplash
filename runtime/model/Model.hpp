@@ -408,6 +408,8 @@ static_assert(ExecutionLimits::targetVerifyRows ==
 // observes one byte total through ModelMemoryActual::stateActualAllocatedBytes.
 struct StateAllocationTracker final {
   std::atomic<uint64_t> bytes{0};
+  // Subset of bytes: draft rings and captured context windows.
+  std::atomic<uint64_t> draftBytes{0};
 };
 
 // Startup sizing and observability are part of the concrete model runtime,

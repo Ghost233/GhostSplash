@@ -23,6 +23,7 @@
 #include <new>
 #include <sstream>
 #include <string_view>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 
@@ -147,7 +148,7 @@ constexpr NSUInteger kMaximumCommandBuffers = 512;
 
 // Refuses the event steps of a command of `dispatches` dispatches that its
 // submission cannot encode.
-void checkEvents(std::span<const EventStep> events, size_t dispatches) {
+void checkEvents(std::span<const EventStep> events, std::span<const ComputeDispatch> dispatches) {
     size_t before = 0;
     NSUInteger signals = 0;
     for (const EventStep &step : events) {
@@ -156,7 +157,7 @@ void checkEvents(std::span<const EventStep> events, size_t dispatches) {
                 "event step needs an event and a nonzero value");
         if (step.before < before)
             throw MetalBackendError("event steps are out of dispatch order");
-        if (step.before > dispatches)
+        if (step.before > dispatches.size())
             throw MetalBackendError(
                 "event step follows more dispatches than its command has");
         before = step.before;
@@ -165,6 +166,11 @@ void checkEvents(std::span<const EventStep> events, size_t dispatches) {
     if (signals >= kMaximumCommandBuffers)
         throw MetalBackendError("Metal command signals more events than its "
                                 "queue holds command buffers");
+    const size_t boundaries = std::ranges::count_if(dispatches, [](const auto &dispatch) {
+        return dispatch.commandBufferBoundaryAfter;
+    });
+    if (signals + boundaries >= kMaximumCommandBuffers)
+        throw MetalBackendError("Metal command has more boundaries than its queue holds command buffers");
 }
 
 double awakeSeconds() noexcept {
@@ -334,13 +340,16 @@ struct BackendAsyncState {
     void commitSubmission(uint64_t sequence,
                           const std::vector<id<MTLCommandBuffer>> &leading,
                           id<MTLCommandBuffer> command,
-                          std::function<void(id<MTLCommandBuffer>)> completion) {
+                          std::function<void(id<MTLCommandBuffer>)> completion,
+                          bool commitBuffers = true) {
         std::lock_guard lock(gateMutex);
         activeCommand = command;
         activeCompletion = std::move(completion);
         commandWatchdog.start(sequence, awakeSeconds());
-        for (id<MTLCommandBuffer> earlier : leading) [earlier commit];
-        [command commit];
+        if (commitBuffers) {
+            for (id<MTLCommandBuffer> earlier : leading) [earlier commit];
+            [command commit];
+        }
     }
 
     void releaseSubmission(uint64_t sequence) noexcept {
@@ -420,6 +429,7 @@ struct CommandTicket::State {
     std::shared_ptr<BackendAsyncState> backend;
     std::vector<std::shared_ptr<MetalAllocation>> retainedAllocations;
     CommandCompletion completion;
+    std::function<void(double)> resolveTimestampProfile;
     mutable std::mutex mutex;
     std::condition_variable condition;
     uint64_t sequence = 0;
@@ -460,6 +470,7 @@ struct CommandTicket::State {
             if (failed.error) {
                 message << ": " << errorDescription(failed.error);
             }
+            if (failed.label) message << " [" << failed.label.UTF8String << "]";
             error = message.str();
         }
 
@@ -580,6 +591,10 @@ struct MetalBackend::Impl {
     };
 
     std::function<void()> operationGuard;
+    std::function<void(const Command &)> submissionObserver;
+    std::function<void(const CommandTimestampProfile &)> timestampObserver;
+    __strong id<MTLCounterSet> timestampSet = nil;
+    bool timestampEncoderBoundary = false;
 
 #ifdef SPLASH_BACKEND_INSTRUMENTATION
     bool dispatchProfiling = false;
@@ -825,6 +840,55 @@ struct MetalBackend::Impl {
             // The buffers before `command`, each ended by an event signal.
             std::vector<id<MTLCommandBuffer>> leading;
             id<MTLComputeCommandEncoder> encoder = nil;
+            size_t bufferFirst = 0;
+            const bool deferWaits = std::ranges::any_of(dispatches, [](const auto &item) {
+                return item.source->commandBufferBoundaryAfter;
+            }) && std::ranges::any_of(events, [](const auto &step) { return step.kind == EventStep::Kind::Wait; });
+            std::vector<std::vector<EventStep>> waits;
+            id<MTLCounterSampleBuffer> samples = nil;
+            if (timestampObserver && !dispatches.empty()) {
+                MTLCounterSampleBufferDescriptor *descriptor = [MTLCounterSampleBufferDescriptor new];
+                descriptor.counterSet = timestampSet;
+                descriptor.storageMode = MTLStorageModeShared;
+                descriptor.sampleCount = dispatches.size() * 2;
+                descriptor.label = @"diagnostic FFN timestamp samples";
+                NSError *error = nil;
+                samples = [device newCounterSampleBufferWithDescriptor:descriptor error:&error];
+                if (!samples) failBeforeCommit("timestamp buffer allocation failed: " + errorDescription(error));
+                std::vector<DispatchTimestamp> metadata;
+                for (size_t i=0; i<dispatches.size(); ++i) {
+                    const auto &source = *dispatches[i].source;
+                    const bool waited = std::ranges::any_of(events, [i](const auto &step) {
+                        return step.before == i && step.kind == EventStep::Kind::Wait;
+                    });
+                    metadata.push_back({source.pipelineName, source.attribution, source.logicalRows, 0, 0, waited});
+                }
+                const auto observer = timestampObserver;
+                ticketState->resolveTimestampProfile = [samples, metadata=std::move(metadata), observer, encoderBoundary=timestampEncoderBoundary](double seconds) mutable {
+                    @autoreleasepool {
+                        CommandTimestampProfile profile;
+                        profile.gpuSpanSeconds = seconds;
+                        profile.encoderBoundarySamples = encoderBoundary;
+                        NSData *data = [samples resolveCounterRange:NSMakeRange(0, metadata.size()*2)];
+                        if (!data || data.length < metadata.size()*2*sizeof(MTLCounterResultTimestamp)) {
+                            profile.error = "timestamp resolution failed";
+                            observer(profile); return;
+                        }
+                        const auto *values = static_cast<const MTLCounterResultTimestamp *>(data.bytes);
+                        profile.valid = true;
+                        for (size_t i=0; i<metadata.size(); ++i) {
+                            metadata[i].beginTicks = values[2*i].timestamp;
+                            metadata[i].endTicks = values[2*i+1].timestamp;
+                            if (metadata[i].beginTicks == MTLCounterErrorValue || metadata[i].endTicks == MTLCounterErrorValue ||
+                                metadata[i].endTicks < metadata[i].beginTicks ||
+                                (i && metadata[i].beginTicks < metadata[i-1].endTicks)) profile.valid = false;
+                        }
+                        if (!profile.valid) profile.error = "unavailable or nonmonotonic GPU timestamp samples";
+                        profile.dispatches = std::move(metadata);
+                        observer(profile);
+                    }
+                };
+            }
             // Encodes the event steps that follow the first `encoded`
             // dispatches.
             auto step = events.begin();
@@ -837,6 +901,10 @@ struct MetalBackend::Impl {
                     id<MTLSharedEvent> event =
                         (__bridge id<MTLSharedEvent>)step->event.nativeHandle();
                     if (step->kind == EventStep::Kind::Wait) {
+                        if (deferWaits) {
+                            waits.resize(leading.size() + 1);
+                            waits.back().push_back(*step);
+                        }
                         [command encodeWaitForEvent:event value:step->value];
                         continue;
                     }
@@ -854,6 +922,7 @@ struct MetalBackend::Impl {
                     }];
                     leading.push_back(command);
                     command = [queue commandBuffer];
+                    bufferFirst = encoded;
                     if (!command) {
                         failBeforeCommit("unable to create Metal command buffer");
                     }
@@ -867,8 +936,17 @@ struct MetalBackend::Impl {
                 encodeSteps(index);
                 const PreparedDispatch &item = dispatches[index];
                 const ComputeDispatch &dispatch = *item.source;
+                command.label = [NSString stringWithFormat:@"dispatches %zu..%zu, last %s grid %llu,%llu,%llu",
+                    bufferFirst, index, dispatch.pipelineName.c_str(), dispatch.threadgroups.x,
+                    dispatch.threadgroups.y, dispatch.threadgroups.z];
                 if (!encoder) {
-                    encoder = [command computeCommandEncoder];
+                    if (samples && timestampEncoderBoundary) {
+                        MTLComputePassDescriptor *pass = [MTLComputePassDescriptor computePassDescriptor];
+                        pass.sampleBufferAttachments[0].sampleBuffer = samples;
+                        pass.sampleBufferAttachments[0].startOfEncoderSampleIndex = index*2;
+                        pass.sampleBufferAttachments[0].endOfEncoderSampleIndex = index*2+1;
+                        encoder = [command computeCommandEncoderWithDescriptor:pass];
+                    } else encoder = [command computeCommandEncoder];
                     if (!encoder) {
                         failBeforeCommit("unable to create Metal compute encoder");
                     }
@@ -894,6 +972,7 @@ struct MetalBackend::Impl {
                                length:binding.sizeBytes
                               atIndex:binding.index];
                 }
+                if (samples && !timestampEncoderBoundary) [encoder sampleCountersInBuffer:samples atSampleIndex:index*2 withBarrier:YES];
                 const IndirectGrid &grid = dispatch.indirectThreadgroups;
                 if (grid.buffer) {
                     const MetalBuffer::Impl &arguments = *grid.buffer.impl_;
@@ -906,6 +985,15 @@ struct MetalBackend::Impl {
                 } else {
                     [encoder dispatchThreadgroups:item.groups
                              threadsPerThreadgroup:item.threads];
+                }
+                if (samples && !timestampEncoderBoundary) [encoder sampleCountersInBuffer:samples atSampleIndex:index*2+1 withBarrier:YES];
+                if (samples && timestampEncoderBoundary) { [encoder endEncoding]; encoder = nil; }
+                if (dispatch.commandBufferBoundaryAfter) {
+                    if (encoder) { [encoder endEncoding]; encoder = nil; }
+                    leading.push_back(command);
+                    command = [queue commandBuffer];
+                    bufferFirst = index + 1;
+                    if (!command) failBeforeCommit("unable to create Metal command buffer");
                 }
             }
             encodeSteps(dispatches.size());
@@ -920,13 +1008,70 @@ struct MetalBackend::Impl {
             [command addCompletedHandler:^(id<MTLCommandBuffer> completed) {
                 ticketState->finishCommand(completed);
             }];
+            // Explicitly sliced graphs may reach their foreign-agent wait
+            // much later. Do not spend the driver's wait deadline in the queue.
+            std::vector<id<MTLCommandBuffer>> commands;
+            auto abortedAfter = std::make_shared<std::atomic<size_t>>(std::numeric_limits<size_t>::max());
+            const auto abandoned = [weakTicket = std::weak_ptr(ticketState)] {
+                if (auto ticket = weakTicket.lock()) {
+                    CommandTiming result;
+                    result.wallSeconds = std::chrono::duration<double>(AwakeClock::now() - ticket->wallStart).count();
+                    ticket->finish(result, "deferred Metal submission was abandoned");
+                }
+            };
+            if (deferWaits) {
+                commands = leading;
+                commands.push_back(command);
+                waits.resize(commands.size());
+                // Every committed prefix independently retains wrapped CPU
+                // storage, even if cancellation discards the uncommitted tail.
+                const auto resources = std::make_shared<decltype(ticketState->retainedAllocations)>(ticketState->retainedAllocations);
+                for (size_t index = 0; index < commands.size(); ++index) {
+                    const auto weakTicket = std::weak_ptr(ticketState);
+                    [commands[index] addCompletedHandler:^(id<MTLCommandBuffer> ended) {
+                        (void)resources;
+                        if (ended.status == MTLCommandBufferStatusError) {
+                            if (auto ticket = weakTicket.lock()) ticket->finishCommand(ended);
+                        } else if (abortedAfter->load(std::memory_order_acquire) == index) abandoned();
+                    }];
+                }
+            }
             residency->use();
             asyncState->commitSubmission(ticketState->sequence, leading, command,
                 [weakTicket = std::weak_ptr(ticketState)](
                     id<MTLCommandBuffer> completed) {
                     if (auto ticket = weakTicket.lock())
                         ticket->finishCommand(completed);
+                }, !deferWaits);
+            if (deferWaits) {
+                const auto state = asyncState;
+                const uint64_t sequence = ticketState->sequence;
+                dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                    @autoreleasepool {
+                        size_t committed = 0;
+                        for (size_t index = 0; index < commands.size(); ++index) {
+                            for (const auto &step : waits[index]) {
+                                id<MTLSharedEvent> event = (__bridge id<MTLSharedEvent>)step.event.nativeHandle();
+                                while (state->healthy.load(std::memory_order_acquire) && event.signaledValue < step.value)
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            }
+                            std::lock_guard lock(state->gateMutex);
+                            if (!state->healthy.load(std::memory_order_acquire) || state->activeSequence != sequence) break;
+                            [commands[index] commit];
+                            ++committed;
+                        }
+                        if (committed != commands.size()) {
+                            if (!committed) abandoned();
+                            else {
+                                abortedAfter->store(committed - 1, std::memory_order_release);
+                                const auto status = commands[committed - 1].status;
+                                if (status == MTLCommandBufferStatusCompleted || status == MTLCommandBufferStatusError)
+                                    abandoned();
+                            }
+                        }
+                    }
                 });
+            }
         }
         return CommandTicket(std::move(ticketState));
     }
@@ -1072,6 +1217,9 @@ CommandTiming CommandTicket::wait() {
         timing = state_->timing;
         error = state_->error;
     }
+    std::function<void(double)> resolve;
+    { std::lock_guard lock(state_->mutex); resolve = std::move(state_->resolveTimestampProfile); }
+    if (error.empty() && resolve) resolve(timing.gpuSeconds);
     state_->release();
     if (!error.empty()) throw MetalBackendError(error);
     return timing;
@@ -1322,11 +1470,32 @@ CommandTicket MetalBackend::submitCommandAsync(const Command &command,
         return impl_->submitProfiled(command.dispatches, std::move(completion));
     }
 #endif
-    checkEvents(command.events, command.dispatches.size());
+    checkEvents(command.events, command.dispatches);
     Impl::PreparedCommand prepared = impl_->prepare(command.dispatches);
-    return impl_->commit(prepared.dispatches, command.events,
+    CommandTicket ticket = impl_->commit(prepared.dispatches, command.events,
                          std::move(prepared.retainedAllocations),
                          std::move(completion));
+    if (impl_->submissionObserver) impl_->submissionObserver(command);
+    return ticket;
+}
+
+std::string MetalBackend::setTimestampObserver(std::function<void(const CommandTimestampProfile &)> observer) {
+    if (commandInFlight()) return "a command is in flight";
+    impl_->timestampObserver = {};
+    impl_->timestampSet = nil;
+    if (!observer) return {};
+    impl_->timestampEncoderBoundary = ![impl_->device supportsCounterSampling:MTLCounterSamplingPointAtDispatchBoundary];
+    if (impl_->timestampEncoderBoundary && ![impl_->device supportsCounterSampling:MTLCounterSamplingPointAtStageBoundary])
+        return "GPU timestamp sampling at dispatch or encoder boundaries unavailable";
+    for (id<MTLCounterSet> counter in impl_->device.counterSets)
+        if ([counter.name isEqualToString:MTLCommonCounterSetTimestamp]) { impl_->timestampSet = counter; break; }
+    if (!impl_->timestampSet) return "GPU timestamp counter set unavailable";
+    impl_->timestampObserver = std::move(observer);
+    return {};
+}
+
+void MetalBackend::setSubmissionObserver(std::function<void(const Command &)> observer) {
+    impl_->submissionObserver = std::move(observer);
 }
 
 void MetalBackend::preparePipelines(

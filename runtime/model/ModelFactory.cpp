@@ -1,4 +1,5 @@
 #include "ModelFactory.hpp"
+#include "AwakeClock.hpp"
 #include "model/DraftCheckpoint.hpp"
 #include "model/GgufTarget.hpp"
 #include "model/MlxTarget.hpp"
@@ -6,6 +7,7 @@
 #include "model/VisionLoader.hpp"
 
 #include <functional>
+#include <chrono>
 #include <algorithm>
 #include <optional>
 #include <type_traits>
@@ -72,9 +74,17 @@ uint64_t imageBytes(const std::vector<gguf::Image> &images) {
 
 LoadedModel loadModel(metal::MetalBackend &backend,
                               const std::filesystem::path &root,
-                              const ModelDescriptor &descriptor) {
+                              const ModelDescriptor &descriptor, FfnLoadOptions ffn) {
   LoadedModel result;
   result.descriptor = descriptor;
+  const auto started = AwakeClock::now();
+  result.ffnOptions = ffn;
+  if ((ffn.mode == FfnWeightMode::LimitedFp16) != (ffn.budgetBytes > 0))
+    throw std::invalid_argument("limited FFN cache requires a positive budget, other modes require zero");
+  if ((ffn.mode != FfnWeightMode::FullFp16 || ffn.variant != ops::FfnPrefillVariant::Baseline) &&
+      !std::holds_alternative<Qwen3_5_4BLayout>(descriptor.target) &&
+      !std::holds_alternative<Qwen3_5_4BDFlashLayout>(descriptor.target))
+    throw std::invalid_argument("quantized FFN experiment requires Qwen3.5-4B");
   if (!result.descriptor.valid())
     throw std::invalid_argument("model descriptor is invalid");
   result.images = std::make_shared<WeightImages>(backend, result.descriptor.sourceIdentity);
@@ -108,11 +118,26 @@ LoadedModel loadModel(metal::MetalBackend &backend,
       result.descriptor.target);
   if (draft) result.draft = loadDFlashDraftWeights(backend, *draft, result.descriptor.draft);
   result.vision = loadVisionWeights(backend, images, vision.get());
-  if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
-    buildQwen3_5_4BPrefillCache(backend, images, *target);
-  if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
-    buildQwen3_5_4BPrefillCache(backend, images, *target);
+  const auto loadedAt = AwakeClock::now();
+  result.loadTimings.sourceSeconds = std::chrono::duration<double>(loadedAt - started).count();
+  const auto policy = [&](auto &target) {
+    if constexpr (std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BWeights> ||
+                  std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BDFlashWeights>)
+      for (auto &layer : target.layers) {
+        layer.gateProjection.ffn = {ops::FfnRole::Gate, ffn.variant, ffn.trace};
+        layer.upProjection.ffn = {ops::FfnRole::Up, ffn.variant, ffn.trace};
+        layer.downProjection.ffn = {ops::FfnRole::Down, ffn.variant, ffn.trace};
+      }
+  };
+  std::visit(policy, result.target);
+  if (ffn.mode != FfnWeightMode::Quantized) {
+    if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
+      buildQwen3_5_4BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
+    if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
+      buildQwen3_5_4BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
+  }
 
+  result.loadTimings.ffnCacheSeconds = std::chrono::duration<double>(AwakeClock::now() - loadedAt).count();
   std::vector<WeightFileRecord> records(result.targetFiles().begin(),
                                         result.targetFiles().end());
   records.insert(records.end(), result.draft.files.begin(),
@@ -124,7 +149,10 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   return result;
 }
 
-uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor) {
+uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor,
+                          FfnLoadOptions ffn) {
+  if ((ffn.mode == FfnWeightMode::LimitedFp16) != (ffn.budgetBytes > 0))
+    throw std::invalid_argument("limited FFN cache requires a positive budget, other modes require zero");
   uint64_t bytes = 0;
   if (descriptor.targetSource == TargetSource::Gguf) {
     WeightSource source(findTargetGguf(root / "target"));
@@ -135,13 +163,23 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
           uint64_t targetBytes = imageBytes(plans);
           if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
                         std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>) {
-            for (const auto &image : plans)
-              for (const auto &repack : image.repacks)
-                if (std::ranges::any_of(repack.sources, [](const auto &source) {
-                      return source.name.ends_with(".ffn_gate.weight") || source.name.ends_with(".ffn_up.weight") ||
-                             source.name.ends_with(".ffn_down.weight");
-                    }))
-                  targetBytes += repack.rows * repack.columns * sizeof(uint16_t);
+            if (ffn.mode != FfnWeightMode::Quantized) {
+              uint64_t cachedBytes = 0;
+              const uint64_t limit = ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX;
+              for (const auto &image : plans)
+                for (const auto &repack : image.repacks)
+                  if (std::ranges::any_of(repack.sources, [](const auto &source) {
+                        return source.name.ends_with(".ffn_gate.weight") || source.name.ends_with(".ffn_up.weight") ||
+                               source.name.ends_with(".ffn_down.weight");
+                      }))
+                    {
+                      const uint64_t matrixBytes = repack.rows * repack.columns * sizeof(uint16_t);
+                      if (matrixBytes <= limit - cachedBytes) {
+                        targetBytes += matrixBytes;
+                        cachedBytes += matrixBytes;
+                      }
+                    }
+            }
           }
           return targetBytes;
         },

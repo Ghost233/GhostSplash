@@ -1,4 +1,6 @@
 #include "model/Runtime.hpp"
+#include "model/CompactDraftHead.hpp"
+#include "StderrLine.hpp"
 #include "AwakeClock.hpp"
 #include "model/QwenState.hpp"
 #include "model/QwenTarget.hpp"
@@ -280,6 +282,8 @@ struct Runtime::Impl {
     // What its activation took from a cached state: the images that end
     // there were left out (ModelRequest::restoredTokens).
     uint32_t restoredTokens = 0;
+    // Allocated only when lookup or compact head is enabled for a draft model.
+    std::vector<uint32_t> featureHistory;
   };
 
   struct DecodeLaneResult final {
@@ -288,6 +292,7 @@ struct Runtime::Impl {
     uint32_t accepted = 0;
     uint32_t currentAnchor = 0;
     uint32_t maximumRetained = 0;
+    bool lookup = false;
     // Why the lane's selection is unusable (invalidSelection), found before
     // any lane commits.
     std::string failure;
@@ -342,6 +347,10 @@ struct Runtime::Impl {
   std::vector<std::weak_ptr<const HeldState>> stateHolds;
   std::array<PageTableBinding, kLaneCount> pageTableBindings{};
   ModelTelemetry counters;
+  OptionalFeatures features;
+  OptionalFeatureReport featureReport;
+  MetalBuffer fastTopK;
+  std::unique_ptr<CompactDraftHead> compactHead;
   ops::Sampling sampling;
   QwenTarget targetModel;
   std::unique_ptr<DFlashDraft> draftModel;
@@ -353,7 +362,8 @@ struct Runtime::Impl {
         operators(value.operators),
         kvPages(value.kvPages),
         states(value.stateStorage),
-        sampling(geometry.target.vocabularySize),
+        features(value.optionalFeatures),
+        sampling(geometry.target.vocabularySize, features.fastTopK),
         targetModel(std::visit(
                         [&](const auto &weights) {
                           return QwenTarget(weights, geometry.target,
@@ -373,7 +383,18 @@ struct Runtime::Impl {
     decodeArena = std::make_unique<DecodeArena>(backend, geometry, operators);
     penaltyTable =
         decodeArena->batchSlice(DecodeTensor::PenaltyState, kLaneCount);
+    featureReport.configured = features;
+    if (features.fastTopK)
+      fastTopK = backend.allocateBuffer(ops::Sampling::fastWorkspaceBytes(kLaneCount * kDecodeRows),
+                                        metal::BufferStorage::Private, "optional-fast-topk");
+    if (features.compactDraftHead) {
+      if (draftModel)
+        compactHead = std::make_unique<CompactDraftHead>(backend, targetModel.vocabularyProjection(),
+            features.compactRanking, model.targetManifestFingerprint());
+      else featureReport.compactReason = "compact head requires an installed draft";
+    }
     preparePolicyPipelines();
+    sampling.resetFastCounters();
   }
 
   // Warmup selects greedily, so the first sampled, penalized or constrained
@@ -895,7 +916,7 @@ struct Runtime::Impl {
             d(DecodeTensor::Candidates),
             d(DecodeTensor::ProposalProbs),
             d(DecodeTensor::TargetVocabularyRanges),
-            d(DecodeTensor::TargetVocabularyArrivals)};
+            d(DecodeTensor::TargetVocabularyArrivals), fastTopK};
   }
 
   std::span<uint32_t> penaltyWords(uint32_t stateLane) const {
@@ -1484,9 +1505,28 @@ struct Runtime::Impl {
     buffers.ropeSin = d(DecodeTensor::DraftRopeSin);
     buffers.gateScratch = decodeArena->gateScratch();
     bindDraftRings(entries, buffers.persistentKeys, buffers.persistentValues);
-    draftModel->addDecode(graph, std::move(buffers),
-                         targetModel.vocabularyProjection(),
+    const ops::Projection *head = &targetModel.vocabularyProjection();
+    bool compact = false;
+    if (features.compactDraftHead) {
+      if (compactHead && lanes == 1 && entries.front()->images.empty()) {
+        auto &history = entries.front()->featureHistory;
+        history.push_back(*entries.front()->pendingToken);
+        compact = compactHead->prepare(history);
+        history.pop_back();
+        featureReport.compactReason = compactHead->reason();
+        if (compact) {
+          head = &compactHead->projection();
+          featureReport.compactRows = compactHead->validRows();
+          ++featureReport.compactCycles;
+        }
+      } else if (compactHead) featureReport.compactReason = "compact head requires one text lane";
+      if (!compact) ++featureReport.compactFallbacks;
+    }
+    draftModel->addDecode(graph, std::move(buffers), *head,
                          std::span(cacheLengths).first(lanes));
+    if (compact)
+      ops::addCompactLogitMask(graph, d(DecodeTensor::Logits), lanes * kDecodeRows,
+                               head->outputSize, compactHead->validRows());
     std::array<uint32_t, kLaneCount> anchors{};
     std::array<ops::SamplingPolicy, kLaneCount> policies{};
     for (uint32_t lane = 0; lane < lanes; ++lane) {
@@ -1503,7 +1543,11 @@ struct Runtime::Impl {
          d(DecodeTensor::Unary), geometry.draft.selectorRank ? d(DecodeTensor::SelectorHidden) : MetalBuffer{},
          d(DecodeTensor::SamplingUniforms), d(DecodeTensor::ProposedTokens),
          d(DecodeTensor::ProposalProbs)},
-        std::span(anchors).first(lanes), std::span(policies).first(lanes));
+        std::span(anchors).first(lanes), std::span(policies).first(lanes), compact ? head->outputSize : 0,
+        compact ? compactHead->mapping() : MetalBuffer{}, compact ? compactHead->validRows() : 0);
+    if (compact && geometry.draft.kind == DraftKind::Standard)
+      ops::addCompactProposalMap(graph, d(DecodeTensor::ProposedTokens), d(DecodeTensor::Candidates),
+                                 compactHead->mapping(), head->outputSize, compactHead->validRows(), policies[0].samples());
   }
 
   void encodeTargetVerifyBatchForward(CommandGraph &graph,
@@ -1795,6 +1839,9 @@ struct Runtime::Impl {
       ModelStepResult &result = results.back();
       if (entry.generatedTokens < entry.maxNewTokens)
         emitTerminalAnchor(entry, result);
+      if (!entry.featureHistory.empty())
+        entry.featureHistory.insert(entry.featureHistory.end(), result.outputTokens.begin(), result.outputTokens.end());
+      if (laneResult.lookup) featureReport.lookupAccepted += result.acceptedDraftTokens;
     }
 
     counters.lastDecodeGpuSeconds = timing.gpuSeconds;
@@ -2053,6 +2100,8 @@ StateAdmission Runtime::resume(const ModelRequest &request) {
     entry.images = std::move(images);
     entry.restoredTokens = request.restoredTokens;
     impl_->bindPenalties(entry, request.prompt);
+    if (impl_->draftModel && (impl_->features.promptLookup || impl_->features.compactDraftHead))
+      entry.featureHistory.assign(request.prompt.begin(), request.prompt.end());
   }
   rollback.committed = admission.granted();
   return admission;
@@ -2074,6 +2123,8 @@ StateAdmission Runtime::beginAt(const ModelRequest &request, uint32_t stateLane)
   entry.sampling = request.sampling;
   entry.constraint = request.constraint;
   entry.flags = request.flags;
+  if (impl_->draftModel && (impl_->features.promptLookup || impl_->features.compactDraftHead))
+    entry.featureHistory.assign(request.prompt.begin(), request.prompt.end());
   entry.scoreTokens.assign(request.scoreTokens.begin(),
                            request.scoreTokens.end());
   std::vector<Impl::ImageState> images;
@@ -2422,10 +2473,42 @@ Runtime::decodeAsync(const BatchPlan &plan,
       impl_->decodeArena->batchSlice(DecodeTensor::RopeSin, width),
       impl_->decodeArena->batchSlice(DecodeTensor::DraftRopeCos, width),
       impl_->decodeArena->batchSlice(DecodeTensor::DraftRopeSin, width));
-  impl_->encodeBatchEmbedding(commandGraph, DecodeTensor::DraftInputTokens,
-                              DecodeTensor::DraftHidden0, width);
-  impl_->encodeDraftBatchGraph(commandGraph, entries,
-                               {logicalPositions.data(), width});
+  bool lookup = false;
+  if (impl_->features.promptLookup) {
+    ++impl_->featureReport.lookupAttempts;
+    if (width == 1 && entries.front()->images.empty() && entries.front()->constraint == ConstraintMode::None) {
+      auto &history = entries.front()->featureHistory;
+      history.push_back(*entries.front()->pendingToken);
+      const auto proposal = lookupProposal(history, kDraftProposalTokens);
+      history.pop_back();
+      if (!proposal.empty()) {
+        lookup = true;
+        lanes.front().lookup = true;
+        ++impl_->featureReport.lookupHits;
+        impl_->featureReport.lookupReason.clear();
+        std::copy(proposal.begin(), proposal.end(), contents<uint32_t>(
+            impl_->decodeArena->get(0, DecodeTensor::ProposedTokens), "lookup proposals"));
+        if (Impl::samplingEnabled(*entries.front())) {
+          auto *ids = contents<uint32_t>(impl_->decodeArena->get(0, DecodeTensor::Candidates), "lookup candidates");
+          auto *probabilities = contents<float>(impl_->decodeArena->get(0, DecodeTensor::ProposalProbs), "lookup Q");
+          std::fill_n(ids, kDraftProposalTokens * SPLASH_DRAFT_CANDIDATES, 0xffffffffu);
+          std::fill_n(probabilities, kDraftProposalTokens * SPLASH_DRAFT_CANDIDATES, 0.0F);
+          for (uint32_t p = 0; p < kDraftProposalTokens; ++p) {
+            ids[p * SPLASH_DRAFT_CANDIDATES] = proposal[p];
+            probabilities[p * SPLASH_DRAFT_CANDIDATES] = 1.0F;
+          }
+        }
+      } else impl_->featureReport.lookupReason = "no complete earlier continuation";
+    } else impl_->featureReport.lookupReason = "lookup requires one unconstrained text lane";
+  }
+  if (lookup && impl_->features.compactDraftHead)
+    impl_->featureReport.compactReason = "lookup supplied proposals; draft head skipped";
+  if (!lookup) {
+    impl_->encodeBatchEmbedding(commandGraph, DecodeTensor::DraftInputTokens,
+                                DecodeTensor::DraftHidden0, width);
+    impl_->encodeDraftBatchGraph(commandGraph, entries,
+                                 {logicalPositions.data(), width});
+  }
   if (constrained) {
     return std::make_unique<Impl::ConstrainedDecodeTicket>(
         *impl_, std::move(lanes), items, commandGraph, std::move(completion));
@@ -2543,6 +2626,15 @@ void Runtime::end(uint64_t requestId) {
     impl_->pageTableBindings[found->second.stateLane] = {};
   }
   impl_->requests.erase(found);
+  const auto report = optionalFeatureReport();
+  if (report.configured.promptLookup || report.configured.compactDraftHead || report.configured.fastTopK)
+    logLine("optional features (cumulative): lookup=", report.configured.promptLookup,
+            " hits=", report.lookupHits, " accepted=", report.lookupAccepted, " reason=", report.lookupReason,
+            "; compact=", report.configured.compactDraftHead, " cycles=", report.compactCycles,
+            " fallback=", report.compactFallbacks, " rows=", report.compactRows, " reason=", report.compactReason,
+            "; fast_topk=", report.configured.fastTopK, " selections=", report.fastTopKSelections,
+            " fallback=", report.fastTopKFallbacks, " reason=", report.fastTopKReason,
+            "; extra_metal_bytes=", report.extraMetalBytes);
 }
 
 namespace {
@@ -2792,7 +2884,23 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
 
 ModelMemoryActual Runtime::actualRuntimeMemory() const {
   return {impl_->states.actualAllocatedBytes(), impl_->prefillArena->bytes(),
-          impl_->decodeArena->bytes(), impl_->states.stagingBytes()};
+          impl_->decodeArena->bytes() + impl_->fastTopK.sizeBytes() +
+              (impl_->compactHead ? impl_->compactHead->bytes() : 0), impl_->states.stagingBytes()};
+}
+
+OptionalFeatureReport Runtime::optionalFeatureReport() const {
+  auto result = impl_->featureReport;
+  result.fastTopKSelections = impl_->sampling.fastSelections();
+  result.fastTopKFallbacks = impl_->sampling.fastFallbacks();
+  if (result.configured.promptLookup && !impl_->draftModel)
+    result.lookupReason = "lookup requires an installed draft verification path";
+  if (result.configured.compactDraftHead && impl_->compactHead && !result.compactCycles)
+    result.compactReason = impl_->compactHead->reason();
+  if (result.configured.fastTopK && !result.fastTopKSelections)
+    result.fastTopKReason = "no sampled selection with top_k 1..32 and min_p 0";
+  result.extraMetalBytes = impl_->fastTopK.sizeBytes() +
+      (impl_->compactHead ? impl_->compactHead->bytes() : 0);
+  return result;
 }
 
 ModelTelemetry Runtime::telemetry() const noexcept {

@@ -251,7 +251,9 @@ public:
   void addSelection(metal::CommandGraph &graph,
                     const ops::DraftSelectorBuffers &buffers,
                     std::span<const uint32_t> anchors,
-                    std::span<const ops::SamplingPolicy> policies) const;
+                    std::span<const ops::SamplingPolicy> policies,
+                    uint32_t compactVocabulary = 0,
+                    metal::MetalBuffer compactMapping = {}, uint32_t compactValidRows = 0) const;
   void addContextCommit(metal::CommandGraph &graph,
                         DFlashContextBuffers buffers,
                         std::span<const uint32_t> startPositions) const;

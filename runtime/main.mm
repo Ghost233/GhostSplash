@@ -185,6 +185,7 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
   config.resources.modelRoot = arguments.modelRoot;
   config.resources.model = arguments.model;
   config.resources.buildId = SPLASH_BUILD_ID;
+  config.resources.optionalFeatures = model::OptionalFeatures::fromEnvironment();
   config.resources.maximumMemoryBytes = arguments.maxMemoryBytes;
   config.resources.maximumCacheDiskBytes = arguments.maxCacheDiskBytes;
   config.resources.persistentCacheRoot = arguments.persistentCacheRoot;

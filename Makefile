@@ -253,6 +253,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/ops/RoPE.cpp \
 	runtime/ops/RowCopy.cpp \
 	runtime/ops/Sampling.cpp \
+	runtime/ops/CompactProjection.cpp \
 	runtime/ops/Vision.cpp \
 	runtime/metal/DeviceCapabilities.cpp \
 	runtime/engine/MemoryPlan.cpp \
@@ -294,6 +295,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/QwenTarget.cpp \
 	runtime/model/QwenTargetLoader.cpp \
 	runtime/model/DFlashDraft.cpp \
+	runtime/model/CompactDraftHead.cpp \
 	runtime/model/ModelFactory.cpp \
 	runtime/model/SlotFile.cpp \
 	runtime/model/QwenState.cpp \

@@ -41,6 +41,11 @@ EXTRA_SOURCES = (
     "dev/native.mk",
     "dev/tools/build_config.py",
     "dev/benchmarks/qwen4b_matrix_native.mm",
+    "dev/benchmarks/qwen4b_ffn_cache.py",
+    "dev/benchmarks/qwen4b_ffn_check.mm",
+    "dev/benchmarks/FfnTrace.hpp",
+    "dev/tests/engine/GgufFormatReference.hpp",
+    "dev/tests/engine/LinearNumerics.hpp",
     "dev/benchmarks/qwen4b_matrix_attention.py",
     "dev/benchmarks/qwen4b_matrix.py",
     "dev/benchmarks/qwen4b_matrix_adapter.py",
@@ -229,6 +234,7 @@ def verify_build(root, variant, block):
         "dev/native.mk",
         "dev/tools/build_config.py",
         "dev/benchmarks/qwen4b_matrix_native.mm",
+        "dev/benchmarks/FfnTrace.hpp",
         "dev/benchmarks/qwen4b_matrix_attention.py",
     }
     metal_dependencies = {
@@ -514,8 +520,10 @@ def validate_short(raw, payload):
         "short batch did not complete requested parameters",
     )
     matrix.require(
-        "timings" not in raw
-        and "warmup" not in raw
+        not any(
+            key in raw
+            for key in ("timings", "warmup", "startup_timings", "ffn_stage_profile")
+        )
         and all("timings" not in r for r in raw.get("requests", [])),
         "correctness emitted performance timings",
     )
@@ -551,7 +559,10 @@ def validate_short(raw, payload):
         response["facts_pass"] = not missing
         response["missing_facts"] = missing
         matrix.require(
-            not missing, "short arithmetic expected fact42 was not preserved"
+            not missing,
+            "long correctness expected facts were not preserved"
+            if payload.get("ffn_long_correctness")
+            else "short arithmetic expected fact42 was not preserved",
         )
     raw["facts_pass"] = all(response["facts_pass"] for response in raw["requests"])
     raw["mode"] = "correctness"
@@ -565,6 +576,11 @@ def run_batch(payload, root, variant_root, standard, off):
         "explicit correctness/performance mode is required",
     )
     p = payload["job"]["parameters"]
+    if "ffn_weight_mode" in p:
+        matrix.require(
+            p["ffn_weight_mode"] in ("full_fp16", "quantized", "limited_fp16"),
+            "invalid FFN weight mode",
+        )
     matrix.require(
         p.get("auto_calibration") is False
         and p.get("ignore_eos") is True
@@ -572,10 +588,24 @@ def run_batch(payload, root, variant_root, standard, off):
         and p.get("temperature") == 0,
         "batch must pin calibration off, ignored EOS, cold cache and greedy sampling",
     )
+    long_correctness = payload.get("ffn_long_correctness") is True
+    if long_correctness:
+        matrix.require(
+            mode == "correctness"
+            and "ffn_weight_mode" in p
+            and p["input_tokens"] == 32768
+            and p["output_tokens"] in (512, 2048)
+            and p["concurrency"] == 1,
+            "long FFN correctness requires pinned input32768/output512 or2048 and C1",
+        )
     if mode == "correctness":
         matrix.require(
-            0 < p["input_tokens"] <= 128 and 0 < p["output_tokens"] <= 32,
-            "correctness fixture limited to input128/output32",
+            long_correctness
+            or (
+                0 < p["input_tokens"] <= (2048 if "ffn_weight_mode" in p else 128)
+                and 0 < p["output_tokens"] <= 32
+            ),
+            "correctness fixture limited to input128/output32 (2048 for FFN experiment)",
         )
     else:
         matrix.require(
@@ -635,6 +665,18 @@ def run_batch(payload, root, variant_root, standard, off):
         f"native exit{result.returncode}: {result.stderr[-4000:]}",
     )
     raw = json.loads(result.stdout)
+    if "ffn_weight_mode" in p:
+        from dev.benchmarks.qwen4b_ffn_cache import validate_memory
+
+        matrix.require(
+            raw.get("actual_ffn_weight_mode") == p["ffn_weight_mode"],
+            "FFN mode mismatch",
+        )
+        validate_memory(
+            raw.get("memory_report", {}),
+            p["ffn_weight_mode"],
+            p.get("ffn_cache_budget_bytes", 0),
+        )
     matrix.require(
         raw.get("compiled_block_size") == block,
         "native actual compiled block differs from stamp",

@@ -14,7 +14,7 @@ uint64_t ggufPrefillCacheBytes(const QuantizedSegment &segment) {
 }
 
 void writeGgufPrefillCache(metal::MetalBackend &backend, const QuantizedSegment &segment,
-                           const metal::MetalBuffer &destination) {
+                           const metal::MetalBuffer &destination, bool trace) {
   const uint64_t bytes = ggufPrefillCacheBytes(segment);
   requireSegmentPlanes(segment, "FP16 prefill cache");
   if (!destination || destination.sizeBytes() != bytes)
@@ -24,6 +24,7 @@ void writeGgufPrefillCache(metal::MetalBackend &backend, const QuantizedSegment 
   graph.add(std::string("gguf_prefill_cache_") + segment.name(),
             {segment.plane0, segment.plane1Slot(), segment.meta, destination}, segment.inputSize,
             {(groups + 31) / 32, 1, 1}, {32, 1, 1});
+  if (trace) graph.attributeFrom(0, "target_ffn/cache_build", 0);
   static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
 }
 

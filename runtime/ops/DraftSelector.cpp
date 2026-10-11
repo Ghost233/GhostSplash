@@ -1,6 +1,7 @@
 #include "ops/DraftSelector.hpp"
 
 #include "metal/abi/Sampling.h"
+#include "metal/abi/OptionalFeatures.h"
 #include "ops/BufferExtent.hpp"
 
 #include <bit>
@@ -58,7 +59,14 @@ void DraftSelector::add(metal::CommandGraph &graph,
   const DraftSelectorWorkspace workspace = DraftSelector::workspace(lanes * kPositions);
   const uint64_t rows = uint64_t{lanes} * SPLASH_DRAFT_QUERY_ROWS;
   const uint64_t codebook = uint64_t{vocabulary_} * SPLASH_DRAFT_SELECTOR_RANK * 2;
-  requireBytes(buffers.logits, rows * vocabulary_ * sizeof(float), "draft logits");
+  const uint32_t projectedVocabulary = buffers.compactMapping ? buffers.compactVocabulary : vocabulary_;
+  if (buffers.compactMapping) {
+    if (!projectedVocabulary || projectedVocabulary > vocabulary_ || !buffers.compactValidRows ||
+        buffers.compactValidRows > projectedVocabulary)
+      throw std::invalid_argument("invalid compact draft selector vocabulary");
+    requireBytes(buffers.compactMapping, uint64_t{projectedVocabulary} * 4, "compact token mapping");
+  }
+  requireBytes(buffers.logits, rows * projectedVocabulary * sizeof(float), "draft logits");
   requireBytes(buffers.partialIds, workspace.partialIdsBytes, "draft selector partial id");
   requireBytes(buffers.partialValues, workspace.partialValuesBytes, "draft selector partial value");
   requireBytes(buffers.candidates, workspace.candidatesBytes, "draft candidate");
@@ -76,7 +84,13 @@ void DraftSelector::add(metal::CommandGraph &graph,
   }
   graph.add("draft_select_top16_sharded",
             {buffers.logits, buffers.partialIds, buffers.partialValues},
-            vocabulary_, {uint64_t{lanes} * kPositions * kShards, 1, 1});
+            projectedVocabulary, {uint64_t{lanes} * kPositions * kShards, 1, 1});
+  if (buffers.compactMapping) {
+    const uint32_t entries = lanes * kPositions * kShards * SPLASH_DRAFT_CANDIDATES;
+    const CompactMapParams mapping{entries, projectedVocabulary, buffers.compactValidRows, 0};
+    graph.add("compact_map_partials", {buffers.partialIds, buffers.compactMapping}, mapping,
+              {(uint64_t{entries} + 255) / 256, 1, 1});
+  }
   graph.add("draft_select_edges",
             {buffers.partialIds, buffers.partialValues, buffers.candidates,
              buffers.unary, buffers.selectorHidden, codebooks.predecessor,

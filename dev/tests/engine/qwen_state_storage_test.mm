@@ -639,6 +639,9 @@ void run(const std::string &metallib) {
                 storage.actualAllocatedBytes() == 2 * observedLaneActual,
             "activated lane accounting is not incremental");
     observedStorageActual = storage.actualAllocatedBytes();
+    require(storage.draftAllocatedBytes() ==
+                2 * (storage.draft(0)[0].keys.allocatedBytes() + storage.window(0).allocatedBytes()),
+            "draft memory subset does not count ring and window allocations once per lane");
 
     // A lane's accessors read the cells it holds now: at parity p, current()
     // is its cell p and next() its cell p ^ 1.
@@ -923,7 +926,7 @@ void run(const std::string &metallib) {
     // No cached state holds rings: without idle rings no number of states
     // makes up a lane.
     constexpr uint32_t kNoStatesSuffice = std::numeric_limits<uint32_t>::max();
-    require(storage.actualAllocatedBytes() == 0 &&
+    require(storage.actualAllocatedBytes() == 0 && storage.draftAllocatedBytes() == 0 &&
                 storage.statesToActivate() == kNoStatesSuffice,
             "reclaimed state cells remain accounted");
 

@@ -203,6 +203,10 @@ struct LinearBuffers final {
   PreparedInput prepared{};
 };
 
+enum class FfnPrefillKernel : uint8_t { Baseline, M64N32, Q4KGroupScale };
+[[nodiscard]] FfnPrefillKernel ffnPrefillKernel(const Projection &projection, const LinearPlan &plan) noexcept;
+[[nodiscard]] bool ffnPrefillGateUpEligible(const SwiGluProjections &ffn, uint32_t rows) noexcept;
+
 // Missing core metadata uses one intermediate estimate for all families.
 // This is a fallback, not a calibrated optimum. Reported counts always win.
 inline constexpr uint32_t kAssumedGpuCores = 32;
@@ -292,6 +296,8 @@ private:
   void addGgufStaged(metal::CommandGraph &graph, const LinearBuffers &buffers,
                      const Projection &projection, const LinearPlan &plan,
                      const Projection *gate) const;
+  bool addFfnPrefillGateUp(metal::CommandGraph &graph, const SwiGluProjections &ffn,
+                           const PrefillFfnBuffers &buffers, uint32_t rows) const;
   void addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &buffers,
                       const Projection &projection, const LinearPlan &plan) const;
   void addGgufRegister(metal::CommandGraph &graph, const LinearBuffers &buffers,

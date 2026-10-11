@@ -475,6 +475,7 @@ metal::MetalBuffer AneFfn::rowScales(uint32_t layer, Matrix matrix) const {
 
 // Layer `layer`'s int8 weights and row scales into staging set `set`.
 void AneFfn::addWeights(metal::CommandGraph &graph, uint32_t layer, uint32_t set) const {
+  const size_t firstDispatch = graph.dispatches().size();
   const Layer &source = layers_.at(layer);
   const Weights &target = memory_.sets[set];
   const auto add = [&](Matrix matrix, const ane::Surface &output, const ane::Surface &scale, uint32_t row,
@@ -500,6 +501,7 @@ void AneFfn::addWeights(metal::CommandGraph &graph, uint32_t layer, uint32_t set
         Rotation::Intermediate);
     begin += shape_.downSegments[i];
   }
+  if (layers_[layer].gate.ffn.trace) graph.attributeFrom(firstDispatch, "target_ffn/ane_weight_staging", 0);
 }
 
 bool AneFfn::begin() {
@@ -538,21 +540,31 @@ void AneFfn::encode(metal::CommandGraph &graph, uint32_t layer, const PrefillFfn
   const auto index = static_cast<uint32_t>(found - evaluations_.begin());
   // Each command stages layer 0's weights, then each layer the next one's.
   if (!layer) addWeights(graph, 0, 0);
+  const size_t packFirst = graph.dispatches().size();
   graph.add("ane_ffn_rotate", {ffn.normalized, memory_.signs, memory_.rotated, memory_.tokenScale.buffer},
             AneFfnRotateParams{shape_.hidden}, {rows, 1, 1}, {ANE_FFN_ROTATE_THREADS, 1, 1});
   for (uint32_t k = 0; k < memory_.inputs.size(); ++k)
     graph.add("ane_ffn_pack", {memory_.rotated, memory_.inputs[k].buffer},
               AneFfnPackParams{shape_.hidden, k * kSegment, memory_.inputs[k].strideBytes},
               {tiles, kSegment / ANE_FFN_TILE, 1}, {ANE_FFN_TILE, ANE_FFN_TILE_ROWS, 1});
+  if (current.gate.ffn.trace) graph.attributeFrom(packFirst, "target_ffn/ane_input_pack", rows);
   const uint64_t ready = ane ? handoff_.next() : 0;
   if (ane) graph.signal(handoff_.event(), ready);
   linear_.addPrefillSwiGlu(graph, {&current.gate, &current.up, &current.down}, ffn, residual, output, rows);
   if (layer + 1 < layers_.size()) addWeights(graph, layer + 1, set ^ 1);
   const uint64_t done = ane ? handoff_.next() : 0;
+  // A wait must not hold back GPU FFN/staging work in the same buffer.
+  if (ane && current.gate.ffn.variant == FfnPrefillVariant::Q4KGroupScale)
+    graph.endCommandBuffer();
   if (ane) graph.wait(handoff_.event(), done);
+  const size_t joinFirst = graph.dispatches().size();
   graph.add("ane_ffn_join", {output, memory_.partial.buffer, memory_.tokenScale.buffer, memory_.status},
             AneFfnJoinParams{shape_.hidden, memory_.partial.strideBytes / uint32_t{sizeof(_Float16)}, rows},
             {tiles, shape_.hidden / ANE_FFN_TILE, 1}, {ANE_FFN_TILE, ANE_FFN_TILE_ROWS, 1});
+  if (current.gate.ffn.trace) graph.attributeFrom(joinFirst, "target_ffn/ane_join", rows);
+  // Keep the ANE wait/join separate from the next layer's GPU attention.
+  if (current.gate.ffn.variant == FfnPrefillVariant::Q4KGroupScale && layer + 1 < layers_.size())
+    graph.endCommandBuffer();
   if (ane) jobs_.push_back({index, set, ready, done});
   ++nextLayer_;
 }

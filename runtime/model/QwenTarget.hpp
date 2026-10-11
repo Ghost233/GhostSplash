@@ -64,6 +64,8 @@ struct QwenTargetWeightsBase {
   ops::EmbeddingWeights tokenEmbedding;
   std::vector<WeightFileRecord> files;
   uint64_t actualAllocatedBytes = 0;
+  // Subset of actualAllocatedBytes: derived resident FFN prefill weights.
+  uint64_t ffnCacheAllocatedBytes = 0;
   std::string manifestFingerprintSha256;
 };
 
