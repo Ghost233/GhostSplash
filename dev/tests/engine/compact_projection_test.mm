@@ -175,7 +175,8 @@ int main(int argc, char **argv) {
     for (uint32_t f = 0; f < GGUF_FMT_COUNT; ++f) formatCheck(backend, f);
     mappingCheck(backend);
     dflash2MappingCheck(backend);
-    std::cout << "compact projection: 37 formats, native-plane bytes, selected logits and FP64 bounds PASS\n";
+    std::cout << "compact projection: " << GGUF_FMT_COUNT
+              << " formats, native-plane bytes, selected logits and FP64 bounds PASS\n";
     return 0;
   } catch (const std::exception &error) {
     std::cerr << "compact projection FAIL: " << error.what() << '\n';

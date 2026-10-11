@@ -123,8 +123,25 @@ struct ResourceWaitSnapshot final {
   bool draining = false;
 };
 
+// One live request's progress, for /status active_requests: its phase and
+// priority, how many prompt tokens are encoded (cached ones included) and
+// generated, and its age since it arrived, which the native runtime that
+// received it adds (NativeRuntime::statusSnapshot).
+struct ActiveRequestSnapshot final {
+  uint64_t id = 0;
+  Phase phase = Phase::Queued;
+  RequestPriority priority = RequestPriority::Normal;
+  uint32_t promptTokens = 0;
+  uint32_t promptProcessed = 0;
+  uint32_t generatedTokens = 0;
+  uint32_t maxNewTokens = 0;
+  double ageMilliseconds = 0.0;
+};
+
 struct EngineSnapshot final {
   SchedulerSnapshot scheduler;
+  // Requests not yet finalized, in submission (id) order.
+  std::vector<ActiveRequestSnapshot> activeRequests;
   CacheSnapshot resources;
   uint32_t maximumContextTokens = 0;
   uint64_t submitted = 0;
@@ -284,6 +301,10 @@ private:
     // The prompt from submit on, then the committed output; request.prompt
     // is empty.
     std::vector<uint32_t> exactTokens;
+    // The first output token, sent to the client when the prefill selected it
+    // (ModelStepResult::firstToken) and until the first decode cycle commits
+    // it: that cycle emits it first, and its event leaves it out.
+    std::optional<uint32_t> sentFirstToken;
     // Made from exactTokens and request.images, which do not change while
     // the request waits; refreshed each pass and dropped once it starts or
     // skips the cache.
@@ -419,6 +440,10 @@ private:
   // The prompt rows a lane in prefill has processed, or the tokens a
   // decoding lane holds.
   [[nodiscard]] uint64_t completedTokens(const Request &request) const;
+  // The output tokens the client was sent: the committed ones and a first
+  // token that no cycle has committed yet (Request::sentFirstToken), as when
+  // the request is suspended or cancelled before its first decode cycle.
+  [[nodiscard]] static uint32_t generatedTokens(const Request &request) noexcept;
   // Whether lane a gives up its memory before lane b: the lower priority,
   // then, at equal priority, a lane in prefill before a decoding one, then
   // the one with fewer completed tokens.

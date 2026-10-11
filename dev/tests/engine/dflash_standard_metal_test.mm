@@ -64,7 +64,7 @@ Projection projection(MetalBackend &backend, uint32_t output, uint32_t input, ui
         weights[at * 32 + pair] = code(group * 64 + pair * 2) | (code(group * 64 + pair * 2 + 1) << 4);
       }
     }
-  const auto native = gguf_reference::mlxNative(true, 4, 64, output, input, weights, scales, biases);
+  const auto native = gguf_reference::mlxNative(gguf_reference::Fmt(GGUF_FMT_AF4G64), output, input, weights, scales, biases);
   const auto planes = gguf_reference::repack(gguf_reference::Fmt(GGUF_FMT_AF4G64), native, output, input, nullptr);
   const auto upload = [&](const std::vector<uint8_t> &bytes) {
     auto buffer = allocated(backend, bytes.size());

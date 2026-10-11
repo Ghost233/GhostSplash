@@ -2,14 +2,15 @@
 
 // Synthetic installed models: the target/, draft/ and vision/ directories of
 // an MLX model of given layouts, each a safetensors shard holding every tensor
-// its loader reads, all zero, which loadModel loads as it loads an installed
-// model.
+// its loader reads, all zero but the few given data, which loadModel loads as
+// it loads an installed model.
 
 #include "TestChecks.hpp"
 #include "metal/abi/DraftAttention.h"
+#include "metal/abi/QuantFormat.h"
 #include "model/DFlashDraft.hpp"
 #include "model/DraftCheckpoint.hpp"
-#include "model/MlxTarget.hpp"
+#include "model/SafetensorsTarget.hpp"
 #include "model/VisionLoader.hpp"
 #include "ops/Vision.hpp"
 
@@ -26,24 +27,30 @@ struct SyntheticTensor final {
   std::string name;
   std::string dtype;
   std::vector<uint64_t> shape;
+  std::vector<uint8_t> data{}; // its bytes, or none for zeros
 };
 
-// A safetensors shard of tensors whose values are all zero: the data is a
-// hole in the file, so a large model costs no disk.
+// A safetensors shard of tensors whose values are all zero but those given
+// data: the zeros are a hole in the file, so a large model costs no disk.
 inline void writeSyntheticShard(const std::filesystem::path &path,
                                 const std::vector<SyntheticTensor> &tensors) {
   std::string header = "{";
   uint64_t offset = 0;
+  std::vector<uint64_t> offsets;
   for (const SyntheticTensor &tensor : tensors) {
-    uint64_t bytes = tensor.dtype == "U32" || tensor.dtype == "F32" ? 4 : tensor.dtype == "U8" ? 1 : 2;
+    uint64_t bytes = tensor.dtype == "U32" || tensor.dtype == "F32"     ? 4
+                     : tensor.dtype == "U8" || tensor.dtype == "F8_E4M3" ? 1
+                                                                         : 2;
     std::string shape;
     for (uint64_t dimension : tensor.shape) {
       bytes *= dimension;
       shape += (shape.empty() ? "" : ",") + std::to_string(dimension);
     }
+    require(tensor.data.empty() || tensor.data.size() == bytes, "synthetic tensor data does not fill its shape");
     header += (header.size() > 1 ? ",\"" : "\"") + tensor.name + R"(":{"dtype":")" + tensor.dtype +
               R"(","shape":[)" + shape + R"(],"data_offsets":[)" + std::to_string(offset) + "," +
               std::to_string(offset + bytes) + "]}";
+    offsets.push_back(offset);
     offset += bytes;
   }
   header += "}";
@@ -56,6 +63,14 @@ inline void writeSyntheticShard(const std::filesystem::path &path,
     require(bool(file), "unable to write a synthetic safetensors shard");
   }
   std::filesystem::resize_file(path, sizeof(uint64_t) + header.size() + offset);
+  std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+  for (size_t index = 0; index < tensors.size(); ++index)
+    if (!tensors[index].data.empty()) {
+      file.seekp(std::streamoff(sizeof(uint64_t) + header.size() + offsets[index]));
+      file.write(reinterpret_cast<const char *>(tensors[index].data.data()),
+                 std::streamsize(tensors[index].data.size()));
+    }
+  require(bool(file), "unable to write a synthetic safetensors shard's data");
 }
 
 // The tensors of a DFlash2 draft of layout as its repository releases them,
@@ -96,9 +111,9 @@ inline std::vector<SyntheticTensor> draftTensors(const model::DFlashDraftLayout 
 }
 
 // The tensors of an MLX target of layout as mlx-lm saves it, which
-// model/MlxImage.cpp reads: bf16 norms, convolution, A_log and dt_bias, and
-// each quantized module's codes, scales and biases in the bits and group size
-// quantization(module) gives, as MLX packs them.
+// model/SafetensorsImage.cpp reads: bf16 norms, convolution, A_log and
+// dt_bias, and each quantized module's codes, scales and biases in the bits
+// and group size quantization(module) gives, as MLX packs them.
 template <class Layout, class Quantization>
 std::vector<SyntheticTensor> mlxTargetTensors(const Layout &layout, Quantization quantization) {
   std::vector<SyntheticTensor> result;
@@ -158,6 +173,92 @@ std::vector<SyntheticTensor> mlxTargetTensors(const Layout &layout, Quantization
   bfloat16("language_model.model.norm.weight", {hidden});
   quantized("language_model.lm_head", layout.vocabularySize, hidden);
   quantized("language_model.model.embed_tokens", layout.vocabularySize, hidden);
+  return result;
+}
+
+// How a checkpoint stores NVFP4 and FP8 modules (model/SafetensorsImage.cpp,
+// floatQuantized): as Model Optimizer does, NVFP4's .weight beside the F32
+// tensor scale weight_scale_2 and FP8 with one F32 weight_scale, or as
+// compressed-tensors does, NVFP4's .weight_packed beside the F32
+// weight_global_scale [1] (1 / g) and FP8 with a BF16 weight_scale per row.
+enum class FloatCheckpoint { ModelOptimizer, CompressedTensors };
+
+// The tensors of a target of layout in NVFP4 and FP8, as `checkpoint` saves
+// them, which model/SafetensorsImage.cpp reads by transformers names: bf16
+// norms (each stored 1 below the weight the norm multiplies by), convolution
+// [channels, 1, taps], GDN alpha and beta, router, shared-expert gate and
+// token table, each routed expert a module of its own, and each quantized
+// module in the format format(module) gives, its codes and E4M3 scales beside
+// its tensor scales; a compressed-tensors global scale is 1, as its
+// reciprocal is g.
+template <class Layout, class Format>
+std::vector<SyntheticTensor> floatTargetTensors(const Layout &layout, Format format, FloatCheckpoint checkpoint) {
+  std::vector<SyntheticTensor> result;
+  const auto bfloat16 = [&](const std::string &name, std::vector<uint64_t> shape) {
+    result.push_back({name, "BF16", std::move(shape)});
+  };
+  const bool compressed = checkpoint == FloatCheckpoint::CompressedTensors;
+  const auto quantized = [&](const std::string &module, uint64_t rows, uint64_t columns) {
+    if (format(module) == GGUF_FMT_NVFP4) {
+      result.push_back({module + (compressed ? ".weight_packed" : ".weight"), "U8", {rows, columns / 2}});
+      result.push_back({module + ".weight_scale", "F8_E4M3", {rows, columns / 16}});
+      if (compressed)
+        result.push_back({module + ".weight_global_scale", "F32", {1}, {0x00, 0x00, 0x80, 0x3F}});
+      else
+        result.push_back({module + ".weight_scale_2", "F32", {}});
+    } else {
+      result.push_back({module + ".weight", "F8_E4M3", {rows, columns}});
+      if (compressed)
+        result.push_back({module + ".weight_scale", "BF16", {rows, 1}});
+      else
+        result.push_back({module + ".weight_scale", "F32", {}});
+    }
+  };
+  const uint64_t hidden = layout.hiddenSize;
+  for (uint32_t layer = 0; layer < layout.layers; ++layer) {
+    const std::string prefix = "model.language_model.layers." + std::to_string(layer) + ".";
+    bfloat16(prefix + "input_layernorm.weight", {hidden});
+    if (layout.isFullAttentionLayer(layer)) {
+      const std::string attention = prefix + "self_attn.";
+      const uint64_t kv = uint64_t{layout.attentionKvHeads} * layout.attentionHeadDimension;
+      quantized(attention + "q_proj", 2ull * layout.attentionWidth, hidden);
+      quantized(attention + "k_proj", kv, hidden);
+      quantized(attention + "v_proj", kv, hidden);
+      bfloat16(attention + "q_norm.weight", {layout.attentionHeadDimension});
+      bfloat16(attention + "k_norm.weight", {layout.attentionHeadDimension});
+      quantized(attention + "o_proj", hidden, layout.attentionWidth);
+    } else {
+      const std::string gdn = prefix + "linear_attn.";
+      quantized(gdn + "in_proj_qkv", layout.convolutionDimension, hidden);
+      quantized(gdn + "in_proj_z", layout.attentionWidth, hidden);
+      bfloat16(gdn + "in_proj_b.weight", {layout.gdnValueHeads, hidden});
+      bfloat16(gdn + "in_proj_a.weight", {layout.gdnValueHeads, hidden});
+      bfloat16(gdn + "conv1d.weight", {layout.convolutionDimension, 1, model::kGdnConvolutionTaps});
+      bfloat16(gdn + "A_log", {layout.gdnValueHeads});
+      bfloat16(gdn + "dt_bias", {layout.gdnValueHeads});
+      bfloat16(gdn + "norm.weight", {layout.gdnHeadDimension});
+      quantized(gdn + "out_proj", hidden, layout.attentionWidth);
+    }
+    bfloat16(prefix + "post_attention_layernorm.weight", {hidden});
+    const std::string mlp = prefix + "mlp.";
+    const auto ffn = [&](const std::string &projections, uint64_t width) {
+      quantized(projections + "gate_proj", width, hidden);
+      quantized(projections + "up_proj", width, hidden);
+      quantized(projections + "down_proj", hidden, width);
+    };
+    if (layout.ffnKind == model::QwenFfnKind::SparseMoe) {
+      bfloat16(mlp + "gate.weight", {layout.experts, hidden});
+      for (uint32_t expert = 0; expert < layout.experts; ++expert)
+        ffn(mlp + "experts." + std::to_string(expert) + ".", layout.expertIntermediateSize);
+      ffn(mlp + "shared_expert.", layout.expertIntermediateSize);
+      bfloat16(mlp + "shared_expert_gate.weight", {1, hidden});
+    } else {
+      ffn(mlp, layout.intermediateSize);
+    }
+  }
+  bfloat16("model.language_model.norm.weight", {hidden});
+  quantized("lm_head", layout.vocabularySize, hidden);
+  bfloat16("model.language_model.embed_tokens.weight", {layout.vocabularySize, hidden});
   return result;
 }
 
@@ -227,7 +328,7 @@ SyntheticAccounting writeSyntheticModel(const std::filesystem::path &root, const
                                         const ops::VisionLayout &vision) {
   writeSyntheticCheckpoints(root, target, draft);
   writeSyntheticShard(root / "vision" / "model.safetensors", visionTensors(vision));
-  return {model::mlxTargetImageBytes(root / "target", target), model::draftImageBytes(root / "draft", draft),
+  return {model::safetensorsTargetImageBytes(root / "target", target), model::draftImageBytes(root / "draft", draft),
           model::visionImageBytes(vision)};
 }
 

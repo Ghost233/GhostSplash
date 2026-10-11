@@ -109,9 +109,10 @@ GgufTensorDescriptor readGgufDescriptor(WeightFile &file, std::string_view label
     if (!bytes) throw WeightStoreError("GGUF descriptor is not host visible");
     const GgufTensorDescriptor d = GgufTensorDescriptor::decode(
         std::span<const uint8_t, GgufTensorDescriptor::kBytes>(bytes, GgufTensorDescriptor::kBytes));
-    // Float tensors are rows as stored; quantized ones fill whole tiles.
+    // Float tensors (F32, a bf16 token table) are rows as stored; quantized ones fill whole tiles.
     if (!d.outputSize || !d.inputSize ||
-        (d.type != ggml::kF32 && (d.outputSize % QUANT_TILE_ROWS || d.inputSize % kGgufBlockColumns)))
+        (d.type != ggml::kF32 && d.type != ggml::kBF16 &&
+         (d.outputSize % QUANT_TILE_ROWS || d.inputSize % kGgufBlockColumns)))
         throw WeightStoreError("GGUF tensor shape is not tile aligned: " + std::string(label));
     return d;
 }
@@ -156,6 +157,12 @@ ops::EmbeddingWeights readBlockEmbedding(WeightFile &file, uint32_t outputSize, 
     const GgufTensorDescriptor d = readGgufDescriptor(file, label);
     if (d.outputSize != outputSize || d.inputSize != inputSize)
         throw WeightStoreError("GGUF embedding does not match the layout: " + std::string(label));
+    if (d.type == ggml::kBF16) {
+        if (d.plane0Bytes != uint64_t{d.outputSize} * d.inputSize * sizeof(uint16_t))
+            throw WeightStoreError("bf16 embedding rows are inconsistent: " + std::string(label));
+        return {outputSize, inputSize,
+                ops::NativeRows(file.section(d.plane0Bytes, std::string(label) + "-bf16"), ops::NativeRows::kBfloat16)};
+    }
     const uint32_t format = gguf_format_of(d.type);
     if (format == GGUF_FMT_COUNT ||
         d.plane0Bytes != d.outputSize * ggufRowBytes(kQuantFormats[format], d.inputSize))

@@ -282,13 +282,20 @@ ModelStepResult decodeOne(model::Runtime &executor, uint64_t requestId,
 }
 
 // A stop token or a one-token budget is emitted by prefill itself; otherwise
-// the first output tokens come from one decode cycle.
+// the first output tokens come from one decode cycle, which commits first the
+// first token the prefill reported (the engine sends that one ahead).
 ModelStepResult firstStep(model::Runtime &executor, ModelStepResult prefilled,
                           uint64_t requestId, uint64_t logicalPosition,
                           const std::vector<uint32_t> &pageTable) {
   if (!prefilled.outputTokens.empty())
     return prefilled;
-  return decodeOne(executor, requestId, logicalPosition, pageTable);
+  ModelStepResult decoded =
+      decodeOne(executor, requestId, logicalPosition, pageTable);
+  require(!prefilled.firstToken || (!decoded.outputTokens.empty() &&
+                                    decoded.outputTokens.front() ==
+                                        *prefilled.firstToken),
+          "the first cycle did not commit the first token prefill reported");
+  return decoded;
 }
 
 struct PendingMaskedDecode final {
@@ -2104,7 +2111,11 @@ int main(int argc, char **argv) {
 
     // Recurrent cache entries are policy-neutral. The consumer replays one
     // teacher-forced token, then selects from the regenerated final hidden
-    // with its own sampling stream.
+    // with its own sampling stream: its anchor is a cold run's. The tokens
+    // after the anchor come from draft rings the restore computed again from
+    // the context window (compareCommittedSamples), so they are compared with
+    // those of a second consumer, of a second producer's snapshot under
+    // another policy, whose rings come from an equal context window.
     std::vector<uint32_t> samplingPrefix(128);
     for (uint32_t index = 0; index < samplingPrefix.size(); ++index) {
       samplingPrefix[index] =
@@ -2161,10 +2172,40 @@ int main(int argc, char **argv) {
                      std::span<const uint32_t>(samplingPrompt).subspan(128, 1),
                      coldSamplingPages),
         32, samplingPrompt.size(), coldSamplingPages);
-    require(coldSample.outputTokens == replayedSample.outputTokens,
-            "sampling restore replay reused producer policy state");
+    require(!coldSample.outputTokens.empty() &&
+                coldSample.outputTokens.front() == replayedSample.outputTokens.front(),
+            "sampling restore replay did not select from the regenerated final hidden");
     executor.end(32);
     samplingPromptSnapshot.reset();
+
+    EngineRequest otherSource = samplingSource;
+    otherSource.id = 33;
+    otherSource.sampling = {
+        .temperature = 0.7F, .topP = 0.9F, .topK = 8, .seed = 27183};
+    beginCold(executor, otherSource, 0);
+    prefillChunk(executor, 33, 0,
+                 std::span<const uint32_t>(samplingPrefix).first(120),
+                 coldSamplingPages);
+    prefillChunk(executor, 33, 120,
+                 std::span<const uint32_t>(samplingPrefix).subspan(120, 8),
+                 coldSamplingPages);
+    std::shared_ptr<const CompositeState> otherSnapshot = executor.snapshot(33);
+    require(otherSnapshot != nullptr, "sampling snapshot allocation failed");
+    executor.end(33);
+    EngineRequest otherReplay = replayedSampling;
+    otherReplay.id = 34;
+    beginCold(executor, otherReplay, 0);
+    restoreActivePrefix(executor, 34, samplingPrompt.size(), 128, otherSnapshot);
+    ModelStepResult otherSample = firstStep(
+        executor,
+        prefillChunk(executor, 34, 128,
+                     std::span<const uint32_t>(samplingPrompt).subspan(128, 1),
+                     coldSamplingPages),
+        34, samplingPrompt.size(), coldSamplingPages);
+    require(otherSample.outputTokens == replayedSample.outputTokens,
+            "sampling restore replay reused producer policy state");
+    executor.end(34);
+    otherSnapshot.reset();
 
     const auto beforeConstrained = executor.telemetry();
 

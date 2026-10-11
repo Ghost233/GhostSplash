@@ -2,8 +2,8 @@
 #include "AwakeClock.hpp"
 #include "model/DraftCheckpoint.hpp"
 #include "model/GgufTarget.hpp"
-#include "model/MlxTarget.hpp"
 #include "model/QwenTargetLoader.hpp"
+#include "model/SafetensorsTarget.hpp"
 #include "model/VisionLoader.hpp"
 
 #include <functional>
@@ -32,7 +32,7 @@ void requireCompatibleModel(const LoadedModel &model) {
 }
 
 std::unique_ptr<VisionLoader> planVisionLoader(const std::filesystem::path &root, const ModelDescriptor &descriptor) {
-  if (descriptor.visionSource != VisionSource::Mlx && descriptor.visionSource != VisionSource::Gguf)
+  if (descriptor.visionSource != VisionSource::Safetensors && descriptor.visionSource != VisionSource::Gguf)
     return nullptr;
   return std::make_unique<VisionLoader>(root / "vision", descriptor.visionSource, descriptor.vision);
 }
@@ -100,11 +100,11 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         using Layout = std::remove_cvref_t<decltype(layout)>;
         const std::filesystem::path directory = root / "target";
         switch (result.descriptor.targetSource) {
-        case TargetSource::Mlx: {
+        case TargetSource::Safetensors: {
           if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
             throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
           } else {
-            MlxTargetLoader loader(backend, images, directory, layout);
+            SafetensorsTargetLoader loader(backend, images, directory, layout);
             return readTarget(backend, layout, std::ref(loader));
           }
         }
@@ -189,7 +189,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
       if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
                     std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
         throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
-      else return mlxTargetImageBytes(root / "target", layout);
+      else return safetensorsTargetImageBytes(root / "target", layout);
     }, descriptor.target);
   }
   if (descriptor.hasDraft()) bytes += draftImageBytes(root / "draft", descriptor.draft);

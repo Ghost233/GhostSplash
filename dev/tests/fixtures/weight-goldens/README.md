@@ -1,7 +1,9 @@
 `goldens.json` holds every SHA-256 the weight tests compare against:
 
 - `gguf_dequantization`: upstream GGML's fp32 dequantization of the reference
-  fixture of each GGUF format (`gguf-reference`). They pin the CPU reference
+  fixture of each GGUF format, and of block_nvfp4 rows of llama.cpp's NVFP4
+  (`ggml-nvfp4`, which the loader converts into NVFP4's native rows)
+  (`gguf-reference`). They pin the CPU reference
   (`dev/tests/engine/GgufFormatReference.hpp`) to llama.cpp 7ab4ee7, and
   PQ2_0, which upstream GGML lacks, to PrismML-Eng/llama.cpp 01ae597, so no
   Splash change touches them.

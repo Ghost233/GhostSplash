@@ -75,6 +75,10 @@ inline bfloat2 operand(typename F::Chunk ch, uint f, threadgroup const bfloat2 *
   } else if constexpr (F::Kind == QuantInt8) {
     const uint2 v = F::values(ch);
     return bfloat2(float2(as_type<char2>(ushort((f < 2 ? v.x : v.y) >> (16 * (f & 1))))));
+  } else if constexpr (F::Kind == QuantFloat8) {   // exact: an E4M3 value has four significant bits
+    const uint2 v = F::values(ch);
+    const uint pair = ((f < 2 ? v.x : v.y) >> (16 * (f & 1))) & 0xFFFFu;
+    return bfloat2(float2(quant_e4m3_pair(quant_byte_pairs(pair).x)));
   } else {
     const uint2 g = F::grid(ch);
     const uchar4 m = as_type<uchar4>(f < 2 ? g.x : g.y);

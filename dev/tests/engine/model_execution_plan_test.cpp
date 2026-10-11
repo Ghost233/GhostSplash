@@ -57,8 +57,8 @@ model::LoadedModel loadedModel() {
   vision.outputHiddenSize = targetOnly ? 0 : target.layout.hiddenSize;
   result.descriptor = model::makeModelDescriptor(
       "operator workspace test", target.layout, draft, vision,
-      targetOnly ? model::TargetSource::Gguf : model::TargetSource::Mlx,
-      targetOnly ? model::VisionSource::None : model::VisionSource::Mlx);
+      targetOnly ? model::TargetSource::Gguf : model::TargetSource::Safetensors,
+      targetOnly ? model::VisionSource::None : model::VisionSource::Safetensors);
   result.target = std::move(target);
   result.draft.layout = draft;
   return result;

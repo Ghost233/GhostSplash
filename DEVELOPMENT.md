@@ -21,8 +21,12 @@ make -j4
 ```
 
 `--model` names an upstream Hugging Face model: an MLX repository
-([MLX targets](#mlx-targets)) such as `mlx-community/Qwen3.8-27B-4bit`, or a GGUF repository and
-variant, `OWNER/REPO:VARIANT`, such as `unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M`.
+([MLX targets](#mlx-targets)) such as `mlx-community/Qwen3.8-27B-4bit`, an NVFP4
+repository of Model Optimizer ([Model Optimizer targets](#model-optimizer-targets))
+or compressed-tensors ([Compressed-tensors targets](#compressed-tensors-targets))
+such as `nvidia/Qwen3.8-27B-NVFP4` or `unsloth/Qwen3.8-27B-NVFP4`, or a GGUF
+repository and variant, `OWNER/REPO:VARIANT`, such as
+`unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M`.
 Splash identifies the model from its own metadata and pairs the DFlash2 draft
 trained for it. The first serve sets up Python dependencies and downloads the
 model and its draft; each start loads the weights into memory
@@ -890,6 +894,7 @@ Proxy consumers can use these fields; additional fields may be added:
 | Field | Meaning |
 | --- | --- |
 | `requests.submitted`, `completed`, `cancelled`, `failed` | Native request counters since engine start |
+| `active_requests` | Each request the engine holds, in arrival order: its `id`, `phase` (`queued`, `waiting_resources`, `waiting_prefix`, `prefill`, `decode` or `waiting_mask`), `priority`, `prompt_tokens` and how many of them are encoded (`prompt_processed`, cached ones included), `generated_tokens` of `max_new_tokens`, and `age_ms` since it arrived |
 | `memory_actual.current_bytes`, `peak_bytes` | Metal allocations, not process RSS |
 | `weights.idle_release_seconds`, `released`, `restores`, `restore_failures` | `--idle-release` in seconds (`null` for `off`), whether the weights' memory is released now, the times it was restored for a request since engine start, and the restores that gave up for want of memory |
 | `ane_ffn.state`, `share`, `minimum_rows`, `reason` | The prefill FFN's [Neural Engine split](#neural-engine-prefill): `split` while it serves, at `share` of the FFN's channels over chunks of `minimum_rows` rows or more; `off` when the start left the GPU alone (`share` and `minimum_rows` 0); `stopped` once it stopped while serving, until the engine restarts. `reason` is the start's outcome, or why the split stopped |
@@ -1041,27 +1046,76 @@ separate installation from the same ID without them.
 An MLX target's `quantization` gives a mode, bits and group size, and may give
 a module its own, as mlx-lm writes it; a module's entry wins, and its mode
 defaults to affine. The engine loads affine 2, 3, 4, 5, 6 or 8 bits in groups
-of 32, 64 or 128 and mxfp4 (4 bits in groups of 32), mixed in any way across
-modules, and refuses any other format, naming the module (nvfp4, mxfp8).
-Every projection, the experts' too, the head and the token table load only
-quantized (`mlx::quantizedModules`): an entry `false`, which mlx-lm writes for
+of 32, 64 or 128, mxfp4 (4 bits in groups of 32) and nvfp4 (4 bits in groups
+of 16), mixed in any way across modules, and refuses any other format, naming
+the module (mxfp8). Every projection, the experts' too, and the head load only
+quantized (`safetensors::quantizedModules`): an entry `false`, which mlx-lm writes for
 a module it leaves unquantized, is refused for any of them before any weight
 download, naming it, and the loader refuses one the checkpoint holds
-unquantized. The router, the shared-expert gate and GDN alpha and beta may be
-unquantized. An affine weight is `s * q + z` for its group's bf16 `.scales`
-and `.biases` and its code `q`, packed little-endian in `.weight`'s 32-bit
-words at every width; an mxfp4 weight is an E2M1 code times its group's power
-of two, a uint8 scale, which is GGUF's MXFP4.
+unquantized. The router, the shared-expert gate, GDN alpha and beta and the
+token table may be unquantized. An affine weight is `s * q + z` for its group's
+bf16 `.scales` and `.biases` and its code `q`, packed little-endian in
+`.weight`'s 32-bit words at every width; an mxfp4 weight is an E2M1 code times
+its group's power of two, a uint8 scale, which is GGUF's MXFP4; an nvfp4 weight
+is an E2M1 code times its 16 elements' E4M3 scale, a uint8, which is NVFP4
+with a tensor scale of 1.
 
 An MLX target loads into the `MDGG0001` images a GGUF target's do
-(`MlxTargetLoader`, [Weight loading](#weight-loading)):
+(`SafetensorsTargetLoader`, [Weight loading](#weight-loading)):
 each quantized tensor in the format mlx-lm infers from its tensors, an affine
-`af<bits>g<group>` format of `runtime/metal/abi/QuantFormat.h` or MXFP4, at the
-checkpoint's bits per weight; projections and experts as block planes, the
-token table as native rows. The block MoE kernels read the router and the
-shared-expert gate in F32, so these load as the F32 values `s * q + z` of their
-quantization, and so do GDN alpha and beta unless both are in one format. Norms
-stay bf16 and the GDN value heads in MLX's grouped order.
+`af<bits>g<group>` format of `runtime/metal/abi/QuantFormat.h`, MXFP4 or
+NVFP4, at the checkpoint's bits per weight (NVFP4's at 4.625, its tensor scale
+stored once per 256 weights); projections and experts as block planes, a
+quantized token table as native rows and an unquantized one as its bf16 rows.
+The block MoE kernels read the router and the shared-expert gate in F32, so
+these load as the F32 values of their quantization, and so do GDN alpha and
+beta unless both are in one format. Norms stay bf16 and the GDN value heads in
+MLX's grouped order.
+
+### Model Optimizer targets
+
+NVIDIA's Model Optimizer checkpoints (`quantization_config` with
+`quant_method` `modelopt`), such as `nvidia/Qwen3.8-27B-NVFP4` and
+`nvidia/Qwen3.6-35B-A3B-NVFP4`, load as safetensors targets beside MLX's. Each
+layer they quantize, by `quantized_layers` or else by `quant_algo` for every
+layer the `ignore` patterns leave, must hold NVFP4 in groups of 16 (`NVFP4`,
+`W4A16_NVFP4`) or FP8 with one scale per tensor (`FP8`), and every projection
+and the head must be such a layer; any other algorithm is refused before any
+weight download, naming the layer. An NVFP4 weight is `g * e4m3 * e2m1`: its
+E2M1 code (two per byte of `.weight`, U8), its 16 elements' E4M3 scale
+(`.weight_scale`, F8_E4M3) and the tensor's FP32 `.weight_scale_2`; an FP8
+weight is `g * e4m3`, its E4M3 value (`.weight`, F8_E4M3) and the tensor's
+FP32 `.weight_scale`. The kernels read them weights-only, as NVFP4 and FP8 rows
+of `runtime/metal/abi/QuantFormat.h` whose meta unit holds `g` beside the
+E4M3 scales, so every kernel decodes them through the format table alone;
+`.input_scale` and the KV cache quantization, which scale activations on
+NVIDIA GPUs, play no part. The checkpoints keep transformers' module names:
+`model.language_model.*`, `lm_head`, each routed expert a module
+`mlp.experts.<e>` of its own (stacked into one tensor's planes, each expert
+with its own `g`), and RMSNorm weights stored 1 below the weight the norm
+multiplies by, which load as the F32 `1 + w` (the GDN's gated norm as stored,
+widened to F32). Their unquantized tensors (GDN alpha and beta, the router,
+the shared-expert gate, the bf16 token table) load as an MLX target's do, and
+their MTP modules are not read.
+
+### Compressed-tensors targets
+
+llm-compressor's checkpoints (`quantization_config` with `quant_method`
+`compressed-tensors`), such as `unsloth/Qwen3.8-27B-NVFP4` and
+`unsloth/Qwen3.6-35B-A3B-NVFP4`, load as Model Optimizer's do. Each config
+group's weights must be NVFP4 (`nvfp4-pack-quantized`: float 4-bit by
+`tensor_group` in groups of 16) or FP8 (`float-quantized`: float 8-bit by
+`channel` or `tensor`), symmetric and in their stored column order, and every
+projection and the head, each routed expert's by its own name (the first and
+the last expert's before the download, every expert's when its tensors load),
+must be a group's target that no `ignore` entry names; a target or entry is a
+module's name, a regular expression after `re:` matched from the start of the
+name (at most 512 bytes), or the class `Linear`. Anything else is refused before any weight download,
+naming the group or the module, so checkpoints that keep the head or a
+projection in BF16 (RedHatAI's) are refused. An NVFP4 weight's codes are
+`.weight_packed`, its `g` the reciprocal of the F32 `.weight_global_scale`;
+an FP8 weight's F32 or BF16 `.weight_scale` is the tensor's `g` or, `[rows,
+1]`, each row's, which that row's meta units hold.
 
 ### GGUF targets
 
@@ -1077,7 +1131,7 @@ and lists every unsupported tensor in one error:
 
 - linears and experts: Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_0, Q4_0, Q4_1,
   IQ1_S, IQ1_M, IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_XS, IQ4_NL,
-  MXFP4 or PQ2_0;
+  MXFP4, NVFP4 or PQ2_0;
 - token embeddings: all the quantized formats listed for linears and experts,
   gathered directly from native GGUF blocks;
 - norms, the MoE router and shared-expert scalar gate, and the GDN
@@ -1094,6 +1148,17 @@ stores alpha and beta in the file type's format (Q4_K in a Q4_K_M), as in
 lmstudio-community's files, so those load too. A format's image takes the bits
 per weight of its GGUF blocks, but for Q3_K's and Q6_K's padded meta units (1/16
 bit more) and IQ3_S's chunk words (4.06 bits for its 3.44).
+
+llama.cpp's NVFP4 (type 40, as in `cdiamond/Qwen3.8-27B-iMatrix-NVFP4-MTP-GGUF`)
+is `block_nvfp4`: 64 elements, a UE4M3 scale per 16 (an E4M3 byte whose bit 7
+llama.cpp ignores, reading 0x7F as 0) and E2M1 codes, beside an optional F32
+`.scale` tensor, one value for a projection or one per expert for an experts
+tensor (`_exps`), which llama.cpp multiplies the products by; a `.scale` beside
+a weight of another type is refused, as only NVFP4's rows hold one. It loads as
+Model Optimizer's NVFP4 does
+([Model Optimizer targets](#model-optimizer-targets)): four blocks make one
+256-element NVFP4 block, whose meta unit holds the `.scale` value as its `g`
+(1 without one), at 4.625 bits per weight for the file's 4.5.
 
 ### PQ2_0
 
@@ -1132,7 +1197,9 @@ runs on the block kernels its target's projections run on.
 
 ### Vision
 
-Vision comes from the target repository: MLX's `vision_tower.*` tensors, linking
+Vision comes from the target repository: MLX's `vision_tower.*` tensors (or
+transformers' `model.visual.*`, as Model Optimizer keeps them, whose patch
+embedding is already in the image's order), linking
 only `config.json` and the shards holding them, or the GGUF repository's root
 projector, a GGUF whose name holds `mmproj` (as `mmproj-BF16.gguf` or
 `MODEL-mmproj-BF16.gguf`), chosen by its header: a `clip` projector whose
@@ -1336,19 +1403,21 @@ never rewrites upstream files.
 
 Every start writes a model's target, draft and vision tensors into weight
 images in memory, in the layouts the kernels read: any vision tower in the
-BF16 layout of the vision operator, and the target, MLX or GGUF, and the
-DFlash2 draft in the `MDGG0001` layout of the GGUF kernels ([MLX
+BF16 layout of the vision operator, and the target, safetensors or GGUF, and
+the DFlash2 draft in the `MDGG0001` layout of the GGUF kernels ([MLX
 targets](#mlx-targets)). Each source adapter is a loader, which validates the
-source's metadata and plans its images, and a writer: `MlxTargetLoader`
-(`MlxTarget.cpp`, planned by `MlxImage.cpp`) and `GgufPreparation` for an MLX
-target, `DraftCheckpointLoader` (`DraftCheckpoint.cpp`) and `GgufPreparation`
+source's metadata and plans its images, and a writer:
+`SafetensorsTargetLoader` (`SafetensorsTarget.cpp`, planned by
+`SafetensorsImage.cpp`) and `GgufPreparation` for a safetensors target,
+`DraftCheckpointLoader` (`DraftCheckpoint.cpp`) and `GgufPreparation`
 for the draft, `GgufTargetLoader` (`GgufTarget.cpp`, planned by
 `GgufImage.cpp`) and `GgufPreparation` for a GGUF target, `VisionLoader` and
-`VisionPreparation` for an MLX or GGUF vision tower. `GgufPreparation` repacks
-GGUF blocks ([GGUF targets](#gguf-targets)) and MLX tensors without
-requantization, quantizes the draft's BF16 projections ([Drafts](#drafts)),
-and computes an MLX target's GDN decay as `float(-exp(double(A_log)))`, which
-may differ by one float ULP from MLX's float exponential.
+`VisionPreparation` for a safetensors or GGUF vision tower. `GgufPreparation`
+repacks GGUF blocks ([GGUF targets](#gguf-targets)) and safetensors tensors
+without requantization, quantizes the draft's BF16 projections
+([Drafts](#drafts)), and computes a safetensors target's GDN decay as
+`float(-exp(double(A_log)))`, which may differ by one float ULP from MLX's float
+exponential.
 
 Loading never rounds a target or vision weight but in the F32 values of an MLX
 target's quantized router, shared-expert gate or GDN alpha and beta ([MLX
@@ -1428,10 +1497,10 @@ images, and the restore loads it again in one tick more, after the last image
 (`ReleasableMemory`).
 
 `loadQwenTarget` (`QwenTargetLoader.hpp`) reads a target's images
-(`QwenTargetFiles`: the images `MlxTargetLoader` or `GgufTargetLoader` plans)
+(`QwenTargetFiles`: the images `SafetensorsTargetLoader` or `GgufTargetLoader` plans)
 through `BlockTargetFormat`, which reads each tensor as one block-quantized
 `QuantizedSegment` (a fused projection's tensors in output column order), the
-norms as F32 (bf16 for an MLX target), and keeps the GDN output projection's
+norms as F32 (bf16 for an MLX checkpoint), and keeps the GDN output projection's
 input in the source's value-head order, llama.cpp's tiled or MLX's grouped.
 Both Qwen families share one layout
 (`QwenHybridLayout`) and its validator.

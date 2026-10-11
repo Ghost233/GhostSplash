@@ -368,6 +368,20 @@ EngineSnapshot Engine::snapshot() const {
   result.scheduler = scheduler_.snapshot();
   result.resources = cache_.snapshot();
   result.writeBehind = writeBehind_.snapshot();
+  for (const auto &[id, active] : requests_) {
+    if (active.finalized)
+      continue;
+    result.activeRequests.push_back(
+        {.id = id,
+         .phase = scheduler_.phase(id),
+         .priority = active.request.priority,
+         .promptTokens = active.promptTokens,
+         .promptProcessed =
+             std::min(scheduler_.promptProcessed(id), active.promptTokens),
+         .generatedTokens = generatedTokens(active),
+         .maxNewTokens = active.request.maxNewTokens});
+  }
+  std::ranges::sort(result.activeRequests, {}, &ActiveRequestSnapshot::id);
   return result;
 }
 
@@ -1248,6 +1262,11 @@ uint64_t Engine::completedTokens(const Request &active) const {
              : active.exactTokens.size();
 }
 
+uint32_t Engine::generatedTokens(const Request &active) noexcept {
+  return static_cast<uint32_t>(active.exactTokens.size() - active.promptTokens) +
+         (active.sentFirstToken ? 1 : 0);
+}
+
 bool Engine::yieldsBefore(const Request &a, const Request &b) const {
   if (a.request.priority != b.request.priority)
     return a.request.priority > b.request.priority;
@@ -1617,7 +1636,23 @@ void Engine::apply(const BatchPlan &plan,
                                 result.outputTokens.begin(),
                                 result.outputTokens.end());
       outputTokens += static_cast<uint32_t>(result.outputTokens.size());
-      events_.tokens(active.request.id, result.outputTokens);
+      std::span<const uint32_t> unsent = result.outputTokens;
+      if (active.sentFirstToken) {
+        if (unsent.front() != *active.sentFirstToken)
+          throw std::logic_error(
+              "model committed another first token than the one sent");
+        unsent = unsent.subspan(1);
+        active.sentFirstToken.reset();
+      }
+      if (!unsent.empty())
+        events_.tokens(active.request.id, unsent);
+    }
+    if (result.firstToken) {
+      if (active.sentFirstToken || !result.outputTokens.empty())
+        throw std::logic_error(
+            "model reported a first token twice or beside output");
+      active.sentFirstToken = result.firstToken;
+      events_.tokens(active.request.id, {&*result.firstToken, 1});
     }
     if (plan.kind == WorkKind::Decode) {
       draftedTokens += result.draftedTokens;
@@ -1729,8 +1764,7 @@ void Engine::finish(Request &active, EngineFinishReason reason,
     scheduler_.cancel(active.request.id);
   }
   active.finalized = true;
-  const auto completionTokens =
-      static_cast<uint32_t>(active.exactTokens.size() - active.promptTokens);
+  const uint32_t completionTokens = generatedTokens(active);
   events_.completed(active.request.id, reason, active.promptTokens,
                     completionTokens, optionLogits);
   if (reason == EngineFinishReason::Cancelled) {

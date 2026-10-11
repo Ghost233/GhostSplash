@@ -232,6 +232,28 @@ void testPromptProgress() {
           "cancelled prefill published further progress");
 }
 
+// /status active_requests: a live request's phase, prompt progress, output
+// budget and age since its arrival, until it finishes.
+void testSnapshotReportsLiveRequests() {
+  engine::NativeLoopConfig config;
+  LoopFixture fixture(config, {.pages = 512});
+  engine::NativeRuntime &loop = fixture.loop;
+  loop.announceReady();
+  const auto commandsReady = fixture.executor.holdCommands();
+  require(loop.receive(protocol::peer::serialize(request(7, 4))), "request failed");
+  require(loop.tick() && loop.commandInFlight(), "prefill was not submitted");
+  fixture.monotonic += 250.0;
+  const std::vector<engine::ActiveRequestSnapshot> active = loop.statusSnapshot().activeRequests;
+  require(active.size() == 1 && active[0].id == 7 && active[0].phase == engine::Phase::Prefill &&
+              active[0].priority == RequestPriority::Foreground && active[0].promptTokens == 65 &&
+              active[0].promptProcessed == 0 && active[0].generatedTokens == 0 &&
+              active[0].maxNewTokens == 4 && active[0].ageMilliseconds == 250.0,
+          "a prefilling request's progress or age is wrong");
+  *commandsReady = true;
+  runUntilIdle(loop);
+  require(loop.statusSnapshot().activeRequests.empty(), "a finished request is still reported");
+}
+
 void testWireLifecycleAndCacheHit() {
   engine::NativeLoopConfig config;
   config.engine.maxContext = 1024;
@@ -1731,6 +1753,7 @@ void testMemoryStatusReporterLogsTransitionsOnly() {
 int main() {
   try {
     testWireLifecycleAndCacheHit();
+    testSnapshotReportsLiveRequests();
     testGenerationPromptBoundsTheReplayState();
     testRequestFlagsReachTheModel();
     testSamplingReachesTheModel();

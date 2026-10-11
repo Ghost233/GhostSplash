@@ -22,6 +22,7 @@
 #include <cstring>
 #include <filesystem>
 #include <map>
+#include <optional>
 #include <random>
 #include <span>
 #include <stdexcept>
@@ -50,19 +51,21 @@ inline constexpr uint32_t kQ8_0 = ggmlType("Q8_0"), kQ3_K = ggmlType("Q3_K"), kQ
 inline int failures = 0;
 
 // One tensor of the MLX quantization fixture (dev/tests/fixtures/mlx-quantization), which
-// dev/tools/mlx_quantization_fixture.py writes with MLX: its mode (affine or mxfp4), bits, group size and
-// shape, MLX's packed codes, scales and biases (bf16; none for mxfp4) and MLX's reading of it, an affine
-// tensor's codes and the fp32 values.
+// dev/tools/mlx_quantization_fixture.py writes with MLX: its mode (affine, mxfp4 or nvfp4), bits, group size and
+// shape, MLX's packed codes, scales (bf16, or mxfp4's E8M0 and nvfp4's E4M3 bytes) and an affine tensor's bf16
+// biases, and MLX's reading of it, an affine tensor's codes and the fp32 values.
 struct MlxTensor {
-  bool affine = true;
+  std::string mode;
   uint32_t bits = 0, group = 0, rows = 0, columns = 0;
   std::vector<uint8_t> weight, scales, biases, codes, values;
+  [[nodiscard]] bool affine() const { return mode == "affine"; }
   // Its format (metal/abi/QuantFormat.h).
   [[nodiscard]] Fmt format() const {
-    return affine ? Fmt(quant_affine_format_of(bits, group)) : gguf_reference::MXFP4;
+    return affine() ? Fmt(quant_affine_format_of(bits, group))
+                    : mode == "nvfp4" ? gguf_reference::NVFP4 : gguf_reference::MXFP4;
   }
   [[nodiscard]] std::vector<uint8_t> native() const {
-    return gguf_reference::mlxNative(affine, bits, group, rows, columns, weight, scales, biases);
+    return gguf_reference::mlxNative(format(), rows, columns, weight, scales, biases);
   }
 };
 inline std::vector<MlxTensor> mlxFixture(const char *path) {
@@ -79,7 +82,7 @@ inline std::vector<MlxTensor> mlxFixture(const char *path) {
   std::vector<MlxTensor> tensors;
   for (NSDictionary *entry in fixture[@"formats"]) {
     MlxTensor &t = tensors.emplace_back();
-    t.affine = [entry[@"mode"] isEqual:@"affine"];
+    t.mode = [entry[@"mode"] UTF8String];
     t.bits = [entry[@"bits"] unsignedIntValue];
     t.group = [entry[@"group"] unsignedIntValue];
     t.rows = [entry[@"rows"] unsignedIntValue];
@@ -87,7 +90,7 @@ inline std::vector<MlxTensor> mlxFixture(const char *path) {
     t.weight = bytes(entry[@"weight"]);
     t.scales = bytes(entry[@"scales"]);
     t.values = bytes(entry[@"values"]);
-    if (t.affine) {
+    if (t.affine()) {
       t.biases = bytes(entry[@"biases"]);
       t.codes = bytes(entry[@"codes"]);
     }
@@ -140,9 +143,10 @@ inline void checkGolden(const Goldens &hashes, const std::string &name, std::spa
 
 // Every byte random and every half scale a random finite half: either sign,
 // zero and subnormal included; an MLX affine format's bf16 scales and biases
-// random finite bf16s.
+// random finite bf16s; NVFP4's and FP8's blocks as makeNative draws them.
 inline std::vector<uint8_t> fixture(Fmt f, uint32_t rows, uint32_t K, uint32_t seed) {
   std::mt19937 rng(seed);
+  if (f == gguf_reference::NVFP4 || f == gguf_reference::FP8) return gguf_reference::makeNative(f, rows, K, rng);
   if (gguf_reference::affine(f)) {
     std::vector<uint8_t> native((size_t)rows * gguf_reference::rowBytes(f, K));
     for (auto &b : native) b = (uint8_t)rng();
@@ -157,6 +161,25 @@ inline std::vector<uint8_t> fixture(Fmt f, uint32_t rows, uint32_t K, uint32_t s
     while ((h & 0x7C00) == 0x7C00);
     return h;
   });
+}
+
+// The GGUF tensor type of a format's tensors: its table type, or llama.cpp's
+// NVFP4 for NVFP4, whose native rows the loader builds from it; none for the
+// loader's other formats (MLX affine, FP8).
+inline std::optional<uint32_t> ggufType(uint32_t format) {
+  if (format == GGUF_FMT_NVFP4) return model::ggml::kNVFP4;
+  if (quant_loader_format(format)) return std::nullopt;
+  return kQuantFormats[format].ggml_type;
+}
+
+// block_nvfp4 rows of llama.cpp's NVFP4 (ggml type 40), every byte random,
+// so their scales take every byte: 0x7F, which UE4M3 reads as 0, and those
+// of bit 7, which it ignores, included.
+inline std::vector<uint8_t> blockNvfp4Fixture(uint32_t rows, uint32_t K, uint32_t seed) {
+  std::mt19937 rng(seed);
+  std::vector<uint8_t> blocks(size_t(rows) * K / 64 * gguf_reference::kBlockNvfp4Bytes);
+  for (auto &b : blocks) b = uint8_t(rng());
+  return blocks;
 }
 
 // F32 values in [-1, -0.5] and [0.5, 1], optionally exact bf16 values (the

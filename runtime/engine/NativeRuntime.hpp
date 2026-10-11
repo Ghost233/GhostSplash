@@ -113,6 +113,9 @@ public:
   [[nodiscard]] engine::EngineSnapshot snapshot() const {
     return core_.snapshot();
   }
+  // The snapshot /status reports: each live request's age counted from its
+  // arrival, on the runtime's clock.
+  [[nodiscard]] engine::EngineSnapshot statusSnapshot() const;
   [[nodiscard]] WeightsSnapshot weightsSnapshot() const {
     return {idleReleaseSeconds_, config_.weights->released(), weightRestores_,
             weightRestoreFailures_};

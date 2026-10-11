@@ -141,7 +141,7 @@ std::string RuntimeBootstrap::statusJson(const RuntimeMetricsSnapshot &metrics,
   metal::MetalBackend &backend = resources_->backend();
   const bool healthy = backend.healthy();
   return runtimeStatusJson(
-      resources_->memoryPlan(), nativeLoop_->snapshot(), backend.memoryStats(),
+      resources_->memoryPlan(), nativeLoop_->statusSnapshot(), backend.memoryStats(),
       report_.warmup, report_.memoryAudit, metrics, model_->telemetry(),
       resources_->cacheIdentity(), resources_->memoryGovernor().snapshot(),
       healthy, healthy ? std::string{} : backend.unhealthyReason(),

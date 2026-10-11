@@ -124,7 +124,8 @@ inline constexpr bool gguf_embedding_format(uint32_t format) {
          format == GGUF_FMT_Q2K || format == GGUF_FMT_Q80 || format == GGUF_FMT_Q40 || format == GGUF_FMT_Q41 ||
          format == GGUF_FMT_IQ4XS || format == GGUF_FMT_IQ4NL || format == GGUF_FMT_IQ3S || format == GGUF_FMT_IQ2S ||
          format == GGUF_FMT_IQ3XXS || format == GGUF_FMT_IQ2XXS || format == GGUF_FMT_IQ2XS ||
-         format == GGUF_FMT_IQ1S || format == GGUF_FMT_IQ1M || format == GGUF_FMT_MXFP4 || format == GGUF_FMT_PQ20 || quant_affine_format(format);
+         format == GGUF_FMT_IQ1S || format == GGUF_FMT_IQ1M || format == GGUF_FMT_MXFP4 || format == GGUF_FMT_PQ20 ||
+         format == GGUF_FMT_NVFP4 || quant_affine_format(format);
 }
 
 // Prism ML's input rotation (kernels/shared/gguf_rotation.metal): weights

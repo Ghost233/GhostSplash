@@ -473,6 +473,15 @@ void NativeRuntime::promptProgress(uint64_t requestId,
                      config_.monotonicMilliseconds())});
 }
 
+engine::EngineSnapshot NativeRuntime::statusSnapshot() const {
+  engine::EngineSnapshot result = core_.snapshot();
+  const double now = config_.monotonicMilliseconds();
+  for (engine::ActiveRequestSnapshot &request : result.activeRequests)
+    if (const auto found = telemetry_.find(request.id); found != telemetry_.end())
+      request.ageMilliseconds = now - found->second.arrivedMilliseconds;
+  return result;
+}
+
 void NativeRuntime::tokens(uint64_t requestId,
                            std::span<const uint32_t> values) {
   RequestTelemetry &telemetry = telemetry_.at(requestId);
