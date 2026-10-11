@@ -80,7 +80,7 @@ RuntimeResourcesConfig budgetConfig(const char *metallibPath, const std::filesys
   config.metallibPath = metallibPath;
   config.modelRoot = root;
   config.model = model::makeModelDescriptor("budget-test", planned.target, planned.draft, planned.vision,
-                                            model::TargetSource::Mlx, model::VisionSource::Mlx);
+                                            model::TargetSource::Safetensors, model::VisionSource::Safetensors);
   config.buildId = "budget-test";
   writeCheckpoints(root, config.model);
   return config;
@@ -120,8 +120,8 @@ uint64_t minimumBytes(const RuntimeResourcesConfig &config) {
 void testPersistentCacheNamespace() {
   const model::ModelDescriptor model = model::makeModelDescriptor(
       "namespace-test", model::Qwen3_8Layout{}, model::kQwen3_8DraftLayout,
-      model::kQwen3_8VisionLayout, model::TargetSource::Mlx,
-      model::VisionSource::Mlx);
+      model::kQwen3_8VisionLayout, model::TargetSource::Safetensors,
+      model::VisionSource::Safetensors);
   const auto identity = [&](char models, std::string_view build, kv::Format format) {
     kv::Layout layout = model.targetKvLayout;
     layout.format = format;
@@ -277,8 +277,8 @@ void testModelBeyondBudgetIsRefusedBeforeLoading(const char *metallibPath) {
   const test::TemporaryDirectory root("splash-budget");
   RuntimeResourcesConfig config = budgetConfig(metallibPath, root.path());
   config.model = model::makeModelDescriptor("budget-test", model::Qwen3_8Layout{}, model::kQwen3_8DraftLayout,
-                                            model::kQwen3_8VisionLayout, model::TargetSource::Mlx,
-                                            model::VisionSource::Mlx);
+                                            model::kQwen3_8VisionLayout, model::TargetSource::Safetensors,
+                                            model::VisionSource::Safetensors);
   writeCheckpoints(root.path(), config.model);
   config.maximumMemoryBytes = model::modelWeightBytes(root.path(), config.model) + kGiB / 2;
   try {
@@ -304,8 +304,8 @@ void testStartupAdmissionIgnoresModelSize(const char *metallibPath) {
   target.layers = 16;
   target.hiddenCaptureLayers = {1, 4, 7, 10, 13};
   config.model = model::makeModelDescriptor("budget-test", target, model::kQwen3_8DraftLayout,
-                                            model::kQwen3_8VisionLayout, model::TargetSource::Mlx,
-                                            model::VisionSource::Mlx);
+                                            model::kQwen3_8VisionLayout, model::TargetSource::Safetensors,
+                                            model::VisionSource::Safetensors);
   writeCheckpoints(root.path(), config.model);
   require(model::modelWeightBytes(root.path(), config.model) > 3 * kGiB, "the model must exceed the sample");
   config.hostAvailableMemory = [] { return std::optional<uint64_t>(3 * kGiB); };
@@ -337,8 +337,8 @@ void testLoadedVisionIsRequiredOnlyWithVision() {
   model::LoadedModel loaded;
   loaded.descriptor = model::makeModelDescriptor(
       "loaded-test", model::Qwen3_8Layout{}, model::kQwen3_8DraftLayout,
-      model::kQwen3_8VisionLayout, model::TargetSource::Mlx,
-      model::VisionSource::Mlx);
+      model::kQwen3_8VisionLayout, model::TargetSource::Safetensors,
+      model::VisionSource::Safetensors);
   model::Qwen3_8Weights target;
   target.actualAllocatedBytes = 1;
   target.manifestFingerprintSha256 = "target";
@@ -370,8 +370,8 @@ void testFailedStepIsNamed(const char *metallibPath) {
   config.metallibPath = metallibPath;
   config.modelRoot = root.path();
   config.model = model::makeModelDescriptor("assembly-test", planned.target, planned.draft,
-                                            planned.vision, model::TargetSource::Mlx,
-                                            model::VisionSource::Mlx);
+                                            planned.vision, model::TargetSource::Safetensors,
+                                            model::VisionSource::Safetensors);
   config.model.sourceIdentity = "synthetic";
   config.buildId = "assembly-test";
   const auto host = [&](uint64_t available) {

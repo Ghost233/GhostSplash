@@ -1,6 +1,7 @@
 // The GGUF CPU reference's fp32 values against golden hashes of upstream
-// GGML's dequantization per GGUF format, and against MLX's own reading of
-// MLX's quantization per MLX affine format and for mxfp4.
+// GGML's dequantization per GGUF format and of llama.cpp's NVFP4 tensor type,
+// and against MLX's own reading of MLX's quantization per MLX affine format
+// and for mxfp4 and nvfp4.
 //   gguf-reference GOLDENS MLX_FIXTURE
 // GOLDENS is dev/tests/fixtures/weight-goldens/goldens.json; its README says
 // how to update it. With SPLASH_GGML_ORACLE=<libggml-base.dylib> the reference
@@ -16,7 +17,8 @@ using namespace gguf_reference;
 
 namespace {
 
-// The goldens hash fixture(f, kRows, kColumns, kSeed + f).
+// The goldens hash fixture(f, kRows, kColumns, kSeed + f), and llama.cpp's
+// NVFP4 blockNvfp4Fixture(kRows, kColumns, kSeed + GGUF_FMT_NVFP4).
 constexpr uint32_t kRows = 256, kColumns = 1024, kSeed = 7;
 
 void checkFormat(void *ggml, const Goldens &hashes, Fmt f) {
@@ -37,18 +39,39 @@ void checkFormat(void *ggml, const Goldens &hashes, Fmt f) {
                                      official.size() * sizeof(float)}).c_str());
 }
 
+// llama.cpp's NVFP4 (ggml type 40), which the loader converts into NVFP4's
+// native rows: the reference's reading of block_nvfp4 rows whose scales take
+// every byte (blockNvfp4Values) against GGML's golden hash, and GGML's own.
+void checkBlockNvfp4(void *ggml, const Goldens &hashes) {
+  const std::vector<uint8_t> rows = blockNvfp4Fixture(kRows, kColumns, kSeed + GGUF_FMT_NVFP4);
+  const std::vector<float> values = blockNvfp4Values(rows);
+  const std::span<const uint8_t> bytes(reinterpret_cast<const uint8_t *>(values.data()), values.size() * sizeof(float));
+  checkGolden(hashes, "ggml-nvfp4", bytes, "CPU reference matches the GGML golden hash: llama.cpp's NVFP4");
+  if (!ggml) return;
+  std::vector<float> official;
+  std::string error;
+  const bool loaded = ggmlDequantizeRows(ggml, "dequantize_row_nvfp4", rows, values.size(), official, error);
+  check(loaded && official.size() == values.size() && !memcmp(official.data(), values.data(), bytes.size()),
+        std::string("CPU reference matches GGML: llama.cpp's NVFP4") + (loaded ? "" : " (" + error + ")"));
+  if (loaded)
+    std::printf("GGML ggml-nvfp4 %s\n",
+                model::weightDigest({reinterpret_cast<const uint8_t *>(official.data()),
+                                     official.size() * sizeof(float)}).c_str());
+}
+
 // Each fixture tensor as the loader's native rows of its format (mlxNative)
 // against MLX's own reading of it: an affine tensor's codes and the fp32
-// values, bit for bit but for mxfp4's zero code 8, which MLX reads as -0 and
+// values, bit for bit but for mxfp4's and nvfp4's zero code 8, which MLX reads as -0 and
 // GGML's table, as +0.
 void checkMlx(const char *path) {
   const std::vector<MlxTensor> tensors = mlxFixture(path);
-  check(tensors.size() == GGUF_FMT_COUNT - GGUF_FMT_AF2G32 + 1, "MLX fixture holds every MLX affine format and mxfp4");
+  check(tensors.size() == GGUF_FMT_AF8G128 - GGUF_FMT_AF2G32 + 3,
+        "MLX fixture holds every MLX affine format, mxfp4 and nvfp4");
   for (const MlxTensor &tensor : tensors) {
     const Fmt f = tensor.format();
     const uint32_t rows = tensor.rows, K = tensor.columns;
     const std::vector<uint8_t> native = tensor.native();
-    if (tensor.affine) {
+    if (tensor.affine()) {
       bool same = true;
       for (uint32_t r = 0; r < rows; ++r)
         for (uint32_t l = 0; l < K; ++l)
@@ -63,9 +86,10 @@ void checkMlx(const char *path) {
     for (size_t i = 0; same && i < reference.size(); ++i) {
       float value;
       memcpy(&value, tensor.values.data() + 4 * i, 4);
-      same = tensor.affine ? !memcmp(&value, &reference[i], 4) : value == reference[i];
+      same = tensor.affine() ? !memcmp(&value, &reference[i], 4) : value == reference[i];
     }
-    check(same, std::string("CPU reference matches MLX's values: ") + fmtName(f) + (tensor.affine ? "" : " (MLX mxfp4)"));
+    check(same, std::string("CPU reference matches MLX's values: ") + fmtName(f) +
+                    (tensor.affine() ? "" : " (MLX " + tensor.mode + ")"));
   }
 }
 
@@ -84,6 +108,7 @@ int main(int argc, char **argv) {
     }
     const Goldens hashes = goldens(argv[1], @"gguf_dequantization");
     for (uint32_t f = 0; f < GGUF_FMT_AF2G32; ++f) checkFormat(ggml, hashes, Fmt(f));
+    checkBlockNvfp4(ggml, hashes);
     checkMlx(argv[2]);
     std::printf("%s (%d failures)\n", failures ? "GGUF reference tests FAILED" : "GGUF reference tests passed",
                 failures);

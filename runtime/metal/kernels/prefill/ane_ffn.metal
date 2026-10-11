@@ -127,6 +127,9 @@ inline void ane_ffn_gguf_values(thread float (&value)[4], device uchar *plane0, 
   } else if constexpr (F::Kind == QuantInt8) {
     const uint2 codes = F::values(q);
     v = float4(as_type<char4>(h ? codes.y : codes.x)) * s;
+  } else if constexpr (F::Kind == QuantFloat8) {
+    const uint2 codes = F::values(q);
+    v = float4(quant_e4m3_word(h ? codes.y : codes.x)) * s;
   } else {
     const uint2 grid = F::grid(q);
     const uint signs = F::signs(q) >> (4 * h);

@@ -12,9 +12,16 @@
 namespace splash::ops {
 
 NativeRows::NativeRows(metal::MetalBuffer rows, uint32_t formatId) : rows(std::move(rows)), formatId(formatId) {
-  if (!gguf_embedding_format(formatId)) throw std::invalid_argument("unsupported native embedding format");
+  if (!isBfloat16() && !gguf_embedding_format(formatId))
+    throw std::invalid_argument("unsupported native embedding format");
 }
-const char *NativeRows::name() const noexcept { return kQuantFormats[formatId].name; }
+const char *NativeRows::name() const noexcept { return isBfloat16() ? "bf16" : kQuantFormats[formatId].name; }
+uint32_t NativeRows::blockElements() const noexcept {
+  return isBfloat16() ? 1 : kQuantFormats[formatId].block_elements;
+}
+uint32_t NativeRows::blockBytes() const noexcept {
+  return isBfloat16() ? sizeof(uint16_t) : kQuantFormats[formatId].block_bytes;
+}
 
 void Embedding::add(metal::CommandGraph &graph, metal::MetalBuffer tokens,
                     const EmbeddingWeights &table, metal::MetalBuffer output,
@@ -26,10 +33,9 @@ void Embedding::add(metal::CommandGraph &graph, metal::MetalBuffer tokens,
   requireBytes(output, uint64_t{rows} * table.inputSize * sizeof(uint16_t), "embedding output");
   const NativeRows &native = table.blocks();
   // Every token's row of native blocks (kernels/shared/embedding.metal).
-  const QuantFormat &format = kQuantFormats[native.formatId];
-  if (table.inputSize % format.block_elements)
-    throw std::invalid_argument("native token rows take whole blocks");
-  requireBytes(native.rows, uint64_t{table.outputSize} * (table.inputSize / format.block_elements) * format.block_bytes,
+  if (table.inputSize % native.blockElements()) throw std::invalid_argument("native token rows take whole blocks");
+  requireBytes(native.rows,
+               uint64_t{table.outputSize} * (table.inputSize / native.blockElements()) * native.blockBytes(),
                "token table");
   const GgufEmbedParams params{rows, table.outputSize, table.inputSize};
   if (table.rotation) {

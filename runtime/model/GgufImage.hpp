@@ -33,30 +33,55 @@ struct RowOrder {
   uint32_t valueHeadsPerKey = 0;
 };
 
-// An MLX quantized tensor's codes and scales, and an affine one's biases,
-// which the writer interleaves into the native rows of its format
+// A quantized safetensors tensor's codes and scales, and an affine one's
+// biases, which the writer interleaves into the native rows of its format
 // (metal/abi/QuantFormat.h): per group an affine tensor's bf16 scale, its
 // bias and its codes, or an mxfp4 tensor's block_mxfp4, its E8M0 scale and
-// codes (GGUF_FMT_MXFP4). Or a BF16 weight, which the writer quantizes into
+// codes (GGUF_FMT_MXFP4); per 256 elements an nvfp4 tensor's E4M3 scales, its
+// row's tensor scale (TensorScale) and codes, or an fp8 tensor's row's tensor
+// scale and E4M3 values. Or a BF16 weight, which the writer quantizes into
 // native af4g64 rows as MLX's affine quantization rounds it (a DFlash2
 // draft's projections).
-struct MlxSource {
+struct SafetensorsSource {
   const SourceTensor *codes = nullptr, *scales = nullptr, *biases = nullptr;
   const SourceTensor *bfloat16 = nullptr;
 };
+// Whether a quantized safetensors tensor may be in a format: MLX affine,
+// mxfp4, nvfp4 or fp8.
+[[nodiscard]] constexpr bool safetensorsFormat(uint32_t format) {
+  return quant_loader_format(format) || format == GGUF_FMT_MXFP4;
+}
 
-// Rows [0, rows) of one source tensor in image order, read from `file`: rows
-// of rowBytes bytes at `offset` of its tensor data, or, for an MLX tensor
-// (mlx.codes or mlx.bfloat16 set), its format's native rows.
+// The tensor scale g of an nvfp4 or fp8 tensor's rows: the F32 or BF16 values
+// at `offset` of file's tensor data (`bytes` long), one for every
+// rowsPerValue rows, or their reciprocals. Model Optimizer's weight_scale_2 or
+// per-tensor fp8 weight_scale holds the tensor's g, compressed-tensors'
+// weight_global_scale its 1 / g and its per-channel fp8 weight_scale each
+// row's g [rows, 1], and a llama.cpp NVFP4 projection's .scale its g or
+// each expert's. Without one (rowsPerValue 0), as in MLX's nvfp4, g is 1.
+struct TensorScale {
+  const WeightSource *file = nullptr;
+  uint64_t offset = 0, bytes = 0;
+  uint64_t rowsPerValue = 0;
+  bool bfloat16 = false, reciprocal = false;
+};
+
+// Rows [0, rows) of one source tensor in image order, read from `file`: rows of
+// rowBytes bytes at `offset` of its tensor data, or its format's native rows,
+// which the writer builds from a quantized safetensors tensor's tensors
+// (safetensors.codes or safetensors.bfloat16 set) or from llama.cpp's NVFP4
+// rows (ggufNvfp4RowBytes set: rows of block_nvfp4 that long from `offset` on).
 struct TensorRows {
   std::string name;
-  uint32_t type = 0;   // ggml type, or QUANT_AFFINE_TYPE
+  uint32_t type = 0;   // ggml type, or a loader's (metal/abi/QuantFormat.h)
   uint64_t offset = 0; // in the file's tensor data
   uint64_t rows = 0;
   uint64_t rowBytes = 0;
   RowOrder order{};
   const WeightSource *file = nullptr;
-  MlxSource mlx{};
+  SafetensorsSource safetensors{};
+  TensorScale scale{};
+  uint64_t ggufNvfp4RowBytes = 0;
 };
 
 // Header and descriptor bytes.
@@ -67,12 +92,15 @@ struct Fill {
 // How a copy writes each value: as stored, narrowed from F32 to the bf16
 // value it equals exactly (rows the kernels read as bf16), widened from BF16
 // to the F32 value it equals (rows the kernels read as F32), as the F32 decay
-// -exp(A_log) of an MLX GDN's A_log, BF16 or F32, which float(-exp(double))
-// rounds once, or as the F32 values of an MLX quantized tensor's rows (affine
-// s * code + z, or mxfp4), which the kernels read unquantized (its MoE router
-// and shared-expert gate, GDN alpha and beta of two formats), or the exact
-// F32 values of Q3_K rows paired with an F32 GDN gate.
-enum class Conversion : uint8_t { None, NarrowToBfloat16, WidenToFloat32, Decay, DequantizeToFloat32 };
+// -exp(A_log) of a safetensors GDN's A_log, BF16 or F32, which
+// float(-exp(double)) rounds once, as the F32 values of a quantized
+// safetensors tensor's rows (affine s * code + z, mxfp4, nvfp4 or fp8), which
+// the kernels read unquantized (its MoE router and shared-expert gate, GDN
+// alpha and beta of two formats), the exact F32 values of Q3_K rows paired
+// with an F32 GDN gate, or as the F32 1 + w of a BF16 RMSNorm
+// weight w, which transformers stores 1 below the weight the norm multiplies
+// by (exact but for |w| < 2^-16, which it rounds once).
+enum class Conversion : uint8_t { None, NarrowToBfloat16, WidenToFloat32, Decay, DequantizeToFloat32, CenteredNorm };
 // Rows written back to back, each value converted as `conversion` says.
 struct Copy {
   uint64_t destination = 0;
@@ -101,13 +129,13 @@ struct Image {
 
 // The destination bytes of `sourceBytes` bytes of rows copied with
 // `conversion`: halved when narrowed, doubled when widened (and for the decay
-// of BF16 values), four per element when decoded to F32.
+// of BF16 values and a centered norm), four per element when decoded to F32.
 [[nodiscard]] uint64_t convertedBytes(const TensorRows &source, Conversion conversion, uint64_t sourceBytes);
 
 // Lays out one image: its header block, then 16 KiB-aligned sections, each a
 // descriptor, copied rows or a quantized tensor's planes. The planners of a
-// GGUF target (planImages) and of an MLX target (model/MlxImage.hpp) build
-// their images with it.
+// GGUF target (planImages) and of a safetensors target
+// (model/SafetensorsImage.hpp) build their images with it.
 class ImageBuilder {
 public:
   ImageBuilder(std::string name, uint32_t layer, uint32_t type);

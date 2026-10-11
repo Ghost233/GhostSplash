@@ -307,11 +307,12 @@ class UpstreamTest(unittest.TestCase):
         fake = fake_hub(self, self.cache)
         required = (
             r"this model requires an MLX checkpoint \(affine 2, 3, 4, 5, 6 or 8 bits "
-            r"in groups of 32, 64 or 128, or mxfp4\) or a supported GGUF"
+            r"in groups of 32, 64 or 128, mxfp4 or nvfp4\), an NVFP4 checkpoint of "
+            r"Model Optimizer or compressed-tensors, or a supported GGUF"
         )
         formats = (
             r"; MLX weights load as affine 2, 3, 4, 5, 6 or 8 bits in groups of 32, "
-            "64 or 128, or as mxfp4"
+            "64 or 128, or as mxfp4 or nvfp4"
         )
         for name, quantization, refusal in (
             # A transformers quantization_config alone is another method.
@@ -338,9 +339,21 @@ class UpstreamTest(unittest.TestCase):
                 required,
             ),
             (
-                "nvfp4",
-                {"quantization": {"mode": "nvfp4", "bits": 4, "group_size": 16}},
-                "quantization is nvfp4 4-bit in groups of 16" + formats,
+                "nvfp4-g32",
+                {"quantization": {"mode": "nvfp4", "bits": 4, "group_size": 32}},
+                "quantization is nvfp4 4-bit in groups of 32" + formats,
+            ),
+            # Model Optimizer's NVFP4 and FP8 only, its activation scales unused.
+            (
+                "modelopt-awq",
+                {
+                    "quantization_config": {
+                        "quant_method": "modelopt",
+                        "quant_algo": "W4A8_AWQ",
+                    }
+                },
+                "quantization_config is W4A8_AWQ; Model Optimizer weights load as "
+                "NVFP4, W4A16_NVFP4 or FP8",
             ),
             (
                 "mxfp4-g64",
@@ -378,7 +391,7 @@ class UpstreamTest(unittest.TestCase):
                     }
                 },
                 "quantization language_model.lm_head is unquantized; Splash loads "
-                "quantized MLX projections and token tables",
+                "quantized MLX projections",
             ),
         ):
             with self.subTest(name=name):
@@ -388,13 +401,45 @@ class UpstreamTest(unittest.TestCase):
                     self.prepare(selection(self.root, f"someone/{name}"))
                 self.assertEqual(fake.downloads, [f"someone/{name}/config.json"])
         # MLX writes both keys, and states the mode only in newer versions; a
-        # module's entry gives it its own format, affine unless it says.
+        # module's entry gives it its own format, affine unless it says. Model
+        # Optimizer and compressed-tensors write a quantization_config alone.
+        modelopt = {
+            "quant_method": "modelopt",
+            "quant_algo": "NVFP4",
+            "group_size": 16,
+            "ignore": ["mtp*"],
+        }
+        compressed_tensors = {
+            "quant_method": "compressed-tensors",
+            "format": "nvfp4-pack-quantized",
+            "config_groups": {
+                "group_0": {
+                    "targets": ["Linear"],
+                    "weights": {
+                        "num_bits": 4,
+                        "type": "float",
+                        "strategy": "tensor_group",
+                        "group_size": 16,
+                        "symmetric": True,
+                    },
+                }
+            },
+            "ignore": ["re:.*mlp\\.gate$"],
+        }
+        for name, quantization in (
+            ("modelopt", {"quantization_config": modelopt}),
+            ("compressed-tensors", {"quantization_config": compressed_tensors}),
+        ):
+            fake.publish(f"someone/{name}", "c" * 40, target(quantization))
+            self.prepare(selection(self.root, f"someone/{name}"))
+            assembly.verify(selection(self.root, f"someone/{name}").link)
         for name, affine in (
             ("mlx", {"bits": 4, "group_size": 64, "mode": "affine"}),
             ("older-mlx", {"bits": 4, "group_size": 64}),
             ("q8", {"bits": 8, "group_size": 64}),
             ("q3-g32", {"bits": 3, "group_size": 32, "mode": "affine"}),
             ("mxfp4", {"bits": 4, "group_size": 32, "mode": "mxfp4"}),
+            ("nvfp4", {"bits": 4, "group_size": 16, "mode": "nvfp4"}),
             (
                 "mixed",
                 {
@@ -456,7 +501,9 @@ class UpstreamTest(unittest.TestCase):
                 "Qwen/Qwen3.8-27B",
                 transformers_release,
                 r"this model requires an MLX checkpoint \(affine 2, 3, 4, 5, 6 or 8 "
-                r"bits in groups of 32, 64 or 128, or mxfp4\) or a supported GGUF",
+                r"bits in groups of 32, 64 or 128, mxfp4 or nvfp4\), an NVFP4 "
+                r"checkpoint of Model Optimizer or compressed-tensors, or a supported "
+                r"GGUF",
             ),
             (
                 "mlx-community/Qwen3.5-4B-MLX-4bit",

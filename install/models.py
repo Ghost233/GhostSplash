@@ -44,10 +44,11 @@ from server import serve_options
 from . import paths
 
 MODELS = paths.MODELS
-# The bound on one JSON metadata file the installer reads; such files are
-# kilobytes, so a larger one is refused unread. The engine bounds the files it
-# reads by its own rule.
-MAX_JSON_BYTES = 4 * 1024 * 1024
+# The bound on one JSON metadata file the installer reads, a larger one being
+# refused unread: configs are kilobytes, and a shard index names every tensor,
+# 14 MB for a checkpoint that stores each routed expert's tensors of its own
+# (Model Optimizer's). The engine bounds the files it reads by its own rule.
+MAX_JSON_BYTES = 64 * 1024 * 1024
 # What installation_kind finds at a selection link: an assembly, or a Splash
 # package an earlier release installed.
 ASSEMBLY, PACKAGE = "assembly", "package"

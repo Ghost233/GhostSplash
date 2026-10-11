@@ -1,13 +1,14 @@
 #pragma once
 
 #include "metal/abi/QuantTables.h"
+#include "metal/kernels/common/quant_formats.h"
 #include <metal_stdlib>
 
 // The native GGUF blocks of the token tables (ops/Embedding.cpp), one struct
 // per format: a row is hidden / Weights blocks of Bytes bytes, each laid out as
-// the format's ggml block_* (an MLX affine table: the loader's block of
-// metal/abi/QuantFormat.h) at the byte offsets its struct names, and value is
-// element dim as bf16. Every format's value keeps the source order of its
+// the format's ggml block_* (an MLX affine or nvfp4 table: the loader's block
+// of metal/abi/QuantFormat.h) at the byte offsets its struct names, and value
+// is element dim as bf16. Every format's value keeps the source order of its
 // float operations (reassociate(off)), as the GGUF GEMMs do.
 
 // The little-endian half at byte `at` of a block.
@@ -263,6 +264,20 @@ struct GgufEmbedMXFP4 {
     return bfloat(float(kFP4Values[q]) * as_type<float>(e < 2 ? 0x00200000u << e : (e - 1) << 23));
   }
 };
+// The loader's nvfp4 block: uchar scales[16] | float g | uchar codes[128], element l in nibble l % 2 of codes[l / 2]
+// and its 16-group's E4M3 scale scales[l / 16]; value = kFP4Values[code] (twice the E2M1 value) times the scale the
+// projections' coefficient rounds once (kernels/common/quant_formats.h), (e4m3 / 2^8) (128 g).
+struct GgufEmbedNVFP4 {
+  enum : uint { Weights = 256, Bytes = 148, Scales = 0, G = QUANT_NVFP4_G, Codes = QUANT_NVFP4_CODES };
+  __attribute__((always_inline)) static bfloat value(device const uchar *block, uint dim) {
+#pragma clang fp reassociate(off)
+    const uint l = dim % Weights;
+    const uchar q = (block[Codes + l / 2] >> (4 * (l % 2))) & 15;
+    const float g = as_type<float>(uint(block[G]) | uint(block[G + 1]) << 8 | uint(block[G + 2]) << 16 |
+                                   uint(block[G + 3]) << 24);
+    return bfloat(float(kFP4Values[q]) * (float(quant_e4m3_pair(block[Scales + l / 16]).x) * (128.0f * g)));
+  }
+};
 // MLX affine {bf16 s, bf16 z, codes}: element l of the group is code l of the codes' little-endian bit string of
 // Bits-bit codes; value = s * code + z, rounded once to bf16.
 template <uint Bits, uint Group> struct GgufEmbedAffine {
@@ -276,6 +291,13 @@ template <uint Bits, uint Group> struct GgufEmbedAffine {
     const float s = float(as_type<bfloat>(ushort(block[S] | (block[S + 1] << 8))));
     const float z = float(as_type<bfloat>(ushort(block[Z] | (block[Z + 1] << 8))));
     return bfloat(code * s + z);
+  }
+};
+// A bf16 token table, which a safetensors checkpoint keeps unquantized: each value is its own block.
+struct GgufEmbedBF16 {
+  enum : uint { Weights = 1, Bytes = 2 };
+  __attribute__((always_inline)) static bfloat value(device const uchar *block, uint) {
+    return as_type<bfloat>(ushort(block[0] | (block[1] << 8)));
   }
 };
 #define GGUF_EMBED_AFFINE(B)                                                                                       \

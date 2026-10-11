@@ -130,6 +130,18 @@ kernel void gguf_repack(device const uchar *src [[buffer(0)]], device uchar *dst
       for (uint i = 0; i < f.meta_bytes; ++i) meta[i] = blk[i];
       break;
     }
+    case GGUF_FMT_NVFP4: {   // {E4M3 scales[16], g, codes[128]}: element e of group j in bits 4 (e % 2) of codes[16 j + e / 2]
+      for (uint e = 0; e < 32; ++e) lo[quant_slot(e)] = (blk[QUANT_NVFP4_CODES + 16 * j + e / 2] >> (4 * (e % 2))) & 15;
+      gguf_store_bits(lo, 4, out0);
+      if (j == 0) for (uint i = 0; i < QUANT_NVFP4_CODES; ++i) meta[i] = blk[i];   // the scales and g
+      break;
+    }
+    case GGUF_FMT_FP8: {   // {g, E4M3 values[256]}
+      for (uint e = 0; e < 32; ++e) lo[quant_slot(e)] = blk[QUANT_FP8_VALUES + 32 * j + e];
+      gguf_store_bits(lo, 8, out0);
+      if (j == 0) for (uint i = 0; i < QUANT_FP8_VALUES; ++i) meta[i] = blk[i];   // g
+      break;
+    }
     case GGUF_FMT_IQ3XXS: case GGUF_FMT_IQ2XXS: case GGUF_FMT_IQ2XS:   // {d, qs[64 | 32], signs and scales[32] | scales[8]}
       gguf_copy_native(blk, j, f, 2, 66, 0, out0, out1, meta);
       break;

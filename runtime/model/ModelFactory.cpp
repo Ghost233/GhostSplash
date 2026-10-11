@@ -1,8 +1,8 @@
 #include "ModelFactory.hpp"
 #include "model/DraftCheckpoint.hpp"
 #include "model/GgufTarget.hpp"
-#include "model/MlxTarget.hpp"
 #include "model/QwenTargetLoader.hpp"
+#include "model/SafetensorsTarget.hpp"
 #include "model/VisionLoader.hpp"
 
 #include <functional>
@@ -27,7 +27,7 @@ void requireCompatibleModel(const LoadedModel &model) {
 }
 
 std::unique_ptr<VisionLoader> planVisionLoader(const std::filesystem::path &root, const ModelDescriptor &descriptor) {
-  if (descriptor.visionSource != VisionSource::Mlx && descriptor.visionSource != VisionSource::Gguf)
+  if (descriptor.visionSource != VisionSource::Safetensors && descriptor.visionSource != VisionSource::Gguf)
     return nullptr;
   return std::make_unique<VisionLoader>(root / "vision", descriptor.visionSource, descriptor.vision);
 }
@@ -74,8 +74,8 @@ LoadedModel loadModel(metal::MetalBackend &backend,
       [&](const auto &layout) -> TargetWeights {
         const std::filesystem::path directory = root / "target";
         switch (result.descriptor.targetSource) {
-        case TargetSource::Mlx: {
-          MlxTargetLoader loader(backend, images, directory, layout);
+        case TargetSource::Safetensors: {
+          SafetensorsTargetLoader loader(backend, images, directory, layout);
           return readTarget(backend, layout, std::ref(loader));
         }
         case TargetSource::Gguf: {
@@ -109,7 +109,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
         [&](const auto &layout) { return imageBytes(gguf::planImages(file, layout)); },
         descriptor.target);
   } else {
-    bytes = std::visit([&](const auto &layout) { return mlxTargetImageBytes(root / "target", layout); },
+    bytes = std::visit([&](const auto &layout) { return safetensorsTargetImageBytes(root / "target", layout); },
                        descriptor.target);
   }
   bytes += draftImageBytes(root / "draft", descriptor.draft);

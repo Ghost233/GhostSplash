@@ -31,7 +31,21 @@ using namespace metal;
 //   QuantGrid      grid(Chunk) -> uint2, the grid magnitudes of pairs 0, 1
 //                  (x) and 2, 3 (y); signs(Chunk) bit 2p + i negates element
 //                  i of pair p; value = s * signed magnitude
-enum QuantKind : ushort { QuantLinear, QuantCodebook, QuantInt8, QuantGrid };
+//   QuantFloat8    values(Chunk) -> uint2, the E4M3 bytes of pairs 0, 1 (x)
+//                  and 2, 3 (y); value = s * quant_e4m3 of the byte, which
+//                  is 2^-8 times the E4M3 value (so s carries the 2^8)
+enum QuantKind : ushort { QuantLinear, QuantCodebook, QuantInt8, QuantGrid, QuantFloat8 };
+
+// The E4M3 bytes at bits 0..7 and 16..23 of `pair` (sign, four exponent bits of bias 7, three mantissa bits) as
+// halves 2^-8 times their values, exactly: the byte's seven magnitude bits placed so that its exponent field is
+// the low four of the half's, its subnormals the half's, as MLX's fp8.h also converts them. The NaN encodings
+// (0x7F, 0xFF) come out finite; no weight or scale holds one.
+inline half2 quant_e4m3_pair(uint pair) { return as_type<half2>(((pair & 0x007F007Fu) << 7) | ((pair & 0x00800080u) << 8)); }
+// The four E4M3 bytes of a word, in byte order, as quant_e4m3_pair's halves.
+inline half4 quant_e4m3_word(uint word) {
+  const half2 even = quant_e4m3_pair(word & 0x00FF00FFu), odd = quant_e4m3_pair((word >> 8) & 0x00FF00FFu);
+  return half4(even.x, odd.x, even.y, odd.y);
+}
 
 // s.x scales and m.x offsets pairs 0, 1, s.y and m.y pairs 2, 3 (equal for
 // 32-element coefficient groups).
@@ -426,6 +440,35 @@ struct FmtMXFP4 {
   static uint indices(Chunk q) { return q; }
   static QuantCoef coef(Meta e, ushort) { return {float2(as_type<float>(e < 2 ? 0x00200000u << e : uint(e - 1) << 23))}; }
 };
+// NVFP4: plane0 codebook indices, the E2M1 codes; meta the 16 E4M3 scales of the unit's 16-groups (bytes 2j, 2j + 1
+// of group j), then the tensor's FP32 scale g. value = g * e4m3 * E2M1 = kFP4Values (twice E2M1) * (g / 2 * e4m3),
+// whose scale is (128 g) * quant_e4m3, rounded once to float.
+struct FmtNVFP4 {
+  QUANT_FORMAT(GGUF_FMT_NVFP4, QuantCodebook, 0, 16, false);
+  struct Payload { uint4 a; }; typedef uint Chunk; struct Meta { packed_uint4 sc; float g; }; typedef float Scale;
+  static half value(uint i) { return half(kFP4Values[i]); }
+  static Payload load(device uchar *p0, device uchar *) { return {*((device uint4 *)p0)}; }
+  static Meta loadMeta(device uchar *m) { Meta r; r.sc = *((device packed_uint4 *)m); r.g = *((device float *)(m + 16)); return r; }
+  static Chunk chunk(Payload w, ushort c) { return w.a[c]; }
+  static Chunk loadChunk(device uchar *p0, device uchar *, ushort c) { return *((device uint *)(p0 + 4 * c)); }
+  static uint indices(Chunk q) { return q; }
+  static QuantCoef coef(Meta mt, ushort j) {
+    const uint pair = quant_scale_pair(mt.sc, j);   // the E4M3 scales of both 16-groups
+    return {float2(quant_e4m3_pair(quant_byte_pairs(pair).x)) * (128.0f * mt.g)};
+  }
+};
+// FP8: plane0 E4M3 values (bytes 8c..8c+7 = chunk c, as Q8_0's); meta the tensor's FP32 scale g. value = g * e4m3,
+// whose scale is 256 g.
+struct FmtFP8 {
+  QUANT_FORMAT(GGUF_FMT_FP8, QuantFloat8, 0, 32, false);
+  struct Payload { uint4 a; uint4 b; }; typedef uint2 Chunk; typedef float Meta;
+  static Payload load(device uchar *p0, device uchar *) { return {*((device uint4 *)p0), *((device uint4 *)(p0 + 16))}; }
+  static Meta loadMeta(device uchar *m) { return *((device float *)m); }
+  static Chunk chunk(Payload w, ushort c) { const uint4 h = c < 2 ? w.a : w.b; return (c & 1) ? h.zw : h.xy; }
+  static Chunk loadChunk(device uchar *p0, device uchar *, ushort c) { return *((device uint2 *)(p0 + 8 * c)); }
+  static uint2 values(Chunk q) { return q; }
+  static QuantCoef coef(Meta g, ushort) { return {float2(256.0f * g)}; }
+};
 // PQ2_0 (Prism ML's GGUFs, ggml type 142): plane0 2-bit codes as Q2_K's; meta the half d of the 128-element native
 // block, four groups. value = d * (q - 1).
 struct FmtPQ20 {
@@ -486,7 +529,7 @@ QUANT_AFFINE_GROUPS(8)
   X(FmtAF2G32, af2g32) X(FmtAF2G64, af2g64) X(FmtAF2G128, af2g128) X(FmtAF3G32, af3g32) X(FmtAF3G64, af3g64)      \
   X(FmtAF3G128, af3g128) X(FmtAF4G32, af4g32) X(FmtAF4G64, af4g64) X(FmtAF4G128, af4g128) X(FmtAF5G32, af5g32)    \
   X(FmtAF5G64, af5g64) X(FmtAF5G128, af5g128) X(FmtAF6G32, af6g32) X(FmtAF6G64, af6g64) X(FmtAF6G128, af6g128)    \
-  X(FmtAF8G32, af8g32) X(FmtAF8G64, af8g64) X(FmtAF8G128, af8g128)
+  X(FmtAF8G32, af8g32) X(FmtAF8G64, af8g64) X(FmtAF8G128, af8g128) X(FmtNVFP4, nvfp4) X(FmtFP8, fp8)
 
 // Runs body(F()) with the format type of run-time format id `format` (GGUF_FMT_*), for kernels whose tiles pick
 // their tensor, and so its format, at run time. The branch is uniform in a threadgroup. The host passes known ids

@@ -44,6 +44,20 @@
 // of their own; the loader writes each group as the native block the repack
 // reads: s, z, then the group's codes as MLX packs a row's, a little-endian
 // bit string of b bits per code.
+//
+// NVFP4 (NVIDIA's Model Optimizer and compressed-tensors, MLX's mode "nvfp4",
+// llama.cpp's type 40) holds E2M1 codes with an E4M3 scale per 16 elements and
+// an FP32 scale g: value = g * e4m3 * e2m1. FP8 (Model Optimizer's and
+// compressed-tensors') holds E4M3 values with an FP32 scale g: value = g *
+// e4m3. g is the tensor's, or each row's or expert's when a checkpoint scales
+// those apart. Their meta unit spans eight groups and holds g, as a K-quant's
+// super-block holds its d, so the kernels read every scale a value needs from
+// its meta unit. The loader writes each 256 elements of a row as the native
+// block the repack reads: NVFP4's 16 E4M3 scales (byte i scaling elements
+// 16i..16i+15), g at QUANT_NVFP4_G, then from QUANT_NVFP4_CODES the codes as a
+// row packs them (element e in bits 4 (e % 2) of byte e / 2); FP8's g, then
+// from QUANT_FP8_VALUES the 256 E4M3 bytes. Their planes hold the codes as
+// MXFP4's indices and the values as Q8_0's.
 #ifdef __METAL_VERSION__
 #include <metal_stdlib>
 #define QUANT_CONSTANT constant constexpr
@@ -92,14 +106,24 @@
 #define GGUF_FMT_AF8G32 34u
 #define GGUF_FMT_AF8G64 35u
 #define GGUF_FMT_AF8G128 36u
-#define GGUF_FMT_COUNT 37u
+#define GGUF_FMT_NVFP4 37u
+#define GGUF_FMT_FP8 38u
+#define GGUF_FMT_COUNT 39u
 
 // The tensor type an image descriptor names for an MLX affine format: no GGUF
 // type is of this form.
 #define QUANT_AFFINE_TYPE(bits, group) (0x4D4C0000u | ((bits) << 8) | (group))
+// The tensor types of NVFP4's and FP8's native blocks, which the loader
+// writes ("NVF4", "FP8E"): no GGUF type is either.
+#define QUANT_NVFP4_TYPE 0x4E564634u
+#define QUANT_FP8_TYPE 0x46503845u
+// Byte offsets in NVFP4's native block (its scales at 0) and FP8's (its g at 0).
+#define QUANT_NVFP4_G 16u
+#define QUANT_NVFP4_CODES 20u
+#define QUANT_FP8_VALUES 4u
 
 struct QuantFormat {
-  uint32_t ggml_type;      // GGUF tensor type, or QUANT_AFFINE_TYPE
+  uint32_t ggml_type;      // GGUF tensor type, or a loader's (QUANT_AFFINE_TYPE, QUANT_NVFP4_TYPE, QUANT_FP8_TYPE)
   uint32_t block_elements; // elements per native block
   uint32_t block_bytes;    // bytes per native block
   uint32_t plane0_bytes;   // per row and group of 32
@@ -148,9 +172,12 @@ QUANT_CONSTANT QuantFormat kQuantFormats[GGUF_FMT_COUNT] = {
     {QUANT_AFFINE_TYPE(8, 32), 32, 36, 32, 0, 4, 1, "af8g32"},
     {QUANT_AFFINE_TYPE(8, 64), 64, 68, 32, 0, 4, 2, "af8g64"},
     {QUANT_AFFINE_TYPE(8, 128), 128, 132, 32, 0, 4, 4, "af8g128"},
+    // The loader's native blocks of 256 elements.
+    {QUANT_NVFP4_TYPE, 256, 148, 16, 0, 20, 8, "nvfp4"},   // meta: the 16 E4M3 scales, g
+    {QUANT_FP8_TYPE, 256, 260, 32, 0, 4, 8, "fp8"},        // meta: g
 };
 
-// The format that stores a GGUF tensor type (or a QUANT_AFFINE_TYPE);
+// The format that stores a GGUF tensor type (or a loader's);
 // GGUF_FMT_COUNT when none does.
 inline constexpr uint32_t gguf_format_of(uint32_t ggml_type) {
   for (uint32_t format = 0; format < GGUF_FMT_COUNT; ++format)
@@ -160,9 +187,14 @@ inline constexpr uint32_t gguf_format_of(uint32_t ggml_type) {
 
 // Whether a format is MLX affine, and its code bits.
 inline constexpr bool quant_affine_format(uint32_t format) {
-  return format >= GGUF_FMT_AF2G32 && format < GGUF_FMT_COUNT;
+  return format >= GGUF_FMT_AF2G32 && format <= GGUF_FMT_AF8G128;
 }
 inline constexpr uint32_t quant_affine_bits(uint32_t format) { return (kQuantFormats[format].ggml_type >> 8) & 0xFF; }
+// Whether a format's native block is the loader's rather than a GGUF type's:
+// the MLX affine formats, NVFP4 and FP8.
+inline constexpr bool quant_loader_format(uint32_t format) {
+  return quant_affine_format(format) || format == GGUF_FMT_NVFP4 || format == GGUF_FMT_FP8;
+}
 // The MLX affine format of b bits in groups of g; GGUF_FMT_COUNT when none
 // (QUANT_AFFINE_TYPE holds b and g in a byte each).
 inline constexpr uint32_t quant_affine_format_of(uint32_t bits, uint32_t group) {

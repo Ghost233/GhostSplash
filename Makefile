@@ -272,8 +272,8 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/GgufFile.cpp \
 	runtime/model/GgufImage.cpp \
 	runtime/model/GgufTarget.cpp \
-	runtime/model/MlxImage.cpp \
-	runtime/model/MlxTarget.cpp \
+	runtime/model/SafetensorsImage.cpp \
+	runtime/model/SafetensorsTarget.cpp \
 	runtime/model/DraftCheckpoint.cpp \
 	runtime/model/WeightSource.cpp \
 	runtime/model/WeightImages.cpp \

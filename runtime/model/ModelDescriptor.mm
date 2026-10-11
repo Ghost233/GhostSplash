@@ -1,20 +1,25 @@
 #include "ModelDescriptor.hpp"
 #include "GgufImage.hpp"
-#include "MlxImage.hpp"
+#include "SafetensorsImage.hpp"
 #include "WeightStore.hpp"
 #include "metal/abi/DraftAttention.h"
 #include "metal/abi/ExecutionGeometry.h"
 
 #import <Foundation/Foundation.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <fnmatch.h>
 #include <initializer_list>
+#include <iterator>
+#include <regex>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <unordered_set>
 #include <utility>
 
 namespace splash::model {
@@ -88,6 +93,13 @@ std::string requireString(NSDictionary *object, NSString *key,
   const char *text = static_cast<NSString *>(value).UTF8String;
   if (!text || !*text)
     throw std::invalid_argument(std::string(label) + " must not be empty");
+  return text;
+}
+
+// The text of a JSON string, which a lone surrogate escape leaves without one.
+std::string requireText(id value, std::string_view label) {
+  const char *text = [value isKindOfClass:[NSString class]] ? static_cast<NSString *>(value).UTF8String : nullptr;
+  if (!text) throw std::invalid_argument(std::string(label) + " must be a string");
   return text;
 }
 
@@ -214,7 +226,7 @@ ModelDescriptor qwen36Descriptor(std::string name, TargetSource targetSource,
 
 // The name errors give an upstream target's source.
 std::string_view sourceName(TargetSource source) {
-  return source == TargetSource::Mlx ? "MLX" : "GGUF";
+  return source == TargetSource::Safetensors ? "MLX" : "GGUF";
 }
 
 // The refusal of a model of none of the families Splash serves: what tells it
@@ -226,10 +238,10 @@ std::invalid_argument unsupportedModel(const std::string &difference) {
 
 // The target's text configuration, of the family its model type names. Every
 // one holds the sizes the descriptor shares with it, which tell the family's
-// target from other models of its architecture. An MLX target's config.json
-// also holds the rest of what the kernels compute; a GGUF's is what the
-// installer derived from the GGUF's metadata, which the GGUF planner checks
-// (gguf::requireMetadata).
+// target from other models of its architecture. A safetensors target's
+// config.json also holds the rest of what the kernels compute; a GGUF's is
+// what the installer derived from the GGUF's metadata, which the GGUF planner
+// checks (gguf::requireMetadata).
 void validateTextConfig(NSDictionary *text, const QwenTargetDimensions &target, std::string_view family,
                         TargetSource source) {
   const std::string_view name = sourceName(source);
@@ -247,7 +259,7 @@ void validateTextConfig(NSDictionary *text, const QwenTargetDimensions &target, 
       throw unsupportedModel(label + ": " + std::string(name) + " " + value.description.UTF8String + ", " +
                              std::string(family) + " " + @(size.value).description.UTF8String);
   }
-  if (source != TargetSource::Mlx) return;
+  if (source != TargetSource::Safetensors) return;
   requireNumbers(text, name, "text config",
                  {{"linear_num_key_heads", target.gdnKeyHeads},
                   {"linear_num_value_heads", target.gdnValueHeads},
@@ -290,51 +302,242 @@ void validateTextConfig(NSDictionary *text, const QwenTargetDimensions &target, 
 
 // An MLX target's quantization, the "quantization" object of its config.json:
 // the object and each module's own entry name a format the block kernels hold
-// (metal/abi/QuantFormat.h), as MLX loads it: an entry's mode is MLX's
-// default, affine, unless it names another. The object states its bits and
-// group size; a module's entry that omits either takes its mode's default, as
-// MLX's to_quantized does: affine 4 bits in groups of 64, mxfp4 4 bits in
-// groups of 32. The images read each module's format from its tensors, as MLX
-// does (model/MlxImage.hpp). An entry that is not an object, false as MLX
-// writes for a module it leaves unquantized, is refused for a module the
-// images read only quantized (mlx::quantizedModules: each projection, the head
-// and the token table), so before any weight download; any other module's,
-// such as the router's, the shared-expert gate's or GDN alpha's and beta's,
-// which the images read unquantized too, is accepted.
-void requireQuantization(NSDictionary *config, const QwenTargetDimensions &geometry) {
-  // A checkpoint without it holds BF16 weights, or another method's that a
-  // transformers quantization_config states (GPTQ, AWQ, ...).
-  NSDictionary *quantization = config[@"quantization"];
-  if (![quantization isKindOfClass:[NSDictionary class]])
-    throw std::invalid_argument(
-        "this model requires an MLX checkpoint (affine 2, 3, 4, 5, 6 or 8 bits in groups of 32, 64 or 128, or "
-        "mxfp4) or a supported GGUF");
+// (metal/abi/QuantFormat.h), as MLX loads it: an entry's mode is MLX's default,
+// affine, unless it names another. The object states its bits and group size; a
+// module's entry that omits either takes its mode's default, as MLX's
+// to_quantized does: affine 4 bits in groups of 64, mxfp4 4 bits in groups of
+// 32, nvfp4 4 bits in groups of 16. The images read each module's format from
+// its tensors, as MLX does (model/SafetensorsImage.hpp). An entry that is not
+// an object, false as MLX writes for a module it leaves unquantized, is refused
+// for a module the images read only quantized (safetensors::quantizedModules:
+// each projection and the head), so before any weight download; any other
+// module's, such as the router's, the shared-expert gate's, GDN alpha's and
+// beta's or the token table's, which the images read unquantized too, is
+// accepted.
+void requireMlxQuantization(NSDictionary *quantization, const QwenTargetDimensions &geometry) {
   const auto require = [](NSDictionary *entry, const std::string &label, bool module) {
     NSString *mode = entry[@"mode"] ?: @"affine";
     if (![mode isKindOfClass:[NSString class]]) throw std::invalid_argument(label + " mode must be a string");
-    const bool affine = [mode isEqual:@"affine"];
+    const bool affine = [mode isEqual:@"affine"], nvfp4 = [mode isEqual:@"nvfp4"];
     const auto number = [&](NSString *key, uint32_t modeDefault) {
       return module && !entry[key] ? modeDefault : requireWhole(entry[key], label + " " + key.UTF8String);
     };
-    const uint32_t bits = number(@"bits", 4), group = number(@"group_size", affine ? 64 : 32);
+    const uint32_t bits = number(@"bits", 4), group = number(@"group_size", affine ? 64 : nvfp4 ? 16 : 32);
     if (affine ? quant_affine_format_of(bits, group) == GGUF_FMT_COUNT
-               : ![mode isEqual:@"mxfp4"] || bits != 4 || group != 32)
+               : nvfp4 ? bits != 4 || group != 16 : ![mode isEqual:@"mxfp4"] || bits != 4 || group != 32)
       throw std::invalid_argument(label + " is " + mode.UTF8String + " " + std::to_string(bits) +
                                   "-bit in groups of " + std::to_string(group) +
                                   "; MLX weights load as affine 2, 3, 4, 5, 6 or 8 bits in groups of 32, 64 or "
-                                  "128, or as mxfp4");
+                                  "128, or as mxfp4 or nvfp4");
   };
   require(quantization, "quantization", false);
   // A module's entry is an object; the object's other values are its own.
   for (NSString *module in quantization)
     if ([quantization[module] isKindOfClass:[NSDictionary class]])
       require(quantization[module], "quantization " + std::string(module.UTF8String ?: ""), true);
-  for (const std::string &module : mlx::quantizedModules(geometry)) {
+  for (const std::string &module : safetensors::quantizedModules(geometry, safetensors::ModuleNames::Mlx)) {
     id entry = quantization[@(module.c_str())];
     if (entry && ![entry isKindOfClass:[NSDictionary class]])
       throw std::invalid_argument("quantization " + module +
-                                  " is unquantized; Splash loads quantized MLX projections and token tables");
+                                  " is unquantized; Splash loads quantized MLX projections");
   }
+}
+
+// The projections a configuration names for a layer's routed experts
+// (safetensors::quantizedModules' mlp.experts by transformers names) as each
+// expert's own modules: the first and the last expert's stand for every
+// expert's, as matching all names of 256 experts in 40 layers takes half a
+// second, and the images refuse any other expert left unquantized when they
+// read its tensors.
+std::vector<std::string> expertProjections(const std::string &experts, const QwenTargetDimensions &geometry) {
+  std::vector<std::string> names;
+  for (const uint32_t expert : {0u, geometry.experts - 1})
+    for (const char *projection : {"gate_proj", "up_proj", "down_proj"})
+      names.push_back(experts + "." + std::to_string(expert) + "." + projection);
+  return names;
+}
+
+// A Model Optimizer target's quantization, its config.json's
+// quantization_config of quant_method "modelopt": each layer it quantizes, by
+// its quantized_layers or else by its quant_algo for every layer its ignore
+// patterns leave, holds NVFP4 in groups of 16 (NVFP4, W4A16_NVFP4) or FP8 with
+// a scale per tensor (FP8), which the block kernels read weights-only, and each
+// module the images read only quantized (safetensors::quantizedModules by
+// transformers names, a layer's routed experts as the one layer mlp.experts, as
+// quantized_layers keys them) is such a layer: a key of quantized_layers, or
+// else a module no ignore pattern names, nor its experts' projections
+// (expertProjections). Its activation and KV cache quantization play no part:
+// the kernels read activations in bf16 and keep Splash's own KV formats.
+void requireModelOptimizerQuantization(NSDictionary *quantization, const QwenTargetDimensions &geometry) {
+  const auto requireAlgorithm = [](NSDictionary *entry, const std::string &label) {
+    const std::string algorithm = requireString(entry, @"quant_algo", label + " quant_algo");
+    if (algorithm == "FP8") return;
+    if (algorithm != "NVFP4" && algorithm != "W4A16_NVFP4")
+      throw std::invalid_argument(label + " is " + algorithm +
+                                  "; Model Optimizer weights load as NVFP4, W4A16_NVFP4 or FP8");
+    if (entry[@"group_size"] && requireWhole(entry[@"group_size"], label + " group_size") != 16)
+      throw std::invalid_argument(label + " is NVFP4 in groups of " +
+                                  std::to_string(requireWhole(entry[@"group_size"], label + " group_size")) +
+                                  "; Model Optimizer NVFP4 loads in groups of 16");
+  };
+  const std::vector<std::string> required =
+      safetensors::quantizedModules(geometry, safetensors::ModuleNames::Transformers);
+  NSDictionary *layers = quantization[@"quantized_layers"];
+  if ([layers isKindOfClass:[NSDictionary class]]) {
+    for (NSString *module in layers) {
+      const std::string label = "quantization_config quantized_layers " + std::string(module.UTF8String ?: "");
+      if (![layers[module] isKindOfClass:[NSDictionary class]])
+        throw std::invalid_argument(label + " must be an object");
+      requireAlgorithm(layers[module], label);
+    }
+    for (const std::string &module : required)
+      if (!layers[@(module.c_str())])
+        throw std::invalid_argument("quantization_config leaves " + module +
+                                    " unquantized; Splash loads quantized projections");
+    return;
+  }
+  requireAlgorithm(quantization, "quantization_config");
+  NSArray *ignore = quantization[@"ignore"] ?: quantization[@"exclude_modules"];
+  if (ignore && ![ignore isKindOfClass:[NSArray class]])
+    throw std::invalid_argument("quantization_config ignore must be an array");
+  for (id entry in ignore) {
+    const std::string pattern = requireText(entry, "quantization_config ignore entry");
+    for (const std::string &module : required) {
+      std::vector<std::string> names{module};
+      if (module.ends_with(".experts"))
+        std::ranges::copy(expertProjections(module, geometry), std::back_inserter(names));
+      for (const std::string &name : names)
+        if (!fnmatch(pattern.c_str(), name.c_str(), 0))
+          throw std::invalid_argument("quantization_config leaves " + name +
+                                      " unquantized; Splash loads quantized projections");
+    }
+  }
+}
+
+// The modules compressed-tensors names by a configuration's targets and
+// ignore entries: a module's own name, a regular expression after "re:"
+// matched from the start of a name (as Python's re.match), or a class, of
+// which Linear is every projection's. A pattern is bounded, as parsing it
+// recurses on its nesting, and so is a match (libc++ throws error_complexity
+// past its step bound), so no configuration exhausts the check.
+class ModuleMatcher {
+public:
+  static constexpr size_t kMaxPatternBytes = 512;
+
+  ModuleMatcher(NSArray *entries, std::string label) : label_(std::move(label)) {
+    for (id entry in entries) {
+      const std::string text = requireText(entry, label_ + " entry");
+      if (text == "Linear") {
+        linear_ = true;
+      } else if (text.starts_with("re:")) {
+        if (text.size() > kMaxPatternBytes)
+          throw std::invalid_argument(label_ + " entry exceeds " + std::to_string(kMaxPatternBytes) + " bytes");
+        try {
+          patterns_.emplace_back(text.substr(3));
+        } catch (const std::regex_error &) {
+          throw std::invalid_argument(label_ + " entry " + text + " is not a regular expression Splash reads");
+        }
+      } else {
+        names_.insert(text);
+      }
+    }
+  }
+  [[nodiscard]] bool matches(const std::string &module) const {
+    if (linear_ || names_.contains(module)) return true;
+    try {
+      return std::ranges::any_of(patterns_, [&](const std::regex &pattern) {
+        return std::regex_search(module, pattern, std::regex_constants::match_continuous);
+      });
+    } catch (const std::regex_error &) {
+      throw std::invalid_argument(label_ + " holds a regular expression too complex to match " + module);
+    }
+  }
+
+private:
+  std::string label_;
+  bool linear_ = false;
+  std::unordered_set<std::string> names_;
+  std::vector<std::regex> patterns_;
+};
+
+// A compressed-tensors target's quantization, its config.json's
+// quantization_config of quant_method "compressed-tensors" (llm-compressor's,
+// as unsloth's NVFP4 releases are): each config group's weights are NVFP4
+// (nvfp4-pack-quantized: float 4-bit by tensor_group in groups of 16) or FP8
+// (float-quantized: float 8-bit by channel or tensor), symmetric and in their
+// stored column order, and each module the images read only quantized
+// (safetensors::quantizedModules by transformers names, the routed experts by
+// their projections, expertProjections) is a group's target that no ignore
+// entry names (ModuleMatcher). Its activation and KV cache schemes play no
+// part.
+void requireCompressedTensorsQuantization(NSDictionary *quantization, const QwenTargetDimensions &geometry) {
+  NSDictionary *groups = quantization[@"config_groups"];
+  if (![groups isKindOfClass:[NSDictionary class]] || !groups.count)
+    throw std::invalid_argument("quantization_config config_groups must be a non-empty object");
+  const std::string format =
+      quantization[@"format"] ? requireString(quantization, @"format", "quantization_config format") : "";
+  std::vector<ModuleMatcher> targets;
+  for (NSString *name in groups) {
+    const std::string label = "quantization_config config_groups " + std::string(name.UTF8String ?: "");
+    NSDictionary *group = groups[name], *weights = nil;
+    if ([group isKindOfClass:[NSDictionary class]]) weights = group[@"weights"];
+    if (![weights isKindOfClass:[NSDictionary class]])
+      throw std::invalid_argument(label + " weights must be an object");
+    const std::string groupFormat = group[@"format"] ? requireString(group, @"format", label + " format") : format;
+    const std::string type = requireString(weights, @"type", label + " weights type");
+    const std::string strategy = requireString(weights, @"strategy", label + " weights strategy");
+    const uint64_t bits = requireWhole(weights[@"num_bits"], label + " weights num_bits");
+    const uint64_t groupSize = weights[@"group_size"] && weights[@"group_size"] != [NSNull null]
+                                   ? requireWhole(weights[@"group_size"], label + " weights group_size")
+                                   : 0;
+    const bool nvfp4 = groupFormat == "nvfp4-pack-quantized" && type == "float" && bits == 4 &&
+                       strategy == "tensor_group" && groupSize == 16;
+    const bool fp8 = groupFormat == "float-quantized" && type == "float" && bits == 8 &&
+                     (strategy == "channel" || strategy == "tensor");
+    if (!nvfp4 && !fp8)
+      throw std::invalid_argument(label + " is " + groupFormat + ": " + type + " " + std::to_string(bits) + "-bit by " +
+                                  strategy + (groupSize ? " in groups of " + std::to_string(groupSize) : "") +
+                                  "; compressed-tensors weights load as NVFP4 (nvfp4-pack-quantized: float 4-bit by "
+                                  "tensor_group in groups of 16) or FP8 (float-quantized: float 8-bit by channel or "
+                                  "tensor)");
+    if ([weights[@"symmetric"] isEqual:@NO] || [weights[@"actorder"] isEqual:@"group"] ||
+        [weights[@"actorder"] isEqual:@YES])
+      throw std::invalid_argument(label + " is asymmetric or ordered by activation groups; Splash loads symmetric "
+                                  "compressed-tensors weights in their stored column order");
+    targets.emplace_back(requireArray(group, @"targets", label + " targets"), label + " targets");
+  }
+  NSArray *ignoreEntries = quantization[@"ignore"] ?: @[];
+  if (![ignoreEntries isKindOfClass:[NSArray class]])
+    throw std::invalid_argument("quantization_config ignore must be an array");
+  const ModuleMatcher ignore(ignoreEntries, "quantization_config ignore");
+  for (const std::string &module : safetensors::quantizedModules(geometry, safetensors::ModuleNames::Transformers)) {
+    const std::vector<std::string> names =
+        module.ends_with(".experts") ? expertProjections(module, geometry) : std::vector<std::string>{module};
+    for (const std::string &name : names)
+      if (ignore.matches(name) ||
+          std::ranges::none_of(targets, [&](const ModuleMatcher &target) { return target.matches(name); }))
+        throw std::invalid_argument("quantization_config leaves " + name +
+                                    " unquantized; Splash loads quantized projections");
+  }
+}
+
+// A safetensors target's quantization: MLX's "quantization" object, or the
+// quantization_config of Model Optimizer or compressed-tensors. A checkpoint
+// with none of them holds BF16 weights, or another method's that a
+// transformers quantization_config states (GPTQ, AWQ, ...).
+void requireQuantization(NSDictionary *config, const QwenTargetDimensions &geometry) {
+  NSDictionary *mlxQuantization = config[@"quantization"];
+  if ([mlxQuantization isKindOfClass:[NSDictionary class]]) return requireMlxQuantization(mlxQuantization, geometry);
+  NSDictionary *quantization = config[@"quantization_config"];
+  if ([quantization isKindOfClass:[NSDictionary class]]) {
+    if ([quantization[@"quant_method"] isEqual:@"modelopt"])
+      return requireModelOptimizerQuantization(quantization, geometry);
+    if ([quantization[@"quant_method"] isEqual:@"compressed-tensors"])
+      return requireCompressedTensorsQuantization(quantization, geometry);
+  }
+  throw std::invalid_argument(
+      "this model requires an MLX checkpoint (affine 2, 3, 4, 5, 6 or 8 bits in groups of 32, 64 or 128, mxfp4 or "
+      "nvfp4), an NVFP4 checkpoint of Model Optimizer or compressed-tensors, or a supported GGUF");
 }
 
 // A DFlash2 checkpoint's config: the draft's layout; the block, window,
@@ -421,32 +624,26 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   const bool moe = type == "qwen3_5_moe_text";
   if (!moe && type != "qwen3_5_text") throw unsupportedModel("text model type " + type);
   TargetSource targetSource;
-  if (targetFormat == "mlx-affine") targetSource = TargetSource::Mlx;
+  // "mlx-affine" names every safetensors target, as installations record it.
+  if (targetFormat == "mlx-affine") targetSource = TargetSource::Safetensors;
   else if (targetFormat == "gguf") targetSource = TargetSource::Gguf;
   else throw std::invalid_argument("unsupported target source format: " + std::string(targetFormat));
   VisionSource visionSource;
   if (visionFormat == "none") visionSource = VisionSource::None;
-  else if (visionFormat == "safetensors") visionSource = VisionSource::Mlx;
+  else if (visionFormat == "safetensors") visionSource = VisionSource::Safetensors;
   else if (visionFormat == "gguf") visionSource = VisionSource::Gguf;
   else throw std::invalid_argument("unsupported vision source format: " + std::string(visionFormat));
   ModelDescriptor result = moe ? qwen36Descriptor(std::move(name), targetSource, visionSource)
                                : qwen38Descriptor(std::move(name), targetSource, visionSource);
   std::visit([&](const auto &layout) {
     validateTextConfig(text, layout, layout.family, result.targetSource);
-    if (result.targetSource == TargetSource::Mlx) requireQuantization(config, layout);
+    if (result.targetSource == TargetSource::Safetensors) requireQuantization(config, layout);
     if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
   }, result.target);
   if (result.hasVision())
     validateVisionConfig(requireObject(config, @"vision_config", "vision config"), result.vision,
                          result.targetSource);
   return result;
-}
-
-// The text of a JSON string, which a lone surrogate escape leaves without one.
-std::string requireText(id value, std::string_view label) {
-  const char *text = [value isKindOfClass:[NSString class]] ? static_cast<NSString *>(value).UTF8String : nullptr;
-  if (!text) throw std::invalid_argument(std::string(label) + " must be a string");
-  return text;
 }
 
 // A GGUF's scalar metadata as the installer copies it from the header it read
