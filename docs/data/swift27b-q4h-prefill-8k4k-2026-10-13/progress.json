@@ -1,0 +1,11 @@
+{
+  "controller_pid": 2264,
+  "correctness_completed": 0,
+  "correctness_planned": 0,
+  "completed": 3,
+  "planned": 3,
+  "status": "complete",
+  "mode": "performance",
+  "active": "performance-2-P4096-on-4096-attempt1",
+  "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-8k4k-4096-fixed-v3/performance-2-P4096-on-4096-attempt1"
+}

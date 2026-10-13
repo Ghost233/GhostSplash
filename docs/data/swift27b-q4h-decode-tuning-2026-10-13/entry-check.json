@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "executable": true,
+  "invalid_protocol_rejected": true,
+  "native_rejection_exit": 1,
+  "starts_inference": false
+}

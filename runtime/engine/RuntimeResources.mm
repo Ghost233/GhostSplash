@@ -275,8 +275,12 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                          uint32_t requestedContextTokens) {
   const auto startupStarted = AwakeClock::now();
   RuntimeResourcesConfig config = inputConfig;
+  config.optionalFeatures.validate();
   if (config.optionalFeatures.compactDraftHead && config.optionalFeatures.compactRanking.empty())
     config.optionalFeatures.compactRanking = config.modelRoot / "head-ranked.splash";
+  if (config.aneFfn.recovery.enabled && config.aneFfn.recovery.maximumPowerPercent &&
+      config.aneFfn.powerReference.mode == ane::PowerReferenceSetting::Mode::Off)
+    throw std::invalid_argument("relative ANE recovery requires --ane-power-reference auto or watts");
   RuntimeStartupTimings startupTimings;
   if (config.model.draft.kind == model::DraftKind::Standard) {
     const uint32_t maximum = requestedContextTokens ? requestedContextTokens : config.model.capabilities.maximumContextTokens;
@@ -695,7 +699,7 @@ AneFfnSnapshot RuntimeResources::aneFfnSnapshot() const {
           aneFfn_->minimumRows(),
           served.commands,
           served.evaluations,
-          served.milliseconds};
+          served.milliseconds, aneFfn_->recoveryReport(), aneFfn_->powerReference()};
 }
 
 ActualMemoryReport RuntimeResources::actualMemoryReport(
@@ -748,6 +752,22 @@ AneFfnModel aneFfnModel(metal::MetalBackend &backend, const model::LoadedModel &
       timings = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).time();
     });
     return timings;
+  };
+  model.gpuBaseline = [&backend, layers, cancelled, onArena] {
+    std::array<ops::ane_ffn::ChunkTimings::Gpu, 2> gpu;
+    onArena([&](const ops::PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden) {
+      gpu = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).gpuBaseline();
+    });
+    return gpu;
+  };
+  model.powerReference = [&backend, layers, cancelled, onArena](ops::AneFfn *split) {
+    ane::PowerReference report;
+    report.source = "auto_ffn";
+    if (!split) { report.reason = "ANE split unavailable"; return report; }
+    onArena([&](const ops::PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden) {
+      report = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).powerReference(*split);
+    });
+    return report;
   };
   model.prepare = [&backend, layers, cancelled, onArena](uint32_t aneUnits, bool timeChunks) {
     AneFfnPrepared prepared;

@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "completed": 3,
+  "records": [
+    {
+      "name": "tail-scalar",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/numeric-tail-scalar",
+      "exit_code": 0,
+      "reused_unchanged_execution": true
+    },
+    {
+      "name": "H25",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/numeric-H25",
+      "exit_code": 0,
+      "reused_unchanged_execution": true
+    },
+    {
+      "name": "H75",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/numeric-H75",
+      "exit_code": 0,
+      "reused_unchanged_execution": true
+    }
+  ],
+  "thresholds_unchanged": true
+}

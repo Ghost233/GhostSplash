@@ -34,8 +34,10 @@ CompactTokenRows compactTokenRows(std::span<const uint32_t> ranking,
 
 CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
                                    const std::filesystem::path &rankingFile,
-                                   std::string_view manifest)
+                                   std::string_view manifest, uint32_t requestedCapacity)
     : backend_(backend), source_(source) {
+  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
+    throw std::invalid_argument("compact capacity must be a multiple of256 in512..98304");
   if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
       source.blocks().segments.front().outputSize != source.outputSize) {
     reason_ = "head is not one unrotated quantized FP32 projection"; return;
@@ -65,7 +67,7 @@ CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Proj
     }
     seen[id] = true;
   }
-  capacity_ = std::min<uint32_t>(98304, vocabulary / 2 / 256 * 256);
+  capacity_ = std::min<uint32_t>(requestedCapacity, vocabulary / 2 / 256 * 256);
   if (capacity_ <= 256) { ranking_.clear(); reason_ = "vocabulary too small for compact head"; return; }
 }
 

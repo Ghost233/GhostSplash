@@ -1,0 +1,28 @@
+[
+  {
+    "kv": "q4_0_unrotated",
+    "prefill_tok_s": 409.33593057062893,
+    "decode_tok_s": 63.82594378411964,
+    "timings": {
+      "decode_wall_seconds": 256.6981235,
+      "total_wall_seconds": 336.749732833,
+      "prefill_wall_seconds": 80.051609333,
+      "ttft_seconds": 80.051859208
+    },
+    "native_exit_code": 0,
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-recheck-v1/perf-0-q4_0_unrotated-attempt2"
+  },
+  {
+    "kv": "bf16",
+    "prefill_tok_s": 475.5171666850617,
+    "decode_tok_s": 65.31997869810802,
+    "timings": {
+      "decode_wall_seconds": 250.826781125,
+      "total_wall_seconds": 319.73701675,
+      "prefill_wall_seconds": 68.910235625,
+      "ttft_seconds": 68.910495416
+    },
+    "native_exit_code": 0,
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-bf16-recheck-v1/perf-0-bf16-attempt1"
+  }
+]

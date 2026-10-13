@@ -42,6 +42,7 @@
 #include "metal/abi/AneFfn.h"
 #include "metal/abi/QuantFormat.h"
 #include "ops/AneFfn.hpp"
+#include "ops/AneFfnMeasurement.hpp"
 #include "ops/Linear.hpp"
 
 #include <algorithm>
@@ -903,6 +904,69 @@ void check4b(MetalBackend &backend) {
 // ---------------------------------------------------------------- faults
 // Each fault of an evaluation at layer 0, 1 and 2 of chunks of 512, 700 and 2048 rows stops the split (stops()); an
 // evaluation that signals the event below its value leaves it there.
+void powerReference(MetalBackend &backend) {
+  const Model model = mlxModel(backend);
+  const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
+  const auto split = splitOf(backend, model);
+  const auto reference = ane_ffn::Measurement(backend, model.layers, buffers.ffn, buffers.hidden, {}).powerReference(*split);
+  if (!reference.valid || !reference.peakWatts || !reference.steadyWatts || reference.samples < 3 ||
+      reference.loadSeconds < 5 || !(reference.referenceWatts > 0))
+    fail("automatic reference did not obtain valid high-load power: " + reference.reason);
+  std::cout << "  reference=" << reference.referenceWatts << " W steady=" << reference.steadyWatts.value_or(0)
+            << " W samples=" << reference.samples << " seconds=" << reference.loadSeconds << '\n';
+  split->setPowerReference(reference);
+  static_cast<void>(split->verify(model.layers, buffers.ffn, buffers.hidden));
+  ane_ffn::RecoverySetting setting{.enabled = true};
+  setting.maximumPowerPercent = 50; setting.referenceWatts = reference.referenceWatts;
+  if (setting.powerThreshold() != reference.referenceWatts * 0.5) fail("reference percentage threshold is wrong");
+  section("startup power reference: five-second configured FFN load, valid samples, fixed share and original numerics");
+}
+
+void recovery(MetalBackend &backend) {
+  const Linear linear(backend.capabilities());
+  const Model model = mlxModel(backend);
+  const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
+  fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
+  // splitOf deliberately discards its Projection objects before this recovery uses them.
+  const auto split = splitOf(backend, model);
+  double clock = 0;
+  std::optional<double> watts = 0.0;
+  uint64_t sequence = 0;
+  split->setRecovery({.enabled = true}, [&] {
+    return ane::PowerSample{watts, clock, ++sequence, 1, 10};
+  }, [&] { return clock; });
+  split->setBreaker(ane_ffn::Breaker({{{AneFfn::kMinimumRows, 1e-6}, {AneFfn::kMaximumRows, 2e-6}}}), {});
+  for (unsigned i = 0; i < ane_ffn::Breaker::kWindow; ++i)
+    if (!forward(backend, linear, model, split.get(), buffers, AneFfn::kMaximumRows).usable)
+      fail("recovery setup produced unusable ANE results");
+  if (!split->retired()) fail("recovery test did not reach performance retirement");
+  clock = 59;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  if (split->recoveryReport()->attempts) fail("recovery ignored cooldown");
+  clock = 61; watts = 0.5;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  watts.reset();
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  if (split->recoveryReport()->attempts) fail("busy or unknown power allowed a probe");
+  watts = 0.0;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  const auto report = *split->recoveryReport();
+  if (report.attempts != 1 || (report.phase != "running" && report.phase != "cooldown"))
+    fail("numeric recovery probe failed: " + report.phase + ": " + report.reason);
+  if (split->share() != 0.5 || split->minimumRows() != AneFfn::kMinimumRows)
+    fail("recovery changed the fixed share or row threshold");
+  if (!split->retired()) {
+    static_cast<void>(split->verify(model.layers, buffers.ffn, buffers.hidden));
+  } else {
+    fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
+    const auto expected = forward(backend, linear, model, nullptr, buffers, AneFfn::kMaximumRows);
+    const auto actual = forward(backend, linear, model, split.get(), buffers, AneFfn::kMaximumRows);
+    if (!actual.usable || expected.bits != actual.bits) fail("GPU output changed after rejected recovery");
+    if (report.cooldownRemaining < 120) fail("rejected recovery did not extend cooldown");
+  }
+  section("power-gated recovery: cooldown, busy/unknown power, original numeric verifier, fixed share and safe GPU fallback");
+}
+
 void faults(MetalBackend &backend) {
   using Faults = ane::ProgramInstrumentation::Faults;
   const Linear linear(backend.capabilities());
@@ -1112,8 +1176,8 @@ void program(MetalBackend &backend) {
 int main(int argc, char **argv) {
   const std::string_view mode = argc == 3 ? argv[2] : "";
   if (mode != "kernels" && mode != "kernels4b" && mode != "check4b" && mode != "split" &&
-      mode != "faults" && mode != "program") {
-    std::cerr << "usage: ane-ffn METALLIB kernels|kernels4b|check4b|split|faults|program\n";
+      mode != "faults" && mode != "recovery" && mode != "power-reference" && mode != "program") {
+    std::cerr << "usage: ane-ffn METALLIB kernels|kernels4b|check4b|split|faults|recovery|power-reference|program\n";
     return 2;
   }
   try {
@@ -1132,6 +1196,10 @@ int main(int argc, char **argv) {
       check4b(backend);
     } else if (mode == "split") {
       split(backend);
+    } else if (mode == "power-reference") {
+      powerReference(backend);
+    } else if (mode == "recovery") {
+      recovery(backend);
     } else if (mode == "faults") {
       faults(backend);
     } else {

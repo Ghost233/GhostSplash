@@ -1,0 +1,53 @@
+{
+  "baseline_kept": true,
+  "baseline": {
+    "kv_format": "q4h",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 8,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 16384,
+    "context_tokens": 131072,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "baseline_features": {
+    "lookup": false,
+    "compact": false,
+    "fast": false
+  },
+  "best_observed_c1_profile": "splits-3",
+  "promising_profiles": [
+    "splits-3",
+    "splits-11",
+    "splits-14",
+    "splits-7",
+    "splits-1",
+    "splits-10",
+    "splits-13",
+    "splits-9",
+    "splits-4",
+    "splits-5",
+    "splits-15",
+    "splits-12"
+  ],
+  "promotion_rule": "observed sweep differences are candidates; require paired verification before changing any baseline parameter; Q4H remains fixed by user preference",
+  "candidate": {
+    "name": "splits-3",
+    "change": {
+      "tail_prefill_splits": 3
+    },
+    "features": {
+      "lookup": false,
+      "compact": false,
+      "fast": false
+    }
+  }
+}

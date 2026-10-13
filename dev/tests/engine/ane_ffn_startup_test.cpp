@@ -103,7 +103,7 @@ struct Fake {
   std::optional<uint32_t> recalled, rememberedMost;
   bool healthy = true;
   // The calls the start made: of unavailable() and time(), and of prepare() with its arguments.
-  uint32_t asked = 0, timings = 0;
+  uint32_t asked = 0, timings = 0, baselines = 0, powerMeasurements = 0;
   std::optional<std::pair<uint32_t, bool>> prepared;
 
   [[nodiscard]] uint64_t bytes(uint32_t aneUnits) const { return aneUnits * unitBytes; }
@@ -129,6 +129,15 @@ struct Fake {
       ++timings;
       return time();
     };
+    result.powerReference = [this](ops::AneFfn *) {
+      ++powerMeasurements;
+      ane::PowerReference report;
+      report.valid = true; report.source = "auto_ffn"; report.referenceWatts = 4;
+      report.peakWatts = 4; report.steadyWatts = 3; report.backgroundWatts = 0;
+      report.samples = 5; report.loadSeconds = 5;
+      return report;
+    };
+    result.gpuBaseline = [this] { ++baselines; return timedChunks(15.5).gpu; };
     result.prepare = [this](uint32_t aneUnits, bool timeChunks) {
       prepared = {aneUnits, timeChunks};
       return prepare(aneUnits, timeChunks);
@@ -473,9 +482,26 @@ void testGivenShare() {
               has(started.log, "Neural Engine FFN split at the given share 0.21 for chunks of 512 rows or more, 2.5% "
                                "from the GPU alone on the Neural Engine's part"),
           "the given share did not run as given: " + started.log);
+  Started recovery = start(fake, {.given = AneFfnSetting::Given{0.2, 832}, .recovery = {.enabled = true}});
+  require(recovery.start.outcome.kind == Kind::Split && fake.baselines == 1 && !fake.timings &&
+              fake.prepared == std::pair(7u, false) && !fake.recalled && !fake.remembered,
+          "manual recovery changed share, row threshold or ran automatic calibration");
   started = start(fake, {.given = AneFfnSetting::Given{0.2, 832}});
   require(started.start.outcome.kind == Kind::Split && has(started.log, "for chunks of 832 rows or more"),
           "the given least chunk did not run as given: " + started.log);
+  Fake referenceModel;
+  Started manualReference = start(referenceModel, {.given = AneFfnSetting::Given{0.2},
+      .powerReference = {ane::PowerReferenceSetting::Mode::Manual, 6.0}});
+  require(manualReference.start.outcome.powerReference &&
+      manualReference.start.outcome.powerReference->source == "manual" &&
+      manualReference.start.outcome.powerReference->referenceWatts == 6 && !referenceModel.powerMeasurements,
+      "manual reference ran high-load detection or changed watts");
+  Started autoReference = start(referenceModel, {.given = AneFfnSetting::Given{0.2},
+      .powerReference = {ane::PowerReferenceSetting::Mode::Automatic}});
+  require(autoReference.start.outcome.powerReference &&
+      autoReference.start.outcome.powerReference->source == "auto_ffn" &&
+      autoReference.start.outcome.powerReference->referenceWatts == 4 && referenceModel.powerMeasurements == 1,
+      "automatic reference did not use the measured result");
   for (const AneFfnSetting::Given given : {AneFfnSetting::Given{0.0}, AneFfnSetting::Given{1.0},
                                            AneFfnSetting::Given{0.2, 511}, AneFfnSetting::Given{0.2, 2049}})
     rejects([&] { static_cast<void>(start(fake, {.given = given})); }, "ANE FFN",

@@ -1,0 +1,242 @@
+{
+  "status": "complete",
+  "rows": [
+    {
+      "config": "A",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true,
+        "minimum": 2,
+        "capacity": 98304
+      },
+      "samples": 3,
+      "prefill_tok_s": 604.2422534208754,
+      "decode_tok_s": 91.17566377291152,
+      "ttft_seconds": 13.557596875,
+      "total_seconds": 58.48174475,
+      "device_peak_gib": 15.1522216796875,
+      "prefill_range": [
+        603.7302822532732,
+        604.2889801174753
+      ],
+      "decode_range": [
+        90.46492769449921,
+        92.98382456942787
+      ],
+      "total_change_vs_A_percent": 0.0,
+      "lookup_accepted_tokens": [
+        3237,
+        3237,
+        3237
+      ],
+      "compact_cycles": [
+        95,
+        95,
+        95
+      ],
+      "compact_fallbacks": [
+        0,
+        0,
+        0
+      ],
+      "compact_extra_mib": [
+        270.375,
+        270.375,
+        270.375
+      ]
+    },
+    {
+      "config": "L3",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true,
+        "minimum": 3,
+        "capacity": 98304
+      },
+      "samples": 3,
+      "prefill_tok_s": 601.465751552042,
+      "decode_tok_s": 93.33977325751333,
+      "ttft_seconds": 13.620199291,
+      "total_seconds": 57.502747041,
+      "device_peak_gib": 15.1522216796875,
+      "prefill_range": [
+        575.4537538689649,
+        603.7634817461363
+      ],
+      "decode_range": [
+        91.65996723887794,
+        93.66410681549868
+      ],
+      "total_change_vs_A_percent": -1.6740227453627687,
+      "lookup_accepted_tokens": [
+        3227,
+        3227,
+        3227
+      ],
+      "compact_cycles": [
+        102,
+        102,
+        102
+      ],
+      "compact_fallbacks": [
+        0,
+        0,
+        0
+      ],
+      "compact_extra_mib": [
+        270.375,
+        270.375,
+        270.375
+      ]
+    },
+    {
+      "config": "L4",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true,
+        "minimum": 4,
+        "capacity": 98304
+      },
+      "samples": 3,
+      "prefill_tok_s": 600.526892340316,
+      "decode_tok_s": 91.59542384029747,
+      "ttft_seconds": 13.641599416,
+      "total_seconds": 58.3398655,
+      "device_peak_gib": 15.1522216796875,
+      "prefill_range": [
+        599.7578309368553,
+        602.6438830202162
+      ],
+      "decode_range": [
+        85.295779126446,
+        91.63616133961239
+      ],
+      "total_change_vs_A_percent": -0.24260433851025498,
+      "lookup_accepted_tokens": [
+        3225,
+        3225,
+        3225
+      ],
+      "compact_cycles": [
+        104,
+        104,
+        104
+      ],
+      "compact_fallbacks": [
+        0,
+        0,
+        0
+      ],
+      "compact_extra_mib": [
+        270.375,
+        270.375,
+        270.375
+      ]
+    },
+    {
+      "config": "C64",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true,
+        "minimum": 2,
+        "capacity": 65536
+      },
+      "samples": 3,
+      "prefill_tok_s": 602.3390397671981,
+      "decode_tok_s": 89.11856969556081,
+      "ttft_seconds": 13.600399042,
+      "total_seconds": 59.533345292,
+      "device_peak_gib": 15.064208984375,
+      "prefill_range": [
+        600.4734702526949,
+        603.5909702548588
+      ],
+      "decode_range": [
+        88.01983106563988,
+        89.39362938177565
+      ],
+      "total_change_vs_A_percent": 1.798168892695351,
+      "lookup_accepted_tokens": [
+        3234,
+        3234,
+        3234
+      ],
+      "compact_cycles": [
+        103,
+        103,
+        103
+      ],
+      "compact_fallbacks": [
+        3,
+        3,
+        3
+      ],
+      "compact_extra_mib": [
+        180.25,
+        180.25,
+        180.25
+      ]
+    },
+    {
+      "config": "C32",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true,
+        "minimum": 2,
+        "capacity": 32768
+      },
+      "samples": 3,
+      "prefill_tok_s": 601.8786869263421,
+      "decode_tok_s": 89.54999183380704,
+      "ttft_seconds": 13.610801542,
+      "total_seconds": 59.310471166,
+      "device_peak_gib": 14.9761962890625,
+      "prefill_range": [
+        595.4267579743095,
+        603.6553794566062
+      ],
+      "decode_range": [
+        89.53411018186354,
+        90.12695909241624
+      ],
+      "total_change_vs_A_percent": 1.4170685562523433,
+      "lookup_accepted_tokens": [
+        3234,
+        3234,
+        3234
+      ],
+      "compact_cycles": [
+        103,
+        103,
+        103
+      ],
+      "compact_fallbacks": [
+        3,
+        3,
+        3
+      ],
+      "compact_extra_mib": [
+        90.125,
+        90.125,
+        90.125
+      ]
+    }
+  ],
+  "baseline_automatically_changed": false,
+  "next_step": "retain A2048; compare minMatch and compact capacity; no automatic promotion"
+}

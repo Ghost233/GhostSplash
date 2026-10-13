@@ -21,11 +21,12 @@ struct CompactTokenRows final {
 class CompactDraftHead final {
 public:
   CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
-                   const std::filesystem::path &rankingFile, std::string_view manifest);
+                   const std::filesystem::path &rankingFile, std::string_view manifest, uint32_t requestedCapacity = 98304);
   [[nodiscard]] bool prepare(std::span<const uint32_t> history);
   [[nodiscard]] const ops::Projection &projection() const noexcept { return projection_; }
   [[nodiscard]] const metal::MetalBuffer &mapping() const noexcept { return mapping_; }
   [[nodiscard]] uint32_t validRows() const noexcept { return valid_; }
+  [[nodiscard]] uint32_t capacity() const noexcept { return capacity_; }
   [[nodiscard]] uint64_t bytes() const noexcept;
   [[nodiscard]] const std::string &reason() const noexcept { return reason_; }
 

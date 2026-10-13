@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "pid": 56565,
+  "source": "subprocess.Popen.wait real exit result",
+  "resumed_after_unobserved_supervisor_exit": true
+}

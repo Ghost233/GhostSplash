@@ -1,0 +1,71 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+ISOLATED Q4H16K RETEST: retain3 clean; replace19 interfered; complete41 pending;60 fresh measurements
+IDLE GATE ready gpu=41 busy=[]
+START perf-0-001-isolated-retest-baseline
+INTERFERED ATTEMPT PRESERVED; WAITING TO RETRY baseline
+IDLE GATE ready gpu=36 busy=[]
+START perf-0-001-isolated-retest-attempt2-baseline
+INTERFERED ATTEMPT PRESERVED; WAITING TO RETRY baseline
+IDLE GATE waiting gpu=96 busy=[54790]
+IDLE GATE ready gpu=29 busy=[]
+START perf-0-001-isolated-retest-attempt3-baseline
+END perf-0-001-isolated-retest-attempt3-baseline status=complete facts=True prefill=1873.7 decode=204.4 peak=15.606GiB
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+START perf-0-002-isolated-retest-splits-2
+INTERFERED ATTEMPT PRESERVED; WAITING TO RETRY splits-2
+IDLE GATE ready gpu=43 busy=[]
+START perf-0-002-isolated-retest-attempt2-splits-2
+END perf-0-002-isolated-retest-attempt2-splits-2 status=complete facts=True prefill=1987.6 decode=231.4 peak=15.727GiB
+IDLE GATE ready gpu=41 busy=[]
+START perf-0-006-isolated-retest-splits-6
+INTERFERED ATTEMPT PRESERVED; WAITING TO RETRY splits-6
+IDLE GATE ready gpu=0 busy=[]
+START perf-0-006-isolated-retest-attempt2-splits-6
+END perf-0-006-isolated-retest-attempt2-splits-6 status=complete facts=True prefill=1969.0 decode=188.7 peak=15.727GiB
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+START perf-0-007-isolated-retest-splits-7
+END perf-0-007-isolated-retest-splits-7 status=complete facts=True prefill=1888.0 decode=213.0 peak=15.727GiB
+IDLE GATE ready gpu=49 busy=[]
+START perf-0-008-isolated-retest-splits-1
+END perf-0-008-isolated-retest-splits-1 status=complete facts=True prefill=2137.2 decode=207.7 peak=15.727GiB
+IDLE GATE ready gpu=46 busy=[]
+START perf-0-009-isolated-retest-splits-9
+END perf-0-009-isolated-retest-splits-9 status=complete facts=True prefill=1984.4 decode=202.9 peak=15.727GiB
+IDLE GATE ready gpu=0 busy=[]
+START perf-0-010-isolated-retest-splits-10
+END perf-0-010-isolated-retest-splits-10 status=complete facts=True prefill=2403.1 decode=209.4 peak=15.727GiB
+IDLE GATE ready gpu=10 busy=[]
+START perf-0-011-isolated-retest-splits-11
+END perf-0-011-isolated-retest-splits-11 status=complete facts=True prefill=2091.2 decode=207.1 peak=15.606GiB
+IDLE GATE ready gpu=9 busy=[]
+START perf-0-012-isolated-retest-splits-12
+END perf-0-012-isolated-retest-splits-12 status=complete facts=True prefill=2047.9 decode=200.7 peak=15.606GiB
+IDLE GATE ready gpu=9 busy=[]
+START perf-0-013-isolated-retest-splits-13
+END perf-0-013-isolated-retest-splits-13 status=complete facts=True prefill=1964.2 decode=184.8 peak=15.727GiB
+IDLE GATE ready gpu=25 busy=[]
+START perf-0-014-isolated-retest-splits-14
+END perf-0-014-isolated-retest-splits-14 status=complete facts=True prefill=1861.3 decode=198.8 peak=15.606GiB
+IDLE GATE ready gpu=22 busy=[]
+START perf-0-015-isolated-retest-splits-15
+END perf-0-015-isolated-retest-splits-15 status=complete facts=True prefill=2095.2 decode=213.8 peak=15.727GiB
+IDLE GATE ready gpu=32 busy=[]
+START perf-0-016-isolated-retest-splits-16
+END perf-0-016-isolated-retest-splits-16 status=complete facts=True prefill=2130.6 decode=190.3 peak=15.727GiB
+IDLE GATE ready gpu=35 busy=[]
+START perf-0-017-isolated-retest-concurrency-2
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/runner.py", line 195, in <module>
+    result=execute(profile,repeat,index,phase)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/runner.py", line 163, in execute
+    raw,result=run(name,parameters,profile['features'],True)
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/runner.py", line 92, in run
+    raise RuntimeError('native failed: '+name)
+RuntimeError: native failed: perf-0-017-isolated-retest-concurrency-2

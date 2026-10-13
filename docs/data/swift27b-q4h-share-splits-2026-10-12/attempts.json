@@ -1,0 +1,290 @@
+[
+  {
+    "name": "correctness-0-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-H25-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-H25-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-H25-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-H25-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-H75-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-H75-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-H75-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-H75-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-S1-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-S1-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-S1-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-S1-16384-attempt1",
+    "status": "interrupted",
+    "exit_code": null,
+    "error": "controller-and-supervisor-exit-unobserved; no native exit/validation evidence",
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-S1-16384-attempt2",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-S1-16384-attempt2",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-S2-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-S2-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-S2-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-S2-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-S4-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-S4-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-S4-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-S4-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-S8-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-0-S8-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-S8-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/correctness-1-S8-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-H25-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-H25-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-H75-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-H75-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-S1-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-S1-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-S2-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-S2-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-S4-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-S4-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-S8-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-0-S8-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-S8-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-S8-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-S4-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-S4-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-S2-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-S2-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-S1-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-S1-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-H75-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-H75-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-H25-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-H25-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-1-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-S2-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-S2-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-S4-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-S4-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-S8-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-S8-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-H25-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-H25-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-H75-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-H75-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-S1-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-S1-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  }
+]

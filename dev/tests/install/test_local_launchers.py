@@ -31,6 +31,8 @@ class LocalLauncherTests(unittest.TestCase):
         self.target = self.root / "target"
         self.target.mkdir()
         (self.target / "model.gguf").touch()
+        (self.root / "build").mkdir()
+        (self.root / "build/splash").touch()
         self.installed = self.root / "installed"
         (self.installed / "tokenizer").mkdir(parents=True)
         self.template = self.target / "chat_template.jinja"
@@ -46,6 +48,7 @@ class LocalLauncherTests(unittest.TestCase):
         invalid=False,
         wrong_target=False,
         kv_format="int8",
+        startup_options=(),
     ):
         text = script.read_text()
         source = text.split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
@@ -66,6 +69,8 @@ class LocalLauncherTests(unittest.TestCase):
         if script.name == "tielminiplus35ba3bsplash.sh":
             arguments.append(str(self.template))
         arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4", kv_format])
+        if script.name == "swift1527biq3ssplash.sh":
+            arguments.extend([str(self.root / "build/splash"), *startup_options])
         record = {
             "sources": {
                 "target": {
@@ -171,6 +176,47 @@ class LocalLauncherTests(unittest.TestCase):
             if script.name in EXPLICIT_DRAFTS and not installed:
                 self.assertEqual(len(scratches), 1)
             self.assertTrue(all(not scratch.exists() for scratch in scratches))
+        return parsed if not invalid and not wrong_target else None
+
+    def test_swift_forwards_independent_startup_switches_and_paths_with_spaces(self):
+        binary = self.root / "alternate binary"
+        binary.touch()
+        parsed = self.launch(
+            ROOT / "swift1527biq3ssplash.sh",
+            installed=True,
+            startup_options=(
+                "--binary",
+                str(binary),
+                "--ane-ffn-share",
+                "0.5",
+                "--ane-ffn-minimum-rows",
+                "512",
+                "--ane-power-reference",
+                "6",
+                "--ane-power-recovery",
+                "on",
+                "--ane-recovery-max-power-percent",
+                "50",
+                "--prompt-lookup",
+                "off",
+                "--compact-draft-head",
+                "off",
+                "--fast-topk",
+                "on",
+                "--compact-draft-ranking",
+                str(self.root / "rank file"),
+            ),
+        )
+        self.assertEqual(parsed.binary, str(binary))
+        self.assertEqual(parsed.ane_ffn_share, 0.5)
+        self.assertEqual(parsed.ane_ffn_minimum_rows, 512)
+        self.assertEqual(parsed.ane_power_reference, "6.0")
+        self.assertEqual(parsed.ane_power_recovery, "on")
+        self.assertEqual(parsed.ane_recovery_max_power_percent, 50)
+        self.assertEqual(parsed.prompt_lookup, "off")
+        self.assertEqual(parsed.compact_draft_head, "off")
+        self.assertEqual(parsed.fast_topk, "on")
+        self.assertEqual(parsed.compact_draft_ranking, self.root / "rank file")
 
     def test_every_gguf_launcher_first_install_and_server_arguments(self):
         for script in GGUF_SCRIPTS:

@@ -1,0 +1,122 @@
+[
+  {
+    "name": "performance-0-A-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-0-A-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-L3-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-0-L3-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-L4-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-0-L4-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-C64-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-0-C64-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-C32-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-0-C32-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-C32-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-1-C32-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-C64-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-1-C64-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-L4-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-1-L4-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-L3-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-1-L3-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-1-A-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-1-A-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-L4-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-2-L4-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-C64-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-2-C64-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-C32-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-2-C32-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-A-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-2-A-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-2-L3-4096-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/performance-2-L3-4096-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  }
+]

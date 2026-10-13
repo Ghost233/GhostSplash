@@ -1,0 +1,68 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+KV PAIR START 32; A=INT8 B=Q4H; alternating AB/BA; splits8 block8 C1 all optional features off
+START kv-pair-0-01-512-A
+END kv-pair-0-01-512-A status=complete facts=True prefill=2352.0 decode=143.9 peak=15.761GiB
+START kv-pair-0-02-512-B
+END kv-pair-0-02-512-B status=complete facts=True prefill=2347.0 decode=144.8 peak=15.606GiB
+START kv-pair-0-03-2048-A
+END kv-pair-0-03-2048-A status=complete facts=True prefill=2103.9 decode=191.2 peak=15.761GiB
+START kv-pair-0-04-2048-B
+END kv-pair-0-04-2048-B status=complete facts=True prefill=2113.9 decode=121.1 peak=15.606GiB
+START kv-pair-1-05-2048-B
+END kv-pair-1-05-2048-B status=complete facts=True prefill=2061.7 decode=117.6 peak=15.606GiB
+START kv-pair-1-06-2048-A
+END kv-pair-1-06-2048-A status=complete facts=True prefill=1908.0 decode=169.6 peak=15.761GiB
+START kv-pair-1-07-512-B
+END kv-pair-1-07-512-B status=complete facts=True prefill=1842.1 decode=124.9 peak=15.606GiB
+START kv-pair-1-08-512-A
+END kv-pair-1-08-512-A status=complete facts=True prefill=1783.5 decode=118.4 peak=15.761GiB
+START kv-pair-2-09-512-A
+END kv-pair-2-09-512-A status=complete facts=True prefill=1811.5 decode=123.8 peak=15.761GiB
+START kv-pair-2-10-512-B
+END kv-pair-2-10-512-B status=complete facts=True prefill=1855.2 decode=130.4 peak=15.606GiB
+START kv-pair-2-11-2048-A
+END kv-pair-2-11-2048-A status=complete facts=True prefill=1943.8 decode=159.4 peak=15.761GiB
+START kv-pair-2-12-2048-B
+END kv-pair-2-12-2048-B status=complete facts=True prefill=1706.3 decode=112.5 peak=15.606GiB
+START kv-pair-3-13-2048-B
+END kv-pair-3-13-2048-B status=complete facts=True prefill=1770.6 decode=106.2 peak=15.606GiB
+START kv-pair-3-14-2048-A
+END kv-pair-3-14-2048-A status=complete facts=True prefill=1803.2 decode=168.3 peak=15.761GiB
+START kv-pair-3-15-512-B
+END kv-pair-3-15-512-B status=complete facts=True prefill=1773.2 decode=118.8 peak=15.606GiB
+START kv-pair-3-16-512-A
+END kv-pair-3-16-512-A status=complete facts=True prefill=1784.7 decode=122.3 peak=15.761GiB
+START kv-pair-4-17-512-A
+END kv-pair-4-17-512-A status=complete facts=True prefill=1802.9 decode=123.4 peak=15.761GiB
+START kv-pair-4-18-512-B
+END kv-pair-4-18-512-B status=complete facts=True prefill=1821.2 decode=121.8 peak=15.606GiB
+START kv-pair-4-19-2048-A
+END kv-pair-4-19-2048-A status=complete facts=True prefill=1756.7 decode=166.7 peak=15.761GiB
+START kv-pair-4-20-2048-B
+END kv-pair-4-20-2048-B status=complete facts=True prefill=1869.1 decode=116.0 peak=15.606GiB
+START kv-pair-5-21-2048-B
+END kv-pair-5-21-2048-B status=complete facts=True prefill=1823.8 decode=117.0 peak=15.606GiB
+START kv-pair-5-22-2048-A
+END kv-pair-5-22-2048-A status=complete facts=True prefill=1812.4 decode=171.0 peak=15.761GiB
+START kv-pair-5-23-512-B
+END kv-pair-5-23-512-B status=complete facts=True prefill=1856.2 decode=128.3 peak=15.606GiB
+START kv-pair-5-24-512-A
+END kv-pair-5-24-512-A status=complete facts=True prefill=1839.3 decode=122.2 peak=15.761GiB
+START kv-pair-6-25-512-A
+END kv-pair-6-25-512-A status=complete facts=True prefill=1754.5 decode=120.6 peak=15.761GiB
+START kv-pair-6-26-512-B
+END kv-pair-6-26-512-B status=complete facts=True prefill=1795.1 decode=122.2 peak=15.606GiB
+START kv-pair-6-27-2048-A
+END kv-pair-6-27-2048-A status=complete facts=True prefill=1796.1 decode=168.8 peak=15.761GiB
+START kv-pair-6-28-2048-B
+END kv-pair-6-28-2048-B status=complete facts=True prefill=1858.5 decode=113.7 peak=15.606GiB
+START kv-pair-7-29-2048-B
+END kv-pair-7-29-2048-B status=complete facts=True prefill=1990.8 decode=115.8 peak=15.606GiB
+START kv-pair-7-30-2048-A
+END kv-pair-7-30-2048-A status=complete facts=True prefill=1875.4 decode=173.3 peak=15.761GiB
+START kv-pair-7-31-512-B
+END kv-pair-7-31-512-B status=complete facts=True prefill=1922.4 decode=127.8 peak=15.606GiB
+START kv-pair-7-32-512-A
+END kv-pair-7-32-512-A status=complete facts=True prefill=1876.6 decode=124.9 peak=15.761GiB
+KV PAIR COMPLETE 32

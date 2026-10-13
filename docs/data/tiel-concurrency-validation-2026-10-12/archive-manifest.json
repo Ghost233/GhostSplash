@@ -1,0 +1,423 @@
+{
+  "archive": "raw-diagnostics.tar.gz",
+  "sha256": "584e756e5efa630e3cbed92d89cfee36e34426c7ee09ffb23af76182a48d3ea4",
+  "bytes": 4372041,
+  "roundtrip_verified": true,
+  "files": [
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/TielPrefixProbe.mm",
+      "bytes": 25550,
+      "sha256": "e35f2d814bac4887a949e31941d0498d493e6b9bf58c25ad2eb34d8b0e7b8524"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/build-command.json",
+      "bytes": 1093,
+      "sha256": "206096b667f60d46db8a9cce7247c694863c3af047b72bae8bd4114359b4569c"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/build-result.json",
+      "bytes": 17,
+      "sha256": "e89df0eae5ec7db81135aed16463968955c578bcc4f2ec43172eff351f080c17"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/controller.log",
+      "bytes": 1111,
+      "sha256": "84384ca8a8e442b680d621df33c27e870aca9cc433b4a123e15b347bb5f05fdc"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/fixed-comparison.json",
+      "bytes": 104,
+      "sha256": "f73d82de8212c250c04aaf9bc63fc0417bdfe517a32590cd508263eff282d3f8"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/check.json",
+      "bytes": 29392,
+      "sha256": "6a1aad509a4723fe02cd19c1c93aa7b662c6a9c89343c89a19d10502611a5a6c"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/evidence.json",
+      "bytes": 1060,
+      "sha256": "4cc0bac19372abbd38f5a17e00bac215ee5f1497616800e5eb295b6cf375b4ff"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/payload.json",
+      "bytes": 1127389,
+      "sha256": "249a4beb1adc719e82698c28da670c498cc45f1d51fc8db307618b7a8d6a0697"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/process.json",
+      "bytes": 209,
+      "sha256": "20fb4878f74af2fce929c1ff51c71164ed22e3982c33ddf0b9f37c6e1dea51a8"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/stderr.log",
+      "bytes": 171,
+      "sha256": "ac3ab492fc924639fcdc6e02157b608d9a414f0b9d6e9bf2df0303869d98222f"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-1/stdout.json",
+      "bytes": 26001,
+      "sha256": "89b1024e7e6d13d6f90492e0d5d678dc165cbf7c7e5969b0d8e8cf09284b682d"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/check.json",
+      "bytes": 24400,
+      "sha256": "b6bbf8d313b43c296871af3c6bd6a9e877b0593c30b2b67db90c68e4378eac2b"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/evidence.json",
+      "bytes": 1059,
+      "sha256": "96382bf3c28ce1be148bdbd1d14c87c288a69c7b10331bc27012fb0791c7f917"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/payload.json",
+      "bytes": 1127388,
+      "sha256": "0130cde7aa924d44adae633fb02fd396b8679c7847c12af8e8e81efea1af5a8d"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/process.json",
+      "bytes": 209,
+      "sha256": "ca45a5332c05b85f163392ea0b769e885710eae4661b390a65b49ac860e0520e"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/stderr.log",
+      "bytes": 171,
+      "sha256": "3a0fa9fd351fac92031160f547907d23a461ae50c4d8abb41dd535052386f333"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-2/stdout.json",
+      "bytes": 20530,
+      "sha256": "a6f54a1d918c606f4071d3e4628cad602a1e968a6e613dd0204533cd48eac95d"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/check.json",
+      "bytes": 24400,
+      "sha256": "8b86f98e1b79d19211b6c70017dc9e1ae09596cfeda05feead390d80886dc898"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/evidence.json",
+      "bytes": 1059,
+      "sha256": "365c5c0062445b2acb754bec7a2faba1a7098f6926c4fa160d0ce6d0562458ce"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/payload.json",
+      "bytes": 1127388,
+      "sha256": "0130cde7aa924d44adae633fb02fd396b8679c7847c12af8e8e81efea1af5a8d"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/process.json",
+      "bytes": 209,
+      "sha256": "e0ffff55e0b22665a64171cc0153c1cf83bdde63ef4c07f90fd1a22b370a1975"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/stderr.log",
+      "bytes": 171,
+      "sha256": "be35357ac54998168cad92c998f113fa59d9f6bfdc5e6038fb75bd6a406eb8dc"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/pair-3/stdout.json",
+      "bytes": 20530,
+      "sha256": "62b90848d4c1daef130e905465a1561f57c81724ac4f56bdb062d1965568a23a"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/probe-identity.json",
+      "bytes": 1097,
+      "sha256": "531f9bec09d15f1f21952b364589a90ca7425f59626d9f2781fba278158f992c"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/qwen4b-matrix-native",
+      "bytes": 2559880,
+      "sha256": "4970e5f5ce4124670e5a38e545a4a4deaa76e818837c4451b8330cdef5eb2fc1"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/run.py",
+      "bytes": 3577,
+      "sha256": "52487e9dc22b8a98017d3aecae2ee8eceb34f8e43ed75494fdfc98cbd6eed4e1"
+    },
+    {
+      "path": "tiel-concurrency-prefix-fixed-v1/summary.json",
+      "bytes": 102013,
+      "sha256": "74e68235f29ae5fa87930e727b5519e72e7db6419abaf9899d082193ba9592c3"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/.DS_Store",
+      "bytes": 6148,
+      "sha256": "2c05928b23b1c318611efd1bbae55ba21d68fa48c5e484fe7fc309d183c58a34"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/TielPrefixProbe.mm",
+      "bytes": 24800,
+      "sha256": "277e02a7a33ea7b2dffe92896a8a86307cc7c95b5543ef2823d035a861c55895"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/build-command.json",
+      "bytes": 1049,
+      "sha256": "8e9fa19bcafc1955f81961d6131aa349d766806819a423bd3f7de4dcb73f9416"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/build-result.json",
+      "bytes": 17,
+      "sha256": "e89df0eae5ec7db81135aed16463968955c578bcc4f2ec43172eff351f080c17"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/check.py",
+      "bytes": 1519,
+      "sha256": "a939313fc58a16739970c4c951924a615eade58ec563321e343390557f7c1d08"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/controller.log",
+      "bytes": 723,
+      "sha256": "a8005410c7f9740039a7e009afe2786f38f984f204e5fa48f1f8eb721ee80570"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/check.json",
+      "bytes": 24930,
+      "sha256": "1816c6d14556232c6912c3cc752b975e11831698b4e65f8203f6153208fd3582"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/evidence.json",
+      "bytes": 1417,
+      "sha256": "124f3b998aa2def3f142de015305611ae4f42b9a83741c4ab1d99bc0a43f7738"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/payload.json",
+      "bytes": 1127349,
+      "sha256": "7d81a1098b75a5b0b45ecbb96da3c804769d60b4ad7ac09ea72f4a15b1c2bca4"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/process.json",
+      "bytes": 203,
+      "sha256": "6bccfd3a4cb5ed3d2c6e5112da23a13c426093ff7586f8c670bb0dfa41ebd03a"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/stderr.log",
+      "bytes": 171,
+      "sha256": "cad8b6801961c4f7bfa41002605789cb1de2d8d788697332281024c6cc287c83"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-1/stdout.json",
+      "bytes": 23481,
+      "sha256": "27b446c3e04de2a30edda77595c87a2d82e8ff9633c9741d84001eea7ed2e00d"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/check.json",
+      "bytes": 23832,
+      "sha256": "016fce73855e2086cfc05aacdc4dfa4d2a8982bcbeb2561bc1b0a8165eba24d6"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/evidence.json",
+      "bytes": 1053,
+      "sha256": "7df77b7ee0f5175eb9fca31bb5fea705518fe5f2b61d395206f3b0a2f11cf03e"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/payload.json",
+      "bytes": 1127349,
+      "sha256": "7d81a1098b75a5b0b45ecbb96da3c804769d60b4ad7ac09ea72f4a15b1c2bca4"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/process.json",
+      "bytes": 203,
+      "sha256": "4b8aedc22741f504ab9e51e57c789d19febbe103737ee4e25f690799101f1ef1"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/stderr.log",
+      "bytes": 171,
+      "sha256": "6bc81a36c1aed261e93bd480a5ed1f71772c36856d74da23f0619ddc5a9e11ec"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/pair-2/stdout.json",
+      "bytes": 22497,
+      "sha256": "a7f280e3e1945c96bd4b16a19ac5e95afbc2fd3cc4c1fed6085959d3a0553819"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/probe-identity.json",
+      "bytes": 1085,
+      "sha256": "74cd0e8f712db3fd1e570e7ad583eeb60c0fe52585813b3a93250848780f4e6c"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/qwen4b-matrix-native",
+      "bytes": 2558408,
+      "sha256": "49398c3415d0fa261b6eeb036ceef2a0eda9a9f0d46bcec2137a607b29da9730"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/run.py",
+      "bytes": 3206,
+      "sha256": "7ab08a487f0aa43546c46d7a7761830d008d92769f34d6c21e3950da5f0425ac"
+    },
+    {
+      "path": "tiel-concurrency-prefix-v1/summary.json",
+      "bytes": 64130,
+      "sha256": "1920772c91042266c7b3676627ccd86ae1a2f321e61ef1dc4d9880f22623e0c1"
+    },
+    {
+      "path": "tiel-graph-validation-v1/__pycache__/tiel_graph_validation.cpython-314.pyc",
+      "bytes": 4919,
+      "sha256": "f9576135853740f108a6e6296015f43fe0e84c13d75f3752f07695ee265292ba"
+    },
+    {
+      "path": "tiel-graph-validation-v1/certificate.json",
+      "bytes": 3291,
+      "sha256": "27a8824fecc5094f674774d06fabb2f5e2376c9772a7b0ed84e9831f5962da8b"
+    },
+    {
+      "path": "tiel-graph-validation-v1/test_tiel_graph_validation.py",
+      "bytes": 3927,
+      "sha256": "2480a851c5fa32f440ad3c21dd573035e650194641fbd5eb066579314a1cddd8"
+    },
+    {
+      "path": "tiel-graph-validation-v1/tiel_graph_validation.py",
+      "bytes": 2958,
+      "sha256": "9752e6babefab9bae573447494b0bb53dbf5d093e7a60150016a1fdc33cf8acd"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/ColdGraphOracle.mm",
+      "bytes": 200682,
+      "sha256": "143ee44fb625a0b4bb872224ab498b847926ed91c78878ab8adb88c12974fe96"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/build-command.json",
+      "bytes": 1175,
+      "sha256": "26bd35de3a045d8d55c8006f55da26194c30ccc1556b6e35b2eff8931ccbc137"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/build-result.json",
+      "bytes": 17,
+      "sha256": "e89df0eae5ec7db81135aed16463968955c578bcc4f2ec43172eff351f080c17"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/controller.log",
+      "bytes": 151,
+      "sha256": "2fdaaae3bb01d850dfba3e03b9a20fa749a9d21af6def0327743531f527107ac"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/evidence.json",
+      "bytes": 1414,
+      "sha256": "66d01ff17ada0a3f909f8cd599ce9c09d310719fd0525ece1de28901f9f7b18a"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/identity.json",
+      "bytes": 2610,
+      "sha256": "3c03a012abfada4c58c5d3e4ca21e25ad69c6702314e1cd4ee71c4b7a1cba96f"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/model-runtime-oracle",
+      "bytes": 2673752,
+      "sha256": "c3e96702d67f894372eaa2f7439312af021129792f5453dbc1e5da30b1094b23"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/process.json",
+      "bytes": 563,
+      "sha256": "7382951c520ccd96d21c3381628c194e93a8fe2047b1cb8f3ad5ebbf33447069"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/report.json",
+      "bytes": 2872,
+      "sha256": "dcc082e6a2fe7dfcb1eab9a6a7947277ca0575c3022dd112875acb0510c8bb22"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/run.py",
+      "bytes": 2609,
+      "sha256": "054fd8c2578fd39b74ecc82547ee9e495ff65e6a4737154ab51b2c382421d455"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tiel-q4h-cold-graph-oracle-v1/stdout.log",
+      "bytes": 950,
+      "sha256": "24ac19a5cbdb400f9eba4e50573641c040f1ad84601bd37a5d9510194e87c348"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/ModelRuntimeOracleQ4H.mm",
+      "bytes": 190820,
+      "sha256": "eef5056a86a6fa860ae42170e1ba55c6d19cddea844fa7f2858dc8111f74cf22"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/build-attempt1-result.json",
+      "bytes": 17,
+      "sha256": "5cc319f54b05a38799195a491c303aa686eab7caccfdbbf1e8b8c07405cb7392"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/build-attempt1.log",
+      "bytes": 1023,
+      "sha256": "ab080a2abb2e4429e720a7809052e2dea732f70734b674c741b10a2739961cb5"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/build-command.json",
+      "bytes": 1270,
+      "sha256": "5f986fc50422378bcdff7d041f5cf2091d25c3dcdbc095213870094a7ca1c59d"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/build-result.json",
+      "bytes": 17,
+      "sha256": "e89df0eae5ec7db81135aed16463968955c578bcc4f2ec43172eff351f080c17"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/controller.log",
+      "bytes": 152,
+      "sha256": "1a9f2e06672f050c34aabcd5227ea73ee3ed7323d74e7b455d138765c1dd846f"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/evidence.json",
+      "bytes": 1750,
+      "sha256": "445fbd6676f5df134cf3c3a0ab9044a314fbb23d1c3445a8e7ee21d482626e98"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/identity.json",
+      "bytes": 2509,
+      "sha256": "2c2cec10464ab2a885806bd1be8d318251c0be20ee3eaa7eb05233592acfb777"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/model-runtime-oracle",
+      "bytes": 2657032,
+      "sha256": "dd943b7054711dedfe1cc3836d3517e8b3a158b9fca6cfc8bfbf9ddd4a10a6e2"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/process.json",
+      "bytes": 535,
+      "sha256": "58974cb1bfed56860dfebb1592fa30e52734c5c55a2eeb33dd21e903a1bf8e5a"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/report.json",
+      "bytes": 2769,
+      "sha256": "32cc2c296d93060ce4877c519f693aa89cf6fdab53da7cb24a97abb420fbfd92"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/run.py",
+      "bytes": 2463,
+      "sha256": "c02ec6fefad32130360ab584e18bab482e2e53d3bd7df240bf92c05af6c180a0"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/stderr.log",
+      "bytes": 95,
+      "sha256": "db3a708a4d9e6aff0957ba281a0d960f2d514467f047b21357fc7afd47b8dcfb"
+    },
+    {
+      "path": "tiel-q4h-numeric-oracle-v1/stdout.log",
+      "bytes": 609,
+      "sha256": "99ba2aa323e8c8964bb58609533c69cc51866f6edec6cb07967511094568fb6d"
+    }
+  ]
+}

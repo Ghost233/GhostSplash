@@ -1,0 +1,19 @@
+{
+  "first_command": [
+    "make",
+    "-j4",
+    "BUILD=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/default-check",
+    "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/default-check/engine-tests/optional-features"
+  ],
+  "full_command": [
+    "make",
+    "-j4",
+    "BUILD=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/default-check",
+    "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "check-source",
+    "check-native-cpu",
+    "check-native-build"
+  ],
+  "exit_code": 0
+}

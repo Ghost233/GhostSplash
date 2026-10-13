@@ -1,0 +1,2542 @@
+{
+  "status": "running",
+  "phase": "isolated_retest",
+  "completed": 16,
+  "planned": 63,
+  "records": [
+    {
+      "name": "perf-0-003-sweep-splits-3",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-003-sweep-splits-3",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 3,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2168
+        }
+      },
+      "drafted_tokens": 15176,
+      "accepted_draft_tokens": 14216,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "9d4b84d8617e3a40a79a52c16f0ebaf54434c3e8ac5dee98b8199e19ff1b5d0e",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 72.963088375,
+            "total_wall_seconds": 87.228017917,
+            "prefill_wall_seconds": 14.264929542,
+            "ttft_seconds": 14.265001792
+          },
+          "prefill_tok_s": 2297.102127530438,
+          "decode_tok_s": 224.5518982940119
+        }
+      ],
+      "started_at_unix": 1791720568.564884,
+      "completed_at_unix": 1791720664.999419,
+      "pre_start_gpu_percent": [
+        0,
+        0
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2297.102127530438,
+      "decode_tok_s": 224.5518982940119,
+      "ttft_seconds": 14.265001792,
+      "total_seconds": 87.228017917,
+      "batch_seconds": 87.228659083,
+      "batch_prefill_tok_s": 2297.1098638288727,
+      "batch_decode_tok_s": 224.55212398765804,
+      "profile": "splits-3",
+      "repeat": 0,
+      "schedule_index": 3,
+      "phase": "sweep",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9367422245651028,
+      "startup_timings": {
+        "resources_seconds": 4.828084875,
+        "source_weights_seconds": 4.756423292,
+        "ane_prepare_seconds": 1.917e-06,
+        "ffn_cache_build_seconds": 1.67e-07,
+        "warmup_seconds": 0.686495792,
+        "hot_telemetry_seconds": 1.25e-06,
+        "storage_seconds": 0.014559042
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": true,
+      "measurement_background_policy": "no external activity in all original environment samples; retained without rerun"
+    },
+    {
+      "name": "perf-0-004-sweep-splits-4",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-004-sweep-splits-4",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 4,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2356
+        }
+      },
+      "drafted_tokens": 16492,
+      "accepted_draft_tokens": 14028,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "954ac98aa516d507489b665d49ba902b75f3fe0a7451221a4e4ef8500aeb7202",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 78.979806333,
+            "total_wall_seconds": 92.486369125,
+            "prefill_wall_seconds": 13.506562792,
+            "ttft_seconds": 13.506647917
+          },
+          "prefill_tok_s": 2426.0798624064914,
+          "decode_tok_s": 207.44543144257244
+        }
+      ],
+      "started_at_unix": 1791720667.088866,
+      "completed_at_unix": 1791720767.98484,
+      "pre_start_gpu_percent": [
+        25,
+        13
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2426.0798624064914,
+      "decode_tok_s": 207.44543144257244,
+      "ttft_seconds": 13.506647917,
+      "total_seconds": 92.486369125,
+      "batch_seconds": 92.486691,
+      "batch_prefill_tok_s": 2426.0854233459972,
+      "batch_decode_tok_s": 207.4455848759858,
+      "profile": "splits-4",
+      "repeat": 0,
+      "schedule_index": 4,
+      "phase": "sweep",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 3,
+        "full_fp16": 109868,
+        "quantized": 141445
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8505942275042445,
+      "startup_timings": {
+        "resources_seconds": 4.426311958,
+        "source_weights_seconds": 4.337305667,
+        "ane_prepare_seconds": 2.166e-06,
+        "ffn_cache_build_seconds": 2.5e-07,
+        "warmup_seconds": 0.699713792,
+        "hot_telemetry_seconds": 1.375e-06,
+        "storage_seconds": 0.008959667
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": true,
+      "measurement_background_policy": "no external activity in all original environment samples; retained without rerun"
+    },
+    {
+      "name": "perf-0-005-sweep-splits-5",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-005-sweep-splits-5",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 5,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2224
+        }
+      },
+      "drafted_tokens": 15568,
+      "accepted_draft_tokens": 14160,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "9a7f79c4e55636c4d3784e2c2c6c13e8f2896517e28084c4b91cc8bb67430654",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 74.531839792,
+            "total_wall_seconds": 88.682437917,
+            "prefill_wall_seconds": 14.150598125,
+            "ttft_seconds": 14.150664375
+          },
+          "prefill_tok_s": 2315.661833552354,
+          "decode_tok_s": 219.82551411213927
+        }
+      ],
+      "started_at_unix": 1791720770.076752,
+      "completed_at_unix": 1791720866.875909,
+      "pre_start_gpu_percent": [
+        22,
+        0
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2315.661833552354,
+      "decode_tok_s": 219.82551411213927,
+      "ttft_seconds": 14.150664375,
+      "total_seconds": 88.682437917,
+      "batch_seconds": 88.682725417,
+      "batch_prefill_tok_s": 2315.6646495433765,
+      "batch_decode_tok_s": 219.8256940267558,
+      "profile": "splits-5",
+      "repeat": 0,
+      "schedule_index": 5,
+      "phase": "sweep",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9095580678314491,
+      "startup_timings": {
+        "resources_seconds": 3.764560917,
+        "source_weights_seconds": 3.69107325,
+        "ane_prepare_seconds": 2.167e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.619008,
+        "hot_telemetry_seconds": 1.458e-06,
+        "storage_seconds": 0.014422
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": true,
+      "measurement_background_policy": "no external activity in all original environment samples; retained without rerun"
+    },
+    {
+      "name": "perf-0-001-isolated-retest-attempt3-baseline",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-001-isolated-retest-attempt3-baseline",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 259522560,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16756556160,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16763568128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16763568128,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16756556160,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.605759024620056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2294
+        }
+      },
+      "drafted_tokens": 16058,
+      "accepted_draft_tokens": 14090,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "38a4ef24bd3879a50642208133d7c916bac3ceea1910f28feb0a3c04abb9a530",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16756556160,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 80.15685475,
+            "total_wall_seconds": 97.645295041,
+            "prefill_wall_seconds": 17.488440291,
+            "ttft_seconds": 17.488520291
+          },
+          "prefill_tok_s": 1873.6948209648663,
+          "decode_tok_s": 204.399237608559
+        }
+      ],
+      "started_at_unix": 1791725962.475496,
+      "completed_at_unix": 1791726069.9803252,
+      "pre_start_gpu_percent": [
+        32,
+        0
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1873.6948209648663,
+      "decode_tok_s": 204.399237608559,
+      "ttft_seconds": 17.488520291,
+      "total_seconds": 97.645295041,
+      "batch_seconds": 97.645579542,
+      "batch_prefill_tok_s": 1873.6973253434303,
+      "batch_decode_tok_s": 204.39943353218544,
+      "profile": "baseline",
+      "repeat": 0,
+      "schedule_index": 1,
+      "phase": "isolated-retest-attempt3",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": true,
+      "first_difference_frozen_q4h": null,
+      "frozen_match_required": true,
+      "draft_acceptance": 0.8774442645410387,
+      "startup_timings": {
+        "resources_seconds": 5.902726709,
+        "source_weights_seconds": 5.815693458,
+        "ane_prepare_seconds": 2.292e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.694779667,
+        "hot_telemetry_seconds": 4.25e-06,
+        "storage_seconds": 0.00816875
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 3,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-001-sweep-baseline"
+    },
+    {
+      "name": "perf-0-002-isolated-retest-attempt2-splits-2",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-002-isolated-retest-attempt2-splits-2",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 2,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2130
+        }
+      },
+      "drafted_tokens": 14910,
+      "accepted_draft_tokens": 14254,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "7c043ca358922db052bba55add63a498aa1c023c6cb5e83331d3773402b23db6",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 70.800195292,
+            "total_wall_seconds": 87.286316167,
+            "prefill_wall_seconds": 16.486120875,
+            "ttft_seconds": 16.486226125
+          },
+          "prefill_tok_s": 1987.611291246219,
+          "decode_tok_s": 231.41179106113702
+        }
+      ],
+      "started_at_unix": 1791726091.5708082,
+      "completed_at_unix": 1791726188.14703,
+      "pre_start_gpu_percent": [
+        0,
+        0
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1987.611291246219,
+      "decode_tok_s": 231.41179106113702,
+      "ttft_seconds": 16.486226125,
+      "total_seconds": 87.286316167,
+      "batch_seconds": 87.286616625,
+      "batch_prefill_tok_s": 1987.6132554557144,
+      "batch_decode_tok_s": 231.4124729579454,
+      "profile": "splits-2",
+      "repeat": 0,
+      "schedule_index": 2,
+      "phase": "isolated-retest-attempt2",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 3,
+        "full_fp16": 109868,
+        "quantized": 141445
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9560026827632462,
+      "startup_timings": {
+        "resources_seconds": 4.371239292,
+        "source_weights_seconds": 4.306288875,
+        "ane_prepare_seconds": 1.75e-06,
+        "ffn_cache_build_seconds": 8.3e-08,
+        "warmup_seconds": 0.65048475,
+        "hot_telemetry_seconds": 1.833e-06,
+        "storage_seconds": 0.004089083
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 2,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-002-sweep-splits-2"
+    },
+    {
+      "name": "perf-0-006-isolated-retest-attempt2-splits-6",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-006-isolated-retest-attempt2-splits-6",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 6,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2652
+        }
+      },
+      "drafted_tokens": 18564,
+      "accepted_draft_tokens": 13732,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "959d69b0d5bed28c18e2cf4367ad12c068b223e187ebe120c028ab102dd28d82",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 86.835225458,
+            "total_wall_seconds": 103.476879583,
+            "prefill_wall_seconds": 16.641654125,
+            "ttft_seconds": 16.641740875
+          },
+          "prefill_tok_s": 1969.0350342502388,
+          "decode_tok_s": 188.6791899668013
+        }
+      ],
+      "started_at_unix": 1791726194.7052522,
+      "completed_at_unix": 1791726305.7695098,
+      "pre_start_gpu_percent": [
+        30,
+        45
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1969.0350342502388,
+      "decode_tok_s": 188.6791899668013,
+      "ttft_seconds": 16.641740875,
+      "total_seconds": 103.476879583,
+      "batch_seconds": 103.477149167,
+      "batch_prefill_tok_s": 1969.037119636641,
+      "batch_decode_tok_s": 188.67936795963476,
+      "profile": "splits-6",
+      "repeat": 0,
+      "schedule_index": 6,
+      "phase": "isolated-retest-attempt2",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.7397112691230339,
+      "startup_timings": {
+        "resources_seconds": 4.379798209,
+        "source_weights_seconds": 4.304033375,
+        "ane_prepare_seconds": 2.458e-06,
+        "ffn_cache_build_seconds": 1.67e-07,
+        "warmup_seconds": 0.653350375,
+        "hot_telemetry_seconds": 1.625e-06,
+        "storage_seconds": 0.022838209
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 2,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-006-sweep-splits-6"
+    },
+    {
+      "name": "perf-0-007-isolated-retest-splits-7",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-007-isolated-retest-splits-7",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 7,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2227
+        }
+      },
+      "drafted_tokens": 15589,
+      "accepted_draft_tokens": 14157,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "51aa4d0325a1ac3646ec4abeaae72f7675241bd3248fb5685654ebe455b4070b",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 76.926722625,
+            "total_wall_seconds": 94.282530542,
+            "prefill_wall_seconds": 17.355807917,
+            "ttft_seconds": 17.355911
+          },
+          "prefill_tok_s": 1888.013520125662,
+          "decode_tok_s": 212.9819059089286
+        }
+      ],
+      "started_at_unix": 1791726344.3690932,
+      "completed_at_unix": 1791726447.989866,
+      "pre_start_gpu_percent": [
+        48,
+        44
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1888.013520125662,
+      "decode_tok_s": 212.9819059089286,
+      "ttft_seconds": 17.355911,
+      "total_seconds": 94.282530542,
+      "batch_seconds": 94.282841958,
+      "batch_prefill_tok_s": 1888.0153286415766,
+      "batch_decode_tok_s": 212.98212209513085,
+      "profile": "splits-7",
+      "repeat": 0,
+      "schedule_index": 7,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9081403553787928,
+      "startup_timings": {
+        "resources_seconds": 4.502762166,
+        "source_weights_seconds": 4.437706167,
+        "ane_prepare_seconds": 1.875e-06,
+        "ffn_cache_build_seconds": 4.1e-08,
+        "warmup_seconds": 0.651726083,
+        "hot_telemetry_seconds": 1.5e-06,
+        "storage_seconds": 0.006059541
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-007-sweep-splits-7"
+    },
+    {
+      "name": "perf-0-008-isolated-retest-splits-1",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-008-isolated-retest-splits-1",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 1,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2223
+        }
+      },
+      "drafted_tokens": 15561,
+      "accepted_draft_tokens": 14161,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "3f54b73506133cade08998dada5955afe36f5d84fd31e82956aa897a33df78a8",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 78.872506875,
+            "total_wall_seconds": 94.204923459,
+            "prefill_wall_seconds": 15.332416584,
+            "ttft_seconds": 15.332498334
+          },
+          "prefill_tok_s": 2137.171255455891,
+          "decode_tok_s": 207.72764362575612
+        }
+      ],
+      "started_at_unix": 1791726452.239198,
+      "completed_at_unix": 1791726555.838329,
+      "pre_start_gpu_percent": [
+        39,
+        46
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2137.171255455891,
+      "decode_tok_s": 207.72764362575612,
+      "ttft_seconds": 15.332498334,
+      "total_seconds": 94.204923459,
+      "batch_seconds": 94.205202958,
+      "batch_prefill_tok_s": 2137.1740026785606,
+      "batch_decode_tok_s": 207.72851703490926,
+      "profile": "splits-1",
+      "repeat": 0,
+      "schedule_index": 8,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9100314889788574,
+      "startup_timings": {
+        "resources_seconds": 4.372991208,
+        "source_weights_seconds": 4.286641291,
+        "ane_prepare_seconds": 2.458e-06,
+        "ffn_cache_build_seconds": 2.5e-07,
+        "warmup_seconds": 0.636028667,
+        "hot_telemetry_seconds": 1.375e-06,
+        "storage_seconds": 0.028338459
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-008-sweep-splits-1"
+    },
+    {
+      "name": "perf-0-009-isolated-retest-splits-9",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-009-isolated-retest-splits-9",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 9,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2330
+        }
+      },
+      "drafted_tokens": 16310,
+      "accepted_draft_tokens": 14054,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "7be95545e733bd54dd738dc89399b1373ea6e86eb58c3a7e38b20fd28d12f808",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 80.759661125,
+            "total_wall_seconds": 97.27237375,
+            "prefill_wall_seconds": 16.512712625,
+            "ttft_seconds": 16.512802333
+          },
+          "prefill_tok_s": 1984.4104808309776,
+          "decode_tok_s": 202.87356053464373
+        }
+      ],
+      "started_at_unix": 1791726560.1154659,
+      "completed_at_unix": 1791726665.329646,
+      "pre_start_gpu_percent": [
+        0,
+        30
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1984.4104808309776,
+      "decode_tok_s": 202.87356053464373,
+      "ttft_seconds": 16.512802333,
+      "total_seconds": 97.27237375,
+      "batch_seconds": 97.272663417,
+      "batch_prefill_tok_s": 1984.4276158498672,
+      "batch_decode_tok_s": 202.87376150008538,
+      "profile": "splits-9",
+      "repeat": 0,
+      "schedule_index": 9,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 18,
+        "full_fp16": 96026,
+        "quantized": 98853
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8616799509503372,
+      "startup_timings": {
+        "resources_seconds": 4.09537875,
+        "source_weights_seconds": 3.985012041,
+        "ane_prepare_seconds": 1.75e-06,
+        "ffn_cache_build_seconds": 0,
+        "warmup_seconds": 0.633759959,
+        "hot_telemetry_seconds": 2.084e-06,
+        "storage_seconds": 0.043982
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-009-sweep-splits-9"
+    },
+    {
+      "name": "perf-0-010-isolated-retest-splits-10",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-010-isolated-retest-splits-10",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 10,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2325
+        }
+      },
+      "drafted_tokens": 16275,
+      "accepted_draft_tokens": 14059,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "9467c22517bb4be3f0894f591662f9840c69c351ca0c32629ae57f0b3c9c3fc5",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 78.241966958,
+            "total_wall_seconds": 91.877809625,
+            "prefill_wall_seconds": 13.635842667,
+            "ttft_seconds": 13.63590175
+          },
+          "prefill_tok_s": 2403.078474886014,
+          "decode_tok_s": 209.4016885950077
+        }
+      ],
+      "started_at_unix": 1791726669.5675972,
+      "completed_at_unix": 1791726770.121851,
+      "pre_start_gpu_percent": [
+        0,
+        10
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2403.078474886014,
+      "decode_tok_s": 209.4016885950077,
+      "ttft_seconds": 13.63590175,
+      "total_seconds": 91.877809625,
+      "batch_seconds": 91.878159291,
+      "batch_prefill_tok_s": 2403.081294785358,
+      "batch_decode_tok_s": 209.40189221877642,
+      "profile": "splits-10",
+      "repeat": 0,
+      "schedule_index": 10,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8638402457757296,
+      "startup_timings": {
+        "resources_seconds": 3.693414042,
+        "source_weights_seconds": 3.625706917,
+        "ane_prepare_seconds": 1.5e-06,
+        "ffn_cache_build_seconds": 8.3e-08,
+        "warmup_seconds": 0.625947334,
+        "hot_telemetry_seconds": 1.833e-06,
+        "storage_seconds": 0.013682875
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-010-sweep-splits-10"
+    },
+    {
+      "name": "perf-0-011-isolated-retest-splits-11",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-011-isolated-retest-splits-11",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 11,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 259522560,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16756556160,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16763568128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16763568128,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16756556160,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.605759024620056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2242
+        }
+      },
+      "drafted_tokens": 15694,
+      "accepted_draft_tokens": 14142,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "90aaa9578b104c020f9631af302013b8f583e9c59d0ef020e7a8a6ab97d01c79",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16756556160,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 79.09424325,
+            "total_wall_seconds": 94.763654875,
+            "prefill_wall_seconds": 15.669411625,
+            "ttft_seconds": 15.669466125
+          },
+          "prefill_tok_s": 2091.208067297166,
+          "decode_tok_s": 207.14529056449376
+        }
+      ],
+      "started_at_unix": 1791726774.3589718,
+      "completed_at_unix": 1791726875.857291,
+      "pre_start_gpu_percent": [
+        9,
+        10
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2091.208067297166,
+      "decode_tok_s": 207.14529056449376,
+      "ttft_seconds": 15.669466125,
+      "total_seconds": 94.763654875,
+      "batch_seconds": 94.763959583,
+      "batch_prefill_tok_s": 2091.2105808478364,
+      "batch_decode_tok_s": 207.14546756235808,
+      "profile": "splits-11",
+      "repeat": 0,
+      "schedule_index": 11,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 3,
+        "full_fp16": 109868,
+        "quantized": 141445
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9011087039632981,
+      "startup_timings": {
+        "resources_seconds": 3.598761042,
+        "source_weights_seconds": 3.52019675,
+        "ane_prepare_seconds": 2.584e-06,
+        "ffn_cache_build_seconds": 1.66e-07,
+        "warmup_seconds": 0.632331,
+        "hot_telemetry_seconds": 1.5e-06,
+        "storage_seconds": 0.018905
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-011-sweep-splits-11"
+    },
+    {
+      "name": "perf-0-012-isolated-retest-splits-12",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-012-isolated-retest-splits-12",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 12,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 259522560,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16756556160,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16763568128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16763568128,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16756556160,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.605759024620056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2321
+        }
+      },
+      "drafted_tokens": 16247,
+      "accepted_draft_tokens": 14062,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "573dd0a13cd3b21b73eb8c23d48429b5ae51af608398c8305c8f603123c28a83",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16756556160,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 81.619378959,
+            "total_wall_seconds": 97.62004625,
+            "prefill_wall_seconds": 16.000667291,
+            "ttft_seconds": 16.000725791
+          },
+          "prefill_tok_s": 2047.9145903140698,
+          "decode_tok_s": 200.73664133404154
+        }
+      ],
+      "started_at_unix": 1791726880.118809,
+      "completed_at_unix": 1791726985.758065,
+      "pre_start_gpu_percent": [
+        10,
+        10
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2047.9145903140698,
+      "decode_tok_s": 200.73664133404154,
+      "ttft_seconds": 16.000725791,
+      "total_seconds": 97.62004625,
+      "batch_seconds": 97.620349833,
+      "batch_prefill_tok_s": 2047.9172460959871,
+      "batch_decode_tok_s": 200.73699887341,
+      "profile": "splits-12",
+      "repeat": 0,
+      "schedule_index": 12,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8655136332861452,
+      "startup_timings": {
+        "resources_seconds": 3.768976583,
+        "source_weights_seconds": 3.692102208,
+        "ane_prepare_seconds": 1.916e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.622662625,
+        "hot_telemetry_seconds": 1.583e-06,
+        "storage_seconds": 0.016923667
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-012-sweep-splits-12"
+    },
+    {
+      "name": "perf-0-013-isolated-retest-splits-13",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-013-isolated-retest-splits-13",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 13,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2337
+        }
+      },
+      "drafted_tokens": 16359,
+      "accepted_draft_tokens": 14047,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "e338e2169e8a055d5b5b386a8143c8203ee99dd3b3e94da89267087881622fbd",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 88.651209333,
+            "total_wall_seconds": 105.3337375,
+            "prefill_wall_seconds": 16.682528167,
+            "ttft_seconds": 16.682618709
+          },
+          "prefill_tok_s": 1964.2106802983826,
+          "decode_tok_s": 184.81417369566702
+        }
+      ],
+      "started_at_unix": 1791726990.012906,
+      "completed_at_unix": 1791727103.8643358,
+      "pre_start_gpu_percent": [
+        10,
+        0
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1964.2106802983826,
+      "decode_tok_s": 184.81417369566702,
+      "ttft_seconds": 16.682618709,
+      "total_seconds": 105.3337375,
+      "batch_seconds": 105.334084334,
+      "batch_prefill_tok_s": 1964.2129173721078,
+      "batch_decode_tok_s": 184.8143613219006,
+      "profile": "splits-13",
+      "repeat": 0,
+      "schedule_index": 13,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 126,
+        "full_fp16": 119939,
+        "quantized": 1710
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8586710679136866,
+      "startup_timings": {
+        "resources_seconds": 3.450614541,
+        "source_weights_seconds": 3.3667335,
+        "ane_prepare_seconds": 2.708e-06,
+        "ffn_cache_build_seconds": 1.66e-07,
+        "warmup_seconds": 0.69122625,
+        "hot_telemetry_seconds": 1.833e-06,
+        "storage_seconds": 0.025505791
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-013-sweep-splits-13"
+    },
+    {
+      "name": "perf-0-014-isolated-retest-splits-14",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-014-isolated-retest-splits-14",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 14,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 259522560,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16756556160,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16763568128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16763568128,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16756556160,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.605759024620056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2226
+        }
+      },
+      "drafted_tokens": 15582,
+      "accepted_draft_tokens": 14157,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "3add3b39a93c8e14e3ccae99b3b5057316f68a6777dab4aec8b9fe41ba19f716",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16756556160,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 82.432703333,
+            "total_wall_seconds": 100.037742167,
+            "prefill_wall_seconds": 17.605038834,
+            "ttft_seconds": 17.605122125
+          },
+          "prefill_tok_s": 1861.285300701314,
+          "decode_tok_s": 198.7560681325011
+        }
+      ],
+      "started_at_unix": 1791727108.141642,
+      "completed_at_unix": 1791727216.657782,
+      "pre_start_gpu_percent": [
+        25,
+        48
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 1861.285300701314,
+      "decode_tok_s": 198.7560681325011,
+      "ttft_seconds": 17.605122125,
+      "total_seconds": 100.037742167,
+      "batch_seconds": 100.038031334,
+      "batch_prefill_tok_s": 1861.2871377733939,
+      "batch_decode_tok_s": 198.75623530360556,
+      "profile": "splits-14",
+      "repeat": 0,
+      "schedule_index": 14,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9085483249903735,
+      "startup_timings": {
+        "resources_seconds": 4.569440958,
+        "source_weights_seconds": 4.475162458,
+        "ane_prepare_seconds": 2.709e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.65433025,
+        "hot_telemetry_seconds": 2.083e-06,
+        "storage_seconds": 0.027202333
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-014-sweep-splits-14"
+    },
+    {
+      "name": "perf-0-015-isolated-retest-splits-15",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-015-isolated-retest-splits-15",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 15,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2145
+        }
+      },
+      "drafted_tokens": 15015,
+      "accepted_draft_tokens": 14239,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "5694ea1fee8b652a2e8eb647a05b7fb547daadfe33d7591d0726439b632c3329",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 76.628672875,
+            "total_wall_seconds": 92.26788875,
+            "prefill_wall_seconds": 15.639215875,
+            "ttft_seconds": 15.639432792
+          },
+          "prefill_tok_s": 2095.245711927357,
+          "decode_tok_s": 213.81030605510142
+        }
+      ],
+      "started_at_unix": 1791727220.8981912,
+      "completed_at_unix": 1791727321.7895958,
+      "pre_start_gpu_percent": [
+        47,
+        37
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2095.245711927357,
+      "decode_tok_s": 213.81030605510142,
+      "ttft_seconds": 15.639432792,
+      "total_seconds": 92.26788875,
+      "batch_seconds": 92.268201541,
+      "batch_prefill_tok_s": 2095.2488993036914,
+      "batch_decode_tok_s": 213.81054845511522,
+      "profile": "splits-15",
+      "repeat": 0,
+      "schedule_index": 15,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.9483183483183483,
+      "startup_timings": {
+        "resources_seconds": 3.967983625,
+        "source_weights_seconds": 3.874735875,
+        "ane_prepare_seconds": 2.166e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.721770125,
+        "hot_telemetry_seconds": 1.917e-06,
+        "storage_seconds": 0.036179584
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-015-sweep-splits-15"
+    },
+    {
+      "name": "perf-0-016-isolated-retest-splits-16",
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-016-isolated-retest-splits-16",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 16,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 16384,
+        "context_tokens": 131072,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "native_exit_code": 0,
+      "validation_status": "complete",
+      "facts_pass": true,
+      "ane_actual": {
+        "fallback_reason": "the target has no dense FFN layers",
+        "enabled": false,
+        "auto_calibration": false,
+        "minimum_rows": 0,
+        "share": 0,
+        "evaluations": 0
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": false,
+          "fast_topk": false,
+          "prompt_lookup": false
+        },
+        "compact_rows": 0,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 0,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "",
+        "extra_metal_bytes": 0,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 0,
+        "compact_cycles": 0,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 0,
+        "fast_topk_fallback_reason": ""
+      },
+      "memory_report": {
+        "state_bytes": 314966016,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 57409536,
+        "kv_bytes": 389283840,
+        "draft_weights_bytes": 480165888,
+        "backend_peak_bytes": 16886317440,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 16893329408,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 0,
+        "prefill_workspace_bytes": 629981184,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 16893329408,
+        "ffn_formats": {},
+        "decode_workspace_bytes": 178864512,
+        "backend_current_bytes": 16886317440,
+        "target_source_weights_bytes": 14893056000,
+        "ffn_quantized_payload_bytes": 0
+      },
+      "memory_peak_gib": 15.726608633995056,
+      "actual_batch_widths": {
+        "min": 1,
+        "max": 1,
+        "mean": 1.0,
+        "cycles_by_width": {
+          "1": 2403
+        }
+      },
+      "drafted_tokens": 16821,
+      "accepted_draft_tokens": 13981,
+      "requests": [
+        {
+          "prompt_id": "tiel-0",
+          "input_sha256": "baa91032eca66ec2e450e792cbe77fd47d04cc8420767e60764bda208d39c994",
+          "input_tokens": 32768,
+          "output_tokens": 16384,
+          "output_sha256": "6c2c0c01c0cd9a6cc5021baed2b075850cf169a0b4e22c980f0ce57381290935",
+          "first_eos_position": null,
+          "eos_count": 0,
+          "eos_rate": 0.0,
+          "missing_facts": [],
+          "facts_pass": true,
+          "memory_peak_bytes": 16886317440,
+          "cached_input_tokens": 0,
+          "timings": {
+            "decode_wall_seconds": 86.10847725,
+            "total_wall_seconds": 101.487897833,
+            "prefill_wall_seconds": 15.379420583,
+            "ttft_seconds": 15.379517167
+          },
+          "prefill_tok_s": 2130.6394361970224,
+          "decode_tok_s": 190.27162624688034
+        }
+      ],
+      "started_at_unix": 1791727326.036389,
+      "completed_at_unix": 1791727435.878056,
+      "pre_start_gpu_percent": [
+        20,
+        26
+      ],
+      "observed_busy_pids": [],
+      "source_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+      "target_manifest_sha256": "e5bc582f01ef3b59b36ffcc5c2f267664718e7d98ac73e0387a534aa9528726c",
+      "prefill_tok_s": 2130.6394361970224,
+      "decode_tok_s": 190.27162624688034,
+      "ttft_seconds": 15.379517167,
+      "total_seconds": 101.487897833,
+      "batch_seconds": 101.488195542,
+      "batch_prefill_tok_s": 2130.6420857461176,
+      "batch_decode_tok_s": 190.27181324069,
+      "profile": "splits-16",
+      "repeat": 0,
+      "schedule_index": 16,
+      "phase": "isolated-retest",
+      "token_match_same_profile": true,
+      "first_differences_same_profile": [
+        null
+      ],
+      "token_match_frozen_q4h": false,
+      "first_difference_frozen_q4h": {
+        "index": 7,
+        "full_fp16": 95744,
+        "quantized": 101761
+      },
+      "frozen_match_required": false,
+      "draft_acceptance": 0.8311634266690446,
+      "startup_timings": {
+        "resources_seconds": 4.002462959,
+        "source_weights_seconds": 3.92563625,
+        "ane_prepare_seconds": 1.833e-06,
+        "ffn_cache_build_seconds": 1.25e-07,
+        "warmup_seconds": 0.626946167,
+        "hot_telemetry_seconds": 2.084e-06,
+        "storage_seconds": 0.017377792
+      },
+      "reference_source": "prior Q4H full16384 golden for S8/C1; first same-profile batch for split/concurrency repeatability",
+      "retained_from_previous": false,
+      "measurement_background_policy": "require_idle_and_abort_on_external_workload",
+      "attempt_number": 1,
+      "replaces_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-016-sweep-splits-16"
+    }
+  ]
+}

@@ -75,6 +75,8 @@ public:
   void retire(std::string reason);
 
   [[nodiscard]] bool retired() const;
+  // A fresh event only after all old jobs have reported and their command was finished.
+  [[nodiscard]] bool restart(metal::MetalBackend &backend);
   // Whether the agent has reported every job it started, so that none of
   // them still runs.
   [[nodiscard]] bool idle() const;

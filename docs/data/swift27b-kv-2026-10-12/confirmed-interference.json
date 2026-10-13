@@ -1,0 +1,33 @@
+{
+  "sample": "perf-2-bf16-attempt1",
+  "status": "failed",
+  "native_exit_code": -15,
+  "error": "background-interference: [61885]",
+  "own_native_pid": 56711,
+  "background_overlap_samples": [
+    {
+      "gpu_utilization_percent": 98,
+      "servers": [
+        {
+          "pid": 61885,
+          "cpu_percent": 181.4,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": true
+        },
+        {
+          "pid": 80511,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": [
+        61885
+      ]
+    }
+  ],
+  "included_in_statistics": false,
+  "replacement": "perf-2-bf16-attempt2"
+}

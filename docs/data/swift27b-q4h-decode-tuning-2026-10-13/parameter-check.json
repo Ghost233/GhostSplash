@@ -1,0 +1,12 @@
+{
+  "exit_code": 0,
+  "same_base_parameters": true,
+  "same_input_ids": true,
+  "global_prefill_budget": 2048,
+  "configured_feature_flags": {
+    "prompt_lookup": true,
+    "compact_draft_head": true,
+    "fast_topk": false
+  },
+  "original_compact_rare_ratio_and_dynamic_budget_unchanged": true
+}

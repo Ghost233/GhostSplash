@@ -1,0 +1,99 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+START cross-0-001-512-cross-k0-s0-f0
+END cross-0-001-512-cross-k0-s0-f0 status=complete facts=True prefill=1794.5 decode=133.2 peak=15.761GiB
+START cross-0-002-2048-cross-k0-s0-f0
+END cross-0-002-2048-cross-k0-s0-f0 status=complete facts=True prefill=2111.8 decode=170.4 peak=15.761GiB
+START cross-0-003-512-cross-k0-s0-f1
+END cross-0-003-512-cross-k0-s0-f1 status=complete facts=True prefill=2055.7 decode=115.9 peak=15.761GiB
+START cross-0-004-2048-cross-k0-s0-f1
+END cross-0-004-2048-cross-k0-s0-f1 status=complete facts=True prefill=2044.1 decode=178.6 peak=15.761GiB
+START cross-0-005-512-cross-k0-s1-f0
+END cross-0-005-512-cross-k0-s1-f0 status=complete facts=True prefill=1984.2 decode=120.6 peak=15.761GiB
+START cross-0-006-2048-cross-k0-s1-f0
+END cross-0-006-2048-cross-k0-s1-f0 status=complete facts=True prefill=2069.5 decode=163.1 peak=15.761GiB
+START cross-0-007-512-cross-k0-s1-f1
+END cross-0-007-512-cross-k0-s1-f1 status=complete facts=True prefill=1772.1 decode=106.4 peak=15.761GiB
+START cross-0-008-2048-cross-k0-s1-f1
+END cross-0-008-2048-cross-k0-s1-f1 status=complete facts=True prefill=1834.2 decode=157.9 peak=15.761GiB
+START cross-0-009-512-cross-k1-s0-f0
+END cross-0-009-512-cross-k1-s0-f0 status=complete facts=True prefill=1929.1 decode=130.5 peak=15.606GiB
+START cross-0-010-2048-cross-k1-s0-f0
+END cross-0-010-2048-cross-k1-s0-f0 status=complete facts=True prefill=1726.8 decode=107.9 peak=15.606GiB
+START cross-0-011-512-cross-k1-s0-f1
+END cross-0-011-512-cross-k1-s0-f1 status=complete facts=True prefill=1681.8 decode=123.9 peak=15.606GiB
+START cross-0-012-2048-cross-k1-s0-f1
+END cross-0-012-2048-cross-k1-s0-f1 status=complete facts=True prefill=1764.1 decode=109.4 peak=15.606GiB
+START cross-0-013-512-cross-k1-s1-f0
+END cross-0-013-512-cross-k1-s1-f0 status=complete facts=True prefill=1864.2 decode=83.0 peak=15.606GiB
+START cross-0-014-2048-cross-k1-s1-f0
+END cross-0-014-2048-cross-k1-s1-f0 status=complete facts=True prefill=1788.6 decode=148.3 peak=15.606GiB
+START cross-0-015-512-cross-k1-s1-f1
+END cross-0-015-512-cross-k1-s1-f1 status=complete facts=True prefill=1717.9 decode=79.7 peak=15.606GiB
+START cross-0-016-2048-cross-k1-s1-f1
+END cross-0-016-2048-cross-k1-s1-f1 status=complete facts=True prefill=1745.2 decode=158.5 peak=15.606GiB
+START cross-1-017-2048-cross-k1-s1-f1
+END cross-1-017-2048-cross-k1-s1-f1 status=complete facts=True prefill=1769.6 decode=158.6 peak=15.606GiB
+START cross-1-018-512-cross-k1-s1-f1
+END cross-1-018-512-cross-k1-s1-f1 status=complete facts=True prefill=1795.0 decode=80.1 peak=15.606GiB
+START cross-1-019-2048-cross-k1-s1-f0
+END cross-1-019-2048-cross-k1-s1-f0 status=complete facts=True prefill=1789.0 decode=152.2 peak=15.606GiB
+START cross-1-020-512-cross-k1-s1-f0
+END cross-1-020-512-cross-k1-s1-f0 status=complete facts=True prefill=1734.9 decode=81.6 peak=15.606GiB
+START cross-1-021-2048-cross-k1-s0-f1
+END cross-1-021-2048-cross-k1-s0-f1 status=complete facts=True prefill=1803.2 decode=99.6 peak=15.606GiB
+START cross-1-022-512-cross-k1-s0-f1
+END cross-1-022-512-cross-k1-s0-f1 status=complete facts=True prefill=1945.4 decode=135.3 peak=15.606GiB
+START cross-1-023-2048-cross-k1-s0-f0
+END cross-1-023-2048-cross-k1-s0-f0 status=complete facts=True prefill=2178.2 decode=118.1 peak=15.606GiB
+START cross-1-024-512-cross-k1-s0-f0
+END cross-1-024-512-cross-k1-s0-f0 status=complete facts=True prefill=2103.9 decode=126.3 peak=15.606GiB
+START cross-1-025-2048-cross-k0-s1-f1
+END cross-1-025-2048-cross-k0-s1-f1 status=complete facts=True prefill=1951.4 decode=172.6 peak=15.761GiB
+START cross-1-026-512-cross-k0-s1-f1
+END cross-1-026-512-cross-k0-s1-f1 status=complete facts=True prefill=2020.6 decode=114.2 peak=15.761GiB
+START cross-1-027-2048-cross-k0-s1-f0
+END cross-1-027-2048-cross-k0-s1-f0 status=complete facts=True prefill=1738.2 decode=157.9 peak=15.761GiB
+START cross-1-028-512-cross-k0-s1-f0
+END cross-1-028-512-cross-k0-s1-f0 status=complete facts=True prefill=1893.4 decode=118.7 peak=15.761GiB
+START cross-1-029-2048-cross-k0-s0-f1
+END cross-1-029-2048-cross-k0-s0-f1 status=complete facts=True prefill=1935.9 decode=181.7 peak=15.761GiB
+START cross-1-030-512-cross-k0-s0-f1
+END cross-1-030-512-cross-k0-s0-f1 status=complete facts=True prefill=2091.1 decode=121.5 peak=15.761GiB
+START cross-1-031-2048-cross-k0-s0-f0
+END cross-1-031-2048-cross-k0-s0-f0 status=complete facts=True prefill=1998.5 decode=172.7 peak=15.761GiB
+START cross-1-032-512-cross-k0-s0-f0
+END cross-1-032-512-cross-k0-s0-f0 status=complete facts=True prefill=2121.3 decode=127.4 peak=15.761GiB
+START cross-2-033-512-cross-k0-s0-f0
+END cross-2-033-512-cross-k0-s0-f0 status=complete facts=True prefill=2004.7 decode=124.6 peak=15.761GiB
+START cross-2-034-2048-cross-k0-s0-f0
+END cross-2-034-2048-cross-k0-s0-f0 status=complete facts=True prefill=2130.5 decode=181.4 peak=15.761GiB
+START cross-2-035-512-cross-k0-s0-f1
+END cross-2-035-512-cross-k0-s0-f1 status=complete facts=True prefill=2020.4 decode=119.0 peak=15.761GiB
+START cross-2-036-2048-cross-k0-s0-f1
+END cross-2-036-2048-cross-k0-s0-f1 status=complete facts=True prefill=2050.4 decode=168.4 peak=15.761GiB
+START cross-2-037-512-cross-k0-s1-f0
+END cross-2-037-512-cross-k0-s1-f0 status=complete facts=True prefill=1822.0 decode=116.4 peak=15.761GiB
+START cross-2-038-2048-cross-k0-s1-f0
+END cross-2-038-2048-cross-k0-s1-f0 status=complete facts=True prefill=2134.4 decode=158.2 peak=15.761GiB
+START cross-2-039-512-cross-k0-s1-f1
+END cross-2-039-512-cross-k0-s1-f1 status=complete facts=True prefill=1603.3 decode=109.8 peak=15.761GiB
+START cross-2-040-2048-cross-k0-s1-f1
+END cross-2-040-2048-cross-k0-s1-f1 status=complete facts=True prefill=1749.0 decode=167.8 peak=15.761GiB
+START cross-2-041-512-cross-k1-s0-f0
+END cross-2-041-512-cross-k1-s0-f0 status=complete facts=True prefill=1989.2 decode=133.3 peak=15.606GiB
+START cross-2-042-2048-cross-k1-s0-f0
+END cross-2-042-2048-cross-k1-s0-f0 status=complete facts=True prefill=1863.5 decode=110.2 peak=15.606GiB
+START cross-2-043-512-cross-k1-s0-f1
+END cross-2-043-512-cross-k1-s0-f1 status=complete facts=True prefill=1780.8 decode=118.6 peak=15.606GiB
+START cross-2-044-2048-cross-k1-s0-f1
+END cross-2-044-2048-cross-k1-s0-f1 status=complete facts=True prefill=1719.3 decode=106.5 peak=15.606GiB
+START cross-2-045-512-cross-k1-s1-f0
+END cross-2-045-512-cross-k1-s1-f0 status=complete facts=True prefill=1801.4 decode=82.2 peak=15.606GiB
+START cross-2-046-2048-cross-k1-s1-f0
+END cross-2-046-2048-cross-k1-s1-f0 status=complete facts=True prefill=1796.7 decode=153.3 peak=15.606GiB
+START cross-2-047-512-cross-k1-s1-f1
+END cross-2-047-512-cross-k1-s1-f1 status=complete facts=True prefill=1782.5 decode=79.7 peak=15.606GiB
+START cross-2-048-2048-cross-k1-s1-f1
+END cross-2-048-2048-cross-k1-s1-f1 status=complete facts=True prefill=1736.7 decode=154.1 peak=15.606GiB
+CROSS COMPLETE 48

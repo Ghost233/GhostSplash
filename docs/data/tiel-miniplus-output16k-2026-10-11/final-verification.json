@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "checked_at": "2026-10-11T11:17:28.308112+00:00",
+  "commit": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "controller_exit_code": 0,
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "compiled_source_sha256": "39d18faf2656ca607c89aefb06368ba8fdc0d24f368223419c67f1d66646d6be",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-output16k-v1/qwen4b-matrix-native": "37c85acd93a4e727513b6686976cfc93338960b3f694e93d422ed3820992f167",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/libsplash.a": "c5d18d46f172465c0fcc34b9c5564f6c1b5735c5e36d5c374d0f9dce59669752",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-output16k-v1/TielMatrix.mm": "70e5f9c1d97751bf413c4de2237af6604e46a7686e7fa44af1cbf09bc5f3a2b9",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielPagedAttention.cpp": "9e4f9ea31ba4dc333e8c49fce38fed8052abe11905f8e7ea31881b06a2de357b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielPagedAttention.o": "8b94fae0f5c44d4f4fea925f477ef3914e55e91e9437d3a8ad118e36dcafb8d4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/runner.py": "697d1a834c82235ff652e932eea232d292eddb2eb2aaaf54fb6bf7c7e57da9d5",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/plan.json": "43d184469af30e17056351faafe04613a84d1d1d5ad174c07f4b8e2fcde00fa0",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-output16k-v1/runner.py": "8b1059741aea6e84469c9ffd601d70853cd3eef0b7beaeecfe737ea3ef726845"
+  },
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "actual_sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "match": true
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "actual_sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "match": true
+    }
+  },
+  "owned_test_processes_remaining": [],
+  "native_runs": 9,
+  "all_native_exit_codes_zero": true,
+  "all_facts_pass": true,
+  "all_same_kv_token_checks_pass": true,
+  "all_prior2048_prefix_checks_pass": true,
+  "observed_busy_samples": 5
+}

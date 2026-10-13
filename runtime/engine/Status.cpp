@@ -35,7 +35,32 @@ void appendAneFfn(std::ostringstream &out, const AneFfnSnapshot &split, uint64_t
       << ",\"share\":" << split.share << ",\"minimum_rows\":" << split.minimumRows
       << ",\"reason\":" << json::quote(split.reason) << ",\"split_commands\":" << split.commands
       << ",\"reruns\":" << reruns << ",\"ane_ms\":" << split.aneMilliseconds
-      << ",\"evaluations\":" << split.evaluations << '}';
+      << ",\"evaluations\":" << split.evaluations;
+  if (split.recovery) {
+    const auto &r = *split.recovery;
+    out << ",\"recovery\":{\"enabled\":true,\"phase\":" << json::quote(r.phase)
+        << ",\"reason\":" << json::quote(r.reason) << ",\"power_watts\":";
+    if (r.watts) out << *r.watts; else out << "null";
+    out << ",\"cooldown_remaining_seconds\":" << r.cooldownRemaining
+        << ",\"quiet_seconds\":" << r.quietSeconds << ",\"attempts\":" << r.attempts
+        << ",\"restored\":" << r.restored << ",\"relative_power_percent\":";
+    if (r.relativePowerPercent) out << *r.relativePowerPercent; else out << "null";
+    out << '}';
+  }
+  if (split.powerReference) {
+    const auto &r = *split.powerReference;
+    out << ",\"power_reference\":{\"valid\":" << boolean(r.valid)
+        << ",\"source\":" << json::quote(r.source) << ",\"reason\":" << json::quote(r.reason)
+        << ",\"reference_watts\":" << r.referenceWatts << ",\"peak_watts\":";
+    if (r.peakWatts) out << *r.peakWatts; else out << "null";
+    out << ",\"steady_watts\":";
+    if (r.steadyWatts) out << *r.steadyWatts; else out << "null";
+    out << ",\"background_watts\":";
+    if (r.backgroundWatts) out << *r.backgroundWatts; else out << "null";
+    out << ",\"load_seconds\":" << r.loadSeconds << ",\"samples\":" << r.samples
+        << ",\"share\":" << r.share << ",\"rows\":" << r.rows << '}';
+  }
+  out << '}';
 }
 
 void appendBatch(std::ostringstream &out,

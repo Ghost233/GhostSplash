@@ -1,0 +1,1052 @@
+{
+  "status": "passed",
+  "checked_at": "2026-10-11T09:43:05.126555+00:00",
+  "commit": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "final_pair_controller_exit_code": 0,
+  "runtime_source_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "compiled_source_sha256": "39d18faf2656ca607c89aefb06368ba8fdc0d24f368223419c67f1d66646d6be",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/qwen4b-matrix-native": {
+      "sha256": "dbb4468b3f92c6245407e5077207dcd9a96525d55e41b6de3f8d9b230d966814",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib": {
+      "sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/libsplash.a": {
+      "sha256": "c5d18d46f172465c0fcc34b9c5564f6c1b5735c5e36d5c374d0f9dce59669752",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielMatrix.mm": {
+      "sha256": "ad8ecfd15b37cf02fd29a00105a0693306f696bb8d264ef819525a1feaab53fc",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielPagedAttention.cpp": {
+      "sha256": "9e4f9ea31ba4dc333e8c49fce38fed8052abe11905f8e7ea31881b06a2de357b",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/runner.py": {
+      "sha256": "697d1a834c82235ff652e932eea232d292eddb2eb2aaaf54fb6bf7c7e57da9d5",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/plan.json": {
+      "sha256": "43d184469af30e17056351faafe04613a84d1d1d5ad174c07f4b8e2fcde00fa0",
+      "match": true
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/final-pair.py": {
+      "sha256": "0200e9a5910e582a82ccee8a4c0537867ab604aa45423f5163aea4c8eb0f13c0",
+      "match": true
+    }
+  },
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "actual_sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "match": true
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "actual_sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "match": true
+    }
+  },
+  "assembly_verified": true,
+  "native_runs": 246,
+  "measurements": 236,
+  "accepted_performance_samples": 230,
+  "ane_fallback_diagnostics": 6,
+  "initial_correctness_runs": 10,
+  "all_native_exit_codes_zero": true,
+  "evidence_files": [
+    {
+      "path": "correct-2048-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-2048-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-2048-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-2048-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-512-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-512-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-512-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "correct-512-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-001-512-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-002-2048-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-003-512-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-004-2048-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-005-512-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-006-2048-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-007-512-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-008-2048-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-009-512-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-010-2048-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-011-512-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-012-2048-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-013-512-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-014-2048-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-015-512-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-0-016-2048-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-017-2048-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-018-512-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-019-2048-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-020-512-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-021-2048-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-022-512-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-023-2048-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-024-512-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-025-2048-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-026-512-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-027-2048-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-028-512-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-029-2048-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-030-512-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-031-2048-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-1-032-512-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-033-512-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-034-2048-cross-k0-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-035-512-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-036-2048-cross-k0-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-037-512-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-038-2048-cross-k0-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-039-512-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-040-2048-cross-k0-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-041-512-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-042-2048-cross-k1-s0-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-043-512-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-044-2048-cross-k1-s0-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-045-512-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-046-2048-cross-k1-s1-f0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-047-512-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "cross-2-048-2048-cross-k1-s1-f1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-0-01-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-0-02-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-0-03-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-0-04-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-1-05-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-1-06-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-1-07-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-1-08-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-2-09-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-2-10-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-2-11-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-2-12-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-3-13-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-3-14-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-3-15-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-3-16-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-4-17-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-4-18-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-4-19-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-4-20-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-5-21-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-5-22-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-5-23-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-5-24-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-6-25-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-6-26-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-6-27-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-6-28-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-7-29-512-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-7-30-512-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-7-31-2048-A/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "pair-7-32-2048-B/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-001-512-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-002-2048-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-003-512-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-004-2048-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-005-512-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-006-2048-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-007-512-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-008-2048-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-009-512-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-010-2048-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-011-512-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-012-2048-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-013-512-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-014-2048-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-015-512-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-016-2048-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-017-512-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-018-2048-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-019-512-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-020-2048-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-021-512-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-022-2048-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-023-512-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-024-2048-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-025-512-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-026-2048-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-027-512-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-028-2048-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-029-512-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-030-2048-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-031-512-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-032-2048-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-033-512-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-034-2048-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-035-512-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-036-2048-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-037-512-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-038-2048-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-039-512-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-040-2048-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-041-512-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-042-2048-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-043-512-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-044-2048-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-045-512-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-046-2048-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-047-512-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-048-2048-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-049-512-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-050-2048-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-051-512-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-0-052-2048-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-053-2048-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-054-512-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-055-2048-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-056-512-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-057-2048-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-058-512-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-059-2048-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-060-512-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-061-2048-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-062-512-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-063-2048-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-064-512-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-065-2048-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-066-512-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-067-2048-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-068-512-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-069-2048-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-070-512-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-071-2048-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-072-512-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-073-2048-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-074-512-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-075-2048-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-076-512-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-077-2048-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-078-512-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-079-2048-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-080-512-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-081-2048-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-082-512-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-083-2048-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-084-512-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-085-2048-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-086-512-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-087-2048-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-088-512-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-089-2048-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-090-512-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-091-2048-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-092-512-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-093-2048-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-094-512-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-095-2048-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-096-512-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-097-2048-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-098-512-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-099-2048-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-100-512-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-101-2048-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-102-512-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-103-2048-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-1-104-512-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-105-512-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-106-2048-splits-10/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-107-512-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-108-2048-splits-11/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-109-512-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-110-2048-splits-12/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-111-512-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-112-2048-splits-13/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-113-512-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-114-2048-splits-14/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-115-512-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-116-2048-splits-15/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-117-512-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-118-2048-splits-16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-119-512-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-120-2048-concurrency-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-121-512-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-122-2048-concurrency-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-123-512-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-124-2048-lookup/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-125-512-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-126-2048-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-127-512-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-128-2048-lookup-compact/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-129-512-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-130-2048-ane-requested-on/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-131-512-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-132-2048-baseline/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-133-512-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-134-2048-kv-bf16/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-135-512-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-136-2048-kv-q4_0/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-137-512-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-138-2048-kv-q4_0_unrotated/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-139-512-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-140-2048-kv-q4h/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-141-512-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-142-2048-splits-2/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-143-512-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-144-2048-splits-3/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-145-512-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-146-2048-splits-4/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-147-512-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-148-2048-splits-5/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-149-512-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-150-2048-splits-6/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-151-512-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-152-2048-splits-7/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-153-512-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-154-2048-splits-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-155-512-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "perf-2-156-2048-splits-9/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "short-1/evidence.json",
+      "exit_code": 0
+    },
+    {
+      "path": "short-2/evidence.json",
+      "exit_code": 0
+    }
+  ],
+  "owned_test_processes_remaining": [],
+  "detected_external_busy_measurements": 0,
+  "source_and_weight_identity_unchanged": true
+}

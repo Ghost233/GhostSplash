@@ -23,3 +23,12 @@ image_patches_rounded | --max-image-pixels 1000000 | auto auto --max-image-patch
 image_patches_default | --max-image-pixels 4194304 | auto auto
 idle_sleep | --allow-idle-sleep | auto auto --idle-sleep allow
 disable_ane | --disable-ane | auto auto --ane off
+ane_fixed | --ane-ffn-share 0.5 --ane-ffn-minimum-rows 512 | auto auto --ane-ffn-share 0.5 --ane-ffn-minimum-rows 512
+ane_gpu | --ane-ffn-share 0 | auto auto --ane-ffn-share 0.0
+ane_recovery | --ane-power-recovery on --ane-recovery-idle-watts 0.02 | auto auto --ane-power-recovery on --ane-recovery-idle-watts 0.02
+ane_reference_auto | --ane-power-reference auto | auto auto --ane-power-reference auto
+ane_reference_manual | --ane-power-recovery on --ane-power-reference 6 --ane-recovery-max-power-percent 50 | auto auto --ane-power-recovery on --ane-power-reference 6.0 --ane-recovery-max-power-percent 50.0
+lookup | --prompt-lookup on --prompt-lookup-min-match 3 | auto auto --prompt-lookup on --prompt-lookup-min-match 3
+compact | --compact-draft-head on --compact-draft-capacity 65536 --compact-draft-ranking /tmp/ranking | auto auto --compact-draft-head on --compact-draft-capacity 65536 --compact-draft-ranking /tmp/ranking
+fast_topk | --fast-topk on | auto auto --fast-topk on
+features_off | --prompt-lookup off --compact-draft-head off --fast-topk off --ane-power-recovery off --ane-power-reference off | auto auto

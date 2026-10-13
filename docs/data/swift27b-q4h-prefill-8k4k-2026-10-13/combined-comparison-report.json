@@ -1,0 +1,90 @@
+{
+  "status": "complete",
+  "rows": [
+    {
+      "config": "A",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 2048,
+        "draft": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 574.1295805802772,
+      "decode_tok_s": 82.85786772084226,
+      "ttft_seconds": 14.268648333,
+      "total_seconds": 63.702606167,
+      "device_peak_gib": 15.1522216796875,
+      "prefill_range": [
+        573.9922596901348,
+        597.1211863206738
+      ],
+      "decode_range": [
+        82.25056921931136,
+        86.69928447433799
+      ],
+      "total_change_vs_A_percent": 0.0
+    },
+    {
+      "config": "P512-on",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 512,
+        "draft": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 522.9729823440041,
+      "decode_tok_s": 77.00432477936027,
+      "ttft_seconds": 15.664359917,
+      "total_seconds": 68.600287917,
+      "device_peak_gib": 14.650177001953125,
+      "prefill_range": [
+        520.4383026204292,
+        539.7564956513826
+      ],
+      "decode_range": [
+        75.74717737590177,
+        77.37645635240213
+      ],
+      "total_change_vs_A_percent": 7.688353812653204
+    },
+    {
+      "config": "P4096-on",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 4096,
+        "draft": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 593.3925518137177,
+      "decode_tok_s": 86.86739148566032,
+      "ttft_seconds": 13.805436875,
+      "total_seconds": 61.014681416,
+      "device_peak_gib": 15.822952270507812,
+      "prefill_range": [
+        590.9531773755934,
+        600.1954500143013
+      ],
+      "decode_range": [
+        86.69082457976768,
+        88.84996721594777
+      ],
+      "total_change_vs_A_percent": -4.219489456920256
+    }
+  ],
+  "baseline_retained": "A2048",
+  "baseline_automatically_changed": false,
+  "4096_compile_fix": {
+    "maximum_function_count_policy": 16,
+    "compiled_function_count": 15,
+    "function_step": 256,
+    "threshold_rows": 512,
+    "global_prefill_budget": 4096,
+    "mathematics_changed": false
+  }
+}

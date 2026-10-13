@@ -1,0 +1,61 @@
+[
+  {
+    "config": "A",
+    "compared_tokens": 16384,
+    "first_difference": null
+  },
+  {
+    "config": "H25",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 16
+    }
+  },
+  {
+    "config": "H75",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 21
+    }
+  },
+  {
+    "config": "S1",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 21
+    }
+  },
+  {
+    "config": "S2",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 16
+    }
+  },
+  {
+    "config": "S4",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 21
+    }
+  },
+  {
+    "config": "S8",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 16
+    }
+  }
+]

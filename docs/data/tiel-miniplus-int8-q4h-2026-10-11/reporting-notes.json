@@ -1,0 +1,10 @@
+{
+  "stage": "report_generation",
+  "first_exit_code": 1,
+  "original_error": "TypeError: cannot use dict as a set element (unhashable type: dict)",
+  "cause": "first_divergence returns structured dictionaries; the reporter attempted to insert them into a set",
+  "fix": "deduplicate the records using canonical JSON serialization",
+  "repaired_exit_code": 0,
+  "native_measurements_rerun": false,
+  "native_failure_count": 0
+}

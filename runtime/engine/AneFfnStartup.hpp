@@ -25,6 +25,8 @@ struct AneFfnSetting final {
   };
   bool enabled = true;
   std::optional<Given> given;
+  ops::ane_ffn::RecoverySetting recovery{};
+  ane::PowerReferenceSetting powerReference{};
 
   // The setting of a dev tool's --ane-ffn-share and --ane-ffn-minimum-rows:
   // none calibrates the split, and a share of 0 runs the GPU alone. Throws
@@ -58,6 +60,8 @@ struct AneFfnModel final {
   std::function<uint64_t(uint32_t aneUnits)> plannedBytes;
   // Calibration's timings (ops::ane_ffn::Measurement::time).
   std::function<ops::ane_ffn::Timings()> time;
+  std::function<std::array<ops::ane_ffn::ChunkTimings::Gpu, 2>()> gpuBaseline;
+  std::function<ane::PowerReference(ops::AneFfn *)> powerReference;
   // The split that serves with the ANE taking `aneUnits`, verified, with its
   // chunks timed (ops::ane_ffn::Measurement::chunks) when `timeChunks`. A
   // model a test plays prepares no split.
@@ -87,6 +91,7 @@ struct AneFfnOutcome final {
   // same. For a split refused a --max-context, the first is the most context
   // a split leaves instead.
   uint32_t context = 0, contextWithout = 0;
+  std::optional<ane::PowerReference> powerReference = std::nullopt;
 };
 // The kind's name in lowercase, as "no_gain".
 [[nodiscard]] std::string_view aneFfnOutcomeName(AneFfnOutcome::Kind kind) noexcept;
@@ -111,7 +116,9 @@ struct AneFfnStart final {
 // remembered, a split or none. The split then judges itself against the GPU
 // alone as calibrated (ops::ane_ffn::Breaker), which forgets the calibration
 // when it trips, so that the next start calibrates again; a given split
-// takes the given least chunk, no breaker, and nothing remembered. Logs the
+// takes the given least chunk and nothing remembered. With optional power
+// recovery enabled it times only the GPU baseline and installs a breaker;
+// otherwise it has none. Logs the
 // outcome. A failure leaves the GPU alone, unless `cancelled` returns true,
 // the wait for the ANE was interrupted or the backend no longer serves, which
 // the failure's exception reports. Throws std::invalid_argument for a given

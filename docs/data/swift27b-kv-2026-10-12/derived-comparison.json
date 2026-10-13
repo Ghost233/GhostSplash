@@ -1,0 +1,5 @@
+{
+  "total_seconds_reduction_vs_int8_percent": 5.3346759407792765,
+  "decode_increase_vs_int8_percent": 8.696803335307512,
+  "metal_peak_reduction_vs_bf16_gib": 2.171875
+}

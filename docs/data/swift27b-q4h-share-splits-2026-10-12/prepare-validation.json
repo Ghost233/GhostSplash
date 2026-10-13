@@ -1,0 +1,16 @@
+{
+  "native_builds_passed": 2,
+  "build_commands": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/build-commands.json",
+  "initial_oracle_wrapper_return_type_compile_failure_preserved_in_build_log": true,
+  "matrix_unittest_command": [
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "-m",
+    "unittest",
+    "dev.tests.tools.test_qwen4b_matrix"
+  ],
+  "matrix_tests_passed": 22,
+  "matrix_tests_exit_code": 0,
+  "ruff_check_exit_code": 0,
+  "native_wrapper_extended_only": true,
+  "frozen_library_and_shader_unchanged": true
+}

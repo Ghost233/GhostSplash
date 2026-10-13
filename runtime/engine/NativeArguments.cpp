@@ -54,6 +54,21 @@ bool parseFinite(std::string_view value, double &result) {
   return parsed.ec == std::errc{} && parsed.ptr == end && std::isfinite(result);
 }
 
+bool parseSwitch(std::string_view option, std::string_view value) {
+  if (value != "on" && value != "off")
+    throw UsageError(std::string(option) + " requires on or off");
+  return value == "on";
+}
+
+double parseRange(std::string_view option, std::string_view value, double maximum) {
+  double result = 0;
+  if (!parseFinite(value, result) || result < 0 || result > maximum)
+    throw UsageError(std::string(option) + (maximum == std::numeric_limits<double>::max()
+        ? " requires a finite nonnegative number"
+        : " requires a finite number in [0, " + std::to_string(maximum) + "]"));
+  return result;
+}
+
 double parseIdleRelease(std::string_view value) {
   if (value == "off")
     return std::numeric_limits<double>::infinity();
@@ -88,6 +103,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("expected the serve-native command");
   }
   NativeArguments result;
+  std::optional<double> aneShare;
+  std::optional<uint32_t> aneRows;
   int next = 5;
   if (next < argc && !std::string_view(argv[next]).starts_with("--")) {
     const std::string_view quota(argv[next++]);
@@ -124,10 +141,51 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       if (value != "on" && value != "off")
         throw UsageError("--ane requires on or off");
       result.neuralEngine = value == "on";
+    } else if (option == "--ane-ffn-share") {
+      if (value == "auto") aneShare.reset();
+      else aneShare = parseRange(option, value, 1);
+    } else if (option == "--ane-ffn-minimum-rows") {
+      uint32_t rows = 0;
+      if (!parsePositive(value, rows) || rows < ops::AneFfn::kMinimumRows || rows > ops::AneFfn::kMaximumRows)
+        throw UsageError("--ane-ffn-minimum-rows requires rows in [512, " + std::to_string(ops::AneFfn::kMaximumRows) + "]");
+      aneRows = rows;
+    } else if (option == "--ane-power-recovery") {
+      result.aneFfn.recovery.enabled = parseSwitch(option, value);
+    } else if (option == "--ane-power-reference") {
+      try { result.aneFfn.powerReference = ane::PowerReferenceSetting::parse(value); }
+      catch (const std::invalid_argument &error) { throw UsageError(error.what()); }
+    } else if (option == "--ane-recovery-idle-watts") {
+      result.aneFfn.recovery.maximumIdleWatts = parseRange(option, value, std::numeric_limits<double>::max());
+    } else if (option == "--ane-recovery-max-power-percent") {
+      result.aneFfn.recovery.maximumPowerPercent = parseRange(option, value, 100);
+    } else if (option == "--prompt-lookup") {
+      result.optionalFeatures.promptLookup = parseSwitch(option, value);
+    } else if (option == "--compact-draft-head") {
+      result.optionalFeatures.compactDraftHead = parseSwitch(option, value);
+    } else if (option == "--fast-topk") {
+      result.optionalFeatures.fastTopK = parseSwitch(option, value);
+    } else if (option == "--compact-draft-ranking") {
+      if (value.empty()) throw UsageError("--compact-draft-ranking requires a file");
+      result.optionalFeatures.compactRanking = std::filesystem::absolute(std::filesystem::path(value));
+    } else if (option == "--prompt-lookup-min-match" || option == "--compact-draft-capacity") {
+      uint32_t number = 0;
+      if (!parsePositive(value, number)) throw UsageError(std::string(option) + " requires a positive integer");
+      if (option == "--prompt-lookup-min-match") result.optionalFeatures.lookupMinimumMatch = number;
+      else result.optionalFeatures.compactCapacity = number;
     } else {
       throw UsageError("unexpected argument " + std::string(option));
     }
   }
+  try {
+    result.optionalFeatures.validate();
+    const auto given = AneFfnSetting::fromGiven(aneShare, aneRows);
+    result.aneFfn.given = given.given;
+    result.neuralEngine = result.neuralEngine && given.enabled;
+  } catch (const std::invalid_argument &error) { throw UsageError(error.what()); }
+  result.aneFfn.enabled = result.neuralEngine;
+  if (result.aneFfn.recovery.enabled && result.aneFfn.recovery.maximumPowerPercent &&
+      result.aneFfn.powerReference.mode == ane::PowerReferenceSetting::Mode::Off)
+    throw UsageError("--ane-recovery-max-power-percent requires --ane-power-reference auto or watts");
   if (!result.persistentCacheRoot.empty() && !result.maxCacheDiskBytes)
     throw UsageError("--cache-dir requires a MAX_CACHE_DISK_BYTES quota");
   result.modelRoot = requireModelRoot(argv[2]);

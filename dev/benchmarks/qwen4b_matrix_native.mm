@@ -122,13 +122,23 @@ public:
   void promptProgress(uint64_t id, uint32_t processed) override {
     if (processed == promptTokens) {
       requests.at(id - 1).prefillEnd = Clock::now();
+#ifdef SPLASH_MATRIX_SWIFT27B
+      std::cerr << "PREFILL_COMPLETE request=" << id << " tokens=" << processed << '\n';
+#endif
       if (prefillMemory) prefillMemory();
     }
   }
   void tokens(uint64_t id, std::span<const uint32_t> tokens) override {
     auto &request = requests.at(id - 1);
     if (request.output.empty()) request.first = Clock::now();
+#ifdef SPLASH_MATRIX_SWIFT27B
+    const size_t previous = request.output.size();
+#endif
     request.output.insert(request.output.end(), tokens.begin(), tokens.end());
+#ifdef SPLASH_MATRIX_SWIFT27B
+    if (request.output.size() / 2048 > previous / 2048)
+      std::cerr << "OUTPUT_PROGRESS request=" << id << " tokens=" << request.output.size() << '\n';
+#endif
   }
   void maskRequested(uint64_t, std::span<const uint32_t>) override { throw std::logic_error("unexpected mask"); }
   void completed(uint64_t id, EngineFinishReason reason, uint32_t, uint32_t count,
@@ -149,17 +159,27 @@ NSDictionary *run(NSDictionary *payload) {
     throw std::invalid_argument("explicit performance/correctness mode is required");
   const bool performance = [payload[@"mode"] isEqual:@"performance"];
   const bool featureCorrectness = [payload[@"optional_features_correctness"] boolValue];
+#ifdef SPLASH_MATRIX_SWIFT27B
+  constexpr uint32_t correctnessOutputLimit = 16384;
+#else
+  constexpr uint32_t correctnessOutputLimit = 2048;
+#endif
   const uint32_t input = [parameters[@"input_tokens"] unsignedIntValue];
   const uint32_t output = [parameters[@"output_tokens"] unsignedIntValue];
   const uint32_t width = [parameters[@"concurrency"] unsignedIntValue];
-  if (featureCorrectness && (performance || input > 32768 || output > 2048))
-    throw std::invalid_argument("optional feature correctness requires correctness mode and input<=32768/output<=2048");
+  if (featureCorrectness && (performance || input > 32768 || output > correctnessOutputLimit))
+    throw std::invalid_argument("optional feature correctness requires correctness mode and input<=32768/output<=" + std::to_string(correctnessOutputLimit));
   tailSplits = [parameters[@"tail_prefill_splits"] unsignedIntValue];
   if (!width || width > 4 || prompts.count != width || !tailSplits || tailSplits > 16 ||
       ![parameters[@"ignore_eos"] boolValue] || ![parameters[@"cold_requests"] boolValue] ||
       [parameters[@"auto_calibration"] boolValue] || (!featureCorrectness && [parameters[@"temperature"] doubleValue] != 0))
     throw std::invalid_argument("invalid fixed matrix contract");
   const bool cacheExperiment = parameters[@"ffn_weight_mode"] != nil;
+#ifdef SPLASH_MATRIX_SWIFT27B
+  constexpr bool reportMemory = true;
+#else
+  const bool reportMemory = cacheExperiment;
+#endif
   const bool stageProfile = [parameters[@"ffn_stage_profile"] boolValue];
   if (stageProfile && (!performance || !cacheExperiment)) throw std::invalid_argument("stage profiling is a separate explicit performance diagnostic");
   const bool longCorrectness = [payload[@"ffn_long_correctness"] boolValue];
@@ -167,20 +187,43 @@ NSDictionary *run(NSDictionary *payload) {
     throw std::invalid_argument("long FFN correctness requires correctness mode, C1 and exact32768 input/512 or2048 output");
   if (!performance && !longCorrectness && !featureCorrectness && (input > (cacheExperiment ? 2048U : 128U) || output > 32))
     throw std::invalid_argument("correctness limit is input128/output32, or input2048 with explicit FFN cache mode");
+#ifdef SPLASH_MATRIX_SWIFT27B
+  if (performance && (input != 32768 || output != 16384))
+    throw std::invalid_argument("Swift performance requires exact32768 input and16384 output");
+#else
   if (performance && (input != 32768 || (output != 512 && output != 2048)))
     throw std::invalid_argument("performance requires exact32768 input and512/2048 output");
+#endif
   const bool draft = [parameters[@"drafter_enabled"] boolValue];
   if (draft && [parameters[@"drafter_block_size"] unsignedIntValue] != model::ExecutionLimits::draftQueryRows)
     throw std::invalid_argument("binary draft block mismatch");
   RuntimeResourcesConfig config;
-  config.optionalFeatures = model::OptionalFeatures::fromEnvironment();
+  NSDictionary *featureSettings = payload[@"optional_features"];
+  config.optionalFeatures.promptLookup = [featureSettings[@"prompt_lookup"] boolValue];
+  config.optionalFeatures.compactDraftHead = [featureSettings[@"compact_draft_head"] boolValue];
+  config.optionalFeatures.fastTopK = [featureSettings[@"fast_topk"] boolValue];
+  if (featureSettings[@"compact_draft_ranking"])
+    config.optionalFeatures.compactRanking = string(featureSettings[@"compact_draft_ranking"]);
+  if (featureSettings[@"lookup_minimum_match"])
+    config.optionalFeatures.lookupMinimumMatch = [featureSettings[@"lookup_minimum_match"] unsignedIntValue];
+  if (featureSettings[@"compact_capacity"])
+    config.optionalFeatures.compactCapacity = [featureSettings[@"compact_capacity"] unsignedIntValue];
+  config.optionalFeatures.validate();
   config.modelRoot = string(payload[@"model_root"]);
   config.metallibPath = string(payload[@"metallib"]);
   config.model = model::inspectModelRoot(config.modelRoot);
+#ifdef SPLASH_MATRIX_SWIFT27B
+  if (!std::holds_alternative<model::Qwen3_8Layout>(config.model.target) ||
+      !draft || config.model.draft.kind != model::DraftKind::DFlash2)
+    throw std::invalid_argument("Swift matrix requires Qwen3.8-27B with DFlash2");
+  if (cacheExperiment)
+    throw std::invalid_argument("4B FFN experiment options are unsupported for Swift 27B");
+#else
   if ((!std::holds_alternative<model::Qwen3_5_4BLayout>(config.model.target) &&
        !std::holds_alternative<model::Qwen3_5_4BDFlashLayout>(config.model.target)) ||
       (draft && config.model.draft.kind != model::DraftKind::Standard))
     throw std::invalid_argument("matrix requires Qwen3.5-4B and Standard DFlash or NoDraft");
+#endif
   if (config.model.hasDraft() != draft) throw std::invalid_argument("model drafter mismatch");
   NSString *ffnMode = parameters[@"ffn_weight_mode"] ?: @"full_fp16";
   auto trace = std::make_shared<bench::FfnTrace>();
@@ -219,12 +262,12 @@ NSDictionary *run(NSDictionary *payload) {
     if (!unavailable.empty()) throw std::runtime_error("stage timestamp profiling unavailable: " + unavailable);
   }
   NSMutableDictionary *memoryPoints = [NSMutableDictionary dictionary];
-  if (cacheExperiment) memoryPoints[@"ready"] = memoryReport(*resources, resources->actualMemoryReport(runtime.actualRuntimeMemory()));
+  if (reportMemory) memoryPoints[@"ready"] = memoryReport(*resources, resources->actualMemoryReport(runtime.actualRuntimeMemory()));
   const auto requestTrace = trace->snapshot();
   std::optional<ActualMemoryReport> prefillMemory;
   double telemetrySeconds = 0;
   Events events(width, input);
-  if (cacheExperiment) events.prefillMemory = [&] {
+  if (reportMemory) events.prefillMemory = [&] {
     const auto sampledAt = Clock::now();
     prefillMemory = resources->actualMemoryReport(runtime.actualRuntimeMemory(), false);
     telemetrySeconds += seconds(sampledAt);
@@ -299,6 +342,8 @@ NSDictionary *run(NSDictionary *payload) {
     @"configured":@{@"prompt_lookup":@(features.configured.promptLookup),
                     @"compact_draft_head":@(features.configured.compactDraftHead),
                     @"fast_topk":@(features.configured.fastTopK)},
+    @"lookup_minimum_match":@(features.configured.lookupMinimumMatch), @"lookup_maximum_match":@4,
+    @"compact_requested_capacity":@(features.configured.compactCapacity), @"compact_capacity":@(features.compactCapacity),
     @"lookup_hits":@(features.lookupHits), @"lookup_attempts":@(features.lookupAttempts),
     @"lookup_accepted_tokens":@(features.lookupAccepted),
     @"lookup_fallback_reason":[NSString stringWithUTF8String:features.lookupReason.c_str()],
@@ -308,12 +353,18 @@ NSDictionary *run(NSDictionary *payload) {
     @"fast_topk_selections":@(features.fastTopKSelections), @"fast_topk_fallbacks":@(features.fastTopKFallbacks),
     @"fast_topk_fallback_reason":[NSString stringWithUTF8String:features.fastTopKReason.c_str()],
     @"extra_metal_bytes":@(features.extraMetalBytes)};
-  if (cacheExperiment) {
+  if (reportMemory) {
     memoryPoints[@"end"] = memoryReport(*resources, resources->actualMemoryReport(runtime.actualRuntimeMemory()));
     if (prefillMemory) memoryPoints[@"prefill_complete"] = memoryReport(*resources, *prefillMemory);
     result[@"memory_checkpoints"] = memoryPoints;
     result[@"memory_report"] = memoryPoints[@"end"];
+#ifdef SPLASH_MATRIX_SWIFT27B
+    if ([memoryPoints[@"end"][@"ffn_fp16_cache_bytes"] unsignedLongLongValue] != 0)
+      throw std::runtime_error("Swift retained unexpected full FP16 FFN cache");
+    result[@"actual_ffn_weight_mode"] = @"existing_quantized_path";
+#else
     result[@"actual_ffn_weight_mode"] = ffnMode;
+#endif
     result[@"actual_ffn_prefill_variant"] = ffnVariant;
     result[@"ffn_paths"] = pathReport(trace->since(requestTrace));
     result[@"startup_ffn_paths"] = pathReport(setupTrace);

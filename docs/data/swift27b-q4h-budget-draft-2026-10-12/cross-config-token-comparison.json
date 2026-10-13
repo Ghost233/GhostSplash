@@ -1,0 +1,48 @@
+[
+  {
+    "config": "A",
+    "compared_tokens": 16384,
+    "first_difference": null
+  },
+  {
+    "config": "P2048-off",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 64,
+      "reference": 118018,
+      "actual": 97887
+    }
+  },
+  {
+    "config": "P1024-on",
+    "compared_tokens": 16384,
+    "first_difference": null
+  },
+  {
+    "config": "P1024-off",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 64,
+      "reference": 118018,
+      "actual": 97887
+    }
+  },
+  {
+    "config": "P512-on",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 16
+    }
+  },
+  {
+    "config": "P512-off",
+    "compared_tokens": 16384,
+    "first_difference": {
+      "index": 39,
+      "reference": 98151,
+      "actual": 16
+    }
+  }
+]

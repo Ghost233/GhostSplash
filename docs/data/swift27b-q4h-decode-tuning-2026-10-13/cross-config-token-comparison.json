@@ -1,0 +1,27 @@
+[
+  {
+    "config": "A",
+    "compared_tokens": 4096,
+    "first_difference": null
+  },
+  {
+    "config": "L3",
+    "compared_tokens": 4096,
+    "first_difference": null
+  },
+  {
+    "config": "L4",
+    "compared_tokens": 4096,
+    "first_difference": null
+  },
+  {
+    "config": "C64",
+    "compared_tokens": 4096,
+    "first_difference": null
+  },
+  {
+    "config": "C32",
+    "compared_tokens": 4096,
+    "first_difference": null
+  }
+]

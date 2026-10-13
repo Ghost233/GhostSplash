@@ -32,6 +32,9 @@ public:
   // and `split` over a chunk of the rows of each of its functions, on the
   // first layers.
   [[nodiscard]] ChunkTimings chunks(AneFfn &split);
+  [[nodiscard]] std::array<ChunkTimings::Gpu, 2> gpuBaseline();
+  [[nodiscard]] double probe(AneFfn &split, double gpuAlone);
+  [[nodiscard]] ane::PowerReference powerReference(AneFfn &split);
 
 private:
   // The per-layer milliseconds of `count` `rows`-row FFN layers of `layers`

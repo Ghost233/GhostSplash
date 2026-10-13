@@ -4,7 +4,6 @@ import argparse
 import copy
 import hashlib
 import json
-import os
 import uuid
 from pathlib import Path
 
@@ -13,11 +12,6 @@ from dev.benchmarks import qwen4b_matrix_adapter as adapter
 from dev.tools.compact_draft_ranking import write_ranking
 
 ROOT = Path(__file__).resolve().parents[2]
-FLAGS = {
-    "lookup": "SPLASH_PROMPT_LOOKUP",
-    "compact": "SPLASH_COMPACT_DRAFT_HEAD",
-    "fast": "SPLASH_FAST_TOPK",
-}
 
 
 def write(path, value):
@@ -41,30 +35,22 @@ def run_case(args, base, name, enabled, ranking=None):
     payload["optional_features_correctness"] = True
     payload["identity"] = {"code_sha256": adapter.code_sha256(ROOT)}
     payload.pop("ffn_long_correctness", None)
+    payload["optional_features"] = {
+        "prompt_lookup": "lookup" in enabled,
+        "compact_draft_head": "compact" in enabled,
+        "fast_topk": "fast" in enabled,
+    }
+    if ranking:
+        payload["optional_features"]["compact_draft_ranking"] = str(ranking.resolve())
     write(attempt / "payload.json", payload)
-    keys = list(FLAGS.values()) + ["SPLASH_COMPACT_DRAFT_RANKING"]
-    prior = {key: os.environ.get(key) for key in keys}
-    try:
-        for feature, key in FLAGS.items():
-            os.environ[key] = str(int(feature in enabled))
-        if ranking:
-            os.environ["SPLASH_COMPACT_DRAFT_RANKING"] = str(ranking.resolve())
-        else:
-            os.environ.pop("SPLASH_COMPACT_DRAFT_RANKING", None)
-        evidence = isolation.checked_process(
-            [str((args.build / "engine-tests/qwen4b-matrix-native").resolve())],
-            json.dumps(payload),
-            attempt / "stdout.json",
-            attempt / "stderr.log",
-            correctness=True,
-            allow_concurrent_inference=args.allow_concurrent_inference,
-        )
-    finally:
-        for key, value in prior.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
+    evidence = isolation.checked_process(
+        [str((args.build / "engine-tests/qwen4b-matrix-native").resolve())],
+        json.dumps(payload),
+        attempt / "stdout.json",
+        attempt / "stderr.log",
+        correctness=True,
+        allow_concurrent_inference=args.allow_concurrent_inference,
+    )
     evidence["source_sha256"] = adapter.code_sha256(ROOT)
     write(attempt / "evidence.json", evidence)
     if evidence["status"] != "complete" or evidence["exit_code"] != 0:

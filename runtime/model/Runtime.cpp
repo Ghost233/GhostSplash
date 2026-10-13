@@ -390,7 +390,7 @@ struct Runtime::Impl {
     if (features.compactDraftHead) {
       if (draftModel)
         compactHead = std::make_unique<CompactDraftHead>(backend, targetModel.vocabularyProjection(),
-            features.compactRanking, model.targetManifestFingerprint());
+            features.compactRanking, model.targetManifestFingerprint(), features.compactCapacity);
       else featureReport.compactReason = "compact head requires an installed draft";
     }
     preparePolicyPipelines();
@@ -2237,6 +2237,12 @@ Runtime::prefillAsync(const BatchPlan &plan,
   std::array<uint64_t, kLaneCount> draws{};
   CommandGraph graph;
   if (impl_->aneFfn) {
+    uint32_t rows = 0;
+    for (const auto &item : plan.items) rows += item.tokenCount;
+    if (rows >= impl_->aneFfn->minimumRows()) {
+      const auto buffers = prefillBuffers(*impl_->prefillArena);
+      impl_->aneFfn->tryRecover(buffers.ffn(), buffers.hidden);
+    }
     for (uint32_t lane = 0; lane < items.size(); ++lane)
       draws[lane] = impl_->request(items[lane].requestId).rngCounter;
     impl_->aneFfn->begin();
@@ -2482,7 +2488,7 @@ Runtime::decodeAsync(const BatchPlan &plan,
     if (width == 1 && entries.front()->images.empty() && entries.front()->constraint == ConstraintMode::None) {
       auto &history = entries.front()->featureHistory;
       history.push_back(*entries.front()->pendingToken);
-      const auto proposal = lookupProposal(history, kDraftProposalTokens);
+      const auto proposal = lookupProposal(history, kDraftProposalTokens, impl_->features.lookupMinimumMatch);
       history.pop_back();
       if (!proposal.empty()) {
         lookup = true;
@@ -2895,6 +2901,7 @@ OptionalFeatureReport Runtime::optionalFeatureReport() const {
   auto result = impl_->featureReport;
   result.fastTopKSelections = impl_->sampling.fastSelections();
   result.fastTopKFallbacks = impl_->sampling.fastFallbacks();
+  if (impl_->compactHead) result.compactCapacity = impl_->compactHead->capacity();
   if (result.configured.promptLookup && !impl_->draftModel)
     result.lookupReason = "lookup requires an installed draft verification path";
   if (result.configured.compactDraftHead && impl_->compactHead && !result.compactCycles)

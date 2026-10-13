@@ -1,0 +1,11 @@
+{
+  "case": "grid-256",
+  "command": [
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/compile-probe",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/grid-256.mil",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/weights.bin",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/probe-cache"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 39.27455525001278
+}

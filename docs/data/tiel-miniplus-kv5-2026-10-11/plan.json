@@ -1,0 +1,254 @@
+{
+  "model_id": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+  "base_parameters": {
+    "kv_format": "int8",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 8,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 512,
+    "context_tokens": 36864,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "features": {
+    "lookup": false,
+    "compact": false,
+    "fast": false
+  },
+  "formats": [
+    "int8",
+    "bf16",
+    "q4_0",
+    "q4_0_unrotated",
+    "q4h"
+  ],
+  "repeats": 3,
+  "planned": 30,
+  "format_orders": [
+    [
+      "int8",
+      "bf16",
+      "q4_0",
+      "q4_0_unrotated",
+      "q4h"
+    ],
+    [
+      "q4_0",
+      "q4_0_unrotated",
+      "q4h",
+      "int8",
+      "bf16"
+    ],
+    [
+      "q4h",
+      "bf16",
+      "q4_0_unrotated",
+      "int8",
+      "q4_0"
+    ]
+  ],
+  "schedule": [
+    {
+      "repeat": 0,
+      "format_position": 1,
+      "kv_format": "int8",
+      "output": 512
+    },
+    {
+      "repeat": 0,
+      "format_position": 1,
+      "kv_format": "int8",
+      "output": 2048
+    },
+    {
+      "repeat": 0,
+      "format_position": 2,
+      "kv_format": "bf16",
+      "output": 2048
+    },
+    {
+      "repeat": 0,
+      "format_position": 2,
+      "kv_format": "bf16",
+      "output": 512
+    },
+    {
+      "repeat": 0,
+      "format_position": 3,
+      "kv_format": "q4_0",
+      "output": 512
+    },
+    {
+      "repeat": 0,
+      "format_position": 3,
+      "kv_format": "q4_0",
+      "output": 2048
+    },
+    {
+      "repeat": 0,
+      "format_position": 4,
+      "kv_format": "q4_0_unrotated",
+      "output": 2048
+    },
+    {
+      "repeat": 0,
+      "format_position": 4,
+      "kv_format": "q4_0_unrotated",
+      "output": 512
+    },
+    {
+      "repeat": 0,
+      "format_position": 5,
+      "kv_format": "q4h",
+      "output": 512
+    },
+    {
+      "repeat": 0,
+      "format_position": 5,
+      "kv_format": "q4h",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 1,
+      "kv_format": "q4_0",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 1,
+      "kv_format": "q4_0",
+      "output": 512
+    },
+    {
+      "repeat": 1,
+      "format_position": 2,
+      "kv_format": "q4_0_unrotated",
+      "output": 512
+    },
+    {
+      "repeat": 1,
+      "format_position": 2,
+      "kv_format": "q4_0_unrotated",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 3,
+      "kv_format": "q4h",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 3,
+      "kv_format": "q4h",
+      "output": 512
+    },
+    {
+      "repeat": 1,
+      "format_position": 4,
+      "kv_format": "int8",
+      "output": 512
+    },
+    {
+      "repeat": 1,
+      "format_position": 4,
+      "kv_format": "int8",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 5,
+      "kv_format": "bf16",
+      "output": 2048
+    },
+    {
+      "repeat": 1,
+      "format_position": 5,
+      "kv_format": "bf16",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 1,
+      "kv_format": "q4h",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 1,
+      "kv_format": "q4h",
+      "output": 2048
+    },
+    {
+      "repeat": 2,
+      "format_position": 2,
+      "kv_format": "bf16",
+      "output": 2048
+    },
+    {
+      "repeat": 2,
+      "format_position": 2,
+      "kv_format": "bf16",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 3,
+      "kv_format": "q4_0_unrotated",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 3,
+      "kv_format": "q4_0_unrotated",
+      "output": 2048
+    },
+    {
+      "repeat": 2,
+      "format_position": 4,
+      "kv_format": "int8",
+      "output": 2048
+    },
+    {
+      "repeat": 2,
+      "format_position": 4,
+      "kv_format": "int8",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 5,
+      "kv_format": "q4_0",
+      "output": 512
+    },
+    {
+      "repeat": 2,
+      "format_position": 5,
+      "kv_format": "q4_0",
+      "output": 2048
+    }
+  ],
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037"
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+    }
+  },
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "source_results": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1",
+  "background_policy": "keep original observations; accept previously authorized load fluctuations; no automatic speed reruns; preserve 2GiB macOS reserve",
+  "scope": "five KV formats only; three rounds each; every format has mean position 3 across the rounds; actual 32K input and fixed 512/2048 output; same-KV frozen golden checks; record cross-KV token differences"
+}

@@ -154,7 +154,22 @@ void testServerCommandLines(const char *path) {
       {"image_patches_default",
        [](NativeArguments &read) { read.maxImagePatches = 16384; }},
       {"idle_sleep", [](NativeArguments &read) { read.preventIdleSleep = false; }},
-      {"disable_ane", [](NativeArguments &read) { read.neuralEngine = false; }},
+      {"disable_ane", [](NativeArguments &read) { read.neuralEngine = false; read.aneFfn.enabled = false; }},
+      {"ane_fixed", [](NativeArguments &read) { read.aneFfn.given = engine::AneFfnSetting::Given{0.5, 512}; }},
+      {"ane_gpu", [](NativeArguments &read) { read.neuralEngine = false; read.aneFfn.enabled = false; }},
+      {"ane_recovery", [](NativeArguments &read) { read.aneFfn.recovery.enabled = true; read.aneFfn.recovery.maximumIdleWatts = 0.02; }},
+      {"ane_reference_auto", [](NativeArguments &read) { read.aneFfn.powerReference.mode = ane::PowerReferenceSetting::Mode::Automatic; }},
+      {"ane_reference_manual", [](NativeArguments &read) {
+        read.aneFfn.recovery.enabled = true; read.aneFfn.recovery.maximumPowerPercent = 50;
+        read.aneFfn.powerReference = {ane::PowerReferenceSetting::Mode::Manual, 6};
+      }},
+      {"lookup", [](NativeArguments &read) { read.optionalFeatures.promptLookup = true; read.optionalFeatures.lookupMinimumMatch = 3; }},
+      {"compact", [](NativeArguments &read) {
+        read.optionalFeatures.compactDraftHead = true; read.optionalFeatures.compactCapacity = 65536;
+        read.optionalFeatures.compactRanking = "/tmp/ranking";
+      }},
+      {"fast_topk", [](NativeArguments &read) { read.optionalFeatures.fastTopK = true; }},
+      {"features_off", [](NativeArguments &) {}},
   };
   // Every field but the model inspected from the directory.
   const auto same = [](const NativeArguments &read, const NativeArguments &meant) {
@@ -166,7 +181,21 @@ void testServerCommandLines(const char *path) {
            read.maxImagePatches == meant.maxImagePatches &&
            read.idleReleaseSeconds == meant.idleReleaseSeconds &&
            read.preventIdleSleep == meant.preventIdleSleep &&
-           read.neuralEngine == meant.neuralEngine;
+           read.neuralEngine == meant.neuralEngine && read.aneFfn.enabled == meant.aneFfn.enabled &&
+           bool(read.aneFfn.given) == bool(meant.aneFfn.given) &&
+           (!read.aneFfn.given || (read.aneFfn.given->share == meant.aneFfn.given->share &&
+                                 read.aneFfn.given->minimumRows == meant.aneFfn.given->minimumRows)) &&
+           read.aneFfn.recovery.enabled == meant.aneFfn.recovery.enabled &&
+           read.aneFfn.recovery.maximumIdleWatts == meant.aneFfn.recovery.maximumIdleWatts &&
+           read.aneFfn.recovery.maximumPowerPercent == meant.aneFfn.recovery.maximumPowerPercent &&
+           read.aneFfn.powerReference.mode == meant.aneFfn.powerReference.mode &&
+           read.aneFfn.powerReference.manualWatts == meant.aneFfn.powerReference.manualWatts &&
+           read.optionalFeatures.promptLookup == meant.optionalFeatures.promptLookup &&
+           read.optionalFeatures.compactDraftHead == meant.optionalFeatures.compactDraftHead &&
+           read.optionalFeatures.fastTopK == meant.optionalFeatures.fastTopK &&
+           read.optionalFeatures.lookupMinimumMatch == meant.optionalFeatures.lookupMinimumMatch &&
+           read.optionalFeatures.compactCapacity == meant.optionalFeatures.compactCapacity &&
+           read.optionalFeatures.compactRanking == meant.optionalFeatures.compactRanking;
   };
   const auto golden = readGolden(path);
   require(golden.size() == changes.size(),
@@ -217,6 +246,28 @@ void testRefusals() {
   refuses({"auto", "auto", "--idle-sleep", "never"},
           "--idle-sleep requires prevent or allow");
   refuses({"auto", "auto", "--ane", "gpu"}, "--ane requires on or off");
+  for (const char *option : {"--ane-power-recovery", "--prompt-lookup", "--compact-draft-head", "--fast-topk"}) {
+    refuses({"auto", "auto", option, "1"}, std::string(option) + " requires on or off");
+    refuses({"auto", "auto", option}, std::string(option) + " requires on or off");
+  }
+  for (const char *option : {"--ane-ffn-share", "--ane-recovery-idle-watts", "--ane-recovery-max-power-percent"})
+    for (const char *value : {"-1", "nan", "inf", "bad", ""})
+      refuses({"auto", "auto", option, value}, option);
+  refuses({"auto", "auto", "--ane-ffn-share", "1.1"}, "--ane-ffn-share");
+  refuses({"auto", "auto", "--ane-recovery-max-power-percent", "101"}, "--ane-recovery-max-power-percent");
+  refuses({"auto", "auto", "--ane-ffn-minimum-rows", "512"}, "without a share");
+  refuses({"auto", "auto", "--ane-ffn-share", "0.5", "--ane-ffn-minimum-rows", "511"}, "--ane-ffn-minimum-rows");
+  refuses({"auto", "auto", "--ane-ffn-share", "0.5", "--ane-ffn-minimum-rows",
+           std::to_string(ops::AneFfn::kMaximumRows + 1)}, "--ane-ffn-minimum-rows");
+  for (const char *value : {"0", "-1", "nan", "inf", "bad", ""})
+    refuses({"auto", "auto", "--ane-power-reference", value}, "--ane-power-reference");
+  refuses({"auto", "auto", "--ane-power-recovery", "on", "--ane-recovery-max-power-percent", "50"},
+          "requires --ane-power-reference");
+  for (const char *value : {"1", "5", "3x", ""})
+    refuses({"auto", "auto", "--prompt-lookup-min-match", value}, "--prompt-lookup-min-match");
+  for (const char *value : {"256", "33000", "98305", "65536x", ""})
+    refuses({"auto", "auto", "--compact-draft-capacity", value}, "--compact-draft-capacity");
+  refuses({"auto", "auto", "--compact-draft-ranking"}, "--compact-draft-ranking requires a file");
   refuses({"auto", "auto", "--cache-dir", "/srv/cache"},
           "--cache-dir requires a MAX_CACHE_DISK_BYTES quota");
   refuses({"auto", "auto", "5368709120", "--cache-dir", ""},
@@ -266,6 +317,12 @@ int main(int argc, char **argv) {
   modelConfigs = argv[2];
   try {
     testTargetOnlyModelDirectory();
+    testServerCommandLines(argv[1]);
+    for (const char *name : {"SPLASH_ANE_POWER_RECOVERY", "SPLASH_ANE_POWER_REFERENCE",
+                             "SPLASH_ANE_RECOVERY_IDLE_WATTS", "SPLASH_ANE_RECOVERY_MAX_POWER_PERCENT",
+                             "SPLASH_PROMPT_LOOKUP", "SPLASH_COMPACT_DRAFT_HEAD", "SPLASH_FAST_TOPK",
+                             "SPLASH_PROMPT_LOOKUP_MIN_MATCH", "SPLASH_COMPACT_DRAFT_CAPACITY"})
+      setenv(name, "invalid", 1);
     testServerCommandLines(argv[1]);
     testNeuralEngine();
     testRefusals();

@@ -1,4 +1,5 @@
 #pragma once
+#include "ops/AneFfnRecovery.hpp"
 
 #include "engine/MemoryPlan.hpp"
 #include "engine/Engine.hpp"
@@ -263,7 +264,7 @@ struct WeightsSnapshot {
 // The prefill FFN's Neural Engine split (RuntimeResources::aneFfnSnapshot).
 struct AneFfnSnapshot {
   // Off: the start left the GPU alone; Split: the split serves; Stopped: it
-  // stopped while serving, and the GPU runs alone until the engine restarts.
+  // stopped while serving; GPU runs alone, with optional power-gated performance recovery.
   enum class State : uint8_t { Off, Split, Stopped };
   State state = State::Off;
   // The start's outcome (AneFfnOutcome), or why the split stopped.
@@ -274,6 +275,8 @@ struct AneFfnSnapshot {
   // What it ran (ops::AneFfn::Served).
   uint64_t commands = 0, evaluations = 0;
   double aneMilliseconds = 0.0;
+  std::optional<ops::ane_ffn::RecoveryReport> recovery = std::nullopt;
+  std::optional<ane::PowerReference> powerReference = std::nullopt;
 };
 
 // Single source for /status and native protocol status events.

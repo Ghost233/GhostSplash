@@ -1,0 +1,8 @@
+{
+  "exit_code": 0,
+  "settings_unchanged": true,
+  "input_ids_unchanged": true,
+  "ranking_sha256": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+  "original_invalid_attempt_retained": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-8k4k-prefill-v1/performance-0-P4096-on-4096-attempt1",
+  "standalone_correctness_phase": false
+}

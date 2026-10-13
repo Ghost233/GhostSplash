@@ -3,14 +3,14 @@
 本轮实现链接方案的第一批三项。所有开关默认关闭，在服务启动时读取；修改后重启服务。
 第二批的宽 lookup 验证、draft ahead、streamed submit 尚未实施。
 
-| 环境变量 | 默认 | 支持条件和回退 |
+| 启动参数 | 默认 | 支持条件和回退 |
 | --- | --- | --- |
-| `SPLASH_PROMPT_LOOKUP=0/1` | 0 | 已安装 drafter 的单个非语法约束文本请求；查找输入和已提交输出中的 2～4 token 后缀，复制完整的一个草稿块。未命中、并发、图像或语法约束走原 DFlash 路径。 |
-| `SPLASH_COMPACT_DRAFT_HEAD=0/1` | 0 | Standard DFlash 和 DFlash2；单个文本请求、一个未旋转的量化输出矩阵、匹配模型的排名文件。其他条件回退完整 head。 |
-| `SPLASH_FAST_TOPK=0/1` | 0 | 采样温度大于 0，所有采样 lane 的有效 top-k 为 1～32，min-p 为 0。支持已有 penalties、top-p、token mask 和 EOS 排除；其他设置回退通用采样。 |
-| `SPLASH_COMPACT_DRAFT_RANKING=路径` | 模型目录下的 `head-ranked.splash` | 只在 compact head 开启时使用；文件缺失、格式错误或模型指纹不匹配均记录回退原因。 |
+| `--prompt-lookup off\|on` | off | 已安装 drafter 的单个非语法约束文本请求；查找输入和已提交输出中的 2～4 token 后缀，复制完整的一个草稿块。未命中、并发、图像或语法约束走原 DFlash 路径。 |
+| `--compact-draft-head off\|on` | off | Standard DFlash 和 DFlash2；单个文本请求、一个未旋转的量化输出矩阵、匹配模型的排名文件。其他条件回退完整 head。 |
+| `--fast-topk off\|on` | off | 采样温度大于 0，所有采样 lane 的有效 top-k 为 1～32，min-p 为 0。支持已有 penalties、top-p、token mask 和 EOS 排除；其他设置回退通用采样。 |
+| `--compact-draft-ranking 文件` | 模型目录下的 `head-ranked.splash` | 只在 compact head 开启时使用；文件缺失、格式错误或模型指纹不匹配均记录回退原因。 |
 
-环境变量只接受 `0` 或 `1`，非法值拒绝启动。全关时不创建历史副本、compact 权重副本或 fast top-k 工作区。
+功能开关只接受 `off` 或 `on`，非法值拒绝启动。旧环境变量不再读取。全关时不创建历史副本、compact 权重副本或 fast top-k 工作区。
 开关相互独立。lookup 命中时跳过本轮 draft 前向，target 验证和已接受前缀的 GDN／KV／draft 上下文提交仍走现有路径。
 
 ## 数值和状态规则

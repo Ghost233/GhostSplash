@@ -37,6 +37,22 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 | Tiel MiniPlus | [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
 | Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
 
+Swift 27B 的单请求 Dense 入口为 [swift27bdense.command](swift27bdense.command)。
+默认 Q4H KV、并发 1，复用上述 IQ3_S-mtp 文件和本机已缓存的配套 DFlash2。
+文件实际采用混合权重量化，启动器保持各张量的原始格式；GGUF 的 MTP 层未参与运行。
+Lookup 和 compact 各有独立开关，fast top-k 默认关闭：
+
+```sh
+sh swift27bdense.command
+sh swift27bdense.command --kv-format int8 --prompt-lookup off --compact-draft-head off
+```
+
+`--kv-format` 只切换 KV 缓存，支持 BF16、INT8、Q4_0、Q4_0 unrotated 和 Q4H。
+Compact 需要匹配模型的排名文件；未准备时会回退完整输出头。
+普通服务使用当前引擎的 prefill 和 ANE 规划。
+本轮测试的固定尾段 splits=16、ANE share=0.5 和阈值 512 行由测试入口设置。
+五种 KV、32K 输入和 16K 实际输出的测试方式见 [Swift KV 测试说明](dev/benchmarks/docs/swift27b-kv.md)。
+
 旧 Splash 模型包已不受新版运行时支持，对应的两个 Qwen 启动器已删除。
 Bonsai、Swift Bonsai、Ornith、Qwen Distill 和普通 Tiel 的本地模型目录已删除，
 对应启动器也已移除。历史测速记录保留。

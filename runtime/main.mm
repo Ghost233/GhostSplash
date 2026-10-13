@@ -153,7 +153,13 @@ void printUsage(std::string_view executable) {
       " MAX_CONTEXT|auto MAX_MEMORY_BYTES|auto [MAX_CACHE_DISK_BYTES]"
       " [--kv-format int8|bf16] [--decode-share SHARE]"
       " [--max-image-patches PATCHES] [--cache-dir DIRECTORY]"
-      " [--idle-release SECONDS|off] [--idle-sleep prevent|allow] [--ane on|off]");
+      " [--idle-release SECONDS|off] [--idle-sleep prevent|allow] [--ane on|off]"
+      " [--ane-ffn-share auto|SHARE] [--ane-ffn-minimum-rows ROWS]"
+      " [--ane-power-recovery on|off] [--ane-power-reference off|auto|WATTS]"
+      " [--ane-recovery-idle-watts WATTS] [--ane-recovery-max-power-percent PERCENT]"
+      " [--prompt-lookup on|off] [--prompt-lookup-min-match 2|3|4]"
+      " [--compact-draft-head on|off] [--compact-draft-ranking FILE]"
+      " [--compact-draft-capacity ROWS] [--fast-topk on|off]");
   writeStderrLine("       " + command + " model-check mlx-affine none|safetensors CONFIG [DRAFT_CONFIG]");
   writeStderrLine("       " + command + " model-check gguf none|gguf CONFIG GGUF_METADATA [DRAFT_CONFIG]");
   writeStderrLine("       " + command + " device-check");
@@ -185,14 +191,14 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
   config.resources.modelRoot = arguments.modelRoot;
   config.resources.model = arguments.model;
   config.resources.buildId = SPLASH_BUILD_ID;
-  config.resources.optionalFeatures = model::OptionalFeatures::fromEnvironment();
+  config.resources.optionalFeatures = arguments.optionalFeatures;
   config.resources.maximumMemoryBytes = arguments.maxMemoryBytes;
   config.resources.maximumCacheDiskBytes = arguments.maxCacheDiskBytes;
   config.resources.persistentCacheRoot = arguments.persistentCacheRoot;
   config.resources.kvFormat = arguments.kvFormat;
   config.resources.maximumImagePatches = arguments.maxImagePatches;
   config.resources.idleReleaseSeconds = arguments.idleReleaseSeconds;
-  config.resources.aneFfn.enabled = arguments.neuralEngine;
+  config.resources.aneFfn = arguments.aneFfn;
   config.nativeLoop.engine.maxContext = arguments.maxContext;
   config.nativeLoop.engine.decodeShare = arguments.decodeShare;
   return config;

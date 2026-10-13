@@ -1,0 +1,16 @@
+{
+  "command": [
+    "xcrun",
+    "-sdk",
+    "macosx",
+    "clang++",
+    "-std=c++20",
+    "-O2",
+    "-Iruntime",
+    "-Idev/tests/engine",
+    "-fsyntax-only",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/engine/optional_features_test.cpp"
+  ],
+  "exit_code": 0,
+  "stderr": ""
+}

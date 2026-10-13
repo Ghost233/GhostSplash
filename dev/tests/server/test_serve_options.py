@@ -64,6 +64,78 @@ OPTIONS = {
         ("fp16",),
     ),
     "--disable-ane": ([(["--disable-ane"], True)], []),
+    "--ane-ffn-share": values(
+        "--ane-ffn-share",
+        {"auto": None, "0": 0.0, "1": 1.0, "0.5": 0.5},
+        ("-1", "1.1", "nan", "inf", "half"),
+    ),
+    "--ane-ffn-minimum-rows": (
+        [
+            (["--ane-ffn-share=0.5", "--ane-ffn-minimum-rows=512"], 512),
+            (["--ane-ffn-share=0.5", "--ane-ffn-minimum-rows=8192"], 8192),
+        ],
+        [
+            ["--ane-ffn-minimum-rows=512"],
+            ["--ane-ffn-minimum-rows=511"],
+            ["--ane-ffn-minimum-rows=8193"],
+        ],
+    ),
+    "--ane-power-recovery": values(
+        "--ane-power-recovery", {"off": "off", "on": "on"}, ("1", "yes")
+    ),
+    "--ane-power-reference": values(
+        "--ane-power-reference",
+        {"off": "off", "6": "6.0", "auto": "auto"},
+        ("0", "-1", "nan", "inf", "6junk"),
+    ),
+    "--ane-recovery-idle-watts": values(
+        "--ane-recovery-idle-watts",
+        {"0": 0.0, "0.02": 0.02},
+        ("-1", "nan", "inf", "quiet"),
+    ),
+    "--ane-recovery-max-power-percent": (
+        [
+            (
+                [
+                    "--ane-power-reference=6",
+                    "--ane-power-recovery=on",
+                    "--ane-recovery-max-power-percent=0",
+                ],
+                0.0,
+            ),
+            (
+                [
+                    "--ane-power-reference=auto",
+                    "--ane-power-recovery=on",
+                    "--ane-recovery-max-power-percent=50",
+                ],
+                50.0,
+            ),
+        ],
+        [
+            ["--ane-recovery-max-power-percent=" + value]
+            for value in ("-1", "101", "nan", "inf")
+        ]
+        + [["--ane-power-recovery=on", "--ane-recovery-max-power-percent=50"]],
+    ),
+    "--prompt-lookup": values(
+        "--prompt-lookup", {"off": "off", "on": "on"}, ("1", "yes")
+    ),
+    "--prompt-lookup-min-match": values(
+        "--prompt-lookup-min-match", {"2": 2, "4": 4, "3": 3}, ("1", "5", "3x")
+    ),
+    "--compact-draft-head": values(
+        "--compact-draft-head", {"off": "off", "on": "on"}, ("1", "yes")
+    ),
+    "--compact-draft-capacity": values(
+        "--compact-draft-capacity",
+        {"512": 512, "98304": 98304, "65536": 65536},
+        ("256", "33000", "98305", "nan"),
+    ),
+    "--compact-draft-ranking": values(
+        "--compact-draft-ranking", {"/tmp/rank file": Path("/tmp/rank file")}, ("",)
+    ),
+    "--fast-topk": values("--fast-topk", {"off": "off", "on": "on"}, ("1", "yes")),
     "--max-memory": values(
         "--max-memory",
         {
@@ -231,6 +303,29 @@ class ServeOptionsTests(unittest.TestCase):
                     mock.patch.dict(os.environ, {name: "two words"}),
                 ):
                     self.assertIn(flag, self.refuse(parse, required))
+
+    def test_performance_environment_does_not_override_startup_arguments(self):
+        environment = {
+            "SPLASH_ANE_POWER_RECOVERY": "1",
+            "SPLASH_ANE_POWER_REFERENCE": "auto",
+            "SPLASH_ANE_RECOVERY_IDLE_WATTS": "invalid",
+            "SPLASH_ANE_RECOVERY_MAX_POWER_PERCENT": "invalid",
+            "SPLASH_PROMPT_LOOKUP": "1",
+            "SPLASH_COMPACT_DRAFT_HEAD": "1",
+            "SPLASH_FAST_TOPK": "1",
+            "SPLASH_PROMPT_LOOKUP_MIN_MATCH": "invalid",
+            "SPLASH_COMPACT_DRAFT_CAPACITY": "invalid",
+        }
+        for parse, required in PARSERS:
+            with mock.patch.dict(os.environ, environment):
+                args = parse(required)
+                self.assertEqual(args.ane_power_recovery, "off")
+                self.assertEqual(args.ane_power_reference, "off")
+                self.assertEqual(args.prompt_lookup, "off")
+                self.assertEqual(args.compact_draft_head, "off")
+                self.assertEqual(args.fast_topk, "off")
+                self.assertEqual(args.prompt_lookup_min_match, 2)
+                self.assertEqual(args.compact_draft_capacity, 98304)
 
     def test_each_parse_has_its_own_lists(self):
         for parse, required in PARSERS:

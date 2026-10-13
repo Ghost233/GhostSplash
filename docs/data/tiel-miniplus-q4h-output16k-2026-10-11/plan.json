@@ -1,0 +1,1138 @@
+{
+  "model_id": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+  "model_root": "/Users/ghost233/Ghost233Code/GhostSplash/install/models-local/.resolved/8a4d6f9e2b41486cf6457c096475874d4a62df066e22074266b0aa916467e382",
+  "base_parameters": {
+    "kv_format": "q4h",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 8,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 16384,
+    "context_tokens": 131072,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "profiles": [
+    {
+      "name": "baseline",
+      "change": {},
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-2",
+      "change": {
+        "tail_prefill_splits": 2
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-3",
+      "change": {
+        "tail_prefill_splits": 3
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-4",
+      "change": {
+        "tail_prefill_splits": 4
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-5",
+      "change": {
+        "tail_prefill_splits": 5
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-6",
+      "change": {
+        "tail_prefill_splits": 6
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-7",
+      "change": {
+        "tail_prefill_splits": 7
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-1",
+      "change": {
+        "tail_prefill_splits": 1
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-9",
+      "change": {
+        "tail_prefill_splits": 9
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-10",
+      "change": {
+        "tail_prefill_splits": 10
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-11",
+      "change": {
+        "tail_prefill_splits": 11
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-12",
+      "change": {
+        "tail_prefill_splits": 12
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-13",
+      "change": {
+        "tail_prefill_splits": 13
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-14",
+      "change": {
+        "tail_prefill_splits": 14
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-15",
+      "change": {
+        "tail_prefill_splits": 15
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-16",
+      "change": {
+        "tail_prefill_splits": 16
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "concurrency-2",
+      "change": {
+        "concurrency": 2
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "concurrency-4",
+      "change": {
+        "concurrency": 4
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "lookup",
+      "change": {},
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "compact",
+      "change": {},
+      "features": {
+        "lookup": false,
+        "compact": true,
+        "fast": false
+      }
+    },
+    {
+      "name": "lookup-compact",
+      "change": {},
+      "features": {
+        "lookup": true,
+        "compact": true,
+        "fast": false
+      }
+    }
+  ],
+  "repeats": 3,
+  "planned": 63,
+  "schedule": [
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "baseline",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-2",
+        "change": {
+          "tail_prefill_splits": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-3",
+        "change": {
+          "tail_prefill_splits": 3
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-4",
+        "change": {
+          "tail_prefill_splits": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-5",
+        "change": {
+          "tail_prefill_splits": 5
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-6",
+        "change": {
+          "tail_prefill_splits": 6
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-7",
+        "change": {
+          "tail_prefill_splits": 7
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-1",
+        "change": {
+          "tail_prefill_splits": 1
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-9",
+        "change": {
+          "tail_prefill_splits": 9
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-10",
+        "change": {
+          "tail_prefill_splits": 10
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-11",
+        "change": {
+          "tail_prefill_splits": 11
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-12",
+        "change": {
+          "tail_prefill_splits": 12
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-13",
+        "change": {
+          "tail_prefill_splits": 13
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-14",
+        "change": {
+          "tail_prefill_splits": 14
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-15",
+        "change": {
+          "tail_prefill_splits": 15
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "splits-16",
+        "change": {
+          "tail_prefill_splits": 16
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "concurrency-2",
+        "change": {
+          "concurrency": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "concurrency-4",
+        "change": {
+          "concurrency": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "lookup",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "compact",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 0,
+      "profile": {
+        "name": "lookup-compact",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "lookup-compact",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "compact",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "lookup",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "concurrency-4",
+        "change": {
+          "concurrency": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "concurrency-2",
+        "change": {
+          "concurrency": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-16",
+        "change": {
+          "tail_prefill_splits": 16
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-15",
+        "change": {
+          "tail_prefill_splits": 15
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-14",
+        "change": {
+          "tail_prefill_splits": 14
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-13",
+        "change": {
+          "tail_prefill_splits": 13
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-12",
+        "change": {
+          "tail_prefill_splits": 12
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-11",
+        "change": {
+          "tail_prefill_splits": 11
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-10",
+        "change": {
+          "tail_prefill_splits": 10
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-9",
+        "change": {
+          "tail_prefill_splits": 9
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-1",
+        "change": {
+          "tail_prefill_splits": 1
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-7",
+        "change": {
+          "tail_prefill_splits": 7
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-6",
+        "change": {
+          "tail_prefill_splits": 6
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-5",
+        "change": {
+          "tail_prefill_splits": 5
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-4",
+        "change": {
+          "tail_prefill_splits": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-3",
+        "change": {
+          "tail_prefill_splits": 3
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "splits-2",
+        "change": {
+          "tail_prefill_splits": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 1,
+      "profile": {
+        "name": "baseline",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-11",
+        "change": {
+          "tail_prefill_splits": 11
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-12",
+        "change": {
+          "tail_prefill_splits": 12
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-13",
+        "change": {
+          "tail_prefill_splits": 13
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-14",
+        "change": {
+          "tail_prefill_splits": 14
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-15",
+        "change": {
+          "tail_prefill_splits": 15
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-16",
+        "change": {
+          "tail_prefill_splits": 16
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "concurrency-2",
+        "change": {
+          "concurrency": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "concurrency-4",
+        "change": {
+          "concurrency": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "lookup",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "compact",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "lookup-compact",
+        "change": {},
+        "features": {
+          "lookup": true,
+          "compact": true,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "baseline",
+        "change": {},
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-2",
+        "change": {
+          "tail_prefill_splits": 2
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-3",
+        "change": {
+          "tail_prefill_splits": 3
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-4",
+        "change": {
+          "tail_prefill_splits": 4
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-5",
+        "change": {
+          "tail_prefill_splits": 5
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-6",
+        "change": {
+          "tail_prefill_splits": 6
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-7",
+        "change": {
+          "tail_prefill_splits": 7
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-1",
+        "change": {
+          "tail_prefill_splits": 1
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-9",
+        "change": {
+          "tail_prefill_splits": 9
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "profile": {
+        "name": "splits-10",
+        "change": {
+          "tail_prefill_splits": 10
+        },
+        "features": {
+          "lookup": false,
+          "compact": false,
+          "fast": false
+        }
+      }
+    }
+  ],
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037"
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+    }
+  },
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "identity": {
+    "code_sha256": "ac90ff13fadac0c6f9ef872b838a2418b66f95e5841f26216dac07d120ed6eeb",
+    "weight_sha256": {
+      "target": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "draft": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+    }
+  },
+  "background_policy": "peer benchmark finished;30s idle before every attempt; stop/retry on detected external activity",
+  "source_results": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1",
+  "previous_measurement": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v3",
+  "ordering": "forward, reverse, rotated by10; each profile appears once per round; no slow sample discarded",
+  "scope": "Q4H fixed32768 input/16384 output/131072 capacity. Splits1..16, concurrency1/2/4, lookup, compact, combination. Same-profile full-token repeatability and lossless features frozen-reference checks; cross-split/concurrency first divergence retained. No new operator changes. Promising C1 profiles receive final paired verification.",
+  "retained_samples": 21,
+  "fresh_measurements_planned": 42,
+  "retest_audit": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v3/retest-audit.json",
+  "strict_external_workload_gate": true,
+  "numeric_certificate": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/numeric-certificate.json",
+  "validation_policy": "C1 full-token exact; C2/C4 dynamic transcript differences recorded and bound to unchanged matching-command-row numeric oracle; no tolerance changes"
+}

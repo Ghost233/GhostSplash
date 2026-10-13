@@ -1,0 +1,315 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+START perf-0-001-512-baseline
+END perf-0-001-512-baseline status=complete facts=True prefill=1819.5 decode=130.8 peak=15.761GiB
+START perf-0-002-2048-baseline
+END perf-0-002-2048-baseline status=complete facts=True prefill=2108.2 decode=189.5 peak=15.761GiB
+START perf-0-003-512-kv-bf16
+END perf-0-003-512-kv-bf16 status=complete facts=True prefill=2279.4 decode=134.2 peak=16.034GiB
+START perf-0-004-2048-kv-bf16
+END perf-0-004-2048-kv-bf16 status=complete facts=True prefill=2127.7 decode=163.2 peak=16.034GiB
+START perf-0-005-512-kv-q4_0
+END perf-0-005-512-kv-q4_0 status=complete facts=True prefill=1689.9 decode=125.4 peak=15.650GiB
+START perf-0-006-2048-kv-q4_0
+END perf-0-006-2048-kv-q4_0 status=complete facts=True prefill=1675.9 decode=165.5 peak=15.650GiB
+START perf-0-007-512-kv-q4_0_unrotated
+END perf-0-007-512-kv-q4_0_unrotated status=complete facts=True prefill=1594.8 decode=115.5 peak=15.650GiB
+START perf-0-008-2048-kv-q4_0_unrotated
+END perf-0-008-2048-kv-q4_0_unrotated status=complete facts=True prefill=1529.5 decode=132.1 peak=15.650GiB
+START perf-0-009-512-kv-q4h
+END perf-0-009-512-kv-q4h status=complete facts=True prefill=2053.3 decode=138.1 peak=15.606GiB
+START perf-0-010-2048-kv-q4h
+END perf-0-010-2048-kv-q4h status=complete facts=True prefill=2050.9 decode=120.8 peak=15.606GiB
+START perf-0-011-512-splits-2
+END perf-0-011-512-splits-2 status=complete facts=True prefill=2100.1 decode=137.3 peak=15.761GiB
+START perf-0-012-2048-splits-2
+END perf-0-012-2048-splits-2 status=complete facts=True prefill=2165.9 decode=119.2 peak=15.761GiB
+START perf-0-013-512-splits-3
+END perf-0-013-512-splits-3 status=complete facts=True prefill=2126.0 decode=121.4 peak=15.761GiB
+START perf-0-014-2048-splits-3
+END perf-0-014-2048-splits-3 status=complete facts=True prefill=2008.5 decode=156.4 peak=15.761GiB
+START perf-0-015-512-splits-4
+END perf-0-015-512-splits-4 status=complete facts=True prefill=2033.6 decode=125.9 peak=15.761GiB
+START perf-0-016-2048-splits-4
+END perf-0-016-2048-splits-4 status=complete facts=True prefill=1908.6 decode=131.3 peak=15.761GiB
+START perf-0-017-512-splits-5
+END perf-0-017-512-splits-5 status=complete facts=True prefill=1907.1 decode=118.7 peak=15.761GiB
+START perf-0-018-2048-splits-5
+END perf-0-018-2048-splits-5 status=complete facts=True prefill=1968.5 decode=141.0 peak=15.761GiB
+START perf-0-019-512-splits-6
+END perf-0-019-512-splits-6 status=complete facts=True prefill=1981.6 decode=118.7 peak=15.761GiB
+START perf-0-020-2048-splits-6
+END perf-0-020-2048-splits-6 status=complete facts=True prefill=2001.3 decode=146.8 peak=15.761GiB
+START perf-0-021-512-splits-7
+END perf-0-021-512-splits-7 status=complete facts=True prefill=1914.9 decode=122.3 peak=15.761GiB
+START perf-0-022-2048-splits-7
+END perf-0-022-2048-splits-7 status=complete facts=True prefill=2007.0 decode=149.7 peak=15.761GiB
+START perf-0-023-512-splits-1
+END perf-0-023-512-splits-1 status=complete facts=True prefill=2023.5 decode=130.3 peak=15.761GiB
+START perf-0-024-2048-splits-1
+END perf-0-024-2048-splits-1 status=complete facts=True prefill=1970.5 decode=112.2 peak=15.761GiB
+START perf-0-025-512-splits-9
+END perf-0-025-512-splits-9 status=complete facts=True prefill=1980.4 decode=120.0 peak=15.761GiB
+START perf-0-026-2048-splits-9
+END perf-0-026-2048-splits-9 status=complete facts=True prefill=1947.3 decode=130.8 peak=15.761GiB
+START perf-0-027-512-splits-10
+END perf-0-027-512-splits-10 status=complete facts=True prefill=1686.8 decode=108.1 peak=15.761GiB
+START perf-0-028-2048-splits-10
+END perf-0-028-2048-splits-10 status=complete facts=True prefill=1846.7 decode=148.5 peak=15.761GiB
+START perf-0-029-512-splits-11
+END perf-0-029-512-splits-11 status=complete facts=True prefill=1802.7 decode=123.6 peak=15.761GiB
+START perf-0-030-2048-splits-11
+END perf-0-030-2048-splits-11 status=complete facts=True prefill=2068.6 decode=148.4 peak=15.761GiB
+START perf-0-031-512-splits-12
+END perf-0-031-512-splits-12 status=complete facts=True prefill=2175.5 decode=131.0 peak=15.761GiB
+START perf-0-032-2048-splits-12
+END perf-0-032-2048-splits-12 status=complete facts=True prefill=2103.1 decode=128.2 peak=15.761GiB
+START perf-0-033-512-splits-13
+END perf-0-033-512-splits-13 status=complete facts=True prefill=2060.2 decode=127.0 peak=15.761GiB
+START perf-0-034-2048-splits-13
+END perf-0-034-2048-splits-13 status=complete facts=True prefill=1992.2 decode=112.8 peak=15.761GiB
+START perf-0-035-512-splits-14
+END perf-0-035-512-splits-14 status=complete facts=True prefill=1996.3 decode=113.7 peak=15.761GiB
+START perf-0-036-2048-splits-14
+END perf-0-036-2048-splits-14 status=complete facts=True prefill=1949.7 decode=126.6 peak=15.761GiB
+START perf-0-037-512-splits-15
+END perf-0-037-512-splits-15 status=complete facts=True prefill=1832.1 decode=122.0 peak=15.761GiB
+START perf-0-038-2048-splits-15
+END perf-0-038-2048-splits-15 status=complete facts=True prefill=1775.9 decode=158.5 peak=15.761GiB
+START perf-0-039-512-splits-16
+END perf-0-039-512-splits-16 status=complete facts=True prefill=1986.6 decode=122.6 peak=15.761GiB
+START perf-0-040-2048-splits-16
+END perf-0-040-2048-splits-16 status=complete facts=True prefill=1881.7 decode=153.5 peak=15.761GiB
+START perf-0-041-512-concurrency-2
+END perf-0-041-512-concurrency-2 status=complete facts=True prefill=1212.1 decode=85.3 peak=16.309GiB
+START perf-0-042-2048-concurrency-2
+END perf-0-042-2048-concurrency-2 status=complete facts=True prefill=1284.5 decode=69.5 peak=16.372GiB
+START perf-0-043-512-concurrency-4
+END perf-0-043-512-concurrency-4 status=complete facts=True prefill=645.1 decode=43.4 peak=17.287GiB
+START perf-0-044-2048-concurrency-4
+END perf-0-044-2048-concurrency-4 status=complete facts=True prefill=534.5 decode=50.2 peak=17.550GiB
+START perf-0-045-512-lookup
+END perf-0-045-512-lookup status=complete facts=True prefill=1931.4 decode=120.3 peak=15.761GiB
+START perf-0-046-2048-lookup
+END perf-0-046-2048-lookup status=complete facts=True prefill=1973.0 decode=176.5 peak=15.761GiB
+START perf-0-047-512-compact
+END perf-0-047-512-compact status=complete facts=True prefill=2033.7 decode=126.9 peak=15.916GiB
+START perf-0-048-2048-compact
+END perf-0-048-2048-compact status=complete facts=True prefill=2055.6 decode=178.4 peak=15.916GiB
+START perf-0-049-512-lookup-compact
+END perf-0-049-512-lookup-compact status=complete facts=True prefill=1947.4 decode=115.5 peak=15.916GiB
+START perf-0-050-2048-lookup-compact
+END perf-0-050-2048-lookup-compact status=complete facts=True prefill=1644.4 decode=162.9 peak=15.916GiB
+START perf-0-051-512-ane-requested-on
+END perf-0-051-512-ane-requested-on status=unsupported facts=True prefill=1605.7 decode=107.5 peak=15.761GiB
+START perf-0-052-2048-ane-requested-on
+END perf-0-052-2048-ane-requested-on status=unsupported facts=True prefill=1633.0 decode=167.8 peak=15.761GiB
+START perf-1-053-2048-ane-requested-on
+END perf-1-053-2048-ane-requested-on status=unsupported facts=True prefill=1954.1 decode=160.1 peak=15.761GiB
+START perf-1-054-512-ane-requested-on
+END perf-1-054-512-ane-requested-on status=unsupported facts=True prefill=1888.3 decode=127.0 peak=15.761GiB
+START perf-1-055-2048-lookup-compact
+END perf-1-055-2048-lookup-compact status=complete facts=True prefill=1840.9 decode=166.3 peak=15.916GiB
+START perf-1-056-512-lookup-compact
+END perf-1-056-512-lookup-compact status=complete facts=True prefill=1695.0 decode=100.1 peak=15.916GiB
+START perf-1-057-2048-compact
+END perf-1-057-2048-compact status=complete facts=True prefill=1517.8 decode=160.6 peak=15.916GiB
+START perf-1-058-512-compact
+END perf-1-058-512-compact status=complete facts=True prefill=1726.7 decode=119.4 peak=15.916GiB
+START perf-1-059-2048-lookup
+END perf-1-059-2048-lookup status=complete facts=True prefill=1870.3 decode=183.7 peak=15.761GiB
+START perf-1-060-512-lookup
+END perf-1-060-512-lookup status=complete facts=True prefill=1847.4 decode=117.2 peak=15.761GiB
+START perf-1-061-2048-concurrency-4
+END perf-1-061-2048-concurrency-4 status=complete facts=True prefill=477.9 decode=47.7 peak=17.488GiB
+START perf-1-062-512-concurrency-4
+END perf-1-062-512-concurrency-4 status=complete facts=True prefill=612.3 decode=42.6 peak=17.287GiB
+START perf-1-063-2048-concurrency-2
+END perf-1-063-2048-concurrency-2 status=complete facts=True prefill=1172.2 decode=66.3 peak=16.372GiB
+START perf-1-064-512-concurrency-2
+END perf-1-064-512-concurrency-2 status=complete facts=True prefill=1225.0 decode=83.1 peak=16.309GiB
+START perf-1-065-2048-splits-16
+END perf-1-065-2048-splits-16 status=complete facts=True prefill=1751.5 decode=157.3 peak=15.761GiB
+START perf-1-066-512-splits-16
+END perf-1-066-512-splits-16 status=complete facts=True prefill=1821.1 decode=113.6 peak=15.761GiB
+START perf-1-067-2048-splits-15
+END perf-1-067-2048-splits-15 status=complete facts=True prefill=1729.9 decode=156.1 peak=15.761GiB
+START perf-1-068-512-splits-15
+END perf-1-068-512-splits-15 status=complete facts=True prefill=1676.1 decode=119.5 peak=15.761GiB
+START perf-1-069-2048-splits-14
+END perf-1-069-2048-splits-14 status=complete facts=True prefill=1737.2 decode=126.8 peak=15.761GiB
+START perf-1-070-512-splits-14
+END perf-1-070-512-splits-14 status=complete facts=True prefill=1741.4 decode=116.6 peak=15.761GiB
+START perf-1-071-2048-splits-13
+END perf-1-071-2048-splits-13 status=complete facts=True prefill=1738.3 decode=117.3 peak=15.761GiB
+START perf-1-072-512-splits-13
+END perf-1-072-512-splits-13 status=complete facts=True prefill=1730.1 decode=123.5 peak=15.761GiB
+START perf-1-073-2048-splits-12
+END perf-1-073-2048-splits-12 status=complete facts=True prefill=1798.8 decode=130.2 peak=15.761GiB
+START perf-1-074-512-splits-12
+END perf-1-074-512-splits-12 status=complete facts=True prefill=1868.7 decode=112.7 peak=15.761GiB
+START perf-1-075-2048-splits-11
+END perf-1-075-2048-splits-11 status=complete facts=True prefill=1730.1 decode=152.3 peak=15.761GiB
+START perf-1-076-512-splits-11
+END perf-1-076-512-splits-11 status=complete facts=True prefill=2084.6 decode=121.0 peak=15.761GiB
+START perf-1-077-2048-splits-10
+END perf-1-077-2048-splits-10 status=complete facts=True prefill=1993.7 decode=150.1 peak=15.761GiB
+START perf-1-078-512-splits-10
+END perf-1-078-512-splits-10 status=complete facts=True prefill=1800.3 decode=107.8 peak=15.761GiB
+START perf-1-079-2048-splits-9
+END perf-1-079-2048-splits-9 status=complete facts=True prefill=1855.9 decode=116.6 peak=15.761GiB
+START perf-1-080-512-splits-9
+END perf-1-080-512-splits-9 status=complete facts=True prefill=1894.4 decode=121.0 peak=15.761GiB
+START perf-1-081-2048-splits-1
+END perf-1-081-2048-splits-1 status=complete facts=True prefill=1810.7 decode=103.7 peak=15.761GiB
+START perf-1-082-512-splits-1
+END perf-1-082-512-splits-1 status=complete facts=True prefill=1669.6 decode=120.1 peak=15.761GiB
+START perf-1-083-2048-splits-7
+END perf-1-083-2048-splits-7 status=complete facts=True prefill=1658.3 decode=137.8 peak=15.761GiB
+START perf-1-084-512-splits-7
+END perf-1-084-512-splits-7 status=complete facts=True prefill=1990.6 decode=126.5 peak=15.761GiB
+START perf-1-085-2048-splits-6
+END perf-1-085-2048-splits-6 status=complete facts=True prefill=2163.6 decode=172.9 peak=15.761GiB
+START perf-1-086-512-splits-6
+END perf-1-086-512-splits-6 status=complete facts=True prefill=2297.0 decode=129.0 peak=15.761GiB
+START perf-1-087-2048-splits-5
+END perf-1-087-2048-splits-5 status=complete facts=True prefill=2347.9 decode=158.3 peak=15.761GiB
+START perf-1-088-512-splits-5
+END perf-1-088-512-splits-5 status=complete facts=True prefill=1756.3 decode=128.2 peak=15.761GiB
+START perf-1-089-2048-splits-4
+END perf-1-089-2048-splits-4 status=complete facts=True prefill=2146.2 decode=141.0 peak=15.761GiB
+START perf-1-090-512-splits-4
+END perf-1-090-512-splits-4 status=complete facts=True prefill=2237.1 decode=133.8 peak=15.761GiB
+START perf-1-091-2048-splits-3
+END perf-1-091-2048-splits-3 status=complete facts=True prefill=2176.3 decode=169.4 peak=15.761GiB
+START perf-1-092-512-splits-3
+END perf-1-092-512-splits-3 status=complete facts=True prefill=2212.1 decode=128.5 peak=15.761GiB
+START perf-1-093-2048-splits-2
+END perf-1-093-2048-splits-2 status=complete facts=True prefill=1768.3 decode=123.5 peak=15.761GiB
+START perf-1-094-512-splits-2
+END perf-1-094-512-splits-2 status=complete facts=True prefill=2171.5 decode=119.5 peak=15.761GiB
+START perf-1-095-2048-kv-q4h
+END perf-1-095-2048-kv-q4h status=complete facts=True prefill=2048.8 decode=120.0 peak=15.606GiB
+START perf-1-096-512-kv-q4h
+END perf-1-096-512-kv-q4h status=complete facts=True prefill=2086.8 decode=125.7 peak=15.606GiB
+START perf-1-097-2048-kv-q4_0_unrotated
+END perf-1-097-2048-kv-q4_0_unrotated status=complete facts=True prefill=1337.1 decode=120.5 peak=15.650GiB
+START perf-1-098-512-kv-q4_0_unrotated
+END perf-1-098-512-kv-q4_0_unrotated status=complete facts=True prefill=1182.0 decode=101.4 peak=15.650GiB
+START perf-1-099-2048-kv-q4_0
+END perf-1-099-2048-kv-q4_0 status=complete facts=True prefill=1277.1 decode=147.4 peak=15.650GiB
+START perf-1-100-512-kv-q4_0
+END perf-1-100-512-kv-q4_0 status=complete facts=True prefill=1375.2 decode=112.5 peak=15.650GiB
+START perf-1-101-2048-kv-bf16
+END perf-1-101-2048-kv-bf16 status=complete facts=True prefill=1735.0 decode=146.4 peak=16.034GiB
+START perf-1-102-512-kv-bf16
+END perf-1-102-512-kv-bf16 status=complete facts=True prefill=1739.3 decode=117.1 peak=16.034GiB
+START perf-1-103-2048-baseline
+END perf-1-103-2048-baseline status=complete facts=True prefill=1759.7 decode=159.9 peak=15.761GiB
+START perf-1-104-512-baseline
+END perf-1-104-512-baseline status=complete facts=True prefill=1775.2 decode=123.5 peak=15.761GiB
+START perf-2-105-512-splits-10
+END perf-2-105-512-splits-10 status=complete facts=True prefill=1725.3 decode=114.1 peak=15.761GiB
+START perf-2-106-2048-splits-10
+END perf-2-106-2048-splits-10 status=complete facts=True prefill=1635.4 decode=144.3 peak=15.761GiB
+START perf-2-107-512-splits-11
+END perf-2-107-512-splits-11 status=complete facts=True prefill=1664.7 decode=117.6 peak=15.761GiB
+START perf-2-108-2048-splits-11
+END perf-2-108-2048-splits-11 status=complete facts=True prefill=1745.6 decode=143.8 peak=15.761GiB
+START perf-2-109-512-splits-12
+END perf-2-109-512-splits-12 status=complete facts=True prefill=1810.0 decode=119.1 peak=15.761GiB
+START perf-2-110-2048-splits-12
+END perf-2-110-2048-splits-12 status=complete facts=True prefill=1803.9 decode=117.0 peak=15.761GiB
+START perf-2-111-512-splits-13
+END perf-2-111-512-splits-13 status=complete facts=True prefill=1586.9 decode=112.0 peak=15.761GiB
+START perf-2-112-2048-splits-13
+END perf-2-112-2048-splits-13 status=complete facts=True prefill=1600.0 decode=104.3 peak=15.761GiB
+START perf-2-113-512-splits-14
+END perf-2-113-512-splits-14 status=complete facts=True prefill=1696.8 decode=105.1 peak=15.761GiB
+START perf-2-114-2048-splits-14
+END perf-2-114-2048-splits-14 status=complete facts=True prefill=1456.5 decode=113.2 peak=15.761GiB
+START perf-2-115-512-splits-15
+END perf-2-115-512-splits-15 status=complete facts=True prefill=1552.5 decode=83.2 peak=15.761GiB
+START perf-2-116-2048-splits-15
+END perf-2-116-2048-splits-15 status=complete facts=True prefill=1514.5 decode=150.2 peak=15.761GiB
+START perf-2-117-512-splits-16
+END perf-2-117-512-splits-16 status=complete facts=True prefill=1669.4 decode=120.2 peak=15.761GiB
+START perf-2-118-2048-splits-16
+END perf-2-118-2048-splits-16 status=complete facts=True prefill=1901.3 decode=157.2 peak=15.761GiB
+START perf-2-119-512-concurrency-2
+END perf-2-119-512-concurrency-2 status=complete facts=True prefill=1353.3 decode=84.8 peak=16.309GiB
+START perf-2-120-2048-concurrency-2
+END perf-2-120-2048-concurrency-2 status=complete facts=True prefill=1104.0 decode=67.4 peak=16.372GiB
+START perf-2-121-512-concurrency-4
+END perf-2-121-512-concurrency-4 status=complete facts=True prefill=610.3 decode=41.8 peak=17.287GiB
+START perf-2-122-2048-concurrency-4
+END perf-2-122-2048-concurrency-4 status=complete facts=True prefill=506.5 decode=49.0 peak=17.488GiB
+START perf-2-123-512-lookup
+END perf-2-123-512-lookup status=complete facts=True prefill=1770.1 decode=115.9 peak=15.761GiB
+START perf-2-124-2048-lookup
+END perf-2-124-2048-lookup status=complete facts=True prefill=1737.9 decode=175.5 peak=15.761GiB
+START perf-2-125-512-compact
+END perf-2-125-512-compact status=complete facts=True prefill=1737.7 decode=119.5 peak=15.916GiB
+START perf-2-126-2048-compact
+END perf-2-126-2048-compact status=complete facts=True prefill=1738.7 decode=168.5 peak=15.916GiB
+START perf-2-127-512-lookup-compact
+END perf-2-127-512-lookup-compact status=complete facts=True prefill=1758.4 decode=115.7 peak=15.916GiB
+START perf-2-128-2048-lookup-compact
+END perf-2-128-2048-lookup-compact status=complete facts=True prefill=1764.3 decode=177.3 peak=15.916GiB
+START perf-2-129-512-ane-requested-on
+END perf-2-129-512-ane-requested-on status=unsupported facts=True prefill=1680.3 decode=116.2 peak=15.761GiB
+START perf-2-130-2048-ane-requested-on
+END perf-2-130-2048-ane-requested-on status=unsupported facts=True prefill=1556.3 decode=157.7 peak=15.761GiB
+START perf-2-131-512-baseline
+END perf-2-131-512-baseline status=complete facts=True prefill=1673.6 decode=120.1 peak=15.761GiB
+START perf-2-132-2048-baseline
+END perf-2-132-2048-baseline status=complete facts=True prefill=1696.0 decode=154.9 peak=15.761GiB
+START perf-2-133-512-kv-bf16
+END perf-2-133-512-kv-bf16 status=complete facts=True prefill=1699.0 decode=114.3 peak=16.034GiB
+START perf-2-134-2048-kv-bf16
+END perf-2-134-2048-kv-bf16 status=complete facts=True prefill=1518.8 decode=129.6 peak=16.034GiB
+START perf-2-135-512-kv-q4_0
+END perf-2-135-512-kv-q4_0 status=complete facts=True prefill=1290.2 decode=120.2 peak=15.650GiB
+START perf-2-136-2048-kv-q4_0
+END perf-2-136-2048-kv-q4_0 status=complete facts=True prefill=1481.7 decode=156.0 peak=15.650GiB
+START perf-2-137-512-kv-q4_0_unrotated
+END perf-2-137-512-kv-q4_0_unrotated status=complete facts=True prefill=1399.2 decode=95.6 peak=15.650GiB
+START perf-2-138-2048-kv-q4_0_unrotated
+END perf-2-138-2048-kv-q4_0_unrotated status=complete facts=True prefill=1306.2 decode=132.6 peak=15.650GiB
+START perf-2-139-512-kv-q4h
+END perf-2-139-512-kv-q4h status=complete facts=True prefill=1727.8 decode=121.2 peak=15.606GiB
+START perf-2-140-2048-kv-q4h
+END perf-2-140-2048-kv-q4h status=complete facts=True prefill=1691.9 decode=112.3 peak=15.606GiB
+START perf-2-141-512-splits-2
+END perf-2-141-512-splits-2 status=complete facts=True prefill=1667.9 decode=120.0 peak=15.761GiB
+START perf-2-142-2048-splits-2
+END perf-2-142-2048-splits-2 status=complete facts=True prefill=1600.7 decode=111.6 peak=15.761GiB
+START perf-2-143-512-splits-3
+END perf-2-143-512-splits-3 status=complete facts=True prefill=1715.8 decode=116.2 peak=15.761GiB
+START perf-2-144-2048-splits-3
+END perf-2-144-2048-splits-3 status=complete facts=True prefill=1820.1 decode=147.4 peak=15.761GiB
+START perf-2-145-512-splits-4
+END perf-2-145-512-splits-4 status=complete facts=True prefill=1751.0 decode=121.7 peak=15.761GiB
+START perf-2-146-2048-splits-4
+END perf-2-146-2048-splits-4 status=complete facts=True prefill=1600.2 decode=118.4 peak=15.761GiB
+START perf-2-147-512-splits-5
+END perf-2-147-512-splits-5 status=complete facts=True prefill=1717.7 decode=109.9 peak=15.761GiB
+START perf-2-148-2048-splits-5
+END perf-2-148-2048-splits-5 status=complete facts=True prefill=1699.3 decode=133.9 peak=15.761GiB
+START perf-2-149-512-splits-6
+END perf-2-149-512-splits-6 status=complete facts=True prefill=1741.5 decode=101.5 peak=15.761GiB
+START perf-2-150-2048-splits-6
+END perf-2-150-2048-splits-6 status=complete facts=True prefill=1629.8 decode=134.1 peak=15.761GiB
+START perf-2-151-512-splits-7
+END perf-2-151-512-splits-7 status=complete facts=True prefill=1583.2 decode=98.6 peak=15.761GiB
+START perf-2-152-2048-splits-7
+END perf-2-152-2048-splits-7 status=complete facts=True prefill=1404.8 decode=126.4 peak=15.761GiB
+START perf-2-153-512-splits-1
+END perf-2-153-512-splits-1 status=complete facts=True prefill=1486.0 decode=106.9 peak=15.761GiB
+START perf-2-154-2048-splits-1
+END perf-2-154-2048-splits-1 status=complete facts=True prefill=1535.0 decode=95.0 peak=15.761GiB
+START perf-2-155-512-splits-9
+END perf-2-155-512-splits-9 status=complete facts=True prefill=1601.9 decode=107.9 peak=15.761GiB
+START perf-2-156-2048-splits-9
+END perf-2-156-2048-splits-9 status=complete facts=True prefill=1826.0 decode=110.8 peak=15.761GiB
+SWEEP COMPLETE 156

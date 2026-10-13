@@ -120,6 +120,14 @@ struct Handoff::State final {
 Handoff::Handoff(metal::MetalBackend &backend, AwakeClock::duration bound)
     : state_(std::make_shared<State>(backend.newSharedEvent(), bound)) {}
 
+bool Handoff::restart(metal::MetalBackend &backend) {
+  const auto old = state_;
+  std::lock_guard lock(old->mutex);
+  if (!old->retired || !old->jobs.empty() || !old->outstanding.empty()) return false;
+  state_ = std::make_shared<State>(backend.newSharedEvent(), old->bound);
+  return true;
+}
+
 Handoff::~Handoff() {
   try {
     cancel("the handoff ended");

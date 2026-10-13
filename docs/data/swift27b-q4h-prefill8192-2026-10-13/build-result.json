@@ -1,0 +1,17 @@
+{
+  "command": [
+    "make",
+    "-j4",
+    "BUILD=build",
+    "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "build/engine/libsplash.a",
+    "build/splash.metallib",
+    "build/engine/BuildIdentity.hpp"
+  ],
+  "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane8192-v1/sources-8192",
+  "exit_code": 0,
+  "runtime_code_sha256": "7d71cd3fe196febaf9716545123889eb704d6517c2ab9d260dead03409182602",
+  "compiled_source_sha256": "45d2d357df4b12fd0d148073151b3262764dcbe0d2ce1c11dc2325da79bcc40a",
+  "library_sha256": "3bd3568cda738ee3cfe7cb60631742e9f23a3005b77bea3692a1666955591ae1",
+  "metallib_sha256": "cffaa8f343603790513a36bfa4db6f983df16e3a846fe895de49fd6da0f550b0"
+}

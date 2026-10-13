@@ -1,0 +1,124 @@
+[
+  {
+    "name": "correctness-0-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-P2048-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-P2048-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-P2048-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-P2048-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-P1024-on-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-P1024-on-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-P1024-on-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-P1024-on-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-P1024-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-P1024-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-P1024-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-P1024-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-P512-on-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-P512-on-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-P512-on-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-P512-on-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-0-P512-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-0-P512-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "correctness-1-P512-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/correctness-1-P512-off-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-A-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/performance-0-A-16384-attempt1",
+    "status": "complete",
+    "exit_code": 0,
+    "error": null,
+    "observed_busy_pids": []
+  },
+  {
+    "name": "performance-0-P2048-off-16384-attempt1",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/performance-0-P2048-off-16384-attempt1",
+    "status": "failed",
+    "exit_code": -15,
+    "error": "background-interference: [23462]",
+    "observed_busy_pids": [
+      23462
+    ]
+  },
+  {
+    "name": "performance-0-P2048-off-16384-attempt2",
+    "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/performance-0-P2048-off-16384-attempt2",
+    "status": "cancelled",
+    "exit_code": -15,
+    "error": "SIGTERM",
+    "observed_busy_pids": []
+  }
+]

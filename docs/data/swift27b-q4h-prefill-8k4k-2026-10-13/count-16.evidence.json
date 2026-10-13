@@ -1,0 +1,11 @@
+{
+  "case": "count-16",
+  "command": [
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/compile-probe",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/count-16.mil",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/weights.bin",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/probe-cache"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 30.37049008399481
+}

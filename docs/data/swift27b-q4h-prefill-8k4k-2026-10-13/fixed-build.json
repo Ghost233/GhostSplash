@@ -1,0 +1,19 @@
+{
+  "command": [
+    "make",
+    "-j4",
+    "BUILD=build",
+    "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "build/engine/libsplash.a",
+    "build/splash.metallib",
+    "build/engine/BuildIdentity.hpp",
+    "build/engine/metal/MetalBackendInstrumented.o",
+    "build/engine/ane/ProgramInstrumented.o"
+  ],
+  "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/sources-4096",
+  "exit_code": 0,
+  "runtime_code_sha256": "d823961cec710aab4a23d0d226d8437e4e3e7568e55d735fee5425c4ad92b939",
+  "compiled_source_sha256": "e3486bc26d06af6b069bbaaee208cbce0a4583ce6d14654842ba46588ef98323",
+  "library_sha256": "5c2d055a8e54072ffabb31ca26bc01e55623d107946446725630b52c4098bea7",
+  "metallib_sha256": "160a0910cc82ec058bab34e285846286d3112a2b5d2b315841725f4588c40781"
+}

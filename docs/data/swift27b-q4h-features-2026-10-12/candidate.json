@@ -1,0 +1,15 @@
+{
+  "candidate": "A",
+  "basis": "median total request time among three accepted repetitions",
+  "baseline_still_A": true,
+  "requires_ABBA_confirmation": false,
+  "warning": "B output trajectory differs with ANE off; decode is an end-to-end comparison, not a pure kernel comparison.",
+  "next_comparison": {
+    "configs": [
+      "A",
+      "C"
+    ],
+    "method": "ABBA",
+    "purpose": "confirm compact speed versus 270.375 MiB memory tradeoff"
+  }
+}

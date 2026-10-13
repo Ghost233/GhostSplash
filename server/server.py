@@ -1611,6 +1611,23 @@ def _native_command(args):
         )
     if args.disable_ane:
         command.extend(("--ane", "off"))
+    for flag, default in (
+        ("ane-ffn-share", None),
+        ("ane-ffn-minimum-rows", None),
+        ("ane-power-recovery", "off"),
+        ("ane-power-reference", "off"),
+        ("ane-recovery-idle-watts", 0.05),
+        ("ane-recovery-max-power-percent", None),
+        ("prompt-lookup", "off"),
+        ("prompt-lookup-min-match", 2),
+        ("compact-draft-head", "off"),
+        ("compact-draft-capacity", 98304),
+        ("compact-draft-ranking", None),
+        ("fast-topk", "off"),
+    ):
+        value = getattr(args, flag.replace("-", "_"))
+        if value != default:
+            command.extend(("--" + flag, str(value)))
     if args.decode_share is not None:
         command.extend(("--decode-share", str(args.decode_share)))
     if args.max_image_pixels != image_input.MAX_PIXELS:

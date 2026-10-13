@@ -586,6 +586,18 @@ void testAneFfnStatus() {
                   .find("\"reason\":\"an evaluation failed\",\"split_commands\":2,\"reruns\":1,") !=
               std::string::npos,
           "a split that failed lost its rerun");
+  AneFfnSnapshot optional;
+  optional.state = AneFfnSnapshot::State::Split;
+  optional.powerReference.emplace();
+  optional.powerReference->valid = true; optional.powerReference->source = "manual";
+  optional.powerReference->referenceWatts = 6;
+  optional.recovery.emplace(); optional.recovery->phase = "running";
+  optional.recovery->relativePowerPercent = 50;
+  const std::string referenceStatus = status(optional, 0);
+  require(referenceStatus.find("\"relative_power_percent\":50") != std::string::npos &&
+          referenceStatus.find("\"power_reference\":{\"valid\":true,\"source\":\"manual\"") != std::string::npos &&
+          referenceStatus.find("\"reference_watts\":6,\"peak_watts\":null") != std::string::npos,
+          "manual reference or relative percentage status was missing or mislabeled");
 }
 
 // The thermal state beside the memory pressure, in each of its spellings; a

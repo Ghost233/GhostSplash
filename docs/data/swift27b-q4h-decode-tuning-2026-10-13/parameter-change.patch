@@ -1,0 +1,220 @@
+diff --git a/dev/tests/engine/optional_features_test.cpp b/dev/tests/engine/optional_features_test.cpp
+index e05da60..0ccb9b6 100644
+--- a/dev/tests/engine/optional_features_test.cpp
++++ b/dev/tests/engine/optional_features_test.cpp
+@@ -11,7 +11,8 @@ using splash::test::require;
+ 
+ int main() {
+   for (const char *name : {"SPLASH_PROMPT_LOOKUP", "SPLASH_COMPACT_DRAFT_HEAD",
+-                           "SPLASH_FAST_TOPK", "SPLASH_COMPACT_DRAFT_RANKING"})
++                           "SPLASH_FAST_TOPK", "SPLASH_COMPACT_DRAFT_RANKING",
++                           "SPLASH_PROMPT_LOOKUP_MIN_MATCH", "SPLASH_COMPACT_DRAFT_CAPACITY"})
+     unsetenv(name);
+   const auto off = OptionalFeatures::fromEnvironment();
+   require(!off.promptLookup && !off.compactDraftHead && !off.fastTopK &&
+@@ -32,6 +33,46 @@ int main() {
+   catch (const std::invalid_argument &) { rejected = true; }
+   require(rejected, "malformed switches must fail configuration");
+ 
++  unsetenv("SPLASH_FAST_TOPK");
++  options = OptionalFeatures::fromEnvironment();
++  require(options.lookupMinimumMatch == 2 && options.compactCapacity == 98304, "original tuning defaults");
++  setenv("SPLASH_PROMPT_LOOKUP_MIN_MATCH", "3", 1);
++  setenv("SPLASH_COMPACT_DRAFT_CAPACITY", "65536", 1);
++  options = OptionalFeatures::fromEnvironment();
++  require(options.lookupMinimumMatch == 3 && options.compactCapacity == 65536, "startup tuning values");
++  for (const char *value : {"1", "5", "3x", "-1"}) {
++    setenv("SPLASH_PROMPT_LOOKUP_MIN_MATCH", value, 1);
++    bool bad = false;
++    try { static_cast<void>(OptionalFeatures::fromEnvironment()); }
++    catch (const std::invalid_argument &) { bad = true; }
++    require(bad, "invalid lookup minimum accepted");
++  }
++  unsetenv("SPLASH_PROMPT_LOOKUP_MIN_MATCH");
++  for (const char *value : {"256", "33000", "98305", "65536x"}) {
++    setenv("SPLASH_COMPACT_DRAFT_CAPACITY", value, 1);
++    bool bad = false;
++    try { static_cast<void>(OptionalFeatures::fromEnvironment()); }
++    catch (const std::invalid_argument &) { bad = true; }
++    require(bad, "invalid compact capacity accepted");
++  }
++  unsetenv("SPLASH_COMPACT_DRAFT_CAPACITY");
++  const std::vector<uint32_t> two{9,1,2,10,11,12,13,14,15,16,99,1,2};
++  const std::vector<uint32_t> three{9,1,2,3,10,11,12,13,14,15,16,99,1,2,3};
++  require(lookupProposal(two,7,2) == std::vector<uint32_t>({10,11,12,13,14,15,16}), "two-token suffix lookup");
++  require(lookupProposal(two,7,3).empty(), "three-token minimum accepted two-token match");
++  require(lookupProposal(three,7,3) == std::vector<uint32_t>({10,11,12,13,14,15,16}), "three-token suffix lookup");
++  require(lookupProposal(three,7,4).empty(), "four-token minimum accepted three-token match");
++
++  setenv("SPLASH_PROMPT_LOOKUP", "0", 1);
++  setenv("SPLASH_COMPACT_DRAFT_HEAD", "0", 1);
++  setenv("SPLASH_PROMPT_LOOKUP_MIN_MATCH", "invalid", 1);
++  setenv("SPLASH_COMPACT_DRAFT_CAPACITY", "invalid", 1);
++  options = OptionalFeatures::fromEnvironment();
++  require(options.lookupMinimumMatch == 2 && options.compactCapacity == 98304,
++          "disabled features must not read tuning overrides");
++  unsetenv("SPLASH_PROMPT_LOOKUP_MIN_MATCH");
++  unsetenv("SPLASH_COMPACT_DRAFT_CAPACITY");
++
+   const std::vector<uint32_t> history{9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4};
+   require(lookupProposal(history, 7) == std::vector<uint32_t>({5, 6, 7, 8, 9, 10, 1}),
+           "lookup copies an exact earlier continuation");
+@@ -56,5 +97,13 @@ int main() {
+   for (uint32_t i = 0; i < 257; ++i) prompt.push_back(512 + i);
+   require(compactTokenRows(ranking, prompt, 768).reason == "more than 256 distinct rare tokens",
+           "dynamic vocabulary budget");
++  ranking.resize(248320);
++  std::iota(ranking.begin(), ranking.end(), 0);
++  for (uint32_t capacity : {98304U,65536U,32768U}) {
++    std::vector<uint32_t> input(10000,7); input.push_back(248319);
++    rows = compactTokenRows(ranking,input,capacity);
++    require(rows.reason.empty() && rows.ids.size()==capacity && rows.valid==capacity-255 &&
++            rows.ids[capacity-256]==248319, "requested compact row budget and dynamic supplement");
++  }
+   std::cout << "optional features CPU checks passed\n";
+ }
+diff --git a/runtime/model/CompactDraftHead.cpp b/runtime/model/CompactDraftHead.cpp
+index cb18625..555adf4 100644
+--- a/runtime/model/CompactDraftHead.cpp
++++ b/runtime/model/CompactDraftHead.cpp
+@@ -34,8 +34,10 @@ CompactTokenRows compactTokenRows(std::span<const uint32_t> ranking,
+ 
+ CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
+                                    const std::filesystem::path &rankingFile,
+-                                   std::string_view manifest)
++                                   std::string_view manifest, uint32_t requestedCapacity)
+     : backend_(backend), source_(source) {
++  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
++    throw std::invalid_argument("compact capacity must be a multiple of256 in512..98304");
+   if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
+       source.blocks().segments.front().outputSize != source.outputSize) {
+     reason_ = "head is not one unrotated quantized FP32 projection"; return;
+@@ -65,7 +67,7 @@ CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Proj
+     }
+     seen[id] = true;
+   }
+-  capacity_ = std::min<uint32_t>(98304, vocabulary / 2 / 256 * 256);
++  capacity_ = std::min<uint32_t>(requestedCapacity, vocabulary / 2 / 256 * 256);
+   if (capacity_ <= 256) { ranking_.clear(); reason_ = "vocabulary too small for compact head"; return; }
+ }
+ 
+diff --git a/runtime/model/CompactDraftHead.hpp b/runtime/model/CompactDraftHead.hpp
+index 560f3a9..b815877 100644
+--- a/runtime/model/CompactDraftHead.hpp
++++ b/runtime/model/CompactDraftHead.hpp
+@@ -21,11 +21,12 @@ struct CompactTokenRows final {
+ class CompactDraftHead final {
+ public:
+   CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
+-                   const std::filesystem::path &rankingFile, std::string_view manifest);
++                   const std::filesystem::path &rankingFile, std::string_view manifest, uint32_t requestedCapacity = 98304);
+   [[nodiscard]] bool prepare(std::span<const uint32_t> history);
+   [[nodiscard]] const ops::Projection &projection() const noexcept { return projection_; }
+   [[nodiscard]] const metal::MetalBuffer &mapping() const noexcept { return mapping_; }
+   [[nodiscard]] uint32_t validRows() const noexcept { return valid_; }
++  [[nodiscard]] uint32_t capacity() const noexcept { return capacity_; }
+   [[nodiscard]] uint64_t bytes() const noexcept;
+   [[nodiscard]] const std::string &reason() const noexcept { return reason_; }
+ 
+diff --git a/runtime/model/OptionalFeatures.hpp b/runtime/model/OptionalFeatures.hpp
+index cfa5729..467bee9 100644
+--- a/runtime/model/OptionalFeatures.hpp
++++ b/runtime/model/OptionalFeatures.hpp
+@@ -2,6 +2,7 @@
+ 
+ #include <algorithm>
+ #include <cstdint>
++#include <charconv>
+ #include <cstdlib>
+ #include <string_view>
+ #include <filesystem>
+@@ -19,6 +20,8 @@ struct OptionalFeatures final {
+   bool compactDraftHead = false;
+   bool fastTopK = false;
+   std::filesystem::path compactRanking;
++  uint32_t lookupMinimumMatch = 2;
++  uint32_t compactCapacity = 98304;
+ 
+   static OptionalFeatures fromEnvironment() {
+     const auto flag = [](const char *name) {
+@@ -30,6 +33,26 @@ struct OptionalFeatures final {
+     OptionalFeatures result{flag("SPLASH_PROMPT_LOOKUP"),
+                             flag("SPLASH_COMPACT_DRAFT_HEAD"),
+                             flag("SPLASH_FAST_TOPK"), {}};
++    const auto integer = [](const char *name, uint32_t fallback) {
++      const char *value = std::getenv(name);
++      if (!value) return fallback;
++      const std::string_view text(value);
++      uint32_t number = 0;
++      const auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), number);
++      if (error != std::errc{} || end != text.data() + text.size())
++        throw std::invalid_argument(std::string(name) + " must be an unsigned integer");
++      return number;
++    };
++    if (result.promptLookup) {
++      result.lookupMinimumMatch = integer("SPLASH_PROMPT_LOOKUP_MIN_MATCH", 2);
++      if (result.lookupMinimumMatch < 2 || result.lookupMinimumMatch > 4)
++        throw std::invalid_argument("SPLASH_PROMPT_LOOKUP_MIN_MATCH must be 2, 3 or 4");
++    }
++    if (result.compactDraftHead) {
++      result.compactCapacity = integer("SPLASH_COMPACT_DRAFT_CAPACITY", 98304);
++      if (result.compactCapacity <= 256 || result.compactCapacity > 98304 || result.compactCapacity % 256)
++        throw std::invalid_argument("SPLASH_COMPACT_DRAFT_CAPACITY must be a multiple of256 in512..98304");
++    }
+     if (result.compactDraftHead)
+       if (const char *path = std::getenv("SPLASH_COMPACT_DRAFT_RANKING"))
+         result.compactRanking = path;
+@@ -42,7 +65,7 @@ struct OptionalFeatureReport final {
+   uint64_t lookupAttempts = 0, lookupHits = 0, lookupAccepted = 0;
+   uint64_t compactCycles = 0, compactFallbacks = 0;
+   uint64_t fastTopKSelections = 0, fastTopKFallbacks = 0;
+-  uint32_t compactRows = 0;
++  uint32_t compactRows = 0, compactCapacity = 0;
+   uint64_t extraMetalBytes = 0;
+   std::string lookupReason, compactReason, fastTopKReason;
+ };
+@@ -51,9 +74,11 @@ struct OptionalFeatureReport final {
+ // History includes the pending anchor. All proposed tokens must already be
+ // in history; a short continuation is a miss, not padded or invented tokens.
+ inline std::vector<uint32_t> lookupProposal(std::span<const uint32_t> history,
+-                                            uint32_t count) {
+-  if (!count || history.size() < count + 2) return {};
+-  for (size_t n = std::min<size_t>(4, history.size()); n >= 2; --n) {
++                                            uint32_t count, uint32_t minimumMatch = 2) {
++  if (minimumMatch < 2 || minimumMatch > 4)
++    throw std::invalid_argument("lookup minimum match must be 2, 3 or 4");
++  if (!count || history.size() < count + minimumMatch) return {};
++  for (size_t n = std::min<size_t>(4, history.size()); n >= minimumMatch; --n) {
+     const size_t suffix = history.size() - n;
+     if (history.size() < n + count) continue;
+     for (size_t end = history.size() - count; end >= n; --end) {
+diff --git a/runtime/model/Runtime.cpp b/runtime/model/Runtime.cpp
+index e53770a..dc4d1c9 100644
+--- a/runtime/model/Runtime.cpp
++++ b/runtime/model/Runtime.cpp
+@@ -390,7 +390,7 @@ struct Runtime::Impl {
+     if (features.compactDraftHead) {
+       if (draftModel)
+         compactHead = std::make_unique<CompactDraftHead>(backend, targetModel.vocabularyProjection(),
+-            features.compactRanking, model.targetManifestFingerprint());
++            features.compactRanking, model.targetManifestFingerprint(), features.compactCapacity);
+       else featureReport.compactReason = "compact head requires an installed draft";
+     }
+     preparePolicyPipelines();
+@@ -2482,7 +2482,7 @@ Runtime::decodeAsync(const BatchPlan &plan,
+     if (width == 1 && entries.front()->images.empty() && entries.front()->constraint == ConstraintMode::None) {
+       auto &history = entries.front()->featureHistory;
+       history.push_back(*entries.front()->pendingToken);
+-      const auto proposal = lookupProposal(history, kDraftProposalTokens);
++      const auto proposal = lookupProposal(history, kDraftProposalTokens, impl_->features.lookupMinimumMatch);
+       history.pop_back();
+       if (!proposal.empty()) {
+         lookup = true;
+@@ -2895,6 +2895,7 @@ OptionalFeatureReport Runtime::optionalFeatureReport() const {
+   auto result = impl_->featureReport;
+   result.fastTopKSelections = impl_->sampling.fastSelections();
+   result.fastTopKFallbacks = impl_->sampling.fastFallbacks();
++  if (impl_->compactHead) result.compactCapacity = impl_->compactHead->capacity();
+   if (result.configured.promptLookup && !impl_->draftModel)
+     result.lookupReason = "lookup requires an installed draft verification path";
+   if (result.configured.compactDraftHead && impl_->compactHead && !result.compactCycles)

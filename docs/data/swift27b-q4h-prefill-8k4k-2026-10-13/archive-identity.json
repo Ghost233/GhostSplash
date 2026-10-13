@@ -1,0 +1,8 @@
+{
+  "raw_evidence_sha256": "052daaf113120509e7fdb2cf53858e664baa7798bf77fcd77676388b7fdcc115",
+  "source_git_head": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "current_code_sha256": "5e758d48f5286207a933959d0ecb4e57a7fb15a69622a15cb7c72abae890173b",
+  "compiled_4096_code_sha256": "e3486bc26d06af6b069bbaaee208cbce0a4583ce6d14654842ba46588ef98323",
+  "original_weights_changed": false,
+  "historical_invalid_4096_attempt_preserved": true
+}
