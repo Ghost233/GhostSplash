@@ -41,6 +41,7 @@ inline constexpr double kResourceRetryBackoffMilliseconds = 100.0;
 struct EngineConfig final {
   uint32_t maxContext = 0;
   uint32_t vocabularySize = 0;
+  bool decisionScoring = false;
   // Patches per image the server's --max-image-pixels allows; zero rejects
   // images.
   uint32_t maxImagePatches = ops::kMaximumImagePatches;

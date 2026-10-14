@@ -1,4 +1,5 @@
 #include "model/Runtime.hpp"
+#include "model/KevHead.hpp"
 #include "model/CompactDraftHead.hpp"
 #include "StderrLine.hpp"
 #include "AwakeClock.hpp"
@@ -262,6 +263,8 @@ struct Runtime::Impl {
     // Nonempty selects score-only mode: the final prefill chunk computes raw
     // logits at these token ids instead of selecting an anchor.
     std::vector<uint32_t> scoreTokens;
+    std::vector<float> decisionEmbeddings;
+    std::vector<bool> decisionReady;
     std::vector<uint32_t> maskWords;
     // Set only while the current scheduler-owned ticket overlaps grammar-mask
     // computation with target verification. This is model runtime state, not a
@@ -1332,6 +1335,23 @@ struct Runtime::Impl {
     for (const RaggedPrefillSequence &sequence : batch.sequences) {
       Request &entry = *sequence.entry;
       const ModelBatchItem &item = *sequence.item;
+      if (entry.flags & RequestDecisionScoring) {
+        // Reuse the lane's ordinary head workspace. Each command's projected
+        // rows are copied to the request before this batch lane is reused.
+        for (uint32_t index = 0; index <= entry.scoreTokens.size(); ++index) {
+          const uint32_t position = index < entry.scoreTokens.size()
+              ? entry.scoreTokens[index] : entry.promptTokens - 1;
+          if (position < item.logicalPosition || position >= item.logicalPosition + item.tokenCount)
+            continue;
+          targetModel.addHeadOne(graph,
+              prefillU16(finalHidden, sequence.rowBegin + position - item.logicalPosition, 1,
+                         geometry.target.hiddenSize),
+              decodeArena->get(sequence.lane, DecodeTensor::FinalHidden),
+              backend.view(decodeArena->get(sequence.lane, DecodeTensor::Logits),
+                           uint64_t{index} * 512 * sizeof(float), 512 * sizeof(float)));
+        }
+        continue;
+      }
       if (!decoding && (entry.replayingGeneration ||
           item.logicalPosition + item.tokenCount != entry.promptTokens))
         continue;
@@ -2114,6 +2134,16 @@ StateAdmission Runtime::beginAt(const ModelRequest &request, uint32_t stateLane)
   if (!request.id || stateLane >= kLaneCount || request.prompt.empty()) {
     throw std::invalid_argument("invalid executor request activation");
   }
+  const bool decision = request.flags & RequestDecisionScoring;
+  if (decision != bool(impl_->geometry.target.decisionHeadSize))
+    throw std::invalid_argument("request scoring mode does not match the model");
+  if (decision && (request.scoreTokens.size() < 2 || request.scoreTokens.size() > 255 ||
+      request.maxNewTokens || request.scoreTokens.back() >= request.prompt.size() - 1 ||
+      !std::is_sorted(request.scoreTokens.begin(), request.scoreTokens.end()) ||
+      std::adjacent_find(request.scoreTokens.begin(), request.scoreTokens.end()) != request.scoreTokens.end() ||
+      request.restoredTokens > request.scoreTokens.front() || request.prompt.back() != 248062 ||
+      std::ranges::any_of(request.scoreTokens, [&](uint32_t p) { return request.prompt[p] != 248050; })))
+    throw std::invalid_argument("invalid Kev scoring positions");
   if (!impl_->draftModel && request.constraint != ConstraintMode::None)
     throw std::invalid_argument("Qwen3.5-4B ordinary decoding currently requires unconstrained text requests");
   if (impl_->requests.contains(request.id)) {
@@ -2130,6 +2160,10 @@ StateAdmission Runtime::beginAt(const ModelRequest &request, uint32_t stateLane)
     entry.featureHistory.assign(request.prompt.begin(), request.prompt.end());
   entry.scoreTokens.assign(request.scoreTokens.begin(),
                            request.scoreTokens.end());
+  if (decision) {
+    entry.decisionEmbeddings.resize((request.scoreTokens.size() + 1) * 512);
+    entry.decisionReady.resize(request.scoreTokens.size() + 1, false);
+  }
   std::vector<Impl::ImageState> images;
   const StateAdmission admission = impl_->activate(request, stateLane, images);
   if (!admission.granted())
@@ -2151,6 +2185,8 @@ std::unique_ptr<StateRestore> Runtime::beginRestore(
     std::shared_ptr<const CompositeState> state, bool restoreDraft,
     std::function<void()> completion) {
   Impl::Request &entry = impl_->request(requestId);
+  if ((entry.flags & RequestDecisionScoring) && boundary > entry.scoreTokens.front())
+    throw std::invalid_argument("Kev restore cannot skip an option readout");
   if (!entry.resident || !state || boundary >= entry.promptTokens)
     throw std::invalid_argument("invalid state restore");
   return impl_->states.beginRestore(entry.stateLane, *state, restoreDraft,
@@ -2354,7 +2390,34 @@ Runtime::prefillAsync(const BatchPlan &plan,
       entry.promptComplete = nextLength == entry.promptTokens;
       ModelStepResult result{entry.id, item.tokenCount, {}, false,
                              DecodeStage::Regular, 0, 0};
-      if (entry.promptComplete && !entry.replayingGeneration) {
+      if (entry.flags & RequestDecisionScoring) {
+        const float *projected = contents<float>(impl->decodeArena->get(lane, DecodeTensor::Logits),
+                                                 "Kev projected rows");
+        for (uint32_t index = 0; index <= entry.scoreTokens.size(); ++index) {
+          const uint32_t position = index < entry.scoreTokens.size()
+              ? entry.scoreTokens[index] : entry.promptTokens - 1;
+          if (position >= item.logicalPosition && position < nextLength) {
+            std::copy_n(projected + index * 512, 512, entry.decisionEmbeddings.begin() + index * 512);
+            entry.decisionReady[index] = true;
+          }
+        }
+        if (entry.promptComplete) {
+          if (!std::ranges::all_of(entry.decisionReady, [](bool ready) { return ready; })) {
+            result.failure = "Kev scoring row was not captured";
+          } else {
+            try {
+              const auto &bias = std::visit([](const auto &target) -> const MetalBuffer & {
+                return target.decisionBias;
+              }, impl->model.target);
+              result.scoreLogits = kevPointerScores(entry.decisionEmbeddings,
+                  {contents<float>(bias, "Kev decision bias"), 512});
+            } catch (const std::runtime_error &error) {
+              result.failure = error.what();
+            }
+          }
+          result.finished = true;
+        }
+      } else if (entry.promptComplete && !entry.replayingGeneration) {
         entry.pendingToken.reset();
         if (!entry.scoreTokens.empty()) {
           // Score-only: read the raw fp32 logits at the final prompt position
@@ -2710,6 +2773,16 @@ WarmupStepResult Runtime::warmupPrefill(uint32_t rows) {
   request.id = id;
   request.prompt = warmupPrompt;
   request.maxNewTokens = 16;
+  std::array<uint32_t, 2> positions{};
+  if (impl_->geometry.target.decisionHeadSize) {
+    if (rows < 3) throw std::invalid_argument("Kev warmup needs two options and a query");
+    positions = {rows - 3, rows - 2};
+    warmupPrompt[positions[0]] = warmupPrompt[positions[1]] = 248050;
+    warmupPrompt.back() = 248062;
+    request.flags = RequestDecisionScoring;
+    request.scoreTokens = positions;
+    request.maxNewTokens = 0;
+  }
   beginColdRequest(request, 0);
   try {
     std::vector<uint32_t> pages((rows + kv::kPageTokens - 1) / kv::kPageTokens);
@@ -2742,6 +2815,47 @@ WarmupStepResult Runtime::warmupPrefill(uint32_t rows) {
 WarmupStepResult Runtime::warmupDecodeBatch(uint32_t width) {
   if (!width || width > kLaneCount) {
     throw std::invalid_argument("invalid decode warmup width");
+  }
+  if (impl_->geometry.target.decisionHeadSize) {
+    constexpr uint64_t first = std::numeric_limits<uint64_t>::max() - 110;
+    constexpr std::array<uint32_t, kLaneCount> stateLanes{2, 0, 3, 1};
+    const std::array<uint32_t, 2> positions{1, 2};
+    const std::vector<uint32_t> prompt{0, 248050, 248050, 248062};
+    std::array<std::vector<uint32_t>, kLaneCount> pages;
+    std::vector<ModelBatchItem> items;
+    BatchPlan plan{.kind = WorkKind::Prefill};
+    try {
+      for (uint32_t lane = 0; lane < width; ++lane) {
+        ModelRequest request;
+        request.id = first + lane;
+        request.prompt = prompt;
+        request.scoreTokens = positions;
+        request.flags = RequestDecisionScoring;
+        beginColdRequest(request, stateLanes[lane]);
+        pages[lane] = {5 + lane};
+        requireRunwayPages(impl_->kvPages, pages[lane]);
+        items.push_back(warmupItem(request.id, 0, 4, pages[lane]));
+        items.back().inputTokens = prompt;
+        plan.items.push_back({request.id, 4});
+      }
+      const auto start = AwakeClock::now();
+      auto results = prefill(plan, items);
+      const double seconds = std::chrono::duration<double>(AwakeClock::now() - start).count();
+      requireLanesSucceeded(results);
+      std::vector<WarmupLaneResult> lanes;
+      for (uint32_t lane = 0; lane < width; ++lane) {
+        if (!results[lane].finished || results[lane].scoreLogits.size() != 2 ||
+            !results[lane].outputTokens.empty())
+          throw std::runtime_error("Kev batch warmup did not score exactly");
+        lanes.push_back({std::move(results[lane]), {},
+                         impl_->states.metadata(stateLanes[lane]).lengths.targetTokens});
+        end(first + lane);
+      }
+      return {"real B" + std::to_string(width) + " Kev pointer scoring (no decode)", seconds, std::move(lanes)};
+    } catch (...) {
+      for (uint32_t lane = 0; lane < width; ++lane) end(first + lane);
+      throw;
+    }
   }
   constexpr uint64_t firstId = std::numeric_limits<uint64_t>::max() - 110;
   // Plan order is deliberately unrelated to state-lane order. DecodeArena
@@ -2822,6 +2936,14 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
   request.id = id;
   request.prompt = warmupPrompt;
   request.maxNewTokens = 8;
+  const std::array<uint32_t, 2> positions{prefixTokens + 1, prefixTokens + 2};
+  if (impl_->geometry.target.decisionHeadSize) {
+    warmupPrompt[positions[0]] = warmupPrompt[positions[1]] = 248050;
+    warmupPrompt.back() = 248062;
+    request.flags = RequestDecisionScoring;
+    request.scoreTokens = positions;
+    request.maxNewTokens = 0;
+  }
   std::shared_ptr<const CompositeState> cachedState;
   double wallSeconds = 0.0;
   beginColdRequest(request, 0);
@@ -2862,6 +2984,13 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
                              .subspan(prefixTokens, suffixTokens);
     requireLanesSucceeded(
         prefill(suffixPlan, std::span<const ModelBatchItem>(&suffix, 1)));
+    if (impl_->geometry.target.decisionHeadSize) {
+      wallSeconds += impl_->counters.lastPrefillWallSeconds;
+      if (impl_->states.metadata(1).lengths.targetTokens != promptTokens)
+        throw std::runtime_error("restored Kev prefix did not continue exactly");
+      end(id);
+      return {"real Kev paged-KV state restore, lane move, and pointer scoring", wallSeconds, {}};
+    }
     prepareWarmupDecode(id, warmupPrompt.back());
     const double continuationWallSeconds =
         impl_->counters.lastPrefillWallSeconds;

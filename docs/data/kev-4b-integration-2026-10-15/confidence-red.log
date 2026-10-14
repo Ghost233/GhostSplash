@@ -1,0 +1,26 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+03:51:38 Error · invalid_request_error · POST /v1/chat/completions
+03:51:38 Error · invalid_request_error · POST /v1/completions
+....FF
+======================================================================
+FAIL: test_score_confidence_matches_distance_to_mode (dev.tests.server.test_kev.KevTests.test_score_confidence_matches_distance_to_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_kev.py", line 105, in test_score_confidence_matches_distance_to_mode
+    self.assertAlmostEqual(answer["confidence"], expected)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.3155178969433613 != 0.4547516143754132 within 7 places (0.13923371743205193 difference)
+
+======================================================================
+FAIL: test_systemone_uses_pointer_positions_and_model_temperature (dev.tests.server.test_kev.KevTests.test_systemone_uses_pointer_positions_and_model_temperature)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_kev.py", line 78, in test_systemone_uses_pointer_positions_and_model_temperature
+    self.assertAlmostEqual(answer["confidence"], 2 * max(answer["probabilities"].values()) - 1)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0.16005846201683083 != 0.4621171572600098 within 7 places (0.30205869524317897 difference)
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.558s
+
+FAILED (failures=2)

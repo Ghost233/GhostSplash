@@ -1,0 +1,29 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+03:51:44 Error · invalid_request_error · POST /v1/chat/completions
+03:51:44 Error · invalid_request_error · POST /v1/completions
+.........03:51:47 Error · request_timeout · POST /v1/judgments
+.03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · model_not_found · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+03:51:47 Error · invalid_request_error · POST /v1/judgments
+.03:51:48 Error · invalid_request_error · POST /v1/judgments
+...03:51:49 Error · unprocessable_entity · POST /v1/systemone
+.03:51:50 Error · invalid_request_error · POST /v1/systemone
+.03:51:51 Error · request_timeout · POST /v1/systemone
+..03:51:52 Error · unprocessable_entity · POST /v1/systemone
+.03:51:53 Error · unprocessable_entity · POST /v1/systemone
+03:51:53 Error · unprocessable_entity · POST /v1/systemone
+03:51:53 Error · unprocessable_entity · POST /v1/systemone
+03:51:53 Error · unprocessable_entity · POST /v1/systemone
+.
+----------------------------------------------------------------------
+Ran 20 tests in 9.236s
+
+OK

@@ -61,6 +61,7 @@ using QwenMixerWeights = std::variant<QwenGdnWeights, QwenAttentionWeights>;
 struct QwenTargetWeightsBase {
   ops::NormWeights finalNorm;
   ops::Projection logitsProjection;
+  metal::MetalBuffer decisionBias;
   ops::EmbeddingWeights tokenEmbedding;
   std::vector<WeightFileRecord> files;
   uint64_t actualAllocatedBytes = 0;

@@ -101,6 +101,7 @@ class LocalLauncherTests(unittest.TestCase):
         arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4", kv_format])
         if script.name in {
             "swift1527biq3ssplash.sh",
+            "kev4bsplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
@@ -113,13 +114,15 @@ class LocalLauncherTests(unittest.TestCase):
                     "revision": None,
                 },
                 "draft": None
-                if script.name == "qwen3.54bsplash.sh"
+                if script.name in {"qwen3.54bsplash.sh", "kev4bsplash.sh"}
                 else {
                     "repo": "wrong" if wrong_draft else str(draft_dir),
                     "revision": None,
                 },
             }
         }
+        if script.name == "kev4bsplash.sh":
+            record["family"] = "Kev-4B"
         scratches = []
 
         def inspect(repo, variant, language_only, scratch):
@@ -344,6 +347,7 @@ class LocalLauncherTests(unittest.TestCase):
     ):
         for name in (
             "swift1527biq3ssplash.sh",
+            "kev4bsplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
         ):
@@ -383,7 +387,12 @@ class LocalLauncherTests(unittest.TestCase):
                 self.assertEqual(
                     host,
                     "127.0.0.1"
-                    if script.name in {"qwen3.54bsplash.sh", "qwen3.54bdflashsplash.sh"}
+                    if script.name
+                    in {
+                        "qwen3.54bsplash.sh",
+                        "qwen3.54bdflashsplash.sh",
+                        "kev4bsplash.sh",
+                    }
                     else "0.0.0.0",
                 )
                 with socket.socket() as listener:

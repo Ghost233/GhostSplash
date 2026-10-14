@@ -319,6 +319,7 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
   }
   config.nativeLoop.engine.vocabularySize =
       config.resources.model.capabilities.vocabularySize;
+  config.nativeLoop.engine.decisionScoring = config.resources.model.family() == "Kev-4B";
   // Images are admitted up to the server's pixel cap; a model without vision
   // admits none.
   config.nativeLoop.engine.maxImagePatches =

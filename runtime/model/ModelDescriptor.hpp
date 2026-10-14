@@ -54,7 +54,9 @@ struct ModelDescriptor final {
     return visionSource != VisionSource::None;
   }
   [[nodiscard]] std::string_view family() const noexcept {
-    return std::visit([](const auto &layout) { return layout.family; }, target);
+    return std::visit([](const auto &layout) -> std::string_view {
+      return layout.decisionHeadSize ? "Kev-4B" : layout.family;
+    }, target);
   }
   [[nodiscard]] bool valid() const noexcept;
 };

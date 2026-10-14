@@ -182,7 +182,11 @@ def _well_formed(record):
         and isinstance(sources, dict)
         and set(sources) == {"target", "draft"}
         and all(
-            (source is None and role == "draft" and record["family"] == "Qwen3.5-4B")
+            (
+                source is None
+                and role == "draft"
+                and record["family"] in {"Qwen3.5-4B", "Kev-4B"}
+            )
             or (
                 isinstance(source, dict)
                 and set(source) == {"repo", "revision"}

@@ -138,6 +138,18 @@ void testDraftFree4B() {
               descriptor.family() == "Qwen3.5-4B" && descriptor.stateLayout.draft.ringBytes() == 0 &&
               descriptor.targetKvLayout.attentionLayers == 8 && descriptor.stateLayout.target.layers == 24,
           "4B must execute its exact target geometry without draft state");
+  SourceModel kev = source;
+  kev.config.insert(1, R"("decision_config":{"type":"kev","head_size":512,"temperatures":{"choice":2.40605,"score":2.40605,"noul":2.40605},"chat_template":"<|fim_suffix|>"},)");
+  const auto decision = inspect(kev);
+  require(decision.valid() && decision.family() == "Kev-4B" && !decision.hasDraft() &&
+              std::get<model::Qwen3_5_4BLayout>(decision.target).decisionHeadSize == 512,
+          "Kev must retain its decision semantics in the native descriptor");
+  refuses(kev.with(&SourceModel::config, R"("head_size":512)", R"("head_size":256)"),
+          "head_size", "Kev accepted another pointer width");
+  refuses(kev.with(&SourceModel::config, R"("type":"kev")", R"("type":"other")"),
+          "Kev requires", "Kev accepted an unknown decision type");
+  refuses(kev.with(&SourceModel::config, R"("choice":2.40605)", R"("choice":0)"),
+          "temperatures must be positive", "Kev accepted a zero calibration temperature");
   refuses(source.with(&SourceModel::config, R"("num_attention_heads":16)", R"("num_attention_heads":24)"),
           "text config num_attention_heads", "4B accepted a mismatched attention geometry");
   refuses(source.with(&SourceModel::record, R"("vision_format":"none")", R"("vision_format":"gguf")"),

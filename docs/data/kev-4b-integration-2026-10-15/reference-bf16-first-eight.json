@@ -1,0 +1,1205 @@
+{
+  "source_head": "1fe29260f8a5c08115b2a402e1f9bf740bfb6a4a",
+  "performance_test": false,
+  "cases": [
+    {
+      "name": "billing",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "I was charged twice for order 1182. Please refund one charge.",
+        "questions": {
+          "team": {
+            "type": "choice",
+            "instructions": "Which team should handle this?",
+            "criteria": {
+              "shipping": "Deliveries",
+              "billing": "Charges and refunds"
+            }
+          }
+        }
+      },
+      "positions": {
+        "team": {
+          "input_tokens": 39,
+          "option_positions": [
+            31,
+            37
+          ],
+          "query_position": 38
+        }
+      }
+    },
+    {
+      "name": "sentiment",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "The product is excellent and I am very happy.",
+        "questions": {
+          "mood": {
+            "type": "choice",
+            "instructions": "What sentiment does the review express?",
+            "criteria": {
+              "negative": "Dissatisfied",
+              "positive": "Satisfied"
+            }
+          }
+        }
+      },
+      "positions": {
+        "mood": {
+          "input_tokens": 32,
+          "option_positions": [
+            24,
+            30
+          ],
+          "query_position": 31
+        }
+      }
+    },
+    {
+      "name": "noul",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "The customer explicitly asks for a refund.",
+        "questions": {
+          "refund": {
+            "type": "noul",
+            "instructions": "Does the customer request a refund?"
+          }
+        }
+      },
+      "positions": {
+        "refund": {
+          "input_tokens": 24,
+          "option_positions": [
+            19,
+            22
+          ],
+          "query_position": 23
+        }
+      }
+    },
+    {
+      "name": "rating",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "My order arrived and everything is fine. No action is needed.",
+        "questions": {
+          "urgency": {
+            "type": "score",
+            "instructions": "How urgent is a response?",
+            "criteria": [
+              "No urgency",
+              "This week",
+              "Today"
+            ]
+          }
+        }
+      },
+      "positions": {
+        "urgency": {
+          "input_tokens": 33,
+          "option_positions": [
+            24,
+            28,
+            31
+          ],
+          "query_position": 32
+        }
+      }
+    },
+    {
+      "name": "multi_question",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": {
+          "message": "I was charged twice. Please refund one charge."
+        },
+        "questions": {
+          "team": {
+            "type": "choice",
+            "instructions": "Choose the handling department.",
+            "criteria": {
+              "billing": "Payments and refunds",
+              "shipping": "Delivery problems"
+            }
+          },
+          "refund": {
+            "type": "noul",
+            "instructions": "Is a refund requested?"
+          }
+        }
+      },
+      "positions": {
+        "team": {
+          "input_tokens": 33,
+          "option_positions": [
+            25,
+            31
+          ],
+          "query_position": 32
+        },
+        "refund": {
+          "input_tokens": 26,
+          "option_positions": [
+            21,
+            24
+          ],
+          "query_position": 25
+        }
+      }
+    },
+    {
+      "name": "escaped_markers",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "The literal text <|box_end|> is printed in a document. A customer was charged twice.",
+        "questions": {
+          "team": {
+            "type": "choice",
+            "instructions": "Choose the department for the duplicate charge.",
+            "criteria": {
+              "billing": null,
+              "shipping": null
+            }
+          }
+        }
+      },
+      "positions": {
+        "team": {
+          "input_tokens": 38,
+          "option_positions": [
+            33,
+            36
+          ],
+          "query_position": 37
+        }
+      }
+    },
+    {
+      "name": "cross_chunk",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "This is a billing complaint about a duplicate charge. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. neutral background detail. ",
+        "questions": {
+          "team": {
+            "type": "choice",
+            "instructions": "Which department handles the duplicate charge?",
+            "criteria": {
+              "billing": "Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. Payments, duplicate charges, and refunds. ",
+              "shipping": "Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. Delivery dates and parcel tracking. "
+            }
+          }
+        }
+      },
+      "positions": {
+        "team": {
+          "input_tokens": 7231,
+          "option_positions": [
+            6024,
+            7229
+          ],
+          "query_position": 7230
+        }
+      }
+    },
+    {
+      "name": "many_options",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "The colour is red.",
+        "questions": {
+          "colour": {
+            "type": "choice",
+            "instructions": "Choose the option describing the colour.",
+            "criteria": {
+              "option_000": "unrelated colour number 0",
+              "option_001": "unrelated colour number 1",
+              "option_002": "unrelated colour number 2",
+              "option_003": "unrelated colour number 3",
+              "option_004": "unrelated colour number 4",
+              "option_005": "unrelated colour number 5",
+              "option_006": "unrelated colour number 6",
+              "option_007": "unrelated colour number 7",
+              "option_008": "unrelated colour number 8",
+              "option_009": "unrelated colour number 9",
+              "option_010": "unrelated colour number 10",
+              "option_011": "unrelated colour number 11",
+              "option_012": "unrelated colour number 12",
+              "option_013": "unrelated colour number 13",
+              "option_014": "unrelated colour number 14",
+              "option_015": "unrelated colour number 15",
+              "option_016": "unrelated colour number 16",
+              "option_017": "red",
+              "option_018": "unrelated colour number 18",
+              "option_019": "unrelated colour number 19",
+              "option_020": "unrelated colour number 20",
+              "option_021": "unrelated colour number 21",
+              "option_022": "unrelated colour number 22",
+              "option_023": "unrelated colour number 23",
+              "option_024": "unrelated colour number 24",
+              "option_025": "unrelated colour number 25",
+              "option_026": "unrelated colour number 26",
+              "option_027": "unrelated colour number 27",
+              "option_028": "unrelated colour number 28",
+              "option_029": "unrelated colour number 29",
+              "option_030": "unrelated colour number 30",
+              "option_031": "unrelated colour number 31",
+              "option_032": "unrelated colour number 32",
+              "option_033": "unrelated colour number 33",
+              "option_034": "unrelated colour number 34",
+              "option_035": "unrelated colour number 35",
+              "option_036": "unrelated colour number 36",
+              "option_037": "unrelated colour number 37",
+              "option_038": "unrelated colour number 38",
+              "option_039": "unrelated colour number 39",
+              "option_040": "unrelated colour number 40",
+              "option_041": "unrelated colour number 41",
+              "option_042": "unrelated colour number 42",
+              "option_043": "unrelated colour number 43",
+              "option_044": "unrelated colour number 44",
+              "option_045": "unrelated colour number 45",
+              "option_046": "unrelated colour number 46",
+              "option_047": "unrelated colour number 47",
+              "option_048": "unrelated colour number 48",
+              "option_049": "unrelated colour number 49",
+              "option_050": "unrelated colour number 50",
+              "option_051": "unrelated colour number 51",
+              "option_052": "unrelated colour number 52",
+              "option_053": "unrelated colour number 53",
+              "option_054": "unrelated colour number 54",
+              "option_055": "unrelated colour number 55",
+              "option_056": "unrelated colour number 56",
+              "option_057": "unrelated colour number 57",
+              "option_058": "unrelated colour number 58",
+              "option_059": "unrelated colour number 59",
+              "option_060": "unrelated colour number 60",
+              "option_061": "unrelated colour number 61",
+              "option_062": "unrelated colour number 62",
+              "option_063": "unrelated colour number 63",
+              "option_064": "unrelated colour number 64",
+              "option_065": "unrelated colour number 65",
+              "option_066": "unrelated colour number 66",
+              "option_067": "unrelated colour number 67",
+              "option_068": "unrelated colour number 68",
+              "option_069": "unrelated colour number 69",
+              "option_070": "unrelated colour number 70",
+              "option_071": "unrelated colour number 71",
+              "option_072": "unrelated colour number 72",
+              "option_073": "unrelated colour number 73",
+              "option_074": "unrelated colour number 74",
+              "option_075": "unrelated colour number 75",
+              "option_076": "unrelated colour number 76",
+              "option_077": "unrelated colour number 77",
+              "option_078": "unrelated colour number 78",
+              "option_079": "unrelated colour number 79",
+              "option_080": "unrelated colour number 80",
+              "option_081": "unrelated colour number 81",
+              "option_082": "unrelated colour number 82",
+              "option_083": "unrelated colour number 83",
+              "option_084": "unrelated colour number 84",
+              "option_085": "unrelated colour number 85",
+              "option_086": "unrelated colour number 86",
+              "option_087": "unrelated colour number 87",
+              "option_088": "unrelated colour number 88",
+              "option_089": "unrelated colour number 89",
+              "option_090": "unrelated colour number 90",
+              "option_091": "unrelated colour number 91",
+              "option_092": "unrelated colour number 92",
+              "option_093": "unrelated colour number 93",
+              "option_094": "unrelated colour number 94",
+              "option_095": "unrelated colour number 95",
+              "option_096": "unrelated colour number 96",
+              "option_097": "unrelated colour number 97",
+              "option_098": "unrelated colour number 98",
+              "option_099": "unrelated colour number 99",
+              "option_100": "unrelated colour number 100",
+              "option_101": "unrelated colour number 101",
+              "option_102": "unrelated colour number 102",
+              "option_103": "unrelated colour number 103",
+              "option_104": "unrelated colour number 104",
+              "option_105": "unrelated colour number 105",
+              "option_106": "unrelated colour number 106",
+              "option_107": "unrelated colour number 107",
+              "option_108": "unrelated colour number 108",
+              "option_109": "unrelated colour number 109",
+              "option_110": "unrelated colour number 110",
+              "option_111": "unrelated colour number 111",
+              "option_112": "unrelated colour number 112",
+              "option_113": "unrelated colour number 113",
+              "option_114": "unrelated colour number 114",
+              "option_115": "unrelated colour number 115",
+              "option_116": "unrelated colour number 116",
+              "option_117": "unrelated colour number 117",
+              "option_118": "unrelated colour number 118",
+              "option_119": "unrelated colour number 119",
+              "option_120": "unrelated colour number 120",
+              "option_121": "unrelated colour number 121",
+              "option_122": "unrelated colour number 122",
+              "option_123": "unrelated colour number 123",
+              "option_124": "unrelated colour number 124",
+              "option_125": "unrelated colour number 125",
+              "option_126": "unrelated colour number 126",
+              "option_127": "unrelated colour number 127",
+              "option_128": "unrelated colour number 128",
+              "option_129": "unrelated colour number 129",
+              "option_130": "unrelated colour number 130",
+              "option_131": "unrelated colour number 131",
+              "option_132": "unrelated colour number 132",
+              "option_133": "unrelated colour number 133",
+              "option_134": "unrelated colour number 134",
+              "option_135": "unrelated colour number 135",
+              "option_136": "unrelated colour number 136",
+              "option_137": "unrelated colour number 137",
+              "option_138": "unrelated colour number 138",
+              "option_139": "unrelated colour number 139",
+              "option_140": "unrelated colour number 140",
+              "option_141": "unrelated colour number 141",
+              "option_142": "unrelated colour number 142",
+              "option_143": "unrelated colour number 143",
+              "option_144": "unrelated colour number 144",
+              "option_145": "unrelated colour number 145",
+              "option_146": "unrelated colour number 146",
+              "option_147": "unrelated colour number 147",
+              "option_148": "unrelated colour number 148",
+              "option_149": "unrelated colour number 149",
+              "option_150": "unrelated colour number 150",
+              "option_151": "unrelated colour number 151",
+              "option_152": "unrelated colour number 152",
+              "option_153": "unrelated colour number 153",
+              "option_154": "unrelated colour number 154",
+              "option_155": "unrelated colour number 155",
+              "option_156": "unrelated colour number 156",
+              "option_157": "unrelated colour number 157",
+              "option_158": "unrelated colour number 158",
+              "option_159": "unrelated colour number 159",
+              "option_160": "unrelated colour number 160",
+              "option_161": "unrelated colour number 161",
+              "option_162": "unrelated colour number 162",
+              "option_163": "unrelated colour number 163",
+              "option_164": "unrelated colour number 164",
+              "option_165": "unrelated colour number 165",
+              "option_166": "unrelated colour number 166",
+              "option_167": "unrelated colour number 167",
+              "option_168": "unrelated colour number 168",
+              "option_169": "unrelated colour number 169",
+              "option_170": "unrelated colour number 170",
+              "option_171": "unrelated colour number 171",
+              "option_172": "unrelated colour number 172",
+              "option_173": "unrelated colour number 173",
+              "option_174": "unrelated colour number 174",
+              "option_175": "unrelated colour number 175",
+              "option_176": "unrelated colour number 176",
+              "option_177": "unrelated colour number 177",
+              "option_178": "unrelated colour number 178",
+              "option_179": "unrelated colour number 179",
+              "option_180": "unrelated colour number 180",
+              "option_181": "unrelated colour number 181",
+              "option_182": "unrelated colour number 182",
+              "option_183": "unrelated colour number 183",
+              "option_184": "unrelated colour number 184",
+              "option_185": "unrelated colour number 185",
+              "option_186": "unrelated colour number 186",
+              "option_187": "unrelated colour number 187",
+              "option_188": "unrelated colour number 188",
+              "option_189": "unrelated colour number 189",
+              "option_190": "unrelated colour number 190",
+              "option_191": "unrelated colour number 191",
+              "option_192": "unrelated colour number 192",
+              "option_193": "unrelated colour number 193",
+              "option_194": "unrelated colour number 194",
+              "option_195": "unrelated colour number 195",
+              "option_196": "unrelated colour number 196",
+              "option_197": "unrelated colour number 197",
+              "option_198": "unrelated colour number 198",
+              "option_199": "unrelated colour number 199",
+              "option_200": "unrelated colour number 200",
+              "option_201": "unrelated colour number 201",
+              "option_202": "unrelated colour number 202",
+              "option_203": "unrelated colour number 203",
+              "option_204": "unrelated colour number 204",
+              "option_205": "unrelated colour number 205",
+              "option_206": "unrelated colour number 206",
+              "option_207": "unrelated colour number 207",
+              "option_208": "unrelated colour number 208",
+              "option_209": "unrelated colour number 209",
+              "option_210": "unrelated colour number 210",
+              "option_211": "unrelated colour number 211",
+              "option_212": "unrelated colour number 212",
+              "option_213": "unrelated colour number 213",
+              "option_214": "unrelated colour number 214",
+              "option_215": "unrelated colour number 215",
+              "option_216": "unrelated colour number 216",
+              "option_217": "unrelated colour number 217",
+              "option_218": "unrelated colour number 218",
+              "option_219": "unrelated colour number 219",
+              "option_220": "unrelated colour number 220",
+              "option_221": "unrelated colour number 221",
+              "option_222": "unrelated colour number 222",
+              "option_223": "unrelated colour number 223",
+              "option_224": "unrelated colour number 224",
+              "option_225": "unrelated colour number 225",
+              "option_226": "unrelated colour number 226",
+              "option_227": "unrelated colour number 227",
+              "option_228": "unrelated colour number 228",
+              "option_229": "unrelated colour number 229",
+              "option_230": "unrelated colour number 230",
+              "option_231": "unrelated colour number 231",
+              "option_232": "unrelated colour number 232",
+              "option_233": "unrelated colour number 233",
+              "option_234": "unrelated colour number 234",
+              "option_235": "unrelated colour number 235",
+              "option_236": "unrelated colour number 236",
+              "option_237": "unrelated colour number 237",
+              "option_238": "unrelated colour number 238",
+              "option_239": "unrelated colour number 239",
+              "option_240": "unrelated colour number 240",
+              "option_241": "unrelated colour number 241",
+              "option_242": "unrelated colour number 242",
+              "option_243": "unrelated colour number 243",
+              "option_244": "unrelated colour number 244",
+              "option_245": "unrelated colour number 245",
+              "option_246": "unrelated colour number 246",
+              "option_247": "unrelated colour number 247",
+              "option_248": "unrelated colour number 248",
+              "option_249": "unrelated colour number 249",
+              "option_250": "unrelated colour number 250",
+              "option_251": "unrelated colour number 251",
+              "option_252": "unrelated colour number 252",
+              "option_253": "unrelated colour number 253",
+              "option_254": "unrelated colour number 254"
+            }
+          }
+        }
+      },
+      "positions": {
+        "colour": {
+          "input_tokens": 3725,
+          "option_positions": [
+            26,
+            39,
+            52,
+            65,
+            78,
+            91,
+            104,
+            117,
+            130,
+            143,
+            157,
+            171,
+            185,
+            199,
+            213,
+            227,
+            241,
+            250,
+            264,
+            278,
+            292,
+            306,
+            320,
+            334,
+            348,
+            362,
+            376,
+            390,
+            404,
+            418,
+            432,
+            446,
+            460,
+            474,
+            488,
+            502,
+            516,
+            530,
+            544,
+            558,
+            572,
+            586,
+            600,
+            614,
+            628,
+            642,
+            656,
+            670,
+            684,
+            698,
+            712,
+            726,
+            740,
+            754,
+            768,
+            782,
+            796,
+            810,
+            824,
+            838,
+            852,
+            866,
+            880,
+            894,
+            908,
+            922,
+            936,
+            950,
+            964,
+            978,
+            992,
+            1006,
+            1020,
+            1034,
+            1048,
+            1062,
+            1076,
+            1090,
+            1104,
+            1118,
+            1132,
+            1146,
+            1160,
+            1174,
+            1188,
+            1202,
+            1216,
+            1230,
+            1244,
+            1258,
+            1272,
+            1286,
+            1300,
+            1314,
+            1328,
+            1342,
+            1356,
+            1370,
+            1384,
+            1398,
+            1413,
+            1428,
+            1443,
+            1458,
+            1473,
+            1488,
+            1503,
+            1518,
+            1533,
+            1548,
+            1563,
+            1578,
+            1593,
+            1608,
+            1623,
+            1638,
+            1653,
+            1668,
+            1683,
+            1698,
+            1713,
+            1728,
+            1743,
+            1758,
+            1773,
+            1788,
+            1803,
+            1818,
+            1833,
+            1848,
+            1863,
+            1878,
+            1893,
+            1908,
+            1923,
+            1938,
+            1953,
+            1968,
+            1983,
+            1998,
+            2013,
+            2028,
+            2043,
+            2058,
+            2073,
+            2088,
+            2103,
+            2118,
+            2133,
+            2148,
+            2163,
+            2178,
+            2193,
+            2208,
+            2223,
+            2238,
+            2253,
+            2268,
+            2283,
+            2298,
+            2313,
+            2328,
+            2343,
+            2358,
+            2373,
+            2388,
+            2403,
+            2418,
+            2433,
+            2448,
+            2463,
+            2478,
+            2493,
+            2508,
+            2523,
+            2538,
+            2553,
+            2568,
+            2583,
+            2598,
+            2613,
+            2628,
+            2643,
+            2658,
+            2673,
+            2688,
+            2703,
+            2718,
+            2733,
+            2748,
+            2763,
+            2778,
+            2793,
+            2808,
+            2823,
+            2838,
+            2853,
+            2868,
+            2883,
+            2898,
+            2913,
+            2928,
+            2943,
+            2958,
+            2973,
+            2988,
+            3003,
+            3018,
+            3033,
+            3048,
+            3063,
+            3078,
+            3093,
+            3108,
+            3123,
+            3138,
+            3153,
+            3168,
+            3183,
+            3198,
+            3213,
+            3228,
+            3243,
+            3258,
+            3273,
+            3288,
+            3303,
+            3318,
+            3333,
+            3348,
+            3363,
+            3378,
+            3393,
+            3408,
+            3423,
+            3438,
+            3453,
+            3468,
+            3483,
+            3498,
+            3513,
+            3528,
+            3543,
+            3558,
+            3573,
+            3588,
+            3603,
+            3618,
+            3633,
+            3648,
+            3663,
+            3678,
+            3693,
+            3708,
+            3723
+          ],
+          "query_position": 3724
+        }
+      }
+    },
+    {
+      "name": "exact_context_8192",
+      "body": {
+        "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+        "state": "The customer was charged twice. neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral neutral ",
+        "questions": {
+          "team": {
+            "type": "choice",
+            "instructions": "Which department handles the duplicate charge?",
+            "criteria": {
+              "billing": "Payments and refunds",
+              "shipping": "Delivery problems"
+            }
+          }
+        }
+      },
+      "positions": {
+        "team": {
+          "input_tokens": 8192,
+          "option_positions": [
+            8184,
+            8190
+          ],
+          "query_position": 8191
+        }
+      }
+    }
+  ],
+  "runs": {
+    "reference": [
+      {
+        "name": "billing",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.027411524852636898,
+                "billing": 0.9725884751473631
+              },
+              "confidence": 0.9451769502947263
+            }
+          },
+          "usage": {
+            "input_tokens": 39,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "sentiment",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "mood": {
+              "type": "choice",
+              "choice": "positive",
+              "probabilities": {
+                "negative": 0.0023708194256482373,
+                "positive": 0.9976291805743519
+              },
+              "confidence": 0.9952583611487038
+            }
+          },
+          "usage": {
+            "input_tokens": 32,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "noul",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "refund": {
+              "type": "noul",
+              "noul": 0.9669252659447644
+            }
+          },
+          "usage": {
+            "input_tokens": 24,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "rating",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "urgency": {
+              "type": "score",
+              "score": 0.07925815232654593,
+              "legend": {
+                "0": "No urgency",
+                "1": "This week",
+                "2": "Today"
+              },
+              "probabilities": {
+                "0": 0.941914608631015,
+                "1": 0.036912630411424195,
+                "2": 0.021172760957560866
+              },
+              "confidence": 0.8811127715101811
+            }
+          },
+          "usage": {
+            "input_tokens": 33,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "multi_question",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "billing": 0.9916920916315449,
+                "shipping": 0.008307908368455127
+              },
+              "confidence": 0.9833841832630899
+            },
+            "refund": {
+              "type": "noul",
+              "noul": 0.9629715600814621
+            }
+          },
+          "usage": {
+            "input_tokens": 59,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "escaped_markers",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "billing": 0.9306327302897408,
+                "shipping": 0.06936726971025929
+              },
+              "confidence": 0.8612654605794816
+            }
+          },
+          "usage": {
+            "input_tokens": 38,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "cross_chunk",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "billing": 0.9813000248728665,
+                "shipping": 0.018699975127133412
+              },
+              "confidence": 0.962600049745733
+            }
+          },
+          "usage": {
+            "input_tokens": 7231,
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "name": "many_options",
+        "response": {
+          "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+          "answers": {
+            "colour": {
+              "type": "choice",
+              "choice": "option_017",
+              "probabilities": {
+                "option_000": 0.008164290930426121,
+                "option_001": 0.007740447963525895,
+                "option_002": 0.007643494193785052,
+                "option_003": 0.007346384829257409,
+                "option_004": 0.007122440486734447,
+                "option_005": 0.006347138606418427,
+                "option_006": 0.0061241087453966945,
+                "option_007": 0.006599628527366089,
+                "option_008": 0.006356319047239853,
+                "option_009": 0.006102777727017134,
+                "option_010": 0.006193318676996482,
+                "option_011": 0.005824657387157868,
+                "option_012": 0.006234662597394207,
+                "option_013": 0.0054989233728872655,
+                "option_014": 0.006077301680975116,
+                "option_015": 0.005305978878623238,
+                "option_016": 0.004948361795889932,
+                "option_017": 0.21351452524945871,
+                "option_018": 0.002391889588605704,
+                "option_019": 0.0034837169761269653,
+                "option_020": 0.004296715945054661,
+                "option_021": 0.004472561849148986,
+                "option_022": 0.00484233239825522,
+                "option_023": 0.0049143988163298,
+                "option_024": 0.004836655466299627,
+                "option_025": 0.004366674722505516,
+                "option_026": 0.004561258092176268,
+                "option_027": 0.005187925029057618,
+                "option_028": 0.005539357052657452,
+                "option_029": 0.004148557538899662,
+                "option_030": 0.005584296934397565,
+                "option_031": 0.005176180860735728,
+                "option_032": 0.005152470468813627,
+                "option_033": 0.004942406776140341,
+                "option_034": 0.0049311744224349455,
+                "option_035": 0.004399137343706819,
+                "option_036": 0.004710947531086046,
+                "option_037": 0.004705751493033609,
+                "option_038": 0.004256515640284036,
+                "option_039": 0.003978719468131445,
+                "option_040": 0.004259561163302585,
+                "option_041": 0.0038355601038679164,
+                "option_042": 0.004993644646111866,
+                "option_043": 0.0043374845993622135,
+                "option_044": 0.004399093316394454,
+                "option_045": 0.0031732088959787793,
+                "option_046": 0.003807416260883453,
+                "option_047": 0.004836541880549197,
+                "option_048": 0.003939991346884813,
+                "option_049": 0.004565117833431901,
+                "option_050": 0.004331682651438653,
+                "option_051": 0.003960570783860149,
+                "option_052": 0.004121177068231575,
+                "option_053": 0.004047423165729049,
+                "option_054": 0.004254103721710945,
+                "option_055": 0.0030378586998201047,
+                "option_056": 0.0039409690768521365,
+                "option_057": 0.004038712611067771,
+                "option_058": 0.003938529109468508,
+                "option_059": 0.0037018367022078934,
+                "option_060": 0.0039279785516241235,
+                "option_061": 0.0037280052446047535,
+                "option_062": 0.003846813747470395,
+                "option_063": 0.004520557287475237,
+                "option_064": 0.004311747913977601,
+                "option_065": 0.0036366683747100738,
+                "option_066": 0.003709386939149696,
+                "option_067": 0.004856869120556285,
+                "option_068": 0.0037028720122895954,
+                "option_069": 0.003279079606804229,
+                "option_070": 0.0034311546572749338,
+                "option_071": 0.0032200221707811443,
+                "option_072": 0.0034814938687957797,
+                "option_073": 0.0034417510287343754,
+                "option_074": 0.003470095611707417,
+                "option_075": 0.002770995069843904,
+                "option_076": 0.0031527105591688874,
+                "option_077": 0.004099175711828221,
+                "option_078": 0.003202009204350564,
+                "option_079": 0.003116602338254461,
+                "option_080": 0.0032333551731004214,
+                "option_081": 0.003055458055220225,
+                "option_082": 0.0032509639248484807,
+                "option_083": 0.003281618278313422,
+                "option_084": 0.0032375371377709955,
+                "option_085": 0.002359352646841094,
+                "option_086": 0.002633393632180244,
+                "option_087": 0.003085319837706305,
+                "option_088": 0.0029305795331870748,
+                "option_089": 0.002761104764996402,
+                "option_090": 0.002906795080662971,
+                "option_091": 0.0028873859168008836,
+                "option_092": 0.0029387160564702066,
+                "option_093": 0.003067014759080079,
+                "option_094": 0.002976997615865207,
+                "option_095": 0.002312825944501878,
+                "option_096": 0.0024715151008662044,
+                "option_097": 0.003279739927396659,
+                "option_098": 0.0034310988981349705,
+                "option_099": 0.005976273572498219,
+                "option_100": 0.004067418931560587,
+                "option_101": 0.0032400930906284,
+                "option_102": 0.0035856456474420927,
+                "option_103": 0.0035213620314091996,
+                "option_104": 0.0031200532398805137,
+                "option_105": 0.002456461234160742,
+                "option_106": 0.0026549615352447074,
+                "option_107": 0.0029631404453905968,
+                "option_108": 0.002491296005759683,
+                "option_109": 0.0029681920982962766,
+                "option_110": 0.0031192167377999194,
+                "option_111": 0.002997820606718448,
+                "option_112": 0.0035441217088859585,
+                "option_113": 0.0029406211291932265,
+                "option_114": 0.003097491592230941,
+                "option_115": 0.00256126595361802,
+                "option_116": 0.0023474333165642517,
+                "option_117": 0.0025328891765795686,
+                "option_118": 0.0026091471245177603,
+                "option_119": 0.00321973373887898,
+                "option_120": 0.0032489189653995432,
+                "option_121": 0.0024819445530943705,
+                "option_122": 0.003133992610916201,
+                "option_123": 0.0032060483284200563,
+                "option_124": 0.0029754351451011835,
+                "option_125": 0.0024721940724444593,
+                "option_126": 0.0024258101199800715,
+                "option_127": 0.002517403609946943,
+                "option_128": 0.0026855935543891075,
+                "option_129": 0.002314626631833706,
+                "option_130": 0.0028233514364210837,
+                "option_131": 0.002295439499471958,
+                "option_132": 0.0027095756566796764,
+                "option_133": 0.0023911843347416283,
+                "option_134": 0.002544844719488497,
+                "option_135": 0.0022126774069144454,
+                "option_136": 0.002261618823223023,
+                "option_137": 0.0023379568832988702,
+                "option_138": 0.0024194384259613576,
+                "option_139": 0.002430383504811009,
+                "option_140": 0.002738418424903329,
+                "option_141": 0.002300263487476078,
+                "option_142": 0.00259558464705647,
+                "option_143": 0.002147844104962095,
+                "option_144": 0.0027164799352185263,
+                "option_145": 0.002335301124753509,
+                "option_146": 0.0018942943207015733,
+                "option_147": 0.002083383045479274,
+                "option_148": 0.0020999081058437714,
+                "option_149": 0.002594873844115843,
+                "option_150": 0.002545379884585479,
+                "option_151": 0.0020427737244285427,
+                "option_152": 0.002255639953423862,
+                "option_153": 0.0023405173238256393,
+                "option_154": 0.0021744356469445988,
+                "option_155": 0.00205327347773931,
+                "option_156": 0.0022223937860723453,
+                "option_157": 0.0020849348516028027,
+                "option_158": 0.0020521673521295843,
+                "option_159": 0.0023591441142339605,
+                "option_160": 0.002349390849141465,
+                "option_161": 0.002066092337037461,
+                "option_162": 0.0023941868964157285,
+                "option_163": 0.002271027964807116,
+                "option_164": 0.0023740706365698158,
+                "option_165": 0.002046659041087927,
+                "option_166": 0.0019828366116261373,
+                "option_167": 0.0021141235168539623,
+                "option_168": 0.0020143294157414894,
+                "option_169": 0.0018350278875790874,
+                "option_170": 0.0019801760694402016,
+                "option_171": 0.0018059406755110325,
+                "option_172": 0.0021962840720728335,
+                "option_173": 0.0019174283037561729,
+                "option_174": 0.0016962401042975705,
+                "option_175": 0.0014543755954096545,
+                "option_176": 0.001561850686445854,
+                "option_177": 0.001668950251749214,
+                "option_178": 0.0015735437708867363,
+                "option_179": 0.001847959908104259,
+                "option_180": 0.0021471576166315356,
+                "option_181": 0.0020375849862411775,
+                "option_182": 0.0022783946138901223,
+                "option_183": 0.002049360983063615,
+                "option_184": 0.0020526574887229265,
+                "option_185": 0.0016580206151460815,
+                "option_186": 0.0018078658033058252,
+                "option_187": 0.0017352305523318909,
+                "option_188": 0.0021538398655938863,
+                "option_189": 0.0018642078180001495,
+                "option_190": 0.00205531684039275,
+                "option_191": 0.001757184115529233,
+                "option_192": 0.0022570641886958424,
+                "option_193": 0.0019816376492035183,
+                "option_194": 0.001985778946560206,
+                "option_195": 0.0017031266074191036,
+                "option_196": 0.00171061322825434,
+                "option_197": 0.001951446302655032,
+                "option_198": 0.0019502682535650583,
+                "option_199": 0.003596947948903371,
+                "option_200": 0.002975725871235043,
+                "option_201": 0.00225061425458675,
+                "option_202": 0.002870310349654704,
+                "option_203": 0.002463277988071024,
+                "option_204": 0.002655697218748197,
+                "option_205": 0.002005886806969382,
+                "option_206": 0.0022897233292446936,
+                "option_207": 0.0020702718578757264,
+                "option_208": 0.0022146731069595353,
+                "option_209": 0.0020474927437973945,
+                "option_210": 0.0020954266340514104,
+                "option_211": 0.0016675140623158985,
+                "option_212": 0.0020755849676992455,
+                "option_213": 0.0021428037666723484,
+                "option_214": 0.002079156040638026,
+                "option_215": 0.001699761387061012,
+                "option_216": 0.002055015439798708,
+                "option_217": 0.0017479431399269549,
+                "option_218": 0.0019054679946687576,
+                "option_219": 0.002042621104643298,
+                "option_220": 0.0023389963910948005,
+                "option_221": 0.0021779147818807593,
+                "option_222": 0.0030485614999450563,
+                "option_223": 0.0028124938095174276,
+                "option_224": 0.0028758933020970193,
+                "option_225": 0.0025266072393336342,
+                "option_226": 0.0023152446083325694,
+                "option_227": 0.0024878891217950407,
+                "option_228": 0.002616812290690529,
+                "option_229": 0.002380956009836204,
+                "option_230": 0.002090884695423431,
+                "option_231": 0.0019170453011435424,
+                "option_232": 0.002336415851577719,
+                "option_233": 0.002356541813407168,
+                "option_234": 0.0023652960809744774,
+                "option_235": 0.001976844343581779,
+                "option_236": 0.0019757320125579226,
+                "option_237": 0.0019915117370270566,
+                "option_238": 0.0021529180593207386,
+                "option_239": 0.0021455913896025447,
+                "option_240": 0.002121406214819883,
+                "option_241": 0.0019100939104120184,
+                "option_242": 0.002608371608582443,
+                "option_243": 0.0027021801296018373,
+                "option_244": 0.0023535113670078295,
+                "option_245": 0.0018711820740413526,
+                "option_246": 0.001649174319386745,
+                "option_247": 0.001704395517633388,
+                "option_248": 0.0019929244132743714,
+                "option_249": 0.0023910331682754126,
+                "option_250": 0.002030961115112938,
+                "option_251": 0.0017063239889304111,
+                "option_252": 0.00220920403477573,
+                "option_253": 0.002107628811233055,
+                "option_254": 0.00242055349829302
+              },
+              "confidence": 0.2104181257425668
+            }
+          },
+          "usage": {
+            "input_tokens": 3725,
+            "output_tokens": 0
+          }
+        }
+      }
+    ]
+  },
+  "cleanups": {
+    "reference": {
+      "exit": 0,
+      "forced": false
+    }
+  },
+  "complete": false,
+  "error": "<HTTPError 400: 'Bad Request'>"
+}

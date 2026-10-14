@@ -1,5 +1,6 @@
 #include "TestChecks.hpp"
 #include "model/ModelFactory.hpp"
+#include "model/KevHead.hpp"
 #include "model/QwenTargetLoader.hpp"
 #include "model/RuntimeArenas.hpp"
 #include "model/CompactDraftHead.hpp"
@@ -299,6 +300,22 @@ void checkGdnWidths() {
 
 int main() {
   try {
+    {
+      std::vector<float> projected(3 * 512, 0.0F), bias(512, 0.0F);
+      projected[2 * 512] = 3.0F;
+      projected[256] = 2.0F;
+      projected[512 + 256] = -4.0F;
+      bias[0] = 1.0F;
+      bias[256] = 0.5F;
+      const auto scores = model::kevPointerScores(projected, bias);
+      require(scores.size() == 2 && scores[0] == 0.625F && scores[1] == -0.875F,
+              "Kev must use the final row query, option keys, bias and sqrt(256) scale");
+      projected[2 * 512] = std::numeric_limits<float>::infinity();
+      bool rejected = false;
+      try { static_cast<void>(model::kevPointerScores(projected, bias)); }
+      catch (const std::runtime_error &) { rejected = true; }
+      require(rejected, "Kev must reject non-finite pointer scores");
+    }
     checkOptionalFeatureMemoryPlan();
     checkUnsizedProjection();
     checkGdnWidths();

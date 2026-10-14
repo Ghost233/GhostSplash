@@ -75,7 +75,18 @@ void Engine::submit(EngineRequest value) {
   if (std::any_of(value.prompt.begin(), value.prompt.end(), outOfVocabulary)) {
     throw std::invalid_argument("prompt token is out of vocabulary");
   }
-  if (std::any_of(value.scoreTokens.begin(), value.scoreTokens.end(),
+  const bool decision = value.flags & RequestDecisionScoring;
+  if (decision != config_.decisionScoring)
+    throw std::invalid_argument("request scoring mode does not match the model");
+  if (decision && (value.prompt.empty() || value.scoreTokens.size() < 2 ||
+      value.scoreTokens.size() > 255 || value.maxNewTokens ||
+      !std::is_sorted(value.scoreTokens.begin(), value.scoreTokens.end()) ||
+      std::adjacent_find(value.scoreTokens.begin(), value.scoreTokens.end()) != value.scoreTokens.end() ||
+      std::ranges::any_of(value.scoreTokens, [&](uint32_t position) {
+        return position >= value.prompt.size() - 1 || value.prompt[position] != 248050;
+      }) || value.prompt.back() != 248062))
+    throw std::invalid_argument("invalid Kev option or query positions");
+  if (!decision && std::any_of(value.scoreTokens.begin(), value.scoreTokens.end(),
                   outOfVocabulary)) {
     throw std::invalid_argument("score token is out of vocabulary");
   }
@@ -459,10 +470,13 @@ bool Engine::admitQueued(double now) {
   const auto cachedTokens = [&](Request &active) -> uint32_t {
     if (active.skipCache)
       return 0;
+    auto cachePrompt = std::span<const uint32_t>(active.exactTokens);
+    if (active.request.flags & RequestDecisionScoring)
+      cachePrompt = cachePrompt.first(active.request.scoreTokens.front());
     if (active.admissionProbe)
-      cache_.refresh(*active.admissionProbe, active.exactTokens, active.request.images);
+      cache_.refresh(*active.admissionProbe, cachePrompt, active.request.images);
     else
-      active.admissionProbe = cache_.probe(active.exactTokens, active.request.images);
+      active.admissionProbe = cache_.probe(cachePrompt, active.request.images);
     return active.admissionProbe->cachedTokens();
   };
   // A request starts only in a free lane. While every lane is resident,
@@ -601,7 +615,10 @@ uint32_t Engine::replayStateBoundary(const Request &active) noexcept {
 
 uint32_t Engine::promptReplayBoundary(const Request &active) noexcept {
   const uint32_t tail = std::max(active.request.generationPromptTokens, uint32_t{1});
-  return (active.promptTokens - tail) / KvCache::pageTokens * KvCache::pageTokens;
+  uint32_t boundary = active.promptTokens - tail;
+  if (active.request.flags & RequestDecisionScoring)
+    boundary = std::min(boundary, active.request.scoreTokens.front());
+  return boundary / KvCache::pageTokens * KvCache::pageTokens;
 }
 
 uint32_t Engine::sharedPrefillBoundary(const Request &left,
@@ -662,10 +679,13 @@ bool Engine::admit(Request &active, double now) {
   const bool resuming = scheduler_.suspended(active.request.id);
   ModelRequest modelRequest = active.request.modelView();
   modelRequest.prompt = active.exactTokens;
+  auto cachePrompt = modelRequest.prompt;
+  if (active.request.flags & RequestDecisionScoring)
+    cachePrompt = cachePrompt.first(active.request.scoreTokens.front());
   CacheLookup lookup =
       active.skipCache
           ? CacheLookup{}
-          : cache_.lookup(modelRequest.prompt, active.request.images,
+          : cache_.lookup(cachePrompt, active.request.images,
                           active.admissionProbe ? &*active.admissionProbe
                                                 : nullptr);
   // Only unstarted requests wait for a resident producer. Recheck planned

@@ -7,6 +7,9 @@
 #include "ops/GDN.hpp"
 #include "metal/abi/GDN.h"
 #include "LinearNumerics.hpp"
+#include "model/GgufTarget.hpp"
+#include "model/Qwen3_5_4B.hpp"
+#include "model/QwenTargetLoader.hpp"
 
 #include <algorithm>
 #include <array>
@@ -355,13 +358,60 @@ void extents(MetalBackend &backend, std::mt19937 &rng) {
   }
 }
 
+// The actual Kev head: native Q8_0 rows versus the same strict FP64 bounds
+// used above. The GGUF stays quantized; only these reference rows are decoded.
+void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
+  model::WeightSource source(path);
+  const model::GgufFile file(source);
+  test::require(file.require("cls.output.weight").type == kQuantFormats[GGUF_FMT_Q80].ggml_type,
+                "Kev fixture must use its native Q8_0 pointer head");
+  model::Qwen3_5_4BLayout layout;
+  layout.decisionHeadSize = 512;
+  model::WeightImages images(backend, std::string(64, 'f'));
+  model::GgufTargetLoader loader(backend, images, path, layout);
+  auto head = loader.head();
+  static_cast<void>(model::readNorm(head, 2560, true, "Kev final norm"));
+  auto projection = model::readBlockProjection(head, 512, 2560, "Kev pointer head");
+  projection.destination = FloatOutput::Float32;
+  static_cast<void>(head.section(512 * sizeof(float), "Kev bias"));
+  head.finish();
+  const auto &tensor = file.require("cls.output.weight");
+  std::vector<uint8_t> native(tensor.bytes);
+  source.readData(tensor.offset, native);
+  auto input = test::sharedBuffer(backend, 2560 * sizeof(uint16_t));
+  auto output = test::sharedBuffer(backend, 512 * sizeof(float));
+  std::vector<float> x(2560), weight(2560);
+  double maximumError = 0;
+  for (uint32_t probe = 0; probe < 8; ++probe) {
+    for (uint32_t k = 0; k < 2560; ++k) {
+      const float value = float(int((k * 17 + probe * 31) % 127) - 63) / 64.0F;
+      static_cast<uint16_t *>(input.contents())[k] = floatToBf16(value);
+      x[k] = bf16ToFloat(floatToBf16(value));
+    }
+    metal::CommandGraph graph;
+    addSingleTokenLinear(graph, input, projection, output);
+    static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
+    const auto *actual = static_cast<const float *>(output.contents());
+    for (uint32_t n = 0; n < 512; ++n) {
+      rowValues(Q80, native.data() + n * rowBytes(Q80, 2560), 2560, weight.data());
+      const auto expected = product(dot(x.data(), weight.data(), 2560), true);
+      test::require(std::isfinite(actual[n]) && actual[n] >= expected.lo && actual[n] <= expected.hi,
+                    "Kev head FP32 output outside existing unrounded FP64 bound");
+      maximumError = std::max(maximumError, std::fabs(actual[n] - dot(x.data(), weight.data(), 2560).value));
+    }
+  }
+  std::cout << "Kev real-head numerical check: 4096 FP64 comparisons PASS; max absolute error "
+            << maximumError << '\n';
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
   @autoreleasepool {
-    if (argc != 2) { std::cerr << "usage: gguf-single-token METALLIB\n"; return 2; }
+    if (argc != 2 && argc != 3) { std::cerr << "usage: gguf-single-token METALLIB [KEV_GGUF]\n"; return 2; }
     try {
       MetalBackend backend(argv[1]);
+      if (argc == 3) { checkKevHead(backend, argv[2]); return 0; }
       std::mt19937 rng(47);
       for (const uint32_t tile : {32u, 64u})
         for (uint32_t format = 0; format < GGUF_FMT_COUNT; ++format) {

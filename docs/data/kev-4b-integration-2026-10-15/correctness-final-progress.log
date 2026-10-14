@@ -1,0 +1,34 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+reference pid 52971 starting
+reference ready
+reference exact_context_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+reference exit 0
+splash_bf16 pid 53337 starting
+splash_bf16 ready
+splash_bf16 billing PASS {'input_tokens': 39, 'output_tokens': 0}
+splash_bf16 sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+splash_bf16 noul PASS {'input_tokens': 24, 'output_tokens': 0}
+splash_bf16 rating PASS {'input_tokens': 33, 'output_tokens': 0}
+splash_bf16 multi_question PASS {'input_tokens': 59, 'output_tokens': 0}
+splash_bf16 escaped_markers PASS {'input_tokens': 38, 'output_tokens': 0}
+splash_bf16 cross_chunk PASS {'input_tokens': 7231, 'output_tokens': 0}
+splash_bf16 many_options PASS {'input_tokens': 3725, 'output_tokens': 0}
+splash_bf16 exact_context_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+splash_bf16 cache-repeat PASS
+splash_bf16 concurrent-2 PASS
+splash_bf16 exit 0
+splash_q4h pid 53823 starting
+splash_q4h ready
+splash_q4h billing PASS {'input_tokens': 39, 'output_tokens': 0}
+splash_q4h sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+splash_q4h noul PASS {'input_tokens': 24, 'output_tokens': 0}
+splash_q4h rating PASS {'input_tokens': 33, 'output_tokens': 0}
+splash_q4h multi_question PASS {'input_tokens': 59, 'output_tokens': 0}
+splash_q4h escaped_markers PASS {'input_tokens': 38, 'output_tokens': 0}
+splash_q4h cross_chunk PASS {'input_tokens': 7231, 'output_tokens': 0}
+splash_q4h many_options PASS {'input_tokens': 3725, 'output_tokens': 0}
+splash_q4h exact_context_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+splash_q4h cache-repeat PASS
+splash_q4h concurrent-2 PASS
+splash_q4h exit 0
+ALL CORRECTNESS RUNS COMPLETE

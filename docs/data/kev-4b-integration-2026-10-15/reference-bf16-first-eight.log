@@ -1,0 +1,44 @@
+0.00.097.454 I srv  llama_server: initializing ...
+0.00.099.188 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.101.658 I srv    load_model: loading model '/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf'
+0.01.442.006 I decision model reads the embeddings output, enabling embedding mode
+0.01.442.907 W llama_init_from_model: model default pooling_type is [-1], but [0] was specified
+0.01.478.209 I cmn          init: llama threadpool init, n_threads = 6
+0.01.481.594 I srv          init: decision model type: kev
+0.01.492.584 W init: embeddings required but some input tokens were not marked as outputs -> overriding
+0.02.155.106 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8192, kv_unified = 'false'
+0.02.158.053 I srv  llama_server: model loaded
+0.02.158.058 I srv  llama_server: listening on http://127.0.0.1:18113
+0.02.407.138 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.02.407.299 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.02.643.251 I slot      release: id  0 | task 0 | stop processing: n_tokens = 39, truncated = 0
+0.02.645.091 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126758690509
+0.02.645.094 I slot launch_slot_: id  0 | task 2 | processing task, is_child = 0
+0.02.847.531 I slot      release: id  0 | task 2 | stop processing: n_tokens = 32, truncated = 0
+0.02.849.506 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126758894789
+0.02.849.512 I slot launch_slot_: id  0 | task 4 | processing task, is_child = 0
+0.02.995.473 I slot      release: id  0 | task 4 | stop processing: n_tokens = 24, truncated = 0
+0.02.997.626 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126759042772
+0.02.997.631 I slot launch_slot_: id  0 | task 6 | processing task, is_child = 0
+0.03.155.238 I slot      release: id  0 | task 6 | stop processing: n_tokens = 33, truncated = 0
+0.03.156.960 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126759202495
+0.03.156.964 I slot launch_slot_: id  0 | task 8 | processing task, is_child = 0
+0.03.312.895 I slot      release: id  0 | task 8 | stop processing: n_tokens = 33, truncated = 0
+0.03.312.905 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 0.538 (> 0.100 thold), f_keep = 0.424
+0.03.312.907 I slot launch_slot_: id  0 | task 9 | processing task, is_child = 0
+0.03.458.518 I slot      release: id  0 | task 9 | stop processing: n_tokens = 26, truncated = 0
+0.03.461.846 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126759505777
+0.03.461.852 I slot launch_slot_: id  0 | task 12 | processing task, is_child = 0
+0.03.615.572 I slot      release: id  0 | task 12 | stop processing: n_tokens = 38, truncated = 0
+0.03.625.430 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126759662830
+0.03.625.437 I slot launch_slot_: id  0 | task 14 | processing task, is_child = 0
+0.14.617.388 I slot      release: id  0 | task 14 | stop processing: n_tokens = 7231, truncated = 0
+0.14.625.659 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126770664646
+0.14.625.667 I slot launch_slot_: id  0 | task 16 | processing task, is_child = 0
+0.20.088.105 I slot      release: id  0 | task 16 | stop processing: n_tokens = 3725, truncated = 0
+0.20.099.361 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 126776135362
+0.20.099.368 I slot launch_slot_: id  0 | task 18 | processing task, is_child = 0
+0.20.099.379 E srv    send_error: task id = 18, error: request (8192 tokens) exceeds the available context size (8192 tokens), try increasing it
+0.20.099.382 I slot      release: id  0 | task 18 | stop processing: n_tokens = 3725, truncated = 0
+0.20.099.388 W srv          stop: cancel task, id_task = 18
+0.20.099.984 I srv    operator(): operator(): cleaning up before exit...

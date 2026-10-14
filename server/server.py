@@ -787,8 +787,15 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self._submit(job)
             result = self._await_done(job)
             input_tokens += result.prompt_tokens
-            answers[qid] = judgments.systemone_answer(
-                spec, judgments.softmax(list(result.option_logits))
+            probabilities = (
+                self.app.decision_scorer.probabilities(spec, result.option_logits)
+                if self.app.decision_scorer is not None
+                else judgments.softmax(list(result.option_logits))
+            )
+            answers[qid] = (
+                self.app.decision_scorer.answer(spec, probabilities)
+                if self.app.decision_scorer is not None
+                else judgments.systemone_answer(spec, probabilities)
             )
         self._json(
             200,
@@ -1698,11 +1705,12 @@ def main():
         print_status(f"Loading · {args.model}")
         stage = "tokenizer"
         tokenizer_options = {}
+        decision_config = None
         tokenizer_config = Path(args.tokenizer) / "config.json"
         if tokenizer_config.is_file():
-            model_type = json.loads(tokenizer_config.read_text(encoding="utf-8")).get(
-                "model_type"
-            )
+            model_config = json.loads(tokenizer_config.read_text(encoding="utf-8"))
+            model_type = model_config.get("model_type")
+            decision_config = model_config.get("decision_config")
             if model_type in (
                 "qwen3_5",
                 "qwen3_5_text",
@@ -1767,6 +1775,7 @@ def main():
             announce_served_name=args.announce_served_name,
             default_reasoning_effort=args.default_reasoning_effort,
             vision=readiness.vision,
+            decision_config=decision_config,
         )
         server.app = app
         server.server_activate()

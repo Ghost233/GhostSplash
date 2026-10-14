@@ -1,0 +1,428 @@
+diff --git a/dev/tests/engine/compact_projection_test.mm b/dev/tests/engine/compact_projection_test.mm
+index 0fd535e..cd0c468 100644
+--- a/dev/tests/engine/compact_projection_test.mm
++++ b/dev/tests/engine/compact_projection_test.mm
+@@ -57,7 +57,8 @@ Projection source(N, K, BlockWeights{{QuantizedSegment::planes(
+     test::writeFile(path, binary);
+     auto head = model::CompactDraftHead::createIfEnabled(true, backend, source, path, C);
+     const auto checks = head->validation().comparisons;
+-    require(checks == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C && head->bytes() > 0,
++    require(checks == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C &&
++                head->bytes() > 0 && head->bytes() <= model::CompactDraftHead::plannedBytes(source, C),
+             "explicit compact must validate before enabling");
+     std::vector<uint32_t> history(10000, 7); history.push_back(1000);
+     require(head->prepare(history) && head->validRows() == 257 &&
+diff --git a/dev/tests/engine/model_execution_plan_test.cpp b/dev/tests/engine/model_execution_plan_test.cpp
+index c779d38..750a0f0 100644
+--- a/dev/tests/engine/model_execution_plan_test.cpp
++++ b/dev/tests/engine/model_execution_plan_test.cpp
+@@ -2,6 +2,8 @@
+ #include "model/ModelFactory.hpp"
+ #include "model/QwenTargetLoader.hpp"
+ #include "model/RuntimeArenas.hpp"
++#include "model/CompactDraftHead.hpp"
++#include "ops/Sampling.hpp"
+ 
+ #include "metal/abi/QuantFormat.h"
+ 
+@@ -64,6 +66,48 @@ model::LoadedModel loadedModel() {
+   return result;
+ }
+ 
++// MLX affine 4-bit uses packed values plus BF16 scale/offset pairs per 64 inputs.
++// The selected vocabulary copies and fast top-k must be reserved independently.
++void checkOptionalFeatureMemoryPlan() {
++  auto loaded = loadedModel<model::Qwen3_8Weights>();
++  auto &target = std::get<model::Qwen3_8Weights>(loaded.target);
++  target.logitsProjection = ops::Projection(248320, 5120,
++      ops::BlockWeights{{ops::QuantizedSegment::planes(GGUF_FMT_AF4G64, 248320, 5120, {}, {}, {})}});
++  target.logitsProjection.destination = ops::FloatOutput::Float32;
++  DeviceCapabilities device;
++  device.appleGpuFamily = 10;
++  device.gpuCoreCount = 20;
++  const ops::ExecutionPlans operators(device);
++  const auto baseline = model::plannedRuntimeMemory(loaded, operators, kv::Format::Int4Hadamard);
++  const uint64_t fastBytes = alignUp(ops::Sampling::fastWorkspaceBytes(model::kLaneCount * model::kDecodeRows));
++  for (uint32_t capacity : {98304U, 65536U, 32768U})
++    for (uint32_t switches = 0; switches < 4; ++switches) {
++      model::OptionalFeatures features;
++      features.compactDraftHead = switches & 1;
++      features.fastTopK = switches & 2;
++      features.compactCapacity = capacity;
++      features.compactRanking = "/unused-by-size-planning";
++      const uint64_t compactBytes = alignUp(uint64_t{capacity} * 5120 / 2) +
++          alignUp(uint64_t{capacity} * (5120 / 64) * 4) + alignUp(uint64_t{capacity} * 4);
++      const auto planned = model::plannedRuntimeMemory(loaded, operators, kv::Format::Int4Hadamard, features);
++      require(planned.sharedPrefillPlannedAllocatedBytes == baseline.sharedPrefillPlannedAllocatedBytes &&
++                  planned.laneStatePlannedAllocatedBytes == baseline.laneStatePlannedAllocatedBytes,
++              "optional buffers changed unrelated memory categories");
++      require(planned.sharedDecodePlannedAllocatedBytes == baseline.sharedDecodePlannedAllocatedBytes +
++                  (features.compactDraftHead ? compactBytes : 0) + (features.fastTopK ? fastBytes : 0),
++              "optional buffers are missing or duplicated in the fixed decode budget");
++      if (capacity == 98304 && switches == 3 && model::kDecodeRows == 8)
++        require(planned.sharedDecodePlannedAllocatedBytes - baseline.sharedDecodePlannedAllocatedBytes == 283639808,
++                "27B optional memory does not match the real 270.5 MiB regression");
++    }
++  auto smallHead = ops::Projection(1024, 512,
++      ops::BlockWeights{{ops::QuantizedSegment::planes(GGUF_FMT_AF4G64, 1024, 512, {}, {}, {})}});
++  smallHead.destination = ops::FloatOutput::Float32;
++  require(model::CompactDraftHead::plannedBytes(smallHead) ==
++              alignUp(512ULL * 512 / 2) + alignUp(512ULL * (512 / 64) * 4) + alignUp(512ULL * 4),
++          "small vocabulary cap or token-map allocation alignment was omitted");
++}
++
+ // The 4B has no draft. Sizing its arenas must never plan a zero-width
+ // affine draft projection, and every scratch bound must come from the target.
+ void checkTargetOnlyWorkspaces() {
+@@ -255,6 +299,7 @@ void checkGdnWidths() {
+ 
+ int main() {
+   try {
++    checkOptionalFeatureMemoryPlan();
+     checkUnsizedProjection();
+     checkGdnWidths();
+     checkGateUpLayers();
+diff --git a/dev/tests/engine/runtime_resources_test.mm b/dev/tests/engine/runtime_resources_test.mm
+index a040152..d76ea7a 100644
+--- a/dev/tests/engine/runtime_resources_test.mm
++++ b/dev/tests/engine/runtime_resources_test.mm
+@@ -441,6 +441,46 @@ void testFailedStepIsNamed(const char *metallibPath) {
+           "a failure after the weights loaded did not count as progress");
+ }
+ 
++// Exercise the production assembly and runtime with each optional allocation.
++// A category's fixed plan must cover the enabled buffers before KV growth.
++void testOptionalFeatureMemoryPlan(const char *metallibPath) {
++  const test::TemporaryDirectory root("optional-memory-plan");
++  const PlannedModel planned = plannedModel();
++  static_cast<void>(test::writeSyntheticModel(root.path(), planned.target, planned.draft, planned.vision));
++  const auto rankingPath = root.path() / "public.splash";
++  const uint32_t vocabulary = planned.target.vocabularySize;
++  std::vector<uint8_t> ranking(12 + uint64_t{vocabulary} * 4);
++  std::memcpy(ranking.data(), "SPLCHD02", 8);
++  std::memcpy(ranking.data() + 8, &vocabulary, 4);
++  for (uint32_t id = 0; id < vocabulary; ++id)
++    std::memcpy(ranking.data() + 12 + uint64_t{id} * 4, &id, 4);
++  test::writeFile(rankingPath, ranking);
++  for (uint32_t switches = 0; switches < 4; ++switches) {
++    RuntimeResourcesConfig config;
++    config.metallibPath = metallibPath;
++    config.modelRoot = root.path();
++    config.model = model::makeModelDescriptor("optional-memory-test", planned.target, planned.draft,
++        planned.vision, model::TargetSource::Safetensors, model::VisionSource::Safetensors);
++    config.model.sourceIdentity = "synthetic";
++    config.buildId = "optional-memory-test";
++    config.maximumMemoryBytes = 4ULL << 30;
++    config.aneFfn.enabled = false;
++    config.hostAvailableMemory = [] { return std::optional<uint64_t>(64ULL << 30); };
++    config.optionalFeatures.compactDraftHead = switches & 1;
++    config.optionalFeatures.fastTopK = switches & 2;
++    config.optionalFeatures.compactCapacity = 512;
++    config.optionalFeatures.compactRanking = switches & 1 ? rankingPath : root.path() / "missing-unused";
++    auto resources = RuntimeResources::create(config, 0);
++    auto runtime = model::createRuntime(resources->modelContext());
++    const auto actual = runtime->actualRuntimeMemory();
++    const uint64_t reserved = resources->memoryPlan().breakdown().sharedDecodeBytes;
++    require(actual.sharedDecodeActualAllocatedBytes <= reserved,
++        "shared decode actual exceeds plan with optional switches=" + std::to_string(switches) +
++        ": actual=" + std::to_string(actual.sharedDecodeActualAllocatedBytes) +
++        ", planned=" + std::to_string(reserved));
++  }
++}
++
+ // The engine asks the governor whether the host pauses growth, and its
+ // serving mark lets a request in service grow through that pause.
+ void testEngineFollowsTheGovernor(const char *metallibPath) {
+@@ -474,7 +514,13 @@ MemoryGovernor governor(
+ int main(int argc, char **argv) {
+   @autoreleasepool {
+     try {
+-      require(argc == 2, "expected metallib path");
++      require(argc == 2 || (argc == 3 && std::string_view(argv[2]) == "--optional-memory"),
++              "expected metallib path and optional --optional-memory");
++      if (argc == 3) {
++        testOptionalFeatureMemoryPlan(argv[1]);
++        std::cout << "optional feature memory plan tests passed\n";
++        return EXIT_SUCCESS;
++      }
+       testLoadedDraftIsRequiredOnlyWithDraft();
+       testLoadedVisionIsRequiredOnlyWithVision();
+       testPersistentCacheNamespace();
+@@ -486,6 +532,7 @@ int main(int argc, char **argv) {
+       testStartupAdmissionIgnoresModelSize(argv[1]);
+       testFailedStepIsNamed(argv[1]);
+       testEngineFollowsTheGovernor(argv[1]);
++      testOptionalFeatureMemoryPlan(argv[1]);
+       std::cout << "runtime resources tests passed\n";
+       return EXIT_SUCCESS;
+     } catch (const std::exception &error) {
+diff --git a/dev/tests/install/test_local_launchers.py b/dev/tests/install/test_local_launchers.py
+index 8b41f30..24300af 100644
+--- a/dev/tests/install/test_local_launchers.py
++++ b/dev/tests/install/test_local_launchers.py
+@@ -11,7 +11,7 @@ from pathlib import Path
+ from types import SimpleNamespace
+ from unittest import mock
+ 
+-from install import assembly, hub, models, upstream
++from install import assembly, hub, models, paths, upstream
+ from server import server
+ 
+ ROOT = Path(__file__).resolve().parents[3]
+@@ -67,6 +67,7 @@ class LocalLauncherTests(unittest.TestCase):
+         if script.name in {
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
++            "qwen3827bmlx4bitsplash.sh",
+         }:
+             draft_dir.mkdir(exist_ok=True)
+             (draft_dir / "model.safetensors").touch()
+@@ -85,11 +86,13 @@ class LocalLauncherTests(unittest.TestCase):
+             "coder39027bsplash.sh",
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
++            "qwen3827bmlx4bitsplash.sh",
+         }:
+             arguments.append(str(draft_dir))
+         if script.name in {
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
++            "qwen3827bmlx4bitsplash.sh",
+         }:
+             arguments.append(str(self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"))
+         arguments.append(model_id)
+@@ -100,6 +103,7 @@ class LocalLauncherTests(unittest.TestCase):
+             "swift1527biq3ssplash.sh",
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
++            "qwen3827bmlx4bitsplash.sh",
+         }:
+             arguments.extend([str(self.root / "build/splash"), *startup_options])
+         record = {
+@@ -129,6 +133,7 @@ class LocalLauncherTests(unittest.TestCase):
+ 
+         with (
+             mock.patch.object(sys, "argv", [str(script), *arguments]),
++            mock.patch.object(paths, "BINARY", paths.BINARY),
+             mock.patch("socket.socket"),
+             mock.patch.object(os, "chdir"),
+             mock.patch.object(os, "set_inheritable") as inherit,
+@@ -177,6 +182,8 @@ class LocalLauncherTests(unittest.TestCase):
+                 self.assertEqual(parsed.queue_size, 4)
+                 self.assertEqual(parsed.kv_format, kv_format)
+                 self.assertTrue(parsed.no_webui)
++                if script.name == "qwen3827bmlx4bitsplash.sh":
++                    self.assertEqual(paths.BINARY, Path(parsed.binary))
+                 inherit.assert_called_once_with(99, True)
+                 if script.name == "tielminiplus35ba3bsplash.sh":
+                     template = (
+@@ -285,6 +292,48 @@ class LocalLauncherTests(unittest.TestCase):
+         self.assertEqual(parsed.compact_draft_ranking, self.root / "model rank")
+         self.assertEqual(parsed.prompt_lookup, "off")
+ 
++    def test_mlx_27b_uses_local_draft_and_forwards_startup_options(self):
++        script = ROOT / "qwen3827bmlx4bitsplash.sh"
++        parsed = self.launch(script, installed=True)
++        self.assertEqual(parsed.prompt_lookup, "on")
++        self.assertEqual(parsed.compact_draft_head, "on")
++        self.assertEqual(
++            parsed.compact_draft_ranking,
++            self.root / "compact-rankings/qwen35-248320-dev-seed.splash",
++        )
++        self.assertEqual(parsed.ane_ffn_share, 0.4182)
++        self.assertEqual(parsed.ane_power_reference, "auto")
++        self.assertEqual(parsed.ane_power_recovery, "on")
++        self.assertEqual(parsed.ane_recovery_max_power_percent, 50)
++        self.assertEqual(parsed.fast_topk, "on")
++        parsed = self.launch(
++            script,
++            installed=True,
++            startup_options=(
++                "--disable-ane",
++                "--prompt-lookup",
++                "off",
++                "--compact-draft-head",
++                "off",
++                "--fast-topk",
++                "off",
++                "--ane-ffn-share",
++                "auto",
++                "--ane-power-recovery",
++                "off",
++                "--ane-power-reference",
++                "off",
++            ),
++        )
++        self.assertTrue(parsed.disable_ane)
++        self.assertEqual(parsed.prompt_lookup, "off")
++        self.assertEqual(parsed.compact_draft_head, "off")
++        self.assertEqual(parsed.fast_topk, "off")
++        self.assertIsNone(parsed.ane_ffn_share)
++        self.assertEqual(parsed.ane_power_reference, "off")
++        self.assertEqual(parsed.ane_power_recovery, "off")
++        self.launch(script, installed=True, wrong_draft=True)
++
+     def test_miniplus_refuses_another_draft_before_starting_server(self):
+         self.launch(
+             ROOT / "qwen38miniplusv3splash.sh", installed=True, wrong_draft=True
+diff --git a/runtime/engine/RuntimeResources.mm b/runtime/engine/RuntimeResources.mm
+index 548812e..20fc918 100644
+--- a/runtime/engine/RuntimeResources.mm
++++ b/runtime/engine/RuntimeResources.mm
+@@ -433,7 +433,7 @@ throw RuntimeResourcesError(RuntimeResourceStage::ModelLoading,
+   ops::ExecutionPlans operators(device);
+   model::ModelMemoryPlan modelMemoryPlan;
+   try {
+-    modelMemoryPlan = model::plannedRuntimeMemory(loaded, operators, config.kvFormat);
++    modelMemoryPlan = model::plannedRuntimeMemory(loaded, operators, config.kvFormat, config.optionalFeatures);
+   } catch (const std::exception &error) {
+     throw RuntimeResourcesError(
+         RuntimeResourceStage::MemoryPlanning,
+diff --git a/runtime/model/CompactDraftHead.cpp b/runtime/model/CompactDraftHead.cpp
+index 05238c0..200c446 100644
+--- a/runtime/model/CompactDraftHead.cpp
++++ b/runtime/model/CompactDraftHead.cpp
+@@ -1,11 +1,36 @@
+ #include "model/CompactDraftHead.hpp"
+ #include "StderrLine.hpp"
++#include "Checked.hpp"
++#include "metal/abi/QuantFormat.h"
+ 
+ #include <algorithm>
+ #include <cstring>
+ #include <fstream>
+ 
+ namespace splash::model {
++namespace {
++uint32_t compactCapacity(const ops::Projection &source, uint32_t requestedCapacity) {
++  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
++    throw std::invalid_argument("compact capacity must be a multiple of 256 in 512..98304");
++  if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
++      source.blocks().segments.front().outputSize != source.outputSize)
++    throw std::invalid_argument("compact head layout is not one unrotated quantized FP32 projection");
++  const uint32_t capacity = std::min<uint32_t>(requestedCapacity, source.outputSize / 2 / 256 * 256);
++  if (capacity <= 256)
++    throw std::invalid_argument("vocabulary is too small for compact head");
++  return capacity;
++}
++} // namespace
++
++uint64_t CompactDraftHead::plannedBytes(const ops::Projection &source, uint32_t requestedCapacity) {
++  const uint64_t rows = compactCapacity(source, requestedCapacity);
++  const auto &format = source.blocks().segments.front().format();
++  const uint64_t groups = source.inputSize / 32;
++  return alignUp(rows * 4) + alignUp(rows * groups * format.plane0_bytes) +
++      alignUp(rows * groups * format.plane1_bytes) +
++      alignUp(rows * (groups / format.meta_groups) * format.meta_bytes);
++}
++
+ 
+ CompactTokenRows compactTokenRows(std::span<const uint32_t> ranking,
+                                   std::span<const uint32_t> history, uint32_t capacity) {
+@@ -73,15 +98,8 @@ std::unique_ptr<CompactDraftHead> CompactDraftHead::createIfEnabled(
+ CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
+                                    const std::filesystem::path &rankingFile, uint32_t requestedCapacity)
+     : backend_(backend), source_(source) {
+-  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
+-    throw std::invalid_argument("compact capacity must be a multiple of 256 in 512..98304");
+-  if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
+-      source.blocks().segments.front().outputSize != source.outputSize)
+-    throw std::invalid_argument("compact head layout is not one unrotated quantized FP32 projection");
++  capacity_ = compactCapacity(source, requestedCapacity);
+   ranking_ = readCompactRanking(rankingFile, source.outputSize);
+-  capacity_ = std::min<uint32_t>(requestedCapacity, source.outputSize / 2 / 256 * 256);
+-  if (capacity_ <= 256)
+-    throw std::invalid_argument("vocabulary is too small for compact head");
+   std::vector<uint32_t> ids(ranking_.begin(), ranking_.begin() + capacity_);
+   projection_ = ops::gatherProjection(backend_, source_, ids);
+   mapping_ = backend_.allocateBuffer(uint64_t{capacity_} * 4,
+@@ -114,9 +132,9 @@ bool CompactDraftHead::prepare(std::span<const uint32_t> history) {
+ }
+ 
+ uint64_t CompactDraftHead::bytes() const noexcept {
+-  uint64_t bytes = mapping_.sizeBytes();
++  uint64_t bytes = mapping_.allocatedBytes();
+   for (const auto &s : projection_.blocks().segments)
+-    bytes += s.plane0.sizeBytes() + s.plane1.sizeBytes() + s.meta.sizeBytes();
++    bytes += s.plane0.allocatedBytes() + s.plane1.allocatedBytes() + s.meta.allocatedBytes();
+   return bytes;
+ }
+ 
+diff --git a/runtime/model/CompactDraftHead.hpp b/runtime/model/CompactDraftHead.hpp
+index 132d375..f6b68cb 100644
+--- a/runtime/model/CompactDraftHead.hpp
++++ b/runtime/model/CompactDraftHead.hpp
+@@ -26,6 +26,8 @@ public:
+   [[nodiscard]] static std::unique_ptr<CompactDraftHead> createIfEnabled(
+       bool enabled, metal::MetalBackend &backend, const ops::Projection &source,
+       const std::filesystem::path &rankingFile, uint32_t requestedCapacity = 98304);
++  // Persistent compact planes and token map, including allocation alignment.
++  [[nodiscard]] static uint64_t plannedBytes(const ops::Projection &source, uint32_t requestedCapacity = 98304);
+   CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
+                    const std::filesystem::path &rankingFile, uint32_t requestedCapacity = 98304);
+   [[nodiscard]] bool prepare(std::span<const uint32_t> history);
+diff --git a/runtime/model/ModelFactory.hpp b/runtime/model/ModelFactory.hpp
+index faab46a..5602b90 100644
+--- a/runtime/model/ModelFactory.hpp
++++ b/runtime/model/ModelFactory.hpp
+@@ -136,7 +136,8 @@ void withPrefillArena(
+ [[nodiscard]] ModelMemoryPlan
+ plannedRuntimeMemory(const LoadedModel &model,
+                      const ops::ExecutionPlans &operators,
+-                     kv::Format format);
++                     kv::Format format,
++                     const OptionalFeatures &features = {});
+ [[nodiscard]] std::unique_ptr<RuntimeModel>
+ createRuntime(RuntimeContext context);
+ 
+diff --git a/runtime/model/Runtime.cpp b/runtime/model/Runtime.cpp
+index bca0cc0..96599b9 100644
+--- a/runtime/model/Runtime.cpp
++++ b/runtime/model/Runtime.cpp
+@@ -2898,7 +2898,7 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
+ 
+ ModelMemoryActual Runtime::actualRuntimeMemory() const {
+   return {impl_->states.actualAllocatedBytes(), impl_->prefillArena->bytes(),
+-          impl_->decodeArena->bytes() + impl_->fastTopK.sizeBytes() +
++          impl_->decodeArena->bytes() + impl_->fastTopK.allocatedBytes() +
+               (impl_->compactHead ? impl_->compactHead->bytes() : 0), impl_->states.stagingBytes()};
+ }
+ 
+@@ -2918,7 +2918,7 @@ OptionalFeatureReport Runtime::optionalFeatureReport() const {
+     result.compactReason = impl_->compactHead->reason();
+   if (result.configured.fastTopK && !result.fastTopKSelections)
+     result.fastTopKReason = "no sampled selection with top_k 1..32 and min_p 0";
+-  result.extraMetalBytes = impl_->fastTopK.sizeBytes() +
++  result.extraMetalBytes = impl_->fastTopK.allocatedBytes() +
+       (impl_->compactHead ? impl_->compactHead->bytes() : 0);
+   return result;
+ }
+@@ -2962,12 +2962,25 @@ void withPrefillArena(
+ 
+ ModelMemoryPlan plannedRuntimeMemory(const LoadedModel &model,
+                                      const ops::ExecutionPlans &operators,
+-                                     kv::Format format) {
++                                     kv::Format format,
++                                     const OptionalFeatures &features) {
+   requireCompatibleModel(model);
++  features.validate();
+   const RuntimeGeometry geometry = RuntimeGeometry::from(model, format);
++  uint64_t decodeBytes = plannedDecodeBytes(geometry, operators);
++  if (features.fastTopK)
++    decodeBytes = checkedAdd(decodeBytes, alignUp(ops::Sampling::fastWorkspaceBytes(kLaneCount * kDecodeRows)),
++                             "optional fast top-k workspace");
++  if (features.compactDraftHead) {
++    if (!model.descriptor.hasDraft())
++      throw std::invalid_argument("compact head requires an installed drafter");
++    const uint64_t compactBytes = std::visit([&](const auto &target) {
++      return CompactDraftHead::plannedBytes(target.logitsProjection, features.compactCapacity);
++    }, model.target);
++    decodeBytes = checkedAdd(decodeBytes, compactBytes, "optional compact head");
++  }
+   return {model.stateLayout().laneBytes(),
+-          plannedPrefillBytes(geometry, operators),
+-          plannedDecodeBytes(geometry, operators)};
++          plannedPrefillBytes(geometry, operators), decodeBytes};
+ }
+ 
+ std::unique_ptr<RuntimeModel> createRuntime(RuntimeContext context) {

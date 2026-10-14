@@ -10,7 +10,7 @@ from itertools import count
 from pathlib import Path
 
 from . import images as image_input
-from . import json_codec, judgments
+from . import json_codec, judgments, kev
 from . import protocol as wire
 from .api_shapes import (
     IMAGE_PAD_TOKEN,
@@ -257,6 +257,7 @@ class Frontend:
         served_model_names=(),
         announce_served_name=False,
         default_reasoning_effort=None,
+        decision_config=None,
     ):
         if not isinstance(preparation_capacity, int) or preparation_capacity <= 0:
             raise ValueError("frontend preparation capacity must be positive")
@@ -265,6 +266,11 @@ class Frontend:
         self.vision = vision
         self.latencies = LatencyMetrics()
         self.tokenizer = tokenizer
+        self.decision_scorer = (
+            kev.KevScorer(tokenizer, decision_config)
+            if decision_config is not None
+            else None
+        )
         # Probed at startup; requests choose among these, never the
         # tokenizer's own.
         self.chat_templates = chat_templates
@@ -313,6 +319,8 @@ class Frontend:
     def status(self):
         status = self.backend.status()
         status["vision"] = self.vision
+        if self.decision_scorer is not None:
+            status["decision_model"] = self.decision_scorer.status()
         status["input_modalities"] = self.input_modalities
         status["chat_template"] = self.chat_templates.status()
         with self.preparation_lock:
@@ -502,6 +510,8 @@ class Frontend:
     def prepare_completion(self, body, *, deadline):
         """A text completion: the prompt generates as given, with no chat
         template, reasoning split, tools or images."""
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         with self._preparation(deadline):
             body = _drop_nulls(
                 body, ("n", "best_of", "max_tokens", "suffix", "echo", "logprobs")
@@ -626,6 +636,8 @@ class Frontend:
             raise APIError(400, f"{what} prompt could not be rendered") from error
 
     def prepare_judgment(self, body, *, deadline, disconnected):
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         unknown = sorted(
             set(body)
             - {"id", "state", "question", "options", "model", "timeout", "priority"}
@@ -684,6 +696,34 @@ class Frontend:
             for qid, spec in specs:
                 if spec.deterministic:
                     jobs.append((qid, spec, None))
+                    continue
+                if self.decision_scorer is not None:
+                    checkpoint()
+                    try:
+                        tokens, positions = self.decision_scorer.encode(
+                            state, spec, body["questions"][qid]
+                        )
+                    except ValueError as error:
+                        raise APIError(400, str(error)) from error
+                    checkpoint()
+                    if len(tokens) > self.max_context:
+                        raise ContextLengthError(len(tokens), self.max_context)
+                    if (
+                        total_tokens + len(tokens)
+                        > judgments.MAX_SYSTEMONE_TOTAL_TOKENS
+                    ):
+                        raise RequestValidationError(
+                            [
+                                field_error(
+                                    ["questions", qid],
+                                    "total prepared question tokens exceed limit",
+                                )
+                            ]
+                        )
+                    total_tokens += len(tokens)
+                    job = self._score_job(tokens, positions, deadline, priority)
+                    job.flags = wire.RequestFlag.DECISION_SCORING
+                    jobs.append((qid, spec, job))
                     continue
                 slots = judgments.slot_labels(self.tokenizer)
                 if len(spec.labels) > len(slots):
@@ -914,6 +954,8 @@ class Frontend:
         clamp_output_budget,
         thinking_display,
     ):
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         body = _drop_nulls(
             body,
             (

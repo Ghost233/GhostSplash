@@ -390,6 +390,20 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
   const std::string arch = architecture(geometry.ffnKind);
   if (metadata.architecture() != arch)
     throw GgufError("GGUF architecture is " + metadata.architecture() + ", but the model's target is " + arch);
+  const auto decision = metadata.stringValue(arch + ".decision.type");
+  if (geometry.decisionHeadSize) {
+    if (geometry.hiddenSize != 2560 || geometry.layers != 32 || geometry.decisionHeadSize != 512 ||
+        (!decision || *decision != "kev") ||
+        metadata.unsignedValue(arch + ".embedding_length_out") != 512)
+      throw GgufError("GGUF decision metadata does not match Kev-4B");
+    for (const char *kind : {"choice", "score", "noul"}) {
+      const auto temperature = metadata.floatValue(arch + ".decision.temperature." + kind);
+      if (!temperature || !std::isfinite(*temperature) || *temperature <= 0)
+        throw GgufError("invalid Kev decision temperature");
+    }
+  } else if (decision) {
+    throw GgufError("GGUF decision model requires its decision head");
+  }
   std::string mismatched;
   const auto expect = [&](const char *key, uint64_t value) {
     const std::optional<uint64_t> found = metadata.unsignedValue(arch + "." + key);
@@ -446,7 +460,12 @@ std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &
   head.floatNorm("output_norm.weight", geometry.hiddenSize);
   const std::string output = geometry.tiedWordEmbeddings && !file.find("output.weight")
       ? "token_embd.weight" : "output.weight";
-  head.quantized(output, geometry.vocabularySize, geometry.hiddenSize);
+  if (geometry.decisionHeadSize) {
+    head.quantized("cls.output.weight", geometry.decisionHeadSize, geometry.hiddenSize);
+    head.floatNorm("cls.output.bias", geometry.decisionHeadSize);
+  } else {
+    head.quantized(output, geometry.vocabularySize, geometry.hiddenSize);
+  }
   images.push_back(head.finish());
   Builder embedding(file, geometry, problems, "embedding.bin", geometry.vocabularySize, geometry.hiddenSize);
   embedding.embeddingRows("token_embd.weight");

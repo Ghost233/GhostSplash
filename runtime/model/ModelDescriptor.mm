@@ -690,6 +690,20 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
       result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BLayout{}, {}, {},
                                    targetSource, visionSource);
   }
+  if (config[@"decision_config"]) {
+    NSDictionary *decision = requireObject(config, @"decision_config", "decision config");
+    if (!smallDense || draft || visionSource != VisionSource::None ||
+        requireString(decision, @"type", "decision type") != "kev")
+      throw std::invalid_argument("Kev requires a text-only GGUF Qwen3.5-4B without a draft");
+    requireNumbers(decision, "Kev", "decision config", {{"head_size", 512}});
+    NSDictionary *temperatures = requireObject(decision, @"temperatures", "decision temperatures");
+    for (NSString *key in @[@"choice", @"score", @"noul"])
+      if (requireNumber(temperatures[key], "decision temperature").doubleValue <= 0)
+        throw std::invalid_argument("Kev decision temperatures must be positive");
+    if (requireString(decision, @"chat_template", "Kev systemone template").empty())
+      throw std::invalid_argument("Kev systemone template is empty");
+    std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
+  }
   std::visit([&](const auto &layout) {
     validateTextConfig(text, layout, layout.family, result.targetSource);
     if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&

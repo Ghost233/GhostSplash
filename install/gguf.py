@@ -67,6 +67,7 @@ class Metadata:
         each tensor's type."""
         self.values = {}
         self.tensors = {}
+        self.shapes = {}
         self.consumed = 0
         with (
             Path(source).open("rb")
@@ -89,12 +90,13 @@ class Metadata:
                 dimensions = self.scalar("I")
                 if dimensions > self.MAX_DIMENSIONS:
                     raise ModelError("invalid GGUF tensor rank: " + name)
-                self.read(dimensions * struct.calcsize("<Q"))  # Its extents.
+                shape = tuple(self.scalar("Q") for _ in range(dimensions))
                 kind = self.scalar("I")
                 self.scalar("Q")  # Data offset; the payload is never read here.
                 if name in self.tensors:
                     raise ModelError("duplicate GGUF tensor: " + name)
                 self.tensors[name] = kind
+                self.shapes[name] = shape
 
     def read(self, size):
         if size > self.MAX_BYTES - self.consumed:
@@ -291,6 +293,32 @@ def text_architecture(metadata):
     return arch
 
 
+def decision_config(metadata):
+    arch = text_architecture(metadata)
+    kind = metadata.values.get(arch + ".decision.type")
+    if kind is None:
+        return None
+    if kind != "kev" or arch != "qwen35":
+        raise ModelError("unsupported GGUF decision model: " + str(kind))
+    if metadata.positive(arch + ".embedding_length_out") != 512:
+        raise ModelError("Kev decision head must have 512 outputs")
+    temperatures = {}
+    for question in ("choice", "score", "noul"):
+        value = metadata.require(arch + ".decision.temperature." + question, float)
+        if not math.isfinite(value) or value <= 0:
+            raise ModelError("invalid Kev decision temperature: " + question)
+        temperatures[question] = value
+    template = metadata.require("tokenizer.chat_template.systemone", str)
+    if not template.strip():
+        raise ModelError("Kev systemone template is empty")
+    return {
+        "type": kind,
+        "head_size": 512,
+        "temperatures": temperatures,
+        "chat_template": template,
+    }
+
+
 def model_config(metadata, vision=None):
     arch = text_architecture(metadata)
     fields = {
@@ -310,6 +338,11 @@ def model_config(metadata, vision=None):
         "model_type": TEXT_MODEL_TYPES[arch].removesuffix("_text"),
         "text_config": text,
     }
+    decision = decision_config(metadata)
+    if decision is not None:
+        if vision is not None:
+            raise ModelError("Kev currently requires a text-only target")
+        config["decision_config"] = decision
     if vision is not None:
         config["vision_config"] = vision_config(vision)
     return config
@@ -504,13 +537,16 @@ def loaded_tensors(metadata):
     period = metadata.positive(arch + ".full_attention_interval")
     ffn = MOE_TENSORS if arch == "qwen35moe" else DENSE_TENSORS
     tensors = dict(MODEL_TENSORS)
+    if decision_config(metadata) is not None:
+        tensors.pop("output.weight", None)
+        tensors.update({"cls.output.weight": QUANTIZED_TYPES, "cls.output.bias": F32})
     if (
         arch == "qwen35"
         and metadata.values.get(arch + ".embedding_length") == 2560
         and loaded_layers(metadata, arch) == 32
         and "output.weight" not in metadata.tensors
     ):
-        tensors.pop("output.weight")
+        tensors.pop("output.weight", None)
     for layer in range(loaded_layers(metadata, arch)):
         mixer = ATTENTION_TENSORS if (layer + 1) % period == 0 else GDN_TENSORS
         for name, types in (LAYER_TENSORS | mixer | ffn).items():
@@ -564,6 +600,13 @@ def require_loadable(metadata):
     so an unusable file is never downloaded: every tensor it reads must be
     present, with a type it accepts for that tensor."""
     require_rotation(metadata)
+    if decision_config(metadata) is not None:
+        for name, shape in (
+            ("cls.output.weight", (2560, 512)),
+            ("cls.output.bias", (512,)),
+        ):
+            if name in metadata.tensors and metadata.shapes.get(name) != shape:
+                raise ModelError("unexpected Kev tensor shape: " + name)
     unsupported = collections.Counter()
     for name, types in loaded_tensors(metadata).items():
         kind = metadata.tensors.get(name)
