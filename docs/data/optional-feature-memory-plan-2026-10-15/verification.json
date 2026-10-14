@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-15",
+  "source_head": "1fe29260f8a5c08115b2a402e1f9bf740bfb6a4a",
+  "build": {
+    "build_id": "src-b2d04d25cd91237b3f164b9b7ecaca7acd01a220bbad1f23eda5b4d17fc7fd9c",
+    "schema_version": 1,
+    "source_sha256": "b2d04d25cd91237b3f164b9b7ecaca7acd01a220bbad1f23eda5b4d17fc7fd9c"
+  },
+  "source_sha256": {
+    "runtime/model/CompactDraftHead.hpp": "79dffdf8af56c8a0dfeefa1e3c1cd3e479366552af08223f35cbae1e247cb281",
+    "runtime/model/CompactDraftHead.cpp": "00d0ec3a4cbb3bddec4f422b4757dfe5512d342002f79547e697857a68bf309b",
+    "runtime/model/ModelFactory.hpp": "a74bae8e804ec3d4ae2f3780c02913c4700f2d6b0af61832df3ef50d09fac296",
+    "runtime/model/Runtime.cpp": "ef27b9866504d512eed06faba39dda876fe293be5e20f3fe090461923d6adb31",
+    "runtime/engine/RuntimeResources.mm": "71c294fc178bf212e6a3f49d8d8a8cd70f61d53b43ab5a5eabf1bb56bee8e674",
+    "dev/tests/engine/runtime_resources_test.mm": "52e243a124c1b365323b6fade44b3ec00d6dafc40f26e77959f54af942b86921",
+    "dev/tests/engine/model_execution_plan_test.cpp": "350d0edbcc28e0e4e31c9b9318e85906d14ede163e187ba87ab5bbba8dc0bfec",
+    "dev/tests/engine/compact_projection_test.mm": "babb67b1d1674acd8995e4cc57fcadab54c4460d00cae29c167a0556563d4d90",
+    "dev/tests/install/test_local_launchers.py": "6943dd54bf90e251ba9379b3dc56d5c72f6485ac9d72b125a37c0b2363a0b5e1",
+    "qwen3827bmlx4bitsplash.sh": "b4fd030b4eb8f26baa5b1901229dee0e716915132f568d65be94d124a24b82ad"
+  },
+  "checks": [
+    {
+      "command": "resources-red ORIGINAL_METALLIB --optional-memory",
+      "exit_code": 1,
+      "expected_failure": "shared decode actual exceeds plan; compact only"
+    },
+    {
+      "command": "model-execution-plans",
+      "exit_code": 0,
+      "covers": "4 switch combinations, 3 capacities, 27B 270.5 MiB regression and small vocabulary"
+    },
+    {
+      "command": "runtime-resources FIXED_METALLIB --optional-memory",
+      "exit_code": 0
+    },
+    {
+      "command": "make -j4 BUILD=build/optional-memory-fix-20261015 DRAFT_BLOCK_SIZE=8 BUILD_ID_PYTHON=.venv/bin/python check-source check-native-cpu check-native-build verify-build-identity",
+      "exit_code": 0
+    },
+    {
+      "command": "MTL_SHADER_VALIDATION=1 compact-projection PRODUCTION_AND_TEST_METALLIB",
+      "exit_code": 0,
+      "formats": 40,
+      "checks": "native-plane bytes, exact selected logits, unchanged FP64 bounds"
+    },
+    {
+      "command": "MTL_SHADER_VALIDATION=1 runtime-resources FIXED_METALLIB",
+      "exit_code": 0
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s dev/tests/install -t .",
+      "exit_code": 0,
+      "tests": 233,
+      "skipped": 4
+    },
+    {
+      "command": ".venv/bin/python -m unittest dev.tests.install.test_local_launchers dev.tests.server.test_startup_report",
+      "exit_code": 0,
+      "tests": 20
+    },
+    {
+      "command": "make -j4 BUILD=build/optional-memory-fix-20261015 DRAFT_BLOCK_SIZE=8 BUILD_ID_PYTHON=.venv/bin/python check-source check-native-build verify-build-identity",
+      "exit_code": 0
+    },
+    {
+      "command": ".venv/bin/python startup-check.py",
+      "exit_code": 0,
+      "launcher_exit_code": 0
+    },
+    {
+      "command": "sh -n qwen3827bmlx4bitsplash.sh; sh qwen3827bmlx4bitsplash.sh --help; ruff check/format --check",
+      "exit_code": 0
+    },
+    {
+      "command": "make BUILD=build/optional-memory-fix-20261015 DRAFT_BLOCK_SIZE=8 BUILD_ID_PYTHON=.venv/bin/python test-sanitizers",
+      "exit_code": 0,
+      "log": "sanitizers.log"
+    }
+  ],
+  "original_shared_decode_plan_bytes": 249971072,
+  "fixed_shared_decode_plan_bytes": 533610880,
+  "optional_allocated_bytes": 283639808,
+  "startup_peak_bytes": 19669106688,
+  "memory_audit_valid": true,
+  "compact_validation_comparisons": 786432,
+  "compact_maximum_error": 0,
+  "fast_topk_observed_selections": 11,
+  "completion_tokens": 32,
+  "ane_power_reference": {
+    "valid": true,
+    "source": "auto_ffn",
+    "reason": "",
+    "reference_watts": 3.382349629,
+    "peak_watts": 3.382349629,
+    "steady_watts": 1.984692726,
+    "background_watts": 0.0009893825647,
+    "load_seconds": 5.445929625,
+    "samples": 4,
+    "share": 0.4117647059,
+    "rows": 2048
+  },
+  "ane_recovery": {
+    "enabled": true,
+    "phase": "running",
+    "reason": "not sampling",
+    "power_watts": null,
+    "cooldown_remaining_seconds": 0,
+    "quiet_seconds": 0,
+    "attempts": 0,
+    "restored": 0,
+    "relative_power_percent": null
+  },
+  "performance_tested": false,
+  "test_process_released": true,
+  "test_port": 18110,
+  "original_build_preserved": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/general-integration-20261014",
+  "small_buffer_test_note": "Plan uses page-aligned upper bounds; actual bytes use MTLResource allocatedSize. Audit remains actual <= planned. Original numerical exact-equality checks unchanged.",
+  "final_port_released_check": true
+}

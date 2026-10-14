@@ -433,7 +433,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   ops::ExecutionPlans operators(device);
   model::ModelMemoryPlan modelMemoryPlan;
   try {
-    modelMemoryPlan = model::plannedRuntimeMemory(loaded, operators, config.kvFormat);
+    modelMemoryPlan = model::plannedRuntimeMemory(loaded, operators, config.kvFormat, config.optionalFeatures);
   } catch (const std::exception &error) {
     throw RuntimeResourcesError(
         RuntimeResourceStage::MemoryPlanning,

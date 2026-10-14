@@ -2898,7 +2898,7 @@ WarmupStepResult Runtime::warmupCompositeStateRestore() {
 
 ModelMemoryActual Runtime::actualRuntimeMemory() const {
   return {impl_->states.actualAllocatedBytes(), impl_->prefillArena->bytes(),
-          impl_->decodeArena->bytes() + impl_->fastTopK.sizeBytes() +
+          impl_->decodeArena->bytes() + impl_->fastTopK.allocatedBytes() +
               (impl_->compactHead ? impl_->compactHead->bytes() : 0), impl_->states.stagingBytes()};
 }
 
@@ -2918,7 +2918,7 @@ OptionalFeatureReport Runtime::optionalFeatureReport() const {
     result.compactReason = impl_->compactHead->reason();
   if (result.configured.fastTopK && !result.fastTopKSelections)
     result.fastTopKReason = "no sampled selection with top_k 1..32 and min_p 0";
-  result.extraMetalBytes = impl_->fastTopK.sizeBytes() +
+  result.extraMetalBytes = impl_->fastTopK.allocatedBytes() +
       (impl_->compactHead ? impl_->compactHead->bytes() : 0);
   return result;
 }
@@ -2962,12 +2962,25 @@ void withPrefillArena(
 
 ModelMemoryPlan plannedRuntimeMemory(const LoadedModel &model,
                                      const ops::ExecutionPlans &operators,
-                                     kv::Format format) {
+                                     kv::Format format,
+                                     const OptionalFeatures &features) {
   requireCompatibleModel(model);
+  features.validate();
   const RuntimeGeometry geometry = RuntimeGeometry::from(model, format);
+  uint64_t decodeBytes = plannedDecodeBytes(geometry, operators);
+  if (features.fastTopK)
+    decodeBytes = checkedAdd(decodeBytes, alignUp(ops::Sampling::fastWorkspaceBytes(kLaneCount * kDecodeRows)),
+                             "optional fast top-k workspace");
+  if (features.compactDraftHead) {
+    if (!model.descriptor.hasDraft())
+      throw std::invalid_argument("compact head requires an installed drafter");
+    const uint64_t compactBytes = std::visit([&](const auto &target) {
+      return CompactDraftHead::plannedBytes(target.logitsProjection, features.compactCapacity);
+    }, model.target);
+    decodeBytes = checkedAdd(decodeBytes, compactBytes, "optional compact head");
+  }
   return {model.stateLayout().laneBytes(),
-          plannedPrefillBytes(geometry, operators),
-          plannedDecodeBytes(geometry, operators)};
+          plannedPrefillBytes(geometry, operators), decodeBytes};
 }
 
 std::unique_ptr<RuntimeModel> createRuntime(RuntimeContext context) {

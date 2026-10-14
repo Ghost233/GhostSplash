@@ -2,6 +2,8 @@
 #include "model/ModelFactory.hpp"
 #include "model/QwenTargetLoader.hpp"
 #include "model/RuntimeArenas.hpp"
+#include "model/CompactDraftHead.hpp"
+#include "ops/Sampling.hpp"
 
 #include "metal/abi/QuantFormat.h"
 
@@ -62,6 +64,48 @@ model::LoadedModel loadedModel() {
   result.target = std::move(target);
   result.draft.layout = draft;
   return result;
+}
+
+// MLX affine 4-bit uses packed values plus BF16 scale/offset pairs per 64 inputs.
+// The selected vocabulary copies and fast top-k must be reserved independently.
+void checkOptionalFeatureMemoryPlan() {
+  auto loaded = loadedModel<model::Qwen3_8Weights>();
+  auto &target = std::get<model::Qwen3_8Weights>(loaded.target);
+  target.logitsProjection = ops::Projection(248320, 5120,
+      ops::BlockWeights{{ops::QuantizedSegment::planes(GGUF_FMT_AF4G64, 248320, 5120, {}, {}, {})}});
+  target.logitsProjection.destination = ops::FloatOutput::Float32;
+  DeviceCapabilities device;
+  device.appleGpuFamily = 10;
+  device.gpuCoreCount = 20;
+  const ops::ExecutionPlans operators(device);
+  const auto baseline = model::plannedRuntimeMemory(loaded, operators, kv::Format::Int4Hadamard);
+  const uint64_t fastBytes = alignUp(ops::Sampling::fastWorkspaceBytes(model::kLaneCount * model::kDecodeRows));
+  for (uint32_t capacity : {98304U, 65536U, 32768U})
+    for (uint32_t switches = 0; switches < 4; ++switches) {
+      model::OptionalFeatures features;
+      features.compactDraftHead = switches & 1;
+      features.fastTopK = switches & 2;
+      features.compactCapacity = capacity;
+      features.compactRanking = "/unused-by-size-planning";
+      const uint64_t compactBytes = alignUp(uint64_t{capacity} * 5120 / 2) +
+          alignUp(uint64_t{capacity} * (5120 / 64) * 4) + alignUp(uint64_t{capacity} * 4);
+      const auto planned = model::plannedRuntimeMemory(loaded, operators, kv::Format::Int4Hadamard, features);
+      require(planned.sharedPrefillPlannedAllocatedBytes == baseline.sharedPrefillPlannedAllocatedBytes &&
+                  planned.laneStatePlannedAllocatedBytes == baseline.laneStatePlannedAllocatedBytes,
+              "optional buffers changed unrelated memory categories");
+      require(planned.sharedDecodePlannedAllocatedBytes == baseline.sharedDecodePlannedAllocatedBytes +
+                  (features.compactDraftHead ? compactBytes : 0) + (features.fastTopK ? fastBytes : 0),
+              "optional buffers are missing or duplicated in the fixed decode budget");
+      if (capacity == 98304 && switches == 3 && model::kDecodeRows == 8)
+        require(planned.sharedDecodePlannedAllocatedBytes - baseline.sharedDecodePlannedAllocatedBytes == 283639808,
+                "27B optional memory does not match the real 270.5 MiB regression");
+    }
+  auto smallHead = ops::Projection(1024, 512,
+      ops::BlockWeights{{ops::QuantizedSegment::planes(GGUF_FMT_AF4G64, 1024, 512, {}, {}, {})}});
+  smallHead.destination = ops::FloatOutput::Float32;
+  require(model::CompactDraftHead::plannedBytes(smallHead) ==
+              alignUp(512ULL * 512 / 2) + alignUp(512ULL * (512 / 64) * 4) + alignUp(512ULL * 4),
+          "small vocabulary cap or token-map allocation alignment was omitted");
 }
 
 // The 4B has no draft. Sizing its arenas must never plan a zero-width
@@ -255,6 +299,7 @@ void checkGdnWidths() {
 
 int main() {
   try {
+    checkOptionalFeatureMemoryPlan();
     checkUnsizedProjection();
     checkGdnWidths();
     checkGateUpLayers();

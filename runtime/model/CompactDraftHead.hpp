@@ -26,6 +26,8 @@ public:
   [[nodiscard]] static std::unique_ptr<CompactDraftHead> createIfEnabled(
       bool enabled, metal::MetalBackend &backend, const ops::Projection &source,
       const std::filesystem::path &rankingFile, uint32_t requestedCapacity = 98304);
+  // Persistent compact planes and token map, including allocation alignment.
+  [[nodiscard]] static uint64_t plannedBytes(const ops::Projection &source, uint32_t requestedCapacity = 98304);
   CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
                    const std::filesystem::path &rankingFile, uint32_t requestedCapacity = 98304);
   [[nodiscard]] bool prepare(std::span<const uint32_t> history);

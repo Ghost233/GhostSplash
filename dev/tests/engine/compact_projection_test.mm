@@ -57,7 +57,8 @@ void formatCheck(metal::MetalBackend &backend, uint32_t format) {
     test::writeFile(path, binary);
     auto head = model::CompactDraftHead::createIfEnabled(true, backend, source, path, C);
     const auto checks = head->validation().comparisons;
-    require(checks == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C && head->bytes() > 0,
+    require(checks == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C &&
+                head->bytes() > 0 && head->bytes() <= model::CompactDraftHead::plannedBytes(source, C),
             "explicit compact must validate before enabling");
     std::vector<uint32_t> history(10000, 7); history.push_back(1000);
     require(head->prepare(history) && head->validRows() == 257 &&

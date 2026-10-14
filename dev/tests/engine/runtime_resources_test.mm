@@ -441,6 +441,46 @@ void testFailedStepIsNamed(const char *metallibPath) {
           "a failure after the weights loaded did not count as progress");
 }
 
+// Exercise the production assembly and runtime with each optional allocation.
+// A category's fixed plan must cover the enabled buffers before KV growth.
+void testOptionalFeatureMemoryPlan(const char *metallibPath) {
+  const test::TemporaryDirectory root("optional-memory-plan");
+  const PlannedModel planned = plannedModel();
+  static_cast<void>(test::writeSyntheticModel(root.path(), planned.target, planned.draft, planned.vision));
+  const auto rankingPath = root.path() / "public.splash";
+  const uint32_t vocabulary = planned.target.vocabularySize;
+  std::vector<uint8_t> ranking(12 + uint64_t{vocabulary} * 4);
+  std::memcpy(ranking.data(), "SPLCHD02", 8);
+  std::memcpy(ranking.data() + 8, &vocabulary, 4);
+  for (uint32_t id = 0; id < vocabulary; ++id)
+    std::memcpy(ranking.data() + 12 + uint64_t{id} * 4, &id, 4);
+  test::writeFile(rankingPath, ranking);
+  for (uint32_t switches = 0; switches < 4; ++switches) {
+    RuntimeResourcesConfig config;
+    config.metallibPath = metallibPath;
+    config.modelRoot = root.path();
+    config.model = model::makeModelDescriptor("optional-memory-test", planned.target, planned.draft,
+        planned.vision, model::TargetSource::Safetensors, model::VisionSource::Safetensors);
+    config.model.sourceIdentity = "synthetic";
+    config.buildId = "optional-memory-test";
+    config.maximumMemoryBytes = 4ULL << 30;
+    config.aneFfn.enabled = false;
+    config.hostAvailableMemory = [] { return std::optional<uint64_t>(64ULL << 30); };
+    config.optionalFeatures.compactDraftHead = switches & 1;
+    config.optionalFeatures.fastTopK = switches & 2;
+    config.optionalFeatures.compactCapacity = 512;
+    config.optionalFeatures.compactRanking = switches & 1 ? rankingPath : root.path() / "missing-unused";
+    auto resources = RuntimeResources::create(config, 0);
+    auto runtime = model::createRuntime(resources->modelContext());
+    const auto actual = runtime->actualRuntimeMemory();
+    const uint64_t reserved = resources->memoryPlan().breakdown().sharedDecodeBytes;
+    require(actual.sharedDecodeActualAllocatedBytes <= reserved,
+        "shared decode actual exceeds plan with optional switches=" + std::to_string(switches) +
+        ": actual=" + std::to_string(actual.sharedDecodeActualAllocatedBytes) +
+        ", planned=" + std::to_string(reserved));
+  }
+}
+
 // The engine asks the governor whether the host pauses growth, and its
 // serving mark lets a request in service grow through that pause.
 void testEngineFollowsTheGovernor(const char *metallibPath) {
@@ -474,7 +514,13 @@ void testEngineFollowsTheGovernor(const char *metallibPath) {
 int main(int argc, char **argv) {
   @autoreleasepool {
     try {
-      require(argc == 2, "expected metallib path");
+      require(argc == 2 || (argc == 3 && std::string_view(argv[2]) == "--optional-memory"),
+              "expected metallib path and optional --optional-memory");
+      if (argc == 3) {
+        testOptionalFeatureMemoryPlan(argv[1]);
+        std::cout << "optional feature memory plan tests passed\n";
+        return EXIT_SUCCESS;
+      }
       testLoadedDraftIsRequiredOnlyWithDraft();
       testLoadedVisionIsRequiredOnlyWithVision();
       testPersistentCacheNamespace();
@@ -486,6 +532,7 @@ int main(int argc, char **argv) {
       testStartupAdmissionIgnoresModelSize(argv[1]);
       testFailedStepIsNamed(argv[1]);
       testEngineFollowsTheGovernor(argv[1]);
+      testOptionalFeatureMemoryPlan(argv[1]);
       std::cout << "runtime resources tests passed\n";
       return EXIT_SUCCESS;
     } catch (const std::exception &error) {

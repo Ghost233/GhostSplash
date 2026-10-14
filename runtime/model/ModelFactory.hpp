@@ -136,7 +136,8 @@ void withPrefillArena(
 [[nodiscard]] ModelMemoryPlan
 plannedRuntimeMemory(const LoadedModel &model,
                      const ops::ExecutionPlans &operators,
-                     kv::Format format);
+                     kv::Format format,
+                     const OptionalFeatures &features = {});
 [[nodiscard]] std::unique_ptr<RuntimeModel>
 createRuntime(RuntimeContext context);
 

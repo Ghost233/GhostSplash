@@ -11,7 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from install import assembly, hub, models, upstream
+from install import assembly, hub, models, paths, upstream
 from server import server
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -67,6 +67,7 @@ class LocalLauncherTests(unittest.TestCase):
         if script.name in {
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
+            "qwen3827bmlx4bitsplash.sh",
         }:
             draft_dir.mkdir(exist_ok=True)
             (draft_dir / "model.safetensors").touch()
@@ -85,11 +86,13 @@ class LocalLauncherTests(unittest.TestCase):
             "coder39027bsplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
+            "qwen3827bmlx4bitsplash.sh",
         }:
             arguments.append(str(draft_dir))
         if script.name in {
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
+            "qwen3827bmlx4bitsplash.sh",
         }:
             arguments.append(str(self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"))
         arguments.append(model_id)
@@ -100,6 +103,7 @@ class LocalLauncherTests(unittest.TestCase):
             "swift1527biq3ssplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
+            "qwen3827bmlx4bitsplash.sh",
         }:
             arguments.extend([str(self.root / "build/splash"), *startup_options])
         record = {
@@ -129,6 +133,7 @@ class LocalLauncherTests(unittest.TestCase):
 
         with (
             mock.patch.object(sys, "argv", [str(script), *arguments]),
+            mock.patch.object(paths, "BINARY", paths.BINARY),
             mock.patch("socket.socket"),
             mock.patch.object(os, "chdir"),
             mock.patch.object(os, "set_inheritable") as inherit,
@@ -177,6 +182,8 @@ class LocalLauncherTests(unittest.TestCase):
                 self.assertEqual(parsed.queue_size, 4)
                 self.assertEqual(parsed.kv_format, kv_format)
                 self.assertTrue(parsed.no_webui)
+                if script.name == "qwen3827bmlx4bitsplash.sh":
+                    self.assertEqual(paths.BINARY, Path(parsed.binary))
                 inherit.assert_called_once_with(99, True)
                 if script.name == "tielminiplus35ba3bsplash.sh":
                     template = (
@@ -284,6 +291,48 @@ class LocalLauncherTests(unittest.TestCase):
         self.assertEqual(parsed.compact_draft_head, "on")
         self.assertEqual(parsed.compact_draft_ranking, self.root / "model rank")
         self.assertEqual(parsed.prompt_lookup, "off")
+
+    def test_mlx_27b_uses_local_draft_and_forwards_startup_options(self):
+        script = ROOT / "qwen3827bmlx4bitsplash.sh"
+        parsed = self.launch(script, installed=True)
+        self.assertEqual(parsed.prompt_lookup, "on")
+        self.assertEqual(parsed.compact_draft_head, "on")
+        self.assertEqual(
+            parsed.compact_draft_ranking,
+            self.root / "compact-rankings/qwen35-248320-dev-seed.splash",
+        )
+        self.assertEqual(parsed.ane_ffn_share, 0.4182)
+        self.assertEqual(parsed.ane_power_reference, "auto")
+        self.assertEqual(parsed.ane_power_recovery, "on")
+        self.assertEqual(parsed.ane_recovery_max_power_percent, 50)
+        self.assertEqual(parsed.fast_topk, "on")
+        parsed = self.launch(
+            script,
+            installed=True,
+            startup_options=(
+                "--disable-ane",
+                "--prompt-lookup",
+                "off",
+                "--compact-draft-head",
+                "off",
+                "--fast-topk",
+                "off",
+                "--ane-ffn-share",
+                "auto",
+                "--ane-power-recovery",
+                "off",
+                "--ane-power-reference",
+                "off",
+            ),
+        )
+        self.assertTrue(parsed.disable_ane)
+        self.assertEqual(parsed.prompt_lookup, "off")
+        self.assertEqual(parsed.compact_draft_head, "off")
+        self.assertEqual(parsed.fast_topk, "off")
+        self.assertIsNone(parsed.ane_ffn_share)
+        self.assertEqual(parsed.ane_power_reference, "off")
+        self.assertEqual(parsed.ane_power_recovery, "off")
+        self.launch(script, installed=True, wrong_draft=True)
 
     def test_miniplus_refuses_another_draft_before_starting_server(self):
         self.launch(

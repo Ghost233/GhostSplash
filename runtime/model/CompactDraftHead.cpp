@@ -1,11 +1,36 @@
 #include "model/CompactDraftHead.hpp"
 #include "StderrLine.hpp"
+#include "Checked.hpp"
+#include "metal/abi/QuantFormat.h"
 
 #include <algorithm>
 #include <cstring>
 #include <fstream>
 
 namespace splash::model {
+namespace {
+uint32_t compactCapacity(const ops::Projection &source, uint32_t requestedCapacity) {
+  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
+    throw std::invalid_argument("compact capacity must be a multiple of 256 in 512..98304");
+  if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
+      source.blocks().segments.front().outputSize != source.outputSize)
+    throw std::invalid_argument("compact head layout is not one unrotated quantized FP32 projection");
+  const uint32_t capacity = std::min<uint32_t>(requestedCapacity, source.outputSize / 2 / 256 * 256);
+  if (capacity <= 256)
+    throw std::invalid_argument("vocabulary is too small for compact head");
+  return capacity;
+}
+} // namespace
+
+uint64_t CompactDraftHead::plannedBytes(const ops::Projection &source, uint32_t requestedCapacity) {
+  const uint64_t rows = compactCapacity(source, requestedCapacity);
+  const auto &format = source.blocks().segments.front().format();
+  const uint64_t groups = source.inputSize / 32;
+  return alignUp(rows * 4) + alignUp(rows * groups * format.plane0_bytes) +
+      alignUp(rows * groups * format.plane1_bytes) +
+      alignUp(rows * (groups / format.meta_groups) * format.meta_bytes);
+}
+
 
 CompactTokenRows compactTokenRows(std::span<const uint32_t> ranking,
                                   std::span<const uint32_t> history, uint32_t capacity) {
@@ -73,15 +98,8 @@ std::unique_ptr<CompactDraftHead> CompactDraftHead::createIfEnabled(
 CompactDraftHead::CompactDraftHead(metal::MetalBackend &backend, const ops::Projection &source,
                                    const std::filesystem::path &rankingFile, uint32_t requestedCapacity)
     : backend_(backend), source_(source) {
-  if (requestedCapacity <= 256 || requestedCapacity > 98304 || requestedCapacity % 256)
-    throw std::invalid_argument("compact capacity must be a multiple of 256 in 512..98304");
-  if (!source.takesPlaneViews() || source.destination != ops::FloatOutput::Float32 ||
-      source.blocks().segments.front().outputSize != source.outputSize)
-    throw std::invalid_argument("compact head layout is not one unrotated quantized FP32 projection");
+  capacity_ = compactCapacity(source, requestedCapacity);
   ranking_ = readCompactRanking(rankingFile, source.outputSize);
-  capacity_ = std::min<uint32_t>(requestedCapacity, source.outputSize / 2 / 256 * 256);
-  if (capacity_ <= 256)
-    throw std::invalid_argument("vocabulary is too small for compact head");
   std::vector<uint32_t> ids(ranking_.begin(), ranking_.begin() + capacity_);
   projection_ = ops::gatherProjection(backend_, source_, ids);
   mapping_ = backend_.allocateBuffer(uint64_t{capacity_} * 4,
@@ -114,9 +132,9 @@ bool CompactDraftHead::prepare(std::span<const uint32_t> history) {
 }
 
 uint64_t CompactDraftHead::bytes() const noexcept {
-  uint64_t bytes = mapping_.sizeBytes();
+  uint64_t bytes = mapping_.allocatedBytes();
   for (const auto &s : projection_.blocks().segments)
-    bytes += s.plane0.sizeBytes() + s.plane1.sizeBytes() + s.meta.sizeBytes();
+    bytes += s.plane0.allocatedBytes() + s.plane1.allocatedBytes() + s.meta.allocatedBytes();
   return bytes;
 }
 
