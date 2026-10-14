@@ -1,0 +1,130 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+.........12:02:34 Startup configuration · on/off are configured flags; effective state follows Ready
+12:02:34   MODEL_DIRECTORY = model
+12:02:34   --model = test-model
+12:02:34   --tokenizer = tokenizer
+12:02:34   --binary = splash
+12:02:34   --port = 0
+12:02:34   --host = 127.0.0.1
+12:02:34   --allowed-host = none
+12:02:34   --allowed-origin = none
+12:02:34   --api-key = off
+12:02:34   --no-webui = off
+12:02:34   --max-memory = 34359738368
+12:02:34   --max-context = 128
+12:02:34   --kv-format = int8
+12:02:34   --idle-release = auto (default 600 s)
+12:02:34   --max-cache-disk = 0
+12:02:34   --persistent-cache = off
+12:02:34   --cache-dir = off / unset
+12:02:34   --served-model-name = none
+12:02:34   --announce-served-name = off
+12:02:34   --default-reasoning-effort = auto
+12:02:34   --max-request-size = 134217728
+12:02:34   --max-image-pixels = 4194304
+12:02:34   --request-timeout = off / unset
+12:02:34   --queue-size = 1
+12:02:34   --decode-share = auto
+12:02:34   --disable-ane = off
+12:02:34   --ane-ffn-share = auto
+12:02:34   --ane-ffn-minimum-rows = auto
+12:02:34   --ane-power-recovery = off
+12:02:34   --ane-power-reference = off
+12:02:34   --ane-recovery-idle-watts = 0.05
+12:02:34   --ane-recovery-max-power-percent = off / unset
+12:02:34   --prompt-lookup = off
+12:02:34   --prompt-lookup-min-match = 2
+12:02:34   --compact-draft-head = off
+12:02:34   --compact-draft-capacity = 98304
+12:02:34   --compact-draft-ranking = off / unset
+12:02:34   --fast-topk = off
+12:02:34   --allow-idle-sleep = off
+12:02:34 Loading · test-model
+12:02:34 Chat template · <MagicMock name='ChatTemplates().describe()' id='4540475312'>
+12:02:34 Stopping · releasing engine resources
+.12:02:34 Startup configuration · on/off are configured flags; effective state follows Ready
+12:02:34   MODEL_DIRECTORY = model
+12:02:34   --model = test-model
+12:02:34   --tokenizer = tokenizer
+12:02:34   --binary = splash
+12:02:34   --port = 0
+12:02:34   --host = 127.0.0.1
+12:02:34   --allowed-host = none
+12:02:34   --allowed-origin = none
+12:02:34   --api-key = off
+12:02:34   --no-webui = off
+12:02:34   --max-memory = auto
+12:02:34   --max-context = auto
+12:02:34   --kv-format = int8
+12:02:34   --idle-release = auto (default 600 s)
+12:02:34   --max-cache-disk = 0
+12:02:34   --persistent-cache = off
+12:02:34   --cache-dir = off / unset
+12:02:34   --served-model-name = none
+12:02:34   --announce-served-name = off
+12:02:34   --default-reasoning-effort = auto
+12:02:34   --max-request-size = 134217728
+12:02:34   --max-image-pixels = 4194304
+12:02:34   --request-timeout = off / unset
+12:02:34   --queue-size = 1
+12:02:34   --decode-share = auto
+12:02:34   --disable-ane = off
+12:02:34   --ane-ffn-share = auto
+12:02:34   --ane-ffn-minimum-rows = auto
+12:02:34   --ane-power-recovery = off
+12:02:34   --ane-power-reference = off
+12:02:34   --ane-recovery-idle-watts = 0.05
+12:02:34   --ane-recovery-max-power-percent = off / unset
+12:02:34   --prompt-lookup = off
+12:02:34   --prompt-lookup-min-match = 2
+12:02:34   --compact-draft-head = off
+12:02:34   --compact-draft-capacity = 98304
+12:02:34   --compact-draft-ranking = off / unset
+12:02:34   --fast-topk = off
+12:02:34   --allow-idle-sleep = off
+12:02:34 Loading · test-model
+.12:02:34 Startup configuration · on/off are configured flags; effective state follows Ready
+12:02:34   MODEL_DIRECTORY = model
+12:02:34   --model = test-model
+12:02:34   --tokenizer = tokenizer
+12:02:34   --binary = splash
+12:02:34   --port = 8000
+12:02:34   --host = 127.0.0.1
+12:02:34   --allowed-host = none
+12:02:34   --allowed-origin = none
+12:02:34   --api-key = off
+12:02:34   --no-webui = off
+12:02:34   --max-memory = auto
+12:02:34   --max-context = auto
+12:02:34   --kv-format = int8
+12:02:34   --idle-release = auto (default 600 s)
+12:02:34   --max-cache-disk = 0
+12:02:34   --persistent-cache = off
+12:02:34   --cache-dir = off / unset
+12:02:34   --served-model-name = none
+12:02:34   --announce-served-name = off
+12:02:34   --default-reasoning-effort = auto
+12:02:34   --max-request-size = 134217728
+12:02:34   --max-image-pixels = 4194304
+12:02:34   --request-timeout = off / unset
+12:02:34   --queue-size = 1
+12:02:34   --decode-share = auto
+12:02:34   --disable-ane = off
+12:02:34   --ane-ffn-share = auto
+12:02:34   --ane-ffn-minimum-rows = auto
+12:02:34   --ane-power-recovery = off
+12:02:34   --ane-power-reference = off
+12:02:34   --ane-recovery-idle-watts = 0.05
+12:02:34   --ane-recovery-max-power-percent = off / unset
+12:02:34   --prompt-lookup = off
+12:02:34   --prompt-lookup-min-match = 2
+12:02:34   --compact-draft-head = off
+12:02:34   --compact-draft-capacity = 98304
+12:02:34   --compact-draft-ranking = off / unset
+12:02:34   --fast-topk = off
+12:02:34   --allow-idle-sleep = off
+....
+----------------------------------------------------------------------
+Ran 15 tests in 2.322s
+
+OK

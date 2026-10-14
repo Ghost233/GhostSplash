@@ -65,6 +65,8 @@ TEST_STANDARD_DRAFT_CHECKPOINT := $(ENGINE_TEST_BUILD)/standard-draft-checkpoint
 TEST_STANDARD_DFLASH := $(ENGINE_TEST_BUILD)/dflash-standard
 TEST_WEIGHT_SOURCE := $(ENGINE_TEST_BUILD)/weight-source
 TEST_GGUF_FILE := $(ENGINE_TEST_BUILD)/gguf-file
+TEST_GGUF_IQ1S_REPLAY := $(ENGINE_TEST_BUILD)/gguf-iq1s-replay
+IQ1S_RNG_FIXTURE := dev/tests/fixtures/iq1s_spread_rng.txt
 TEST_GGUF_PROJECTION := $(ENGINE_TEST_BUILD)/gguf-projection
 TEST_GGUF_SINGLE := $(ENGINE_TEST_BUILD)/gguf-single-token
 TEST_GGUF_HALF_CACHE := $(ENGINE_TEST_BUILD)/gguf-prefill-cache
@@ -217,6 +219,8 @@ TEST_METAL_TARGETS := $(TEST_COMPACT_PROJECTION) $(TEST_DRAFT_BLOCK_ACCEPTANCE) 
 	$(LIB) $(TEST_METAL_BACKEND_LIB) $(TEST_PRODUCTION_LIB) $(TEST_Q8_LIB) $(TEST_Q8_ATTENTION_LIB) \
 	$(TEST_GGUF_DEQUANT_LIB)
 
+TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY)
+
 # Keep every output that uses a flag set together, including standalone
 # benchmarks, real-model tests and intermediate test AIRs/metallibs.
 TEST_CONFIG_TARGETS := $(TEST_QWEN4B_FFN_CHECK) $(TEST_QWEN4B_MATRIX_NATIVE) $(MATRIX_ATTENTION_OBJECT) \
@@ -349,6 +353,12 @@ $(TEST_SAFETENSORS_CHECKPOINT) $(TEST_MODEL_CONFIGURATION) $(TEST_STANDARD_DRAFT
 
 # Objective-C++ tests, oracles and benchmarks linked with the frameworks.
 $(TEST_DRAFT_PREPARATION): dev/tests/engine/draft_preparation_test.mm $(ENGINE_LIBRARY)
+$(TEST_GGUF_IQ1S_REPLAY): dev/tests/engine/gguf_iq1s_replay_test.mm \
+        dev/tests/engine/gguf_projection_test.mm $(IQ1S_RNG_FIXTURE) \
+        $(ENGINE_LIBRARY) $(TEST_PRODUCTION_LIB) | $(ENGINE_TEST_BUILD)
+	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -fobjc-arc \
+		dev/tests/engine/gguf_iq1s_replay_test.mm $(ENGINE_LIBRARY) $(ENGINE_LINKFLAGS) -o $@
+
 $(TEST_GGUF_PROJECTION): dev/tests/engine/gguf_projection_test.mm $(ENGINE_LIBRARY) $(LIB)
 $(TEST_GGUF_SINGLE): dev/tests/engine/gguf_single_token_test.mm $(ENGINE_LIBRARY) $(LIB)
 $(TEST_GGUF_HALF_CACHE): dev/tests/engine/gguf_prefill_cache_test.mm $(ENGINE_LIBRARY) $(LIB)
@@ -541,6 +551,12 @@ test-engine-cpu: $(TEST_CPU_TARGETS) $(TEST_ATTENTION_SWEEP)
 	$(TEST_STATUS_TEST) dev/tests/engine/status_golden.json
 	$(TEST_Q8_CPU_TEST)
 
+.PHONY: test-gguf-iq1s-replay
+# The fixed IQ1S workload is a correctness guard, never a speed measurement.
+test-gguf-iq1s-replay: $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB)
+	$(METAL_TEST_ENV) $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB) $(IQ1S_RNG_FIXTURE) 128
+
+test-engine-metal: test-gguf-iq1s-replay
 test-engine-metal: $(TEST_METAL_TARGETS)
 	$(METAL_TEST_ENV) $(TEST_COMPACT_PROJECTION) $(TEST_PRODUCTION_LIB)
 	$(METAL_TEST_ENV) $(BUILD_ID_PYTHON) dev/tests/engine/run_draft_preparation.py $(TEST_DRAFT_PREPARATION) $(LIB) \

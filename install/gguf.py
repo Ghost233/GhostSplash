@@ -418,10 +418,12 @@ TENSOR_TYPES = {
     30: "BF16",
     39: "MXFP4",
     40: "NVFP4",
+    42: "Q2_0",
     142: "PQ2_0",
 }
 QUANTIZED_TYPES = {
     "Q2_K",
+    "Q2_0",
     "Q3_K",
     "Q4_K",
     "Q5_K",
@@ -575,10 +577,14 @@ def require_loadable(metadata):
         if stem != name and stem + ".scale" in metadata.tensors and found != "NVFP4":
             scale = short.removesuffix(".weight") + ".scale"
             unsupported[scale, f"beside {found}"] += 1
-        # Mixed F32/Q3_K gates are widened; other pairs share their format.
+        # Mixed F32/Q3_K, Q4_0 or Q8_0 gates are widened; other pairs share their format.
         if name.endswith(".ssm_beta.weight"):
             alpha_kind = metadata.tensors.get(name.replace("ssm_beta", "ssm_alpha"))
-            if kind != alpha_kind and {kind, alpha_kind} != {0, 11}:
+            if kind != alpha_kind and {kind, alpha_kind} not in (
+                {0, 11},
+                {0, 2},
+                {0, 8},
+            ):
                 unsupported[
                     "ssm_alpha.weight and ssm_beta.weight", "of different types"
                 ] += 1

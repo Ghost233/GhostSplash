@@ -106,7 +106,8 @@ LinearConfig oneGateUpPassDecode(uint32_t n, uint32_t k, uint32_t cores, GpuFami
 bool oneFormat(std::span<const Projection *const> projections) {
   if (projections.size() != 2 || !projections[0] || !projections[1]) return false;
   const std::vector<QuantizedSegment> &up = projections[0]->blocks().segments, &gate = projections[1]->blocks().segments;
-  return up.size() == 1 && gate.size() == 1 && !up.front().isFloat() && up.front().formatId == gate.front().formatId;
+  return up.size() == 1 && gate.size() == 1 && !up.front().isFloat() && up.front().formatId == gate.front().formatId &&
+         up.front().formatId != GGUF_FMT_IQ1S;
 }
 
 // Whether Apple9 decodes a plan's projections (a gate/up plan's two) on the
@@ -416,6 +417,14 @@ void Linear::addGgufStaged(metal::CommandGraph &graph, const LinearBuffers &b,
     if (segments.size() != 1 || gates.size() != 1 || gates.front().formatId != segments.front().formatId)
       throw std::invalid_argument("a one-pass block gate/up takes single tensors of one format");
     const QuantizedSegment &g = gates.front(), &u = segments.front();
+    if (u.formatId == GGUF_FMT_IQ1S) {
+      // The fused IQ1S cooperative-tensor path can leave live outputs
+      // unwritten. Each up element consumes only its own gate value, so
+      // the output can hold the intermediate gate without extra scratch.
+      tensor(g, epilogueSuffix(LinearEpilogue::None), b.output, b.output);
+      tensor(u, epilogueSuffix(LinearEpilogue::UpWithGate), b.output, b.output);
+      return;
+    }
     graph.add(std::string("gguf_decode_") + u.name() + "_m" + std::to_string(rows) + "_gate_up",
               {b.input, g.plane0, g.plane1Slot(), g.meta, u.plane0, u.plane1Slot(), u.meta, b.output, partials,
                counters},

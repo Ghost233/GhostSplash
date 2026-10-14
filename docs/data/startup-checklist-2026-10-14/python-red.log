@@ -1,0 +1,18 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+E
+======================================================================
+ERROR: test_startup_report (unittest.loader._FailedTest.test_startup_report)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_startup_report
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/loader.py", line 141, in loadTestsFromName
+    module = __import__(module_name)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_startup_report.py", line 5, in <module>
+    from server import startup_report
+ImportError: cannot import name 'startup_report' from 'server' (/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/server/__init__.py)
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)

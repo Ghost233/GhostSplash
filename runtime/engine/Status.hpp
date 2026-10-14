@@ -279,6 +279,15 @@ struct AneFfnSnapshot {
   std::optional<ane::PowerReference> powerReference = std::nullopt;
 };
 
+// Loaded execution choices, not inferred from the command line. Older status
+// producers omit this snapshot; consumers must then report unknown.
+struct RuntimeFeatureSnapshot final {
+  std::string drafter = "none";
+  uint32_t draftLayers = 0, draftBlockSize = 0, draftTokens = 0;
+  uint64_t ffnCacheBytes = 0;
+  model::OptionalFeatureReport optional;
+};
+
 // Single source for /status and native protocol status events.
 [[nodiscard]] std::string runtimeStatusJson(
     const EngineMemoryPlan &plan, const EngineSnapshot &core,
@@ -289,6 +298,7 @@ struct AneFfnSnapshot {
     const MemoryGovernorSnapshot &memoryGovernor, bool metalHealthy,
     std::string metalFailureReason, const ResourceWaitSnapshot &resourceWait,
     const NativeLoopTiming &loop, const WeightsSnapshot &weights,
-    const AneFfnSnapshot &aneFfn, ThermalState thermalState);
+    const AneFfnSnapshot &aneFfn, ThermalState thermalState,
+    const std::optional<RuntimeFeatureSnapshot> &features = std::nullopt);
 
 } // namespace splash::engine

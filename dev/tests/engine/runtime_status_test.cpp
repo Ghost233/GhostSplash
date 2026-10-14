@@ -66,6 +66,35 @@ MemoryAuditResult audit(const EngineMemoryPlan &memoryPlan) {
 // A representative status document, every section of it set, and the golden
 // copy of the whole document that the server's reading of it is tested on
 // (dev/tests/server/test_status_contract.py).
+void testStartupFeaturesStatus() {
+  RuntimeFeatureSnapshot features;
+  features.drafter = "dflash2";
+  features.draftLayers = 5;
+  features.draftBlockSize = 8;
+  features.draftTokens = 7;
+  features.ffnCacheBytes = 1234;
+  features.optional.configured.promptLookup = true;
+  features.optional.configured.compactDraftHead = true;
+  features.optional.compactValidated = true;
+  features.optional.compactCapacity = 98304;
+  features.optional.compactValidationComparisons = 786432;
+  features.optional.compactValidationMaximumError = 0;
+  features.optional.compactCoverageFallbacks = 2;
+  features.optional.compactRequestFallbacks = 1;
+  features.optional.compactReason = "history coverage insufficient";
+  const auto json = runtimeStatusJson(plan(), {}, {}, {}, {}, {}, {}, {}, {},
+                                     true, {}, {}, {}, {}, {}, ThermalState::Nominal, features);
+  require(json.find("\"drafter\":\"dflash2\"") != std::string::npos &&
+          json.find("\"draft_layers\":5") != std::string::npos &&
+          json.find("\"compact_validated\":true") != std::string::npos &&
+          json.find("\"compact_validation_comparisons\":786432") != std::string::npos &&
+          json.find("\"compact_coverage_fallbacks\":2") != std::string::npos &&
+          json.find("\"compact_request_fallbacks\":1") != std::string::npos &&
+          json.find("\"fast_topk\":false") != std::string::npos &&
+          json.find("history coverage insufficient") != std::string::npos,
+          "startup feature status lost actual drafter or compact validation/fallback state");
+}
+
 void testCleanRuntimeStatus(const char *goldenPath) {
   EngineMemoryPlan memoryPlan = plan();
   engine::EngineSnapshot engine;
@@ -685,6 +714,7 @@ int main(int argc, char **argv) {
   }
   try {
     testCleanRuntimeStatus(argv[1]);
+    testStartupFeaturesStatus();
     testCurrentReadinessAndSimultaneousPeak();
     testWarmupStepsReportMeasurementTruth();
     testMemoryPressureTelemetry();

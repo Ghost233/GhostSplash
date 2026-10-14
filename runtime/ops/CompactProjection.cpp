@@ -4,6 +4,9 @@
 #include "metal/abi/OptionalFeatures.h"
 #include "metal/abi/QuantFormat.h"
 
+#include <array>
+#include <bit>
+#include <cmath>
 #include <cstring>
 #include <stdexcept>
 
@@ -69,6 +72,58 @@ Projection gatherProjection(metal::MetalBackend &backend, const Projection &sour
   return result;
 }
 
+
+CompactProjectionValidation validateCompactProjection(
+    metal::MetalBackend &backend, const Projection &source, const Projection &compact,
+    metal::MetalBuffer mapping) {
+  if (!source.takesPlaneViews() || !compact.takesPlaneViews() ||
+      source.destination != FloatOutput::Float32 || compact.destination != FloatOutput::Float32 ||
+      source.inputSize != compact.inputSize || !mapping.contents())
+    throw std::invalid_argument("compact projection validation has incompatible head layout");
+  requireBytes(mapping, uint64_t{compact.outputSize} * 4, "compact validation mapping");
+  const auto *ids = static_cast<const uint32_t *>(mapping.contents());
+  for (uint32_t i = 0; i < compact.outputSize; ++i)
+    if (ids[i] >= source.outputSize)
+      throw std::invalid_argument("compact validation mapping ID is outside the full vocabulary");
+  constexpr uint32_t rows = SPLASH_DRAFT_QUERY_ROWS;
+  auto input = backend.allocateBuffer(uint64_t{rows} * source.inputSize * 2,
+                                      metal::BufferStorage::Shared, "compact-validation-input");
+  auto fullOutput = backend.allocateBuffer(uint64_t{rows} * source.outputSize * 4,
+                                           metal::BufferStorage::Shared, "compact-validation-full");
+  auto compactOutput = backend.allocateBuffer(uint64_t{rows} * compact.outputSize * 4,
+                                              metal::BufferStorage::Shared, "compact-validation-selected");
+  auto *values = static_cast<uint16_t *>(input.contents());
+  for (uint32_t row = 0; row < rows; ++row)
+    for (uint32_t k = 0; k < source.inputSize; ++k) {
+      const float value = float(int((uint64_t{row} * 131 + uint64_t{k} * 37 + 17) % 257) - 128) / 128;
+      // These dyadic probe values are exactly representable in BF16.
+      values[uint64_t{row} * source.inputSize + k] = uint16_t(std::bit_cast<uint32_t>(value) >> 16);
+    }
+  const Linear linear(backend.capabilities());
+  metal::CommandGraph graph;
+  for (const auto &[projection, output] :
+       std::array<std::pair<const Projection *, metal::MetalBuffer>, 2>{{{&source, fullOutput}, {&compact, compactOutput}}}) {
+    const auto plan = Linear::plan({{projection->outputSize, projection->inputSize}, rows,
+                                    LinearPhase::Decode, LinearEpilogue::None},
+                                   {LinearTile::GgufStaged, 1, false, false}, FloatOutput::Float32);
+    static_cast<void>(linear.add(graph, {.input = input, .output = output}, *projection, plan));
+  }
+  static_cast<void>(backend.submitCommandAsync(graph.dispatches()).wait());
+  const auto *full = static_cast<const float *>(fullOutput.contents());
+  const auto *selected = static_cast<const float *>(compactOutput.contents());
+  CompactProjectionValidation result;
+  for (uint32_t row = 0; row < rows; ++row)
+    for (uint32_t i = 0; i < compact.outputSize; ++i) {
+      const float expected = full[uint64_t{row} * source.outputSize + ids[i]];
+      const float actual = selected[uint64_t{row} * compact.outputSize + i];
+      if (!std::isfinite(expected) || !std::isfinite(actual) || actual != expected)
+        throw std::runtime_error("compact projection numerical validation failed at row " +
+            std::to_string(i) + ", token " + std::to_string(ids[i]) + ", probe " + std::to_string(row));
+      result.maximumAbsoluteError = std::max(result.maximumAbsoluteError, std::fabs(actual - expected));
+      ++result.comparisons;
+    }
+  return result;
+}
 
 void addCompactLogitMask(metal::CommandGraph &graph, metal::MetalBuffer logits,
                          uint32_t rows, uint32_t capacity, uint32_t valid) {

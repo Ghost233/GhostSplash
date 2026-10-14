@@ -165,7 +165,7 @@ def main():
             token for token in range(vocabulary) if token not in preferred_set
         ]
         ranking = args.output / (case + "-correctness-only-ranking.splash")
-        write_ranking(ranking, off["target_manifest_sha256"], order)
+        write_ranking(ranking, order)
         write(
             ranking.with_suffix(".json"),
             {

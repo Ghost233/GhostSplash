@@ -12,7 +12,7 @@ max_cache_disk=50G
 queue_size=1
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 python="$repo/.venv/bin/python"
-binary="$repo/build/ane-startup-cli-20261013/splash"
+binary="$repo/build/startup-checklist-20261014/splash"
 if [ ! -x "$python" ]; then
     echo "Missing: $python" >&2
     exit 1
@@ -36,7 +36,7 @@ from server import serve_options
 parser = argparse.ArgumentParser(
     prog="swift1527biq3ssplash.sh", description="Swift 1.5 27B GSQ RCO launcher",
     epilog="Swift defaults: context=262144, KV=q4h, queue=1, memory=40G, "
-           "lookup=on, compact=on, fast-topk=off, ANE power recovery/reference=off.",
+           "lookup=on, compact=off, fast-topk=off, ANE power recovery/reference=off.",
 )
 parser.add_argument("--port", type=int, default=int(port))
 parser.add_argument("--binary", default=binary)
@@ -46,7 +46,7 @@ parser.set_defaults(
     max_memory=serve_options.parse_max_memory(memory),
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
-    prompt_lookup="on", compact_draft_head="on", fast_topk="off",
+    prompt_lookup="on", compact_draft_head="off", fast_topk="off",
 )
 args = parser.parse_args(sys.argv[12:])
 serve_options.check_serve_arguments(parser, args)

@@ -67,11 +67,11 @@ inline void full_qkv_storage_phase(
       value = float(bfloat(thread_index < RotaryPairs
           ? first * cosine - second * sine : second * cosine + first * sine));
     }
-    destination[thread_index] = bfloat(splash_kv_hadamard<256>(value, rotation, thread_index));
+    destination[thread_index] = splash_kv_rotate_query_key(value, rotation, thread_index);
     if (!query) {
       float v = float(source[KWidth + thread_index]);
-      v = splash_kv_hadamard<64>(v, rotation, thread_index);
-      chunk_values[(ulong(head_index) * HeadDim + thread_index) * params.stride + position] = bfloat(v);
+      chunk_values[(ulong(head_index) * HeadDim + thread_index) * params.stride + position] =
+          splash_kv_rotate_value(v, rotation, thread_index);
     }
     return;
   }

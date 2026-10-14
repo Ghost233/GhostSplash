@@ -387,12 +387,10 @@ struct Runtime::Impl {
     if (features.fastTopK)
       fastTopK = backend.allocateBuffer(ops::Sampling::fastWorkspaceBytes(kLaneCount * kDecodeRows),
                                         metal::BufferStorage::Private, "optional-fast-topk");
-    if (features.compactDraftHead) {
-      if (draftModel)
-        compactHead = std::make_unique<CompactDraftHead>(backend, targetModel.vocabularyProjection(),
-            features.compactRanking, model.targetManifestFingerprint(), features.compactCapacity);
-      else featureReport.compactReason = "compact head requires an installed draft";
-    }
+    if (features.compactDraftHead && !draftModel)
+      throw std::invalid_argument("compact head requires an installed drafter");
+    compactHead = CompactDraftHead::createIfEnabled(features.compactDraftHead, backend,
+        targetModel.vocabularyProjection(), features.compactRanking, features.compactCapacity);
     preparePolicyPipelines();
     sampling.resetFastCounters();
   }
@@ -1511,16 +1509,21 @@ struct Runtime::Impl {
       if (compactHead && lanes == 1 && entries.front()->images.empty()) {
         auto &history = entries.front()->featureHistory;
         history.push_back(*entries.front()->pendingToken);
-        compact = compactHead->prepare(history);
+        try { compact = compactHead->prepare(history); }
+        catch (...) { history.pop_back(); throw; }
         history.pop_back();
         featureReport.compactReason = compactHead->reason();
+        if (!compact) ++featureReport.compactCoverageFallbacks;
         if (compact) {
           head = &compactHead->projection();
           featureReport.compactRows = compactHead->validRows();
           ++featureReport.compactCycles;
         }
       } else if (compactHead) featureReport.compactReason = "compact head requires one text lane";
-      if (!compact) ++featureReport.compactFallbacks;
+      if (!compact) {
+        ++featureReport.compactFallbacks;
+        if (lanes != 1 || !entries.front()->images.empty()) ++featureReport.compactRequestFallbacks;
+      }
     }
     draftModel->addDecode(graph, std::move(buffers), *head,
                          std::span(cacheLengths).first(lanes));
@@ -2640,7 +2643,9 @@ void Runtime::end(uint64_t requestId) {
     logLine("optional features (cumulative): lookup=", report.configured.promptLookup,
             " hits=", report.lookupHits, " accepted=", report.lookupAccepted, " reason=", report.lookupReason,
             "; compact=", report.configured.compactDraftHead, " cycles=", report.compactCycles,
-            " fallback=", report.compactFallbacks, " rows=", report.compactRows, " reason=", report.compactReason,
+            " validated=", report.compactValidated, " validation_comparisons=", report.compactValidationComparisons,
+            " fallback=", report.compactFallbacks, " coverage_fallback=", report.compactCoverageFallbacks,
+            " request_fallback=", report.compactRequestFallbacks, " rows=", report.compactRows, " reason=", report.compactReason,
             "; fast_topk=", report.configured.fastTopK, " selections=", report.fastTopKSelections,
             " fallback=", report.fastTopKFallbacks, " reason=", report.fastTopKReason,
             "; extra_metal_bytes=", report.extraMetalBytes);
@@ -2901,10 +2906,15 @@ OptionalFeatureReport Runtime::optionalFeatureReport() const {
   auto result = impl_->featureReport;
   result.fastTopKSelections = impl_->sampling.fastSelections();
   result.fastTopKFallbacks = impl_->sampling.fastFallbacks();
-  if (impl_->compactHead) result.compactCapacity = impl_->compactHead->capacity();
+  if (impl_->compactHead) {
+    result.compactCapacity = impl_->compactHead->capacity();
+    result.compactValidated = true;
+    result.compactValidationComparisons = impl_->compactHead->validation().comparisons;
+    result.compactValidationMaximumError = impl_->compactHead->validation().maximumAbsoluteError;
+  }
   if (result.configured.promptLookup && !impl_->draftModel)
     result.lookupReason = "lookup requires an installed draft verification path";
-  if (result.configured.compactDraftHead && impl_->compactHead && !result.compactCycles)
+  if (result.configured.compactDraftHead && impl_->compactHead && !result.compactCycles && result.compactReason.empty())
     result.compactReason = impl_->compactHead->reason();
   if (result.configured.fastTopK && !result.fastTopKSelections)
     result.fastTopKReason = "no sampled selection with top_k 1..32 and min_p 0";

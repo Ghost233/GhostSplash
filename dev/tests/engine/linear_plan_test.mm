@@ -403,6 +403,9 @@ void ggufPlans() {
         for (const uint32_t rows : {8U, 32U}) {
           const LinearWorkload gateUp{matrix, rows, LinearPhase::Decode, LinearEpilogue::GateUp};
           const LinearPlan one = device.plan(gateUp, up, &same), two = device.plan(gateUp, up, &other);
+          const Projection iq1s = blockProjection(n, 5120, 1, GGUF_FMT_IQ1S);
+          require(!device.plan(gateUp, iq1s, &iq1s).configuration().oneGateUpPass,
+                  "IQ1S must keep the validated two-pass gate/up default");
           const uint32_t pairSplits =
               device.plan({{2 * n, 5120}, rows, LinearPhase::Decode, LinearEpilogue::None},
                           blockProjection(2 * n, 5120, 1, GGUF_FMT_IQ2XXS)).configuration().splits;

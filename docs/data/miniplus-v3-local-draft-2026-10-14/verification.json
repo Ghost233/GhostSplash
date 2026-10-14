@@ -1,0 +1,61 @@
+{
+  "scope": "local launcher, offline drafter conversion, real native CPU planning and synthetic Metal weight preparation; no full-model generation or performance testing",
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s dev/tests/install -t . -p 'test_*.py'",
+      "tests": 231,
+      "skipped": 4,
+      "exit_code": 0,
+      "log": "install-tests.log"
+    },
+    {
+      "command": ".venv/bin/python -m unittest dev.tests.tools.test_dequantize_dflash2_gguf dev.tests.test_dequantize_coder390_dflash2 dev.tests.tools.test_compact_draft_ranking",
+      "tests": 15,
+      "exit_code": 0,
+      "log": "tools-tests.log"
+    },
+    {
+      "command": "make -j4 BUILD=build/miniplus-v3-dflash2-20261014 DRAFT_BLOCK_SIZE=8 check-source check-native-cpu",
+      "exit_code": 0,
+      "log": "native-cpu-tests.log"
+    },
+    {
+      "command": "GGUF preparation with Metal API and shader validation",
+      "exit_code": 0,
+      "log": "metal-preparation-passed.log"
+    },
+    {
+      "command": "native model-check for real target and converted draft",
+      "exit_code": 0,
+      "log": "native-config-check.log"
+    },
+    {
+      "command": "real MiniPlus tokenizer via CPU server startup, contract validation and chat template validation",
+      "exit_code": 0
+    },
+    {
+      "command": "ruff check and format check for changed Python files; sh -n and launcher --help",
+      "exit_code": 0
+    }
+  ],
+  "initial_native_failure": {
+    "exit_code": 1,
+    "reason": "Q4_0/Q8_0 copy size gate had not yet been expanded; fixed and exact-reference checks rerun without relaxing assertions",
+    "log": "metal-preparation-initial-failure.log"
+  },
+  "source_sha256": {
+    "qwen38miniplusv3splash.sh": "ce44f3086965a579cce6b539d60ce4189afc67babef6923ddb498e3ae924c779",
+    "dev/tools/dequantize_dflash2_gguf.py": "6c03dae1bebf9c8208a9b9aeda994771606babad4d8ded3f9a761f257e185002",
+    "dev/tests/tools/test_dequantize_dflash2_gguf.py": "d55a990b17aef1b4524f378c436d5d1fc7d8f01d2677ed8a7dc0746db97f210b",
+    "install/gguf.py": "3035557601c6445830a5f4fba0ef21cc096fc54a372d754eae31db9cf13d78d3",
+    "runtime/model/GgufImage.cpp": "db4c00580cd376f0e8b35c11293cbaaf7462462c0d05e34be1412cd6d26da465",
+    "runtime/model/GgufPreparation.cpp": "f0bd30c265918534470136dc251ace574fa4424a9c17e80fd3788fbbc97a96f5",
+    "dev/tests/engine/gguf_planner_test.mm": "3f0260959ba6016ce4efe9607328341b7044a7c3befdb5bdbc57c282700939e2",
+    "dev/tests/engine/gguf_preparation_test.mm": "c248ef9f8210c7dc3d59d62cf66c4bee27a05209bb3ed23d6c08602ea1c11426",
+    "dev/tests/install/test_gguf_metadata.py": "00f2adad83bbe7766d7f05001cfd8d6b36d0232876c45c4608c15dffe0b4348d",
+    "dev/tests/install/test_local_launchers.py": "fe688ab943dadacada72d2b19cccee193f549a7ac6657ebfaadb75845533fe1c",
+    "dev/requirements.txt": "64557913ab8dc081f56b37e632713f029738a7858c7508b279fb5636a9889eb9"
+  },
+  "binary_sha256": "ab8a2fb5c9b61aa6027c9b0b5d82d0efb786f93c7c305c92966474c1ccf77f12",
+  "model_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/923c341c5f83b0f531e212985693ef9cda74b67ef854540f6116825058577cc6"
+}

@@ -73,13 +73,16 @@ public:
 
   // beta (value heads rows) | alpha (value heads rows), rows in grouped head
   // order: one 256-row tensor of their format padded with zero rows, or F32 as
-  // one float tensor, which BF16 and mixed F32/Q3_K pairs are widened to exactly.
+  // one float tensor, which BF16 and supported mixed F32/quantized pairs are widened to exactly.
   void alphaBeta(const std::string &betaName, const std::string &alphaName) {
     const GgufTensor *beta = file_.find(betaName), *alpha = file_.find(alphaName);
-    const uint32_t q3k = kQuantFormats[GGUF_FMT_Q3K].ggml_type;
+    const auto widenedQuantized = [](uint32_t type) {
+      return type == kQuantFormats[GGUF_FMT_Q3K].ggml_type || type == kQuantFormats[GGUF_FMT_Q40].ggml_type ||
+             type == kQuantFormats[GGUF_FMT_Q80].ggml_type;
+    };
     const bool mixed = beta && alpha &&
-        ((beta->type == ggml::kF32 && alpha->type == q3k) ||
-         (beta->type == q3k && alpha->type == ggml::kF32));
+        ((beta->type == ggml::kF32 && widenedQuantized(alpha->type)) ||
+         (widenedQuantized(beta->type) && alpha->type == ggml::kF32));
     if (!beta || !alpha || (!mixed && beta->type != alpha->type) || !alphaBetaType(beta->type)) {
       reject(betaName, beta);
       reject(alphaName, alpha);
@@ -97,7 +100,7 @@ public:
       for (const GgufTensor *t : {beta, alpha}) {
         const Conversion conversion = t->type == ggml::kBF16 ? Conversion::WidenToFloat32
             : t->type == ggml::kF16 ? Conversion::WidenHalfToFloat32
-            : t->type == q3k ? Conversion::DequantizeToFloat32 : Conversion::None;
+            : widenedQuantized(t->type) ? Conversion::DequantizeToFloat32 : Conversion::None;
         image_.copyAt(destination, tensorRows(*t, heads, t->bytes / heads, grouped(0, 1)), conversion);
         destination += tensorBytes;
       }
@@ -308,7 +311,7 @@ uint64_t convertedBytes(const TensorRows &source, Conversion conversion, uint64_
   case Conversion::Decay: return source.type == ggml::kBF16 ? sourceBytes * 2 : sourceBytes;
   case Conversion::DequantizeToFloat32: {
     const uint32_t format = gguf_format_of(source.type);
-    if (!safetensorsFormat(format) && format != GGUF_FMT_Q3K)
+    if (!safetensorsFormat(format) && format != GGUF_FMT_Q3K && format != GGUF_FMT_Q40 && format != GGUF_FMT_Q80)
       throw GgufError("unsupported F32 dequantization: " + source.name);
     return sourceBytes / kQuantFormats[format].block_bytes * kQuantFormats[format].block_elements * 4;
   }

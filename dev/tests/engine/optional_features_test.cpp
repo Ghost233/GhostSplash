@@ -2,6 +2,8 @@
 #include "model/CompactDraftHead.hpp"
 #include <numeric>
 #include "TestChecks.hpp"
+#include "TestFiles.hpp"
+#include <cstring>
 
 #include <cstdlib>
 #include <iostream>
@@ -14,6 +16,15 @@ int main() {
   require(!options.promptLookup && !options.compactDraftHead && !options.fastTopK &&
           options.compactRanking.empty(), "features must default off");
   require(options.lookupMinimumMatch == 2 && options.compactCapacity == 98304, "original tuning defaults");
+  auto fileOnly = options;
+  fileOnly.compactRanking = "/missing-public-ranking";
+  fileOnly.validate();
+  require(!fileOnly.compactDraftHead, "ranking path alone must not enable compact");
+  auto missingFile = options;
+  missingFile.compactDraftHead = true;
+  bool missingRejected = false;
+  try { missingFile.validate(); } catch (const std::invalid_argument &) { missingRejected = true; }
+  require(missingRejected, "enabling compact requires an explicit ranking file");
   options.promptLookup = true;
   require(!options.compactDraftHead && !options.fastTopK, "lookup switch is independent");
   for (uint32_t value : {1U, 5U}) {
@@ -72,5 +83,39 @@ int main() {
     require(rows.reason.empty() && rows.ids.size()==capacity && rows.valid==capacity-255 &&
             rows.ids[capacity-256]==248319, "requested compact row budget and dynamic supplement");
   }
+  const splash::test::TemporaryDirectory temporary("public-compact-ranking");
+  const auto file = temporary.path() / "ranking.splash";
+  const std::vector<uint32_t> order{2, 0, 3, 1};
+  std::vector<uint8_t> bytes(12 + 4 * order.size());
+  std::memcpy(bytes.data(), "SPLCHD02", 8);
+  const uint32_t vocabulary = 4;
+  std::memcpy(bytes.data() + 8, &vocabulary, 4);
+  std::memcpy(bytes.data() + 12, order.data(), 4 * order.size());
+  splash::test::writeFile(file, bytes);
+  require(readCompactRanking(file, vocabulary) == order, "public ranking has no model binding");
+  const auto rejected = [&](const std::filesystem::path &path, uint32_t size) {
+    try { static_cast<void>(readCompactRanking(path, size)); } catch (const std::invalid_argument &) { return true; }
+    return false;
+  };
+  require(rejected(temporary.path() / "missing", vocabulary), "missing ranking must reject enabling");
+  require(rejected(file, 5), "vocabulary mismatch must reject enabling");
+  for (uint32_t bad : {4U, 2U}) {
+    auto broken = bytes;
+    std::memcpy(broken.data() + 16, &bad, 4);
+    splash::test::writeFile(file, broken);
+    require(rejected(file, vocabulary), "out-of-range or duplicate ranking ID accepted");
+  }
+  auto truncated = bytes; truncated.pop_back();
+  splash::test::writeFile(file, truncated);
+  require(rejected(file, vocabulary), "truncated ranking accepted");
+  auto unknown = bytes; unknown[7] = '9';
+  splash::test::writeFile(file, unknown);
+  require(rejected(file, vocabulary), "unknown format version accepted");
+  auto trailing = bytes; trailing.push_back(0);
+  splash::test::writeFile(file, trailing);
+  require(rejected(file, vocabulary), "trailing ranking data accepted");
+  bytes[7] = '1';
+  splash::test::writeFile(file, bytes);
+  require(rejected(file, vocabulary), "legacy ranking must require offline conversion");
   std::cout << "optional features CPU checks passed\n";
 }

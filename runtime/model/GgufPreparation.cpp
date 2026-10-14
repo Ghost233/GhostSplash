@@ -320,12 +320,28 @@ float e4m3Scaled(uint8_t b) {
 }
 
 // Writes the F32 values, as the kernels compute them, of `count` native
-// blocks of format `id`: Q3_K for mixed GGUF GDN gates, s * code + z
+// blocks of format `id`: Q3_K/Q4_0/Q8_0 for mixed GGUF GDN gates, s * code + z
 // (MLX affine), or kFP4Values[code] (twice the E2M1 value) times
 // 2^(e - 128) (mxfp4) or times the 16-group's (128 g) * e4m3 / 2^8
 // (nvfp4), or (256 g) times e4m3 / 2^8 (fp8).
 void dequantize(const uint8_t *blocks, uint64_t count, uint32_t id, uint8_t *to) {
   const QuantFormat &format = kQuantFormats[id];
+  if (id == GGUF_FMT_Q40 || id == GGUF_FMT_Q80) {
+    for (uint64_t block = 0; block < count; ++block) {
+      const uint8_t *in = blocks + block * format.block_bytes;
+      __fp16 halfScale;
+      std::memcpy(&halfScale, in, sizeof halfScale);
+      const float scale = static_cast<float>(halfScale);
+      for (uint32_t l = 0; l < format.block_elements; ++l) {
+        const int code = id == GGUF_FMT_Q40
+            ? int((in[2 + l % 16] >> (4 * (l / 16))) & 15) - 8
+            : int(static_cast<int8_t>(in[2 + l]));
+        const float value = scale * code;
+        std::memcpy(to + 4 * (block * format.block_elements + l), &value, 4);
+      }
+    }
+    return;
+  }
   if (id == GGUF_FMT_Q3K) {
     for (uint64_t block = 0; block < count; ++block) {
       const uint8_t *in = blocks + block * format.block_bytes;

@@ -923,7 +923,11 @@ void gatherExtents(MetalBackend &backend) {
           "element short");
 }
 
-int main(int argc, char **argv) {
+// Focused regressions reuse these fixtures without renaming SDK declarations.
+#ifndef SPLASH_GGUF_PROJECTION_TEST_MAIN
+#define SPLASH_GGUF_PROJECTION_TEST_MAIN main
+#endif
+int SPLASH_GGUF_PROJECTION_TEST_MAIN(int argc, char **argv) {
   @autoreleasepool {
     if (argc != 2) {
       std::cerr << "usage: gguf-projection <production-and-test.metallib>\n";

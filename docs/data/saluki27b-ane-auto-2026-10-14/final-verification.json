@@ -1,0 +1,193 @@
+{
+  "completed": 10,
+  "controller_exit_code": 0,
+  "selected_share_counts_percent": {
+    "41.18": 5,
+    "52.94": 1,
+    "35.29": 1,
+    "44.12": 2,
+    "38.24": 1
+  },
+  "selection_median": 0.4117647058823529,
+  "prefill_median_tok_s": 636.2678357298739,
+  "decode_median_tok_s": 66.6984111956358,
+  "total_median_seconds": 75.0813722085,
+  "peak_metal_gib": 11.173189524561167,
+  "ane_used_runs": 10,
+  "retired_runs": 0,
+  "effective_repeat_pairs": [
+    {
+      "runs": [
+        1,
+        7
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        1,
+        8
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        551
+      ]
+    },
+    {
+      "runs": [
+        1,
+        9
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        1,
+        10
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        7,
+        8
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        551
+      ]
+    },
+    {
+      "runs": [
+        7,
+        9
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        7,
+        10
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        8,
+        9
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        551,
+        512
+      ]
+    },
+    {
+      "runs": [
+        8,
+        10
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        551,
+        512
+      ]
+    },
+    {
+      "runs": [
+        9,
+        10
+      ],
+      "share": 0.4117647058823529,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        512,
+        512
+      ]
+    },
+    {
+      "runs": [
+        4,
+        6
+      ],
+      "share": 0.4411764705882353,
+      "evaluations": 256,
+      "tokens_equal": true,
+      "tokens_compared": 4096,
+      "minimum_rows": [
+        535,
+        512
+      ]
+    }
+  ],
+  "startup_attempts_not_counted": [
+    {
+      "directory": "auto-01-attempt2",
+      "status": "failed",
+      "exit_code": null,
+      "error": "'monotonic'"
+    },
+    {
+      "directory": "auto-01-attempt1",
+      "status": "failed",
+      "exit_code": null,
+      "error": "GPU not idle enough for an isolated experiment"
+    }
+  ],
+  "launcher_default": "auto; no fixed minimum rows",
+  "no_external_inference_or_benchmark_detected": true,
+  "desktop_gpu_load_not_excluded_during_requests": true,
+  "runtime_source_sha256": "197a8d05b477fd52c41327b55bb1954a6d87559fb1c1a774f22fef4c2f1a8c6f",
+  "compiled_source_sha256": "ff42f55fe4243b9ecc441576a895944aae2c96842421c2af52512eede733957f"
+}

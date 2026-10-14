@@ -16,6 +16,17 @@ void updateProjectionRows(metal::MetalBackend &backend, const Projection &source
                           const Projection &destination, metal::MetalBuffer ids,
                           uint32_t offset, uint32_t rows);
 
+struct CompactProjectionValidation final {
+  uint64_t comparisons = 0;
+  float maximumAbsoluteError = 0;
+};
+
+// One-time, same staged decode kernel and identical BF16 probes: every
+// gathered row must equal the corresponding complete-head row exactly.
+[[nodiscard]] CompactProjectionValidation validateCompactProjection(
+    metal::MetalBackend &backend, const Projection &source, const Projection &compact,
+    metal::MetalBuffer mapping);
+
 void addCompactLogitMask(metal::CommandGraph &graph, metal::MetalBuffer logits,
                          uint32_t rows, uint32_t capacity, uint32_t valid);
 void addCompactProposalMap(metal::CommandGraph &graph, metal::MetalBuffer proposals,

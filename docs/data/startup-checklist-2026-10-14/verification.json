@@ -1,0 +1,225 @@
+{
+  "created_at": "2026-10-14T12:10:03.547615+08:00",
+  "workspace": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash",
+  "branch": "codex/qwen4b-quantized-ffn",
+  "base_commit": "3f43aa2460f59330e658fdc89945d72ce92d538c",
+  "uncommitted_changes": true,
+  "native_identity": {
+    "build_id": "src-b370030303bec02e1514af221c4293bc56a7c2e9e27d36ad388d074cb90d352e",
+    "schema_version": 1,
+    "source_sha256": "b370030303bec02e1514af221c4293bc56a7c2e9e27d36ad388d074cb90d352e"
+  },
+  "binary": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/startup-checklist-20261014/splash",
+  "binary_sha256": "f4189324b7b76a20ea3dc0abf595e06f8a7b38a5858fbdb3c70c2e7986a1bb5e",
+  "source_files_sha256": {
+    "server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "server/api_shapes.py": "a0c86e6e4bdaccb4bf82f009b6a6fb7c9ba9a2e8a15d906716065de47192f563",
+    "server/backend.py": "b85f6136e84d8077ab9fb187ef268bc2a7e11fac3845d8b69a90245448d71365",
+    "server/chat_templates.py": "76e532b16a5d7884f7d323facc4b75a718ba4946f891cf49557ec62ac912da70",
+    "server/connections.py": "934585fcc18ef3416b013f2ccaca5efb5d0c6fcb3e8cb8b859ae642cac70ed61",
+    "server/constraints.py": "bb957dafafd8f514dc148162de803f1840cd60f00b91056605d5fd299e8f4c25",
+    "server/crash_trace.py": "fa9df8eed7be06d5d312f44de54a029c1f0850d3a34a71a53f180ba295323014",
+    "server/diagnostics.py": "eed17c1b3ef19152cfe1e45a94436a3e68ece13e8de2608f6a3b0103474a30ed",
+    "server/document_worker.py": "49157b9f5a3a9a3233520c2a58576df4cf022342fe1d84c8c07569c3e5b74146",
+    "server/documents.py": "8e0f73d663a7a840fe2f94a57ff22300c5dc8fa1e59176a6a793baa3171ccc4a",
+    "server/errors.py": "93f46fd9891fc52a6192bee2093370519f35fbf55a4a7912cb3fc4461d80b331",
+    "server/frontend.py": "973cb7c4c132f35a88966b4fe153ffc0a031a331b89723ba715fe2d278e297a7",
+    "server/http_security.py": "67d445d809ab902b7f04d5ebfa83682291bf81a461a6e987a927ef9ec5f87aaa",
+    "server/images.py": "9447fd3c7897af1e9586eee07fd14ce64ec3ea90115a7a5ee51257a0b1cdfdd7",
+    "server/json_codec.py": "c28bb625397da538877c0849a15efd7bc603f36052b2454a685e0cc9575e9fe3",
+    "server/judgments.py": "0fdce4b2950f2bee62c05de51846105d078d7db8e68a149eacf97076a8c28759",
+    "server/latency.py": "9ca118d511f93466c291dff5c8220a424d5df281a9ec43095abda66fd1bc534e",
+    "server/lru.py": "c4ffe8fb1e4031608f1427959c6d154b1dd341b04770c0c47d2e5f9f27d9f059",
+    "server/metrics.py": "d1e0a45c6ffa1dba9fd7d6f76c321404797a3f27e1980ac8aee315e365dd7d4b",
+    "server/origins.py": "badacb3d21065b0a21a3d3b3ca97b07f3f131dc6e6da308a76d907e08c5436f1",
+    "server/output.py": "0c410a0d7cd5bd017b027176932a39ef12607d8e22fe0266da55d72bec4be239",
+    "server/protocol.py": "daf30d65be3bfb9934213e6e5120bc6ebfc96ed74707e816f47b0236832567d6",
+    "server/runtime.py": "6c0f9e34d0cd97159141939587aa19317fc0e3274958427229441537eaf6b982",
+    "server/schema_validation.py": "7faa9002a17e14419f2b9f2182748f227bfc196c8be38acd5f2e16346fa9235b",
+    "server/serve_options.py": "8b363e711e071120e1faf81a0ff51ebd0fa08a4b95b5127f6deba235d7c67aea",
+    "server/server.py": "b9071a11432ad416b7a2374ebc211b1771c39bfff7efa9911cdfdb255bad684b",
+    "server/startup_report.py": "bef9496a489097eccd4ee3870731bbb1fc290472a2de48452e943e89fbec2e33",
+    "server/thinking.py": "251e1b284fb8546ac67771a75d668c3bf0f59cd5264b861e1c65ac7fd0d9b138",
+    "server/tokenization.py": "c3354ad6012e83d4328e159c02815d9824562f3c81f3af12134cea8b990554f0",
+    "server/tool_schema.py": "6f2c96b5ca2b0ca8f5f9522bdc36b5df4b474bb0081b9aeb61b2d3945292927b",
+    "runtime/model/Model.hpp": "7cbfc8ccf0aa2adc9d9b8c4ee600333f7ed0b766ef4288efa49390105f59b5cd",
+    "runtime/model/Runtime.hpp": "2becee3737528af192e2c9357c230089880a5acfd070be23b8252c758ddff1e9",
+    "runtime/engine/Status.hpp": "2f308792194e2a5929eaab7a714c13e1b5a55a1ae7e0f9fa87a8a29c3a489460",
+    "runtime/engine/Status.cpp": "50dd16b87abeace29eee0f2d28fa34d798455444f4bb0ce10da3a83409cb5360",
+    "runtime/engine/Bootstrap.mm": "80e37996761547ce1f7333d8f949648e8de12b9a43c9612b597c015105b9caf0",
+    "qwen38miniplusv3splash.sh": "90d2e4d10835cf260c55d08a02130d015ccd3bed1f7fab5c46f5af2ae599244e",
+    "swift1527biq3ssplash.sh": "e87df7fbdf3c43b1ac1481cca58a068e5728aaf15cf4d103779ba32b77e40a6a",
+    "saluki27biq2mixsplash.sh": "8d7a77928466e45acf8ff4df413966318fb47ff035de36fa20a4f823072c3734",
+    "dev/tests/server/test_startup_report.py": "44160ec04411a80ec7118f189e7fa96ca807c339ccccaac53597fefb8bc8dc11",
+    "dev/tests/server/test_server_main.py": "ae36940002e0bbdc8c2f2ce37fa13c851a2246821a162f650cbd815a563ec9fe",
+    "dev/tests/engine/runtime_status_test.cpp": "4b2d115ce027c7a86ddc4678a7937661c6c42e2d63eaf8161ec68d5ff596990f"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "dev/tests/server",
+        "-t",
+        "."
+      ],
+      "tests": 860,
+      "exit_code": 0,
+      "log": "server-final.log"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "dev/tests/install",
+        "-t",
+        "."
+      ],
+      "tests": 232,
+      "skipped": 4,
+      "skip_reason": "Installed OpenCode/Codex/Pi binary integration gates not configured",
+      "exit_code": 0,
+      "log": "install-final.log"
+    },
+    {
+      "command": [
+        "make",
+        "-j4",
+        "BUILD=build/startup-checklist-20261014",
+        "DRAFT_BLOCK_SIZE=8",
+        "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+        "check-source",
+        "check-native-cpu"
+      ],
+      "exit_code": 0,
+      "log": "native-cpu.log"
+    },
+    {
+      "command": [
+        "make",
+        "-j4",
+        "BUILD=build/startup-checklist-20261014",
+        "DRAFT_BLOCK_SIZE=8",
+        "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+        "check-native-build",
+        "verify-build-identity"
+      ],
+      "exit_code": 0,
+      "log": "native-build.log"
+    },
+    {
+      "command": [
+        "make",
+        "BUILD=build/startup-checklist-20261014",
+        "DRAFT_BLOCK_SIZE=8",
+        "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+        "check-source",
+        "verify-build-identity"
+      ],
+      "exit_code": 0,
+      "log": "source-final.log"
+    },
+    {
+      "commands": [
+        ".venv/bin/python -m ruff check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+        ".venv/bin/python -m ruff format --check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+        ".venv/bin/python -m compileall -q server install/*.py dev/tools dev/tests dev/benchmarks"
+      ],
+      "exit_code": 0,
+      "log": "static-final.log"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "dev.tests.server.test_startup_report",
+        "dev.tests.server.test_server_main"
+      ],
+      "tests": 13,
+      "exit_code": 0,
+      "log": "targeted-final.log"
+    }
+  ],
+  "real_launcher_negative_check": {
+    "command": [
+      "sh",
+      "qwen38miniplusv3splash.sh",
+      "--port",
+      "0",
+      "--disable-ane",
+      "--compact-draft-head",
+      "on",
+      "--compact-draft-ranking",
+      "/private/tmp/startup-checklist-missing-c5e254c984134b4a82ec32c7c296988f.splash"
+    ],
+    "returncode": 1,
+    "expected_returncode": 1,
+    "mode": "negative startup; compact preflight precedes Metal creation and weight loading",
+    "assertions_exit_code": 0,
+    "actual_state": "startup error before Metal backend/weight loading; no Ready/effective report",
+    "log": "launcher-error.log"
+  },
+  "actual_status_replay": {
+    "source": "/private/tmp/saluki-readonly-check-20261014.json",
+    "source_sha256": "43b220e275b17ff9ec0af8e6ca2072c59bc9496709694aa78e7e6ff03e1ab903",
+    "actual_states": {
+      "ane": "on",
+      "relative_power_recovery": "unavailable",
+      "power_reference": "unavailable",
+      "drafter": "unknown (old snapshot omitted field)"
+    },
+    "log": "saved-status-replay.log",
+    "inference_performed": false
+  },
+  "initial_failures": [
+    {
+      "test": "Python/native red tests",
+      "exit_codes": [
+        1,
+        2
+      ],
+      "reason": "new report module and native feature snapshot did not yet exist",
+      "logs": [
+        "python-red.log",
+        "native-red.log"
+      ]
+    },
+    {
+      "test": "initial full install",
+      "exit_code": 1,
+      "failures": 2,
+      "reason": "configuration printed before a held stop signal was consumed",
+      "log": "install.log",
+      "resolution": "process held stop before report; original assertions unchanged"
+    },
+    {
+      "test": "initial full server",
+      "exit_code": 1,
+      "errors": 1,
+      "reason": "startup error printed twice",
+      "log": "server.log",
+      "resolution": "merge stage into original single error line; original assertions unchanged"
+    }
+  ],
+  "old_builds_preserved": {
+    "build/compact-public-20261014/splash": {
+      "exists": true,
+      "sha256": "90e427fa260f41bb46a4bc7ada575dbe184e44abec8422b882239737eade4d9f"
+    },
+    "build/miniplus-v3-dflash2-20261014/splash": {
+      "exists": true,
+      "sha256": "ab8a2fb5c9b61aa6027c9b0b5d82d0efb786f93c7c305c92966474c1ccf77f12"
+    }
+  },
+  "production_model_loaded": false,
+  "performance_tests_run": false,
+  "saluki_model_tested": false,
+  "saluki_note": "user deleted original model; not restored or loaded"
+}

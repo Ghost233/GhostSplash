@@ -664,7 +664,7 @@ SERVE_OPTIONS = (
         dict(
             choices=("on", "off"),
             default="off",
-            help="use a ranked draft vocabulary when supported (default: off)",
+            help="enable validated compact draft head with --compact-draft-ranking FILE (default: off)",
         ),
     ),
     ServeOption(
@@ -684,7 +684,7 @@ SERVE_OPTIONS = (
             type=parse_cache_dir,
             default=None,
             metavar="FILE",
-            help="draft ranking file (default: MODEL_DIRECTORY/head-ranked.splash)",
+            help="explicit public draft ranking file; does not enable compact by itself",
         ),
     ),
     ServeOption(
@@ -731,6 +731,8 @@ def add_serve_arguments(parser, groups=None):
 
 def check_serve_arguments(parser, args):
     """The checks of the shared options that involve more than one."""
+    if args.compact_draft_head == "on" and args.compact_draft_ranking is None:
+        parser.error("--compact-draft-head on requires --compact-draft-ranking FILE")
     if args.ane_ffn_minimum_rows is not None and args.ane_ffn_share is None:
         parser.error("--ane-ffn-minimum-rows needs a fixed --ane-ffn-share")
     if (

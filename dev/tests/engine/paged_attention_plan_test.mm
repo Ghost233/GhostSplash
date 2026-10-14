@@ -1,6 +1,7 @@
 #include "TestBuffers.hpp"
 #include "TestChecks.hpp"
 #include "ops/PagedAttention.hpp"
+#include "ops/KvCodec.hpp"
 #include "ops/RoPE.hpp"
 #include "HostKvExtents.hpp"
 #include "LinearNumerics.hpp"
@@ -557,15 +558,19 @@ std::vector<std::vector<std::byte>> expectedQ4hStore(const Case &data) {
           const uint32_t token = data.stores[lane].committed_tokens + row;
           const uint32_t id = data.page(lane, token), extent = id / data.pool.extentPages();
           std::array<float, 256> values{};
+          std::array<uint16_t, 256> sourceBits{};
           float maximum = 0;
           for (uint32_t d = 0; d < 256; ++d) {
             const uint64_t base = (uint64_t(lane) * data.layout.kvHeads + head) * data.stride * 256;
-            values[d] = bf16ToFloat(source[base + (tensor ? d * data.stride + row : row * 256 + d)]);
+            sourceBits[d] = source[base + (tensor ? d * data.stride + row : row * 256 + d)];
+            values[d] = bf16ToFloat(sourceBits[d]);
             maximum = std::max(maximum, std::abs(values[d]));
           }
           const auto *page = data.pool.slab<uint8_t>(kLayer, tensor ? SPLASH_KV_VALUES : SPLASH_KV_KEYS, id);
           const auto *scales = data.pool.slab<float>(kLayer, tensor ? SPLASH_KV_VALUE_SCALES : SPLASH_KV_KEY_SCALES, id);
           const float scale = maximum == 0 ? 0 : maximum / 7.0f;
+          const auto host = kv::quantizeQ4h(sourceBits);
+          require(host.scale == scale, "host Q4H scale differs from the GPU store oracle");
           const auto scaleOffset = reinterpret_cast<const std::byte *>(scales + splash_kv_scale_element(head, token % 32))
                                    - data.pool.bytes(extent).data();
           std::memcpy(result[extent].data() + scaleOffset, &scale, sizeof(scale));
@@ -574,6 +579,7 @@ std::vector<std::vector<std::byte>> expectedQ4hStore(const Case &data) {
               return maximum == 0 ? 0 : std::clamp(int(std::nearbyint(values[dim] * 7.0f / maximum)), -7, 7);
             };
             const uint8_t packed = uint8_t((q(d) & 15) | ((q(d + 1) & 15) << 4));
+            require(host.codes[d / 2] == packed, "host Q4H codes differ from the GPU store oracle");
             const uint64_t at = splash_kv_key_element(head, token % 32, d) / 2;
             const auto offset = reinterpret_cast<const std::byte *>(page + at) - data.pool.bytes(extent).data();
             result[extent][offset] = std::byte(packed);
@@ -746,6 +752,50 @@ std::vector<uint16_t> run(metal::MetalBackend &backend, Case &data, bool testBou
   return {values, values + output.sizeBytes() / 2};
 }
 
+void checkKvHostStore(metal::MetalBackend &backend, kv::Format format, uint32_t heads) {
+  auto data = makeCase(backend, heads == 2 ? 16 : 24, {1, heads, 256, format}, 1, 7, 31, false);
+  std::vector<std::vector<std::byte>> expected;
+  for (uint32_t extent = 0; extent < data.pool.extentCount(); ++extent) {
+    const auto bytes = data.pool.bytes(extent);
+    expected.emplace_back(bytes.begin(), bytes.end());
+  }
+  const bool external = data.layout.scaleBytesPerLayerPage() != 0;
+  for (uint32_t row = 0; row < data.rows; ++row) {
+    const uint32_t token = 31 + row, page = data.page(0, token), extent = page / data.pool.extentPages();
+    std::vector<std::span<std::byte>> spans;
+    for (uint32_t layer = 0; layer <= kLayer; ++layer)
+      for (uint32_t part = 0; part < (external ? 4u : 2u); ++part) {
+        const uint32_t tensor = external ? part : part * 2;
+        const auto original = data.pool.slab<std::byte>(layer, tensor, page);
+        const auto offset = original - data.pool.bytes(extent).data();
+        const auto bytes = tensor % 2 ? data.layout.scaleBytesPerLayerPage() : data.layout.dataBytesPerLayerPage();
+        spans.emplace_back(expected[extent].data() + offset, bytes);
+      }
+    for (uint32_t head = 0; head < heads; ++head) for (uint32_t role = 0; role < 2; ++role) {
+      std::array<uint16_t,256> source{};
+      for (uint32_t d = 0; d < 256; ++d) {
+        source[d] = floatToBf16(row == 0 && head == 0 ? 0.f :
+            float(int((d * 7 + row * 11 + head * 13 + role * 17) % 63) - 31) / 8.f);
+        if (format == kv::Format::BFloat16) {
+          constexpr std::array<uint16_t,12> bits{0,0x8000,1,0x8001,0x7f80,0xff80,0x7fc3,0xffc5,0x0080,0x7f7f,0xff7f,0x4960};
+          source[d] = bits[(d + row + head + role) % bits.size()];
+        }
+      }
+      kv::writeRow(format, spans, kLayer, head, token % 32, role != 0, source);
+      const auto staged = kv::usesHadamard(format) ? kv::rotateRow(source, role != 0) : source;
+      auto *gpu = static_cast<uint16_t *>((role ? data.values : data.keys).contents());
+      for (uint32_t d = 0; d < 256; ++d) {
+        const uint64_t at = uint64_t(head) * data.stride * 256 + (role ? d * data.stride + row : row * 256 + d);
+        gpu[at] = staged[d];
+      }
+    }
+  }
+  metal::CommandGraph graph;
+  ops::PagedAttention::addPrefillStore(graph, data.layer, data.keys, data.values, data.tables[0], data.stores[0], data.layout);
+  (void)backend.submitCommandAsync(graph.dispatches()).wait();
+  checkBf16Store(data, expected);
+}
+
 void checkPrefill(metal::MetalBackend &backend, uint32_t heads, kv::Layout layout,
                    uint32_t history, uint32_t rows) {
   auto data = makeCase(backend, heads, layout, 1, rows, history, false);
@@ -915,11 +965,17 @@ void checkProjection(metal::MetalBackend &backend, uint32_t queryHeads, kv::Layo
           return ((uint64_t(lane) * kvHeads + h) * stride + row) * 256 + d;
         };
         std::array<float, 256> source{};
-        for (uint32_t d = 0; d < 256; ++d)
-          source[d] = bf16ToFloat((query ? oldQueries : value ? oldValues : oldKeys)[index(d)]);
+        std::array<uint16_t, 256> sourceBits{};
+        for (uint32_t d = 0; d < 256; ++d) {
+          sourceBits[d] = (query ? oldQueries : value ? oldValues : oldKeys)[index(d)];
+          source[d] = bf16ToFloat(sourceBits[d]);
+        }
         const auto expected = hadamardReference(source, value ? 64 : 256);
+        const auto host = kv::rotateRow(sourceBits, value);
         for (uint32_t d = 0; d < 256; ++d) {
           const float observed = bf16ToFloat((query ? queryData : value ? valueData : keyData)[index(d)]);
+          require((query ? queryData : value ? valueData : keyData)[index(d)] == host[d],
+                  "CPU/GPU KV rotation BF16 bits differ");
           require(std::isfinite(observed) && std::abs(observed - expected[d]) <=
                       std::max(1e-5f, 2 * ulpBf16(expected[d])),
                   "q4h Q/K/V rotation differs from the dense matrix reference");
@@ -1172,7 +1228,8 @@ void ropeRangeMatchesPositions(metal::MetalBackend &backend) {
 
 int main(int argc, char **argv) {
   try {
-    require(argc >= 1 && argc <= 3, "usage: paged-attention-plan [METALLIB [--long]]");
+    require(argc >= 1 && argc <= 3,
+            "usage: paged-attention-plan [METALLIB [--long|--rope-only|--format=FORMAT|--q4h-shared-only|--kv-codec-only]]");
     for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
                         kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
       for (const auto [heads, kvHeads] : std::array<std::array<uint32_t, 2>, 3>{{{24, 4}, {16, 2}, {16, 4}}})
@@ -1188,6 +1245,28 @@ int main(int argc, char **argv) {
       std::cout << "target-only RoPE: PASS\n";
       return 0;
     }
+    if (argc == 3 && (std::string_view(argv[2]) == "--q4h-shared-only" ||
+                      std::string_view(argv[2]) == "--kv-codec-only")) {
+      const bool q4hOnly = std::string_view(argv[2]) == "--q4h-shared-only";
+      for (const auto [heads, kvHeads] : std::array<std::array<uint32_t,2>,3>{{{24,4},{16,2},{16,4}}}) {
+        for (bool float32 : {false, true}) for (bool verify : {false, true})
+          checkProjection(backend, heads, {1, kvHeads, 256, kv::Format::Int8}, float32, verify);
+        for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
+                            kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
+          if (q4hOnly && format != kv::Format::Int4Hadamard) continue;
+          const kv::Layout layout{1, kvHeads, 256, format};
+          checkPrefill(backend, heads, layout, 33, 7);
+          checkVerify(backend, heads, layout, 33, 2);
+        }
+      }
+      for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
+                          kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
+        if (q4hOnly && format != kv::Format::Int4Hadamard) continue;
+        for (uint32_t heads : {2u,4u}) checkKvHostStore(backend, format, heads);
+      }
+      std::cout << "shared KV CPU/GPU codecs: PASS\n";
+      return 0;
+    }
     checkBf16StoreEdges(backend);
     ropeExtents(backend);
     ropeRangeMatchesPositions(backend);
@@ -1200,6 +1279,10 @@ int main(int argc, char **argv) {
         for (bool verify : {false, true})
           checkProjection(backend, heads, {1, kvHeads, 256, kv::Format::Int8}, float32,
                           verify);
+    for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
+                        kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
+      for (uint32_t heads : {2u,4u}) checkKvHostStore(backend, format, heads);
+    }
     if (argc == 3 && std::string_view(argv[2]) == "--long") {
       for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
                         kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})

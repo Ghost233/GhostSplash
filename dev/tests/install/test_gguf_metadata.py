@@ -56,6 +56,7 @@ GGML = {
     "BF16": 30,
     "MXFP4": 39,
     "NVFP4": 40,
+    "Q2_0": 42,
     "PQ2_0": 142,
 }
 
@@ -366,6 +367,19 @@ class GgufMetadataTests(unittest.TestCase):
                 path = write_gguf(self.root / "mixed.gguf", values, mixed.items())
                 gguf.require_loadable(gguf.Metadata(path, tensors=True))
 
+    def test_screening_accepts_mixed_f32_q4_0_q8_0_gdn_projections(self):
+        values = fixture()
+        tensors = loadable_tensors(values, self.root)
+        for kind in ("Q4_0", "Q8_0"):
+            for alpha, beta in (("F32", kind), (kind, "F32")):
+                with self.subTest(alpha=alpha, beta=beta):
+                    mixed = tensors | {
+                        "blk.0.ssm_alpha.weight": GGML[alpha],
+                        "blk.0.ssm_beta.weight": GGML[beta],
+                    }
+                    path = write_gguf(self.root / "mixed.gguf", values, mixed.items())
+                    gguf.require_loadable(gguf.Metadata(path, tensors=True))
+
     def test_screening_accepts_only_4b_shared_output_weights(self):
         values = fixture()
         tensors = loadable_tensors(values, self.root)
@@ -426,6 +440,7 @@ class GgufMetadataTests(unittest.TestCase):
             "IQ4_XS",
             "MXFP4",
             "PQ2_0",
+            "Q2_0",
         ):
             with self.subTest(kind=kind):
                 path = write_gguf(
@@ -488,7 +503,7 @@ class GgufMetadataTests(unittest.TestCase):
             ),
             ({"output_norm.weight": GGML["F16"]}, "output_norm.weight F16"),
             (
-                {"blk.1.ssm_alpha.weight": GGML["Q8_0"]},
+                {"blk.1.ssm_alpha.weight": GGML["Q6_K"]},
                 "ssm_alpha.weight and ssm_beta.weight of different types",
             ),
             # An all-F32 file, whose types the loader reads somewhere.

@@ -1,0 +1,65 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+.............................................................ssss.................................................../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpjawg1a_v/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpbf8xe8eo/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpc80e_56t/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.....FF...../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpjzoh5ejy/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpwwpwj9o0/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmppe5stwm9/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.......................................Fetching 2 file(s), 0.00 GB, from z-lab/Qwen3.5-4B-DFlash@9a1996ccf887; cached files are reused.
+...Fetching 1 file(s), 0.00 GB, from mlx-community/Qwen3.8-27B-4bit@aaaaaaaaaaaa; cached files are reused.
+..............................Fetching 1 file(s), 0.00 GB, from mlx-community/Qwen3.8-27B-4bit@aaaaaaaaaaaa; cached files are reused.
+........................
+======================================================================
+FAIL: test_programs_take_a_stop_held_from_their_start (dev.tests.install.test_launcher.LauncherTests.test_programs_take_a_stop_held_from_their_start) (program=['-m', 'server.server'], signal='SIGINT')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_launcher.py", line 1206, in test_programs_take_a_stop_held_from_their_start
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        (result.returncode, result.stdout, result.stderr), (status, "", "")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: Tuples differ: (0, '11:59:54 Startup configuration · on/off a[1595 chars], '') != (0, '', '')
+
+First differing element 1:
+'11:59:54 Startup configuration · on/off a[1590 chars]ff\n'
+''
+
+Diff is 1915 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_programs_take_a_stop_held_from_their_start (dev.tests.install.test_launcher.LauncherTests.test_programs_take_a_stop_held_from_their_start) (program=['-m', 'server.server'], signal='SIGTERM')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_launcher.py", line 1206, in test_programs_take_a_stop_held_from_their_start
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        (result.returncode, result.stdout, result.stderr), (status, "", "")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: Tuples differ: (0, '11:59:55 Startup configuration · on/off a[1595 chars], '') != (0, '', '')
+
+First differing element 1:
+'11:59:55 Startup configuration · on/off a[1590 chars]ff\n'
+''
+
+Diff is 1915 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 232 tests in 46.310s
+
+FAILED (failures=2, skipped=4)

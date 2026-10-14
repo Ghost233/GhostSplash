@@ -3,6 +3,7 @@
 #include "metal/abi/PagedAttention.h"
 #include "metal/kernels/common/kv_extent.h"
 #include "metal/kernels/common/kv_hadamard.h"
+#include "metal/kernels/common/kv_codec.h"
 #include "metal/kernels/common/kv_paging.h"
 #include <MetalPerformancePrimitives/MetalPerformancePrimitives.h>
 #include <metal_stdlib>
@@ -20,45 +21,6 @@ using namespace mpp::tensor_ops;
 // fp32 partials and statistics for a fixed-order reduce.
 //
 // Prefill and verify share this device-operand page loop.
-template <class CacheElement> struct SplashKvMatmulElement { using Type = CacheElement; };
-template <> struct SplashKvMatmulElement<uchar> { using Type = int4b_format; };
-
-// Q4_0 scale and packing are decoded only inside one attention page. A
-// single 16 KiB stage is reused for K and V; cache storage remains compressed.
-inline bfloat2 splash_q4_0_pair(device const SplashQ4Block *block, uint lane) {
-  uint code = block->qs[lane];
-  float scale = float(block->d);
-  return bfloat2(bfloat(scale * (int(code & 15) - 8)), bfloat(scale * (int(code >> 4) - 8)));
-}
-
-template <class CacheElement>
-inline auto splash_attention_key_operand(device CacheElement *data,
-                                          threadgroup bfloat *stage) {
-  constexpr uint D = SplashKvHeadDimension, N = SplashKvPageTokens;
-  if constexpr (is_same<CacheElement, SplashQ4Block>::value)
-    return tensor(stage, dextents<int, 2>{D, N}, array<int, 2>{1, D});
-  else {
-    using Element = typename SplashKvMatmulElement<CacheElement>::Type;
-    return tensor<device Element, dextents<int, 2>, tensor_inline>(
-        data, dextents<int, 2>{D, N}, array<int, 2>{1, D});
-  }
-}
-
-template <class CacheElement>
-inline auto splash_attention_value_operand(device CacheElement *data,
-                                            threadgroup bfloat *stage) {
-  constexpr uint D = SplashKvHeadDimension, N = SplashKvPageTokens;
-  if constexpr (is_same<CacheElement, SplashQ4Block>::value)
-    return tensor(stage, dextents<int, 2>{D, N}, array<int, 2>{1, D});
-  else {
-    using Element = typename SplashKvMatmulElement<CacheElement>::Type;
-    constexpr bool Packed4 = is_same<CacheElement, uchar>::value;
-    constexpr uint K = Packed4 ? D : N, Columns = Packed4 ? N : D;
-    return tensor<device Element, dextents<int, 2>, tensor_inline>(
-        data, dextents<int, 2>{K, Columns}, array<int, 2>{1, K});
-  }
-}
-
 constant uint SplashVerifyMaximumSplits =
     SPLASH_VERIFY_ATTENTION_MAXIMUM_SPLITS;
 constant uint SplashPrefillTileRows = SPLASH_PREFILL_ATTENTION_TILE_ROWS;
@@ -254,8 +216,8 @@ inline void splash_paged_attention_tile(
   auto st = tensor(scores, dextents<int, 2>{N, M}, array<int, 2>{1, N});
   auto pt = tensor(probabilities, dextents<int, 2>{N, M}, array<int, 2>{1, N});
   auto p0 = pt.slice<N, M>(0, 0);
-  auto key_type = splash_attention_key_operand(static_cast<device CacheElement *>(nullptr), stage);
-  auto value_type = splash_attention_value_operand(static_cast<device CacheElement *>(nullptr), stage);
+  auto key_type = splash_kv_key_operand(static_cast<device CacheElement *>(nullptr), stage);
+  auto value_type = splash_kv_value_operand(static_cast<device CacheElement *>(nullptr), stage);
   const SplashKvAddressing<KVHeads, CacheElement> addressing(kv, kv_head);
   auto q0 = qt.slice<D, M>(0, 0);
   auto k0 = key_type.template slice<D, N>(0, 0);
@@ -297,8 +259,8 @@ inline void splash_paged_attention_tile(
       }
       threadgroup_barrier(mem_flags::mem_threadgroup);
     }
-    auto kt = splash_attention_key_operand(tensors.keys, stage);
-    auto vt = splash_attention_value_operand(tensors.values, stage);
+    auto kt = splash_kv_key_operand(tensors.keys, stage);
+    auto vt = splash_kv_value_operand(tensors.values, stage);
     device const float *key_scales = tensors.key_scales;
     device const float *value_scales = tensors.value_scales;
 
@@ -408,6 +370,6 @@ inline void splash_attention_reduce_row(
     denominator = *shared_denominator;
   }
   float value = denominator > 0.0f ? numerator / denominator : 0.0f;
-  if constexpr (Rotate) value = splash_kv_hadamard<64>(value, rotation, thread_index);
+  if constexpr (Rotate) value = splash_kv_unrotate_value(value, rotation, thread_index);
   tile_output[fused_row * D + thread_index] = bfloat(value);
 }

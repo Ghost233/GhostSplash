@@ -1,0 +1,4 @@
+2026-10-14 17:33:19.651 target-iq1s-replay[77836:16798135] Metal GPU Validation Enabled
+Frozen IQ1S spread S=1 L=2, 128 repeats ok
+Frozen IQ1S spread S=4 L=2, 128 repeats ok
+IQ1S replay: PASS (0 failures)

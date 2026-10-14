@@ -1,0 +1,102 @@
+2026-10-14 17:23:32.087 target-iq1s-replay[52545:16580535] Metal GPU Validation Enabled
+IQ1S 768x2304 S=1 L=2 repeat=9 one/one: row=0 column=288 a=0xbcd3 b=0xffff
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=9 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=9 one-B/two-B: row=0 column=288 a=0xffff b=0xbcd3
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=9 one-B/two-B: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=23 one/one: row=2 column=192 a=0x3e81 b=0xffff
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=23 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=23 one-B/two-B: row=2 column=192 a=0xffff b=0x3e81
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=23 one-B/two-B: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=35 one/one: row=0 column=256 a=0xbf2c b=0xffff
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=35 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=35 one-B/two-B: row=0 column=256 a=0xffff b=0xbf2c
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=35 one-B/two-B: strict BF16 equality failed
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=42 one-B: writes padding column 896
+IQ1S 768x2304 S=1 L=2 repeat=42 one/one: row=0 column=28 a=0x3f54 b=0x3f55
+  FAIL IQ1S 768x2304 S=1 L=2 repeat=42 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=1 L=2 repeat=42 one-B/two-B: row=0 column=28 a=0x3f55 b=0x3f54
+IQ1S 768x2304 S=1 L=2 repeat=53 one/one: row=2 column=160 a=0xffff b=0xbed3
+IQ1S 768x2304 S=1 L=2 repeat=53 one/two: row=2 column=160 a=0xffff b=0xbed3
+IQ1S 768x2304 S=1 L=2 repeat=53 one/first: row=2 column=160 a=0xffff b=0xbed3
+IQ1S 768x2304 S=1 L=2 repeat=55 one/one: row=0 column=384 a=0xbe4c b=0xffff
+IQ1S 768x2304 S=1 L=2 repeat=55 one-B/two-B: row=0 column=384 a=0xffff b=0xbe4c
+IQ1S 768x2304 S=1 L=2 repeat=63 one/one: row=0 column=512 a=0xffff b=0xbde7
+IQ1S 768x2304 S=1 L=2 repeat=63 one/two: row=0 column=512 a=0xffff b=0xbde7
+IQ1S 768x2304 S=1 L=2 repeat=63 one/first: row=0 column=512 a=0xffff b=0xbde7
+IQ1S 768x2304 S=1 L=2 repeat=70 one/one: row=0 column=256 a=0xbf2c b=0xffff
+IQ1S 768x2304 S=1 L=2 repeat=70 one-B/two-B: row=0 column=256 a=0xffff b=0xbf2c
+IQ1S 768x2304 S=1 L=2 repeat=83 one/one: row=0 column=224 a=0x3cd5 b=0xffff
+IQ1S 768x2304 S=1 L=2 repeat=83 one-B/two-B: row=0 column=224 a=0xffff b=0x3cd5
+IQ1S 768x2304 S=1 L=2 repeat=115 one/one: row=0 column=512 a=0xbde7 b=0xffff
+IQ1S 768x2304 S=1 L=2 repeat=115 one-B/two-B: row=0 column=512 a=0xffff b=0xbde7
+IQ1S 768x2304 S=1 L=2 repeat=122 one/one: row=0 column=544 a=0xffff b=0x3e90
+IQ1S 768x2304 S=1 L=2 repeat=122 one/two: row=0 column=544 a=0xffff b=0x3e90
+IQ1S 768x2304 S=1 L=2 repeat=122 one/first: row=0 column=544 a=0xffff b=0x3e90
+IQ1S 768x2304 S=1 L=2 repeat=123 one/one: row=0 column=704 a=0x3d83 b=0xffff
+IQ1S 768x2304 S=1 L=2 repeat=123 one-B/two-B: row=0 column=704 a=0xffff b=0x3d83
+Frozen IQ1S spread S=1 L=2, 128 repeats FAIL (29 failures)
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=1 one-B: a counter is not reset or a write past a buffer
+IQ1S 768x2304 S=4 L=2 repeat=1 one/one: row=0 column=384 a=0xbe4c b=0xffff
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=1 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=4 L=2 repeat=1 one-B/two-B: row=0 column=384 a=0xffff b=0xbe4c
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=1 one-B/two-B: strict BF16 equality failed
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=2 one-A: a counter is not reset or a write past a buffer
+IQ1S 768x2304 S=4 L=2 repeat=2 one/one: row=0 column=224 a=0xffff b=0x3cd5
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=2 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=4 L=2 repeat=2 one/two: row=0 column=224 a=0xffff b=0x3cd5
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=2 one/two: strict BF16 equality failed
+IQ1S 768x2304 S=4 L=2 repeat=2 one/first: row=0 column=224 a=0xffff b=0x3cd5
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=2 one/first: strict BF16 equality failed
+IQ1S 768x2304 S=4 L=2 repeat=5 one/one: row=2 column=192 a=0x3e81 b=0xffff
+  FAIL IQ1S 768x2304 S=4 L=2 repeat=5 one/one: strict BF16 equality failed
+IQ1S 768x2304 S=4 L=2 repeat=5 one-B/two-B: row=2 column=192 a=0xffff b=0x3e81
+IQ1S 768x2304 S=4 L=2 repeat=6 one/one: row=0 column=544 a=0x3e90 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=6 one-B/two-B: row=0 column=544 a=0xffff b=0x3e90
+IQ1S 768x2304 S=4 L=2 repeat=22 one/one: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=22 one/two: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=22 one-B/two-B: row=2 column=96 a=0xffff b=0xbe3a
+IQ1S 768x2304 S=4 L=2 repeat=22 one/first: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=25 one/one: row=0 column=288 a=0xbcd3 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=25 one-B/two-B: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=29 one/one: row=0 column=448 a=0x3e3a b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=29 one-B/two-B: row=0 column=448 a=0xffff b=0x3e3a
+IQ1S 768x2304 S=4 L=2 repeat=31 one/one: row=0 column=224 a=0x3cd5 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=31 one/two: row=2 column=224 a=0xffff b=0xbd82
+IQ1S 768x2304 S=4 L=2 repeat=31 one-B/two-B: row=0 column=224 a=0xffff b=0x3cd5
+IQ1S 768x2304 S=4 L=2 repeat=31 one/first: row=2 column=224 a=0xffff b=0xbd82
+IQ1S 768x2304 S=4 L=2 repeat=32 one/one: row=2 column=192 a=0x3e81 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=32 one-B/two-B: row=2 column=192 a=0xffff b=0x3e81
+IQ1S 768x2304 S=4 L=2 repeat=33 one/one: row=0 column=192 a=0xffff b=0x3f32
+IQ1S 768x2304 S=4 L=2 repeat=33 one/two: row=0 column=192 a=0xffff b=0x3f32
+IQ1S 768x2304 S=4 L=2 repeat=33 one/first: row=0 column=192 a=0xffff b=0x3f32
+IQ1S 768x2304 S=4 L=2 repeat=48 one/one: row=0 column=576 a=0xffff b=0x3e4b
+IQ1S 768x2304 S=4 L=2 repeat=48 one/two: row=0 column=576 a=0xffff b=0x3e4b
+IQ1S 768x2304 S=4 L=2 repeat=48 one/first: row=0 column=576 a=0xffff b=0x3e4b
+IQ1S 768x2304 S=4 L=2 repeat=51 one/one: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=51 one/two: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=51 one/first: row=0 column=288 a=0xffff b=0xbcd3
+IQ1S 768x2304 S=4 L=2 repeat=53 one/one: row=0 column=448 a=0x3e3a b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=53 one-B/two-B: row=0 column=448 a=0xffff b=0x3e3a
+IQ1S 768x2304 S=4 L=2 repeat=73 one/one: row=0 column=512 a=0xbde7 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=73 one-B/two-B: row=0 column=512 a=0xffff b=0xbde7
+IQ1S 768x2304 S=4 L=2 repeat=85 one/one: row=0 column=672 a=0xffff b=0x3da3
+IQ1S 768x2304 S=4 L=2 repeat=85 one/two: row=0 column=672 a=0xffff b=0x3da3
+IQ1S 768x2304 S=4 L=2 repeat=85 one/first: row=0 column=672 a=0xffff b=0x3da3
+IQ1S 768x2304 S=4 L=2 repeat=86 one/one: row=2 column=416 a=0xffff b=0xbf15
+IQ1S 768x2304 S=4 L=2 repeat=86 one/two: row=2 column=416 a=0xffff b=0xbf15
+IQ1S 768x2304 S=4 L=2 repeat=86 one/first: row=2 column=416 a=0xffff b=0xbf15
+IQ1S 768x2304 S=4 L=2 repeat=88 one/one: row=2 column=96 a=0xbe3a b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=88 one-B/two-B: row=2 column=96 a=0xffff b=0xbe3a
+IQ1S 768x2304 S=4 L=2 repeat=89 one/one: row=2 column=736 a=0xffff b=0xbd9e
+IQ1S 768x2304 S=4 L=2 repeat=89 one/two: row=2 column=736 a=0xffff b=0xbd9e
+IQ1S 768x2304 S=4 L=2 repeat=89 one/first: row=2 column=736 a=0xffff b=0xbd9e
+IQ1S 768x2304 S=4 L=2 repeat=93 one/one: row=2 column=640 a=0x3e2b b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=93 one-B/two-B: row=2 column=640 a=0xffff b=0x3e2b
+IQ1S 768x2304 S=4 L=2 repeat=97 one/one: row=0 column=576 a=0x3e4b b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=97 one-B/two-B: row=0 column=576 a=0xffff b=0x3e4b
+IQ1S 768x2304 S=4 L=2 repeat=101 one/one: row=2 column=160 a=0xbed3 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=101 one-B/two-B: row=2 column=160 a=0xffff b=0xbed3
+IQ1S 768x2304 S=4 L=2 repeat=119 one/one: row=2 column=192 a=0x3e81 b=0xffff
+IQ1S 768x2304 S=4 L=2 repeat=119 one-B/two-B: row=2 column=192 a=0xffff b=0x3e81
+Frozen IQ1S spread S=4 L=2, 128 repeats FAIL (69 failures)
+IQ1S replay: FAIL (98 failures)

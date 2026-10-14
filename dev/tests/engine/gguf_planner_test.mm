@@ -133,6 +133,20 @@ void checkQuantizedAlphaBeta(const std::filesystem::path &directory) {
             "planner alpha/beta: one 256-row " + model::ggmlTypeName(type) + " tensor of beta then alpha rows (" +
                 model::gguf::architecture(g.ffnKind) + ")" + (result.error ? ": " + *result.error : ""));
     }
+    for (const auto format : {gguf_reference::Q3K, gguf_reference::Q40, gguf_reference::Q80})
+      for (bool betaQuantized : {false, true}) {
+        const uint32_t quantized = kQuantFormats[format].ggml_type;
+        writeGguf(path, tensorsWith(betaQuantized ? quantized : model::ggml::kF32,
+                                   betaQuantized ? model::ggml::kF32 : quantized), g);
+        const Plan mixed = plan(path, g);
+        const auto *copy = copyIn(mixed, betaQuantized ? "blk.0.ssm_beta.weight" : "blk.0.ssm_alpha.weight");
+        check(!mixed.error && copy && copy->conversion == model::gguf::Conversion::DequantizeToFloat32 &&
+                  model::gguf::convertedBytes(copy->source, copy->conversion,
+                                             copy->source.rows * copy->source.rowBytes) ==
+                      uint64_t{g.gdnValueHeads} * g.hiddenSize * sizeof(float),
+              "planner accepts mixed F32/" + std::string(gguf_reference::fmtName(format)) +
+                  " alpha/beta with exact F32 size and grouped rows");
+      }
     for (const auto &[beta, alpha] : {std::pair{kIQ4_XS, kQ8_0}, std::pair{kQ4_K, model::ggml::kF32}}) {
       writeGguf(path, tensorsWith(beta, alpha), g);
       const std::string betaName = "blk.0.ssm_beta.weight (" + model::ggmlTypeName(beta) + ")";

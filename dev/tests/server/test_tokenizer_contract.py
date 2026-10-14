@@ -1,7 +1,15 @@
 import io
+import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import mock
 
+from tokenizers import Regex, Tokenizer, decoders, models, normalizers, pre_tokenizers
+from transformers.utils import logging as transformers_logging
+
+from dev.tests.server_fixtures import byte_alphabet, main_args
+from install.gguf import QWEN35_PATTERN
 from server import constraints as generation_constraints
 from server import server
 
@@ -85,6 +93,107 @@ class TokenizerContractTests(unittest.TestCase):
         native.assert_not_called()
         http.server_activate.assert_not_called()
         http.server_close.assert_called_once()
+
+
+class TokenizerLoadingTests(unittest.TestCase):
+    def fixture(self, directory, model_type):
+        vocabulary = {
+            char: index for index, char in enumerate(byte_alphabet().values())
+        }
+        merges = [("P", "h"), ("Ph", "o"), ("Pho", "n"), ("Phon", "e"), ("i", "Phone")]
+        for left, right in merges:
+            vocabulary[left + right] = len(vocabulary)
+        # Transformers only runs its Mistral heuristic above 100,000 tokens.
+        while len(vocabulary) <= 100000:
+            vocabulary[f"<unused_{len(vocabulary)}>"] = len(vocabulary)
+        codec = Tokenizer(models.BPE(vocabulary, merges))
+        codec.normalizer = normalizers.NFC()
+        codec.pre_tokenizer = pre_tokenizers.Sequence(
+            [
+                pre_tokenizers.Split(Regex(QWEN35_PATTERN), behavior="isolated"),
+                pre_tokenizers.ByteLevel(add_prefix_space=False, use_regex=False),
+            ]
+        )
+        codec.decoder = decoders.ByteLevel()
+        codec.save(str(directory / "tokenizer.json"))
+        (directory / "tokenizer_config.json").write_text(
+            json.dumps({"tokenizer_class": "TokenizersBackend"})
+        )
+        if model_type is not None:
+            (directory / "config.json").write_text(
+                json.dumps({"model_type": model_type})
+            )
+        return codec
+
+    def load_at_startup(self, directory):
+        captured = []
+
+        def capture(tokenizer):
+            captured.append(tokenizer)
+            # Stop before native startup; this fixture tests the real CPU loader.
+            raise KeyboardInterrupt
+
+        logger = transformers_logging.get_logger(
+            "transformers.tokenization_utils_tokenizers"
+        )
+        with (
+            mock.patch.object(
+                server, "parse_args", return_value=main_args(tokenizer=str(directory))
+            ),
+            mock.patch.object(server, "_raise_descriptor_limit"),
+            mock.patch.object(server.signal, "signal"),
+            mock.patch.object(server.signal, "pthread_sigmask"),
+            mock.patch.object(server, "load_thinking_key", return_value=None),
+            mock.patch.object(server, "FrontendServer"),
+            mock.patch.object(server, "print_status"),
+            mock.patch.object(server, "validate_tokenizer", side_effect=capture),
+            mock.patch.object(server.engine_runtime, "MultiplexedRuntime") as native,
+            mock.patch.object(logger, "warning") as warning,
+        ):
+            server.main()
+        native.assert_not_called()
+        self.assertEqual(len(captured), 1)
+        return captured[0], warning
+
+    def test_qwen_without_transformers_version_preserves_tokens_without_mistral_warning(
+        self,
+    ):
+        for model_type in (
+            "qwen3_5",
+            "qwen3_5_text",
+            "qwen3_5_moe",
+            "qwen3_5_moe_text",
+        ):
+            with self.subTest(model_type=model_type), TemporaryDirectory() as directory:
+                root = Path(directory)
+                original = self.fixture(root, model_type)
+                loaded, warning = self.load_at_startup(root)
+                warning.assert_not_called()
+                self.assertEqual(
+                    loaded.backend_tokenizer.pre_tokenizer.__getstate__(),
+                    original.pre_tokenizer.__getstate__(),
+                )
+                self.assertEqual(len(original.encode("iPhone").ids), 1)
+                for text in ("iPhone", "中文与 eBay 123", "a\u0301\nfloat x = 0.5;"):
+                    self.assertEqual(
+                        loaded.encode(text, add_special_tokens=False),
+                        original.encode(text, add_special_tokens=False).ids,
+                    )
+
+    def test_other_model_types_keep_transformers_detection(self):
+        for model_type in ("mistral", "custom", None):
+            with self.subTest(model_type=model_type), TemporaryDirectory() as directory:
+                original = self.fixture(Path(directory), model_type)
+                loaded, warning = self.load_at_startup(Path(directory))
+                if model_type is None:
+                    warning.assert_not_called()
+                else:
+                    warning.assert_called_once()
+                    self.assertIn("incorrect regex pattern", warning.call_args.args[0])
+                self.assertEqual(
+                    loaded.backend_tokenizer.pre_tokenizer.__getstate__(),
+                    original.pre_tokenizer.__getstate__(),
+                )
 
 
 if __name__ == "__main__":

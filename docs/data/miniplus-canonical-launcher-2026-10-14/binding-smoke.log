@@ -1,0 +1,50 @@
+Main model: /Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf
+MiniPlus V3 27B: context=262144, KV=q4h, queue=1, memory=42949672960
+MiniPlus V3 Splash: http://127.0.0.1:0/v1 (WebUI disabled; listening on 0.0.0.0)
+Draft: /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16 (compatible Qwen3.8-27B Q4_K_M GGUF converted to BF16)
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+13:32:54 Startup configuration · on/off are configured flags; effective state follows Ready
+13:32:54   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293
+13:32:54   --model = IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3
+13:32:54   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293/tokenizer
+13:32:54   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/startup-checklist-20261014/splash
+13:32:54   --port = 0
+13:32:54   --host = 0.0.0.0
+13:32:54   --allowed-host = none
+13:32:54   --allowed-origin = none
+13:32:54   --api-key = off
+13:32:54   --no-webui = on
+13:32:54   --max-memory = 42949672960
+13:32:54   --max-context = 262144
+13:32:54   --kv-format = q4h
+13:32:54   --idle-release = auto (default 600 s)
+13:32:54   --max-cache-disk = 53687091200
+13:32:54   --persistent-cache = off
+13:32:54   --cache-dir = off / unset
+13:32:54   --served-model-name = splash_IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3
+13:32:54   --announce-served-name = off
+13:32:54   --default-reasoning-effort = auto
+13:32:54   --max-request-size = 134217728
+13:32:54   --max-image-pixels = 4194304
+13:32:54   --request-timeout = off / unset
+13:32:54   --queue-size = 1
+13:32:54   --decode-share = default (0.5)
+13:32:54   --disable-ane = on
+13:32:54   --ane-ffn-share = auto
+13:32:54   --ane-ffn-minimum-rows = auto
+13:32:54   --ane-power-recovery = off
+13:32:54   --ane-power-reference = off
+13:32:54   --ane-recovery-idle-watts = 0.05
+13:32:54   --ane-recovery-max-power-percent = off / unset
+13:32:54   --prompt-lookup = on
+13:32:54   --prompt-lookup-min-match = 2
+13:32:54   --compact-draft-head = on
+13:32:54   --compact-draft-capacity = 98304
+13:32:54   --compact-draft-ranking = /private/tmp/miniplus-canonical-missing-01828ed0e7ea4194adf2314947ff77ac.splash
+13:32:54   --fast-topk = off
+13:32:54   --allow-idle-sleep = off
+13:32:54 Loading · IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3
+13:32:55 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+error: compact ranking file is missing or not a regular file: /private/tmp/miniplus-canonical-missing-01828ed0e7ea4194adf2314947ff77ac.splash
+13:32:55 Error · native protocol reached EOF · Startup state = error; stage=native engine (weights, ANE, compact validation, warmup); later stages unconfirmed
+13:32:55 Stopping · releasing engine resources

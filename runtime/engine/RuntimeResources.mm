@@ -6,6 +6,7 @@
 #include "engine/Engine.hpp"
 #include "metal/abi/ExecutionGeometry.h"
 #include "model/WeightStore.hpp"
+#include "model/CompactDraftHead.hpp"
 #include "ops/AneFfnMeasurement.hpp"
 
 #import <Foundation/Foundation.h>
@@ -276,8 +277,9 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   const auto startupStarted = AwakeClock::now();
   RuntimeResourcesConfig config = inputConfig;
   config.optionalFeatures.validate();
-  if (config.optionalFeatures.compactDraftHead && config.optionalFeatures.compactRanking.empty())
-    config.optionalFeatures.compactRanking = config.modelRoot / "head-ranked.splash";
+  if (config.optionalFeatures.compactDraftHead)
+    static_cast<void>(model::readCompactRanking(config.optionalFeatures.compactRanking,
+                                                config.model.capabilities.vocabularySize));
   if (config.aneFfn.recovery.enabled && config.aneFfn.recovery.maximumPowerPercent &&
       config.aneFfn.powerReference.mode == ane::PowerReferenceSetting::Mode::Off)
     throw std::invalid_argument("relative ANE recovery requires --ane-power-reference auto or watts");

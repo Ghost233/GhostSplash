@@ -140,13 +140,24 @@ std::string RuntimeBootstrap::statusJson(const RuntimeMetricsSnapshot &metrics,
   // the safe-point pressure monitor already refresh the cached sample.
   metal::MetalBackend &backend = resources_->backend();
   const bool healthy = backend.healthy();
+  const auto context = resources_->modelContext();
+  const auto &descriptor = context.model.descriptor;
+  RuntimeFeatureSnapshot features;
+  if (descriptor.hasDraft()) {
+    features.drafter = descriptor.draft.kind == model::DraftKind::DFlash2 ? "dflash2" : "standard_dflash";
+    features.draftLayers = descriptor.draft.layers;
+    features.draftBlockSize = descriptor.draft.queryRows();
+    features.draftTokens = descriptor.draft.proposalTokens();
+  }
+  features.ffnCacheBytes = context.model.targetFfnCacheAllocatedBytes();
+  features.optional = model_->optionalFeatureReport();
   return runtimeStatusJson(
       resources_->memoryPlan(), nativeLoop_->statusSnapshot(), backend.memoryStats(),
       report_.warmup, report_.memoryAudit, metrics, model_->telemetry(),
       resources_->cacheIdentity(), resources_->memoryGovernor().snapshot(),
       healthy, healthy ? std::string{} : backend.unhealthyReason(),
       nativeLoop_->resourceWaitSnapshot(), loop, nativeLoop_->weightsSnapshot(),
-      resources_->aneFfnSnapshot(), thermalState_.state());
+      resources_->aneFfnSnapshot(), thermalState_.state(), features);
 }
 
 void RuntimeBootstrap::sampleThermalState() {

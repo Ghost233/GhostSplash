@@ -23,7 +23,7 @@ from urllib.parse import unquote
 from transformers import AutoTokenizer
 
 from . import images as image_input
-from . import json_codec, judgments, serve_options
+from . import json_codec, judgments, serve_options, startup_report
 from . import protocol as wire
 from . import runtime as engine_runtime
 from .api_shapes import (
@@ -1656,6 +1656,7 @@ def _interrupt(_signum, _frame):
 
 def main():
     args = parse_args()
+    stage = "HTTP bind"
     server = None
     runtime = None
     backend = None
@@ -1668,6 +1669,8 @@ def main():
         # The launcher blocks both across its exec: one sent while this module
         # imported arrives here and ends the startup cleanly.
         signal.pthread_sigmask(signal.SIG_UNBLOCK, (signal.SIGINT, signal.SIGTERM))
+        for line in startup_report.configuration_lines(args):
+            print_status(line)
         _raise_descriptor_limit()
         # Bind before loading the tokenizer or model so duplicates fail early.
         # Activate only after the runtime is ready, keeping a partially started
@@ -1690,14 +1693,36 @@ def main():
                 "page open in a browser that reaches this server use it",
                 error=True,
             )
+        stage = "thinking key"
         thinking_codec = ThinkingCodec(load_thinking_key())
         print_status(f"Loading · {args.model}")
+        stage = "tokenizer"
+        tokenizer_options = {}
+        tokenizer_config = Path(args.tokenizer) / "config.json"
+        if tokenizer_config.is_file():
+            model_type = json.loads(tokenizer_config.read_text(encoding="utf-8")).get(
+                "model_type"
+            )
+            if model_type in (
+                "qwen3_5",
+                "qwen3_5_text",
+                "qwen3_5_moe",
+                "qwen3_5_moe_text",
+            ):
+                # GGUF-derived Qwen configs omit transformers_version, which
+                # triggers Transformers' local Mistral heuristic. Keep Qwen's regex.
+                tokenizer_options["fix_mistral_regex"] = False
         tokenizer = AutoTokenizer.from_pretrained(
-            args.tokenizer, local_files_only=True, trust_remote_code=False
+            args.tokenizer,
+            local_files_only=True,
+            trust_remote_code=False,
+            **tokenizer_options,
         )
         validate_tokenizer(tokenizer)
+        stage = "chat template"
         chat_templates = ChatTemplates(tokenizer)
         print_status(f"Chat template · {chat_templates.describe()}")
+        stage = "native engine (weights, ANE, compact validation, warmup)"
         runtime = engine_runtime.MultiplexedRuntime(
             _native_command(args),
             startup_timeout=NATIVE_START_TIMEOUT,
@@ -1723,6 +1748,7 @@ def main():
                 "native runtime reported an invalid context window"
             )
         effective_context = readiness.max_context_tokens
+        stage = "frontend"
         constraint_factory = ConstraintFactory(tokenizer)
         app = Frontend(
             tokenizer,
@@ -1752,19 +1778,37 @@ def main():
         )
         mode = "" if readiness.vision else " · language only"
         print_status(f"Ready · {args.model} · context {context}{mode} · {address}")
+        try:
+            snapshot = backend.status(timeout=2.0)
+        except Exception as error:
+            snapshot = None
+            print_status(
+                f"Startup status = unknown; {type(error).__name__}", error=True
+            )
+        for line in startup_report.effective_lines(snapshot, readiness, args):
+            print_status(line)
+        stage = "serving"
         server.serve_forever()
     except (
         engine_runtime.EngineRuntimeError,
         ThinkingKeyError,
         ChatTemplateError,
     ) as error:
-        print_status(f"Error · {error}", error=True)
+        print_status(startup_report.failure_line(stage, error, args), error=True)
         raise SystemExit(1) from None
     except OSError as error:
-        print_status(f"Error · unable to start HTTP server: {error}", error=True)
+        print_status(
+            startup_report.failure_line(
+                stage, f"unable to start HTTP server: {error}", args
+            ),
+            error=True,
+        )
         raise SystemExit(1) from None
     except KeyboardInterrupt:
         pass
+    except Exception as error:
+        print_status(startup_report.failure_line(stage, error, args), error=True)
+        raise
     finally:
         # main owns this process. Keep stop signals idempotent through child
         # cleanup and interpreter teardown, including after this function

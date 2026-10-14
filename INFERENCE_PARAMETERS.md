@@ -349,7 +349,7 @@ DFlash2 block 当前固定 8；本轮不重新加入用户已排除的 drafter �
 
 ### Swift 27B 启动参数
 
-`swift1527biq3ssplash.sh` 与 `swift27bdense.command` 使用同一入口。默认保留上下文 262144、Q4H、队列 1、内存预算 40G、磁盘缓存 50G、lookup 和 compact 开启、fast-topk 关闭。启动器默认选择 `build/ane-startup-cli-20261013/splash` 参数版独立构建，保留旧的 `build/splash`；可用 `--binary` 选择其他匹配当前参数接口的构建。`--help` 列出完整参数，命令行设置覆盖启动器默认值。
+`swift1527biq3ssplash.sh` 与 `swift27bdense.command` 使用同一入口。默认保留上下文 262144、Q4H、队列 1、内存预算 40G、磁盘缓存 50G、lookup 开启、compact 默认关闭、fast-topk 关闭。启动器默认选择 `build/compact-public-20261014/splash` 参数版独立构建，保留旧的 `build/splash`；可用 `--binary` 选择其他匹配当前参数接口的构建。`--help` 列出完整参数，命令行设置覆盖启动器默认值。
 
 | 配置 | 启动参数 |
 |---|---|
@@ -363,6 +363,15 @@ DFlash2 block 当前固定 8；本轮不重新加入用户已排除的 drafter �
 | Fast top-k | `--fast-topk on\|off` |
 
 这些性能配置不再读取 `SPLASH_*` 环境变量，原生引擎也不提供环境变量回退。测试工具通过输入 JSON 显式传递功能设置，历史结果文件保持原样。普通 `splash serve` 的 lookup、compact、fast-topk 默认关闭；Swift 基准启动器显式开启前两项。旧入口 `swift1527bsplash.sh` 保留原先 INT8 和队列 4 的默认值，也接受同一组启动参数。
+
+### Compact 公共排名加载（2026-10-14）
+
+服务及相关启动器默认 `--compact-draft-head off`。开启必须同时指定 `--compact-draft-ranking 文件`。
+当前公共文件为 `compact-rankings/qwen35-248320-dev-seed.splash`，不绑定主模型权重指纹。
+旧 Saluki 排名与生成报告保留；旧格式须一次性离线转换。
+文件、布局和投影数值错误拒绝启用，覆盖率不足仍正常回退。此变更不修改其他性能参数。
+历史 benchmark 的 compact 开启结果是当时的实验配置，不代表当前服务默认值。
+具体规则与正确性证据见 [公共排名加载说明](docs/compact-public-ranking-2026-10-14.md)。
 
 ### ANE 低功耗恢复（可选，默认关闭）
 
@@ -619,3 +628,22 @@ Prefill 中位数相差约 0.64%，decode 中位数仍为 INT8 最快，BF16 与
 当前五组实验的实时日志位于 `build/swift27b-q4h-decode-tuning-v3/controller.log`，数值检查并入性能运行；生产 AIR 保持原样，测试库仅附加原字节拷贝检查需要的测试函数。
 
 五组 decode 参数微调已有效完成15／15次，原标准与默认A完整输出保持一致。结果见 [微调报告](docs/swift27b-q4h-decode-tuning-2026-10-13.md)；两个启动覆盖参数保留，基准尚未自动变更。
+
+## 启动参数与实际状态快速检查
+
+2026-10-14 新增启动清单。服务会先列出全部配置参数，在 `Ready` 后列出实际状态；配置开启、校验通过、正常回退、条件不可用和错误分别报告。API key 隐去内容。状态无法读取或旧构建缺少字段时显示 `unknown`。
+
+MiniPlus V3 的两个启动器和 Swift 1.5 启动器已指向独立构建 `build/startup-checklist-20261014/splash`，其他参数保持不变。启动器仍接受命令行参数覆盖，没有新增环境变量。控制台清单是启动时快照，运行中的 ANE 回退或恢复继续通过原有日志和 `/status` 查看。
+
+说明和调整示例见 [启动检查文档](docs/startup-checklist-2026-10-14.md)。
+
+
+## VAL APEX I MiniPlus V3 启动器
+
+2026-10-14 新增 `qwen38valapexminiplusv3splash.sh`，加载 `/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf`。默认端口 8009、上下文 262144、Q4H、队列 1、内存 40G、磁盘缓存 50G、ANE 自动探测、lookup 开启、compact 和 fast top-k 关闭。
+
+新目录没有 drafter，复用已转换的 5 层 Qwen3.8-27B DFlash2，block 固定为 8。结构及完整 CPU 布局规划通过，未测量新模型的接受率或速度。`qwen38miniplusv3splash.sh` 已改为当前 VAL APEX I MiniPlus V3，默认端口 8008；原 EfficientThink 脚本仅作为历史内容保存。Saluki 启动器已删除，历史测试和公共排名保留。
+
+命令及验证记录见 [新 MiniPlus 启动器说明](docs/miniplus-val-apex-launcher-2026-10-14.md)。
+
+2026-10-14 入口修正：继续使用 `sh qwen38miniplusv3splash.sh` 即可加载上述新模型。启动器额外打印主 GGUF 的完整路径，避免名称混淆。8008 旧服务与引擎已退出，本轮没有自动重启。上下文、KV、drafter、ANE 与其他开关不变。

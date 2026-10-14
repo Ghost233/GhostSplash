@@ -1,0 +1,6 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+.........................
+----------------------------------------------------------------------
+Ran 25 tests in 0.360s
+
+OK

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metal/abi/PagedAttention.h"
+#include "metal/kernels/common/kv_codec.h"
 #include "metal/kernels/common/kv_extent.h"
 #include "metal/kernels/common/kv_paging.h"
 #include <metal_stdlib>
@@ -68,84 +69,6 @@ __attribute__((always_inline)) inline void splash_store_kv_row(
                                                 chunk_token, dimension);
   bfloat source = value_tensor ? chunk_values[source_index] : chunk_keys[source_index];
 
-  if constexpr (is_same<CacheElement, SplashQ4Block>::value) {
-    // Each SIMD group quantizes one contiguous group of 32 dimensions.
-    // Tie-breaking takes the first absolute maximum, as the GGML reference.
-    float value = float(source);
-    float maximum = simd_max(abs(value));
-    uint first = simd_min(abs(value) == maximum ? simd_lane : 32u);
-    float signed_maximum = maximum == 0.0f ? 0.0f : simd_shuffle(value, first);
-    float d = signed_maximum * -0.125f;
-    float inverse = d != 0.0f ? 1.0f / d : 0.0f;
-    float normalized = value * inverse;
-    uint code = uint(clamp(int(normalized + 8.5f), 0, 15));
-    uint high = simd_shuffle(code, (simd_lane + 16) % 32);
-    ulong at = (ulong(page_token) * SplashKvHeadDimension + dimension) / 32;
-    device SplashQ4Block *blocks = value_tensor ? slab.values : slab.keys;
-    if (simd_lane == 0)
-      blocks[at].d = maximum == 0.0f ? as_type<half>(ushort(0x8000)) : half(d);
-    if (simd_lane < 16) blocks[at].qs[simd_lane] = uchar(code | (high << 4));
-    return;
-  } else if constexpr (is_same<CacheElement, bfloat>::value) {
-    if (value_tensor)
-      slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] = source;
-    else
-      slab.keys[splash_kv_key_index<KVHeads>(0, 0, page_token, dimension)] = source;
-    return;
-  } else {
-
-    float value = float(source);
-    float local_maximum = simd_max(abs(value));
-    if (simd_lane == 0)
-      maxima[simd_group] = local_maximum;
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    if (simd_group == 0) {
-      for (uint offset = 4; offset != 0; offset >>= 1) {
-        if (simd_lane < offset)
-          maxima[simd_lane] = max(maxima[simd_lane], maxima[simd_lane + offset]);
-        simdgroup_barrier(mem_flags::mem_threadgroup);
-      }
-    }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    float maximum = maxima[0];
-    constexpr bool Packed4 = is_same<CacheElement, uchar>::value;
-    constexpr float Limit = Packed4 ? 7.0f : 127.0f;
-    // Q4H's serialized FP32 scales must match the scalar quantizer exactly;
-    // fast division can also move half-integer codes across rint's boundary.
-    float scale = maximum == 0.0f ? 0.0f
-        : Packed4 ? precise::divide(maximum, Limit) : maximum / Limit;
-    int quantized = maximum == 0.0f
-                        ? 0
-                        : clamp(int(rint(Packed4 ? precise::divide(value * Limit, maximum)
-                                             : value * Limit / maximum)), -int(Limit), int(Limit));
-    if constexpr (Packed4) {
-      // One even dimension owns both nibbles. Token-major V avoids races
-      // between concurrent token stores and byte read/modify/write.
-      int other = simd_shuffle_xor(quantized, 1);
-      if ((dimension & 1) == 0) {
-        uchar packed = uchar((quantized & 15) | ((other & 15) << 4));
-        ulong at = splash_kv_key_index<KVHeads>(0, 0, page_token, dimension) / 2;
-        if (value_tensor) slab.values[at] = packed;
-        else slab.keys[at] = packed;
-      }
-      if (dimension == 0) {
-        ulong at = splash_q8_scale_index<KVHeads>(0, 0, page_token);
-        if (value_tensor) slab.value_scales[at] = scale;
-        else slab.key_scales[at] = scale;
-      }
-      return;
-    }
-
-    if (value_tensor) {
-      slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] =
-          char(quantized);
-      if (dimension == 0)
-        slab.value_scales[splash_q8_scale_index<KVHeads>(0, 0, page_token)] = scale;
-    } else {
-      slab.keys[splash_kv_key_index<KVHeads>(0, 0, page_token, dimension)] =
-          char(quantized);
-      if (dimension == 0)
-        slab.key_scales[splash_q8_scale_index<KVHeads>(0, 0, page_token)] = scale;
-    }
-  }
+  splash_kv_store_row(slab, source, maxima, value_tensor, page_token,
+                      dimension, simd_lane, simd_group);
 }

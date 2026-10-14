@@ -1,6 +1,7 @@
 #include "TestBuffers.hpp"
 #include "GgufFormatReference.hpp"
 #include "model/CompactDraftHead.hpp"
+#include "TestFiles.hpp"
 #include "ops/Linear.hpp"
 #include "ops/DraftSelector.hpp"
 #include "metal/abi/OptionalFeatures.h"
@@ -34,6 +35,57 @@ void formatCheck(metal::MetalBackend &backend, uint32_t format) {
   std::vector<uint32_t> ids(C);
   for (uint32_t i = 0; i < C; ++i) ids[i] = (73 * i + 199) % N;
   const auto compact = gatherProjection(backend, source, ids);
+  if (format == GGUF_FMT_Q6K) {
+    const test::TemporaryDirectory directory("compact-public-lifecycle");
+    const auto path = directory.path() / "ranking.splash";
+    test::writeFile(path, "bad file");
+    const auto before = backend.memoryStats().allocatedBytes;
+    auto disabled = model::CompactDraftHead::createIfEnabled(false, backend, Projection{}, path);
+    require(!disabled && backend.memoryStats().allocatedBytes == before,
+            "disabled compact must ignore malformed ranking and allocate nothing");
+    bool badFile = false;
+    try { static_cast<void>(model::CompactDraftHead::createIfEnabled(true, backend, source, path)); }
+    catch (const std::invalid_argument &) { badFile = true; }
+    require(badFile && backend.memoryStats().allocatedBytes == before,
+            "malformed ranking must reject before compact allocation");
+    std::vector<uint32_t> ranking(N);
+    std::iota(ranking.begin(), ranking.end(), 0);
+    std::vector<uint8_t> binary(12 + N * 4);
+    std::memcpy(binary.data(), "SPLCHD02", 8);
+    std::memcpy(binary.data() + 8, &N, 4);
+    std::memcpy(binary.data() + 12, ranking.data(), N * 4);
+    test::writeFile(path, binary);
+    auto head = model::CompactDraftHead::createIfEnabled(true, backend, source, path, C);
+    const auto checks = head->validation().comparisons;
+    require(checks == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C && head->bytes() > 0,
+            "explicit compact must validate before enabling");
+    std::vector<uint32_t> history(10000, 7); history.push_back(1000);
+    require(head->prepare(history) && head->validRows() == 257 &&
+                static_cast<uint32_t *>(head->mapping().contents())[256] == 1000,
+            "dynamic compact rows preserve original token IDs");
+    require(!head->prepare(std::vector<uint32_t>{1000, 7}) &&
+                head->reason() == "rare-token ratio exceeds 1 percent", "coverage ratio is normal fallback");
+    history.assign(30000, 7);
+    for (uint32_t i = 0; i < 257; ++i) history.push_back(256 + i);
+    require(!head->prepare(history) && head->reason() == "more than 256 distinct rare tokens",
+            "coverage ID budget is normal fallback");
+    require(head->validation().comparisons == checks, "generation must not repeat full-head validation");
+    bool badLayout = false;
+    try { static_cast<void>(model::CompactDraftHead::createIfEnabled(true, backend, Projection{}, path)); }
+    catch (const std::invalid_argument &) { badLayout = true; }
+    require(badLayout, "unsupported head layout must reject enabling");
+  }
+  auto validationIds = test::sharedBuffer(backend, ids.size() * 4);
+  std::memcpy(validationIds.contents(), ids.data(), ids.size() * 4);
+  const auto validation = validateCompactProjection(backend, source, compact, validationIds);
+  require(validation.comparisons == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * C &&
+              validation.maximumAbsoluteError == 0, "startup compact projection validation");
+  std::swap(static_cast<uint32_t *>(validationIds.contents())[0],
+            static_cast<uint32_t *>(validationIds.contents())[1]);
+  bool rejected = false;
+  try { static_cast<void>(validateCompactProjection(backend, source, compact, validationIds)); }
+  catch (const std::runtime_error &) { rejected = true; }
+  require(rejected, "wrong compact token mapping must fail numerical validation");
   const auto &segment = compact.blocks().segments.front();
   const auto &info = kQuantFormats[format];
   const auto plane = [&](const metal::MetalBuffer &buffer, const std::vector<uint8_t> &original,
@@ -85,6 +137,31 @@ void formatCheck(metal::MetalBackend &backend, uint32_t format) {
       require(std::isfinite(value) && std::fabs(value - dot.value) <= gguf_reference::projectionBound(dot, true),
               "compact logit exceeds existing FP64 bound");
     }
+  }
+}
+
+void publicSharingCheck(metal::MetalBackend &backend) {
+  constexpr uint32_t N = 1024, K = 512;
+  const test::TemporaryDirectory directory("compact-shared-ranking");
+  const auto path = directory.path() / "public.splash";
+  std::vector<uint32_t> ranking(N);
+  std::iota(ranking.begin(), ranking.end(), 0);
+  std::vector<uint8_t> binary(12 + N * 4);
+  std::memcpy(binary.data(), "SPLCHD02", 8);
+  std::memcpy(binary.data() + 8, &N, 4);
+  std::memcpy(binary.data() + 12, ranking.data(), N * 4);
+  test::writeFile(path, binary);
+  for (uint32_t format : {uint32_t{GGUF_FMT_IQ3S}, uint32_t{GGUF_FMT_Q6K}}) {
+    std::mt19937 random(723 + format);
+    const auto native = gguf_reference::makeNative(gguf_reference::Fmt(format), N, K, random);
+    const auto packed = gguf_reference::repack(gguf_reference::Fmt(format), native, N, K, nullptr);
+    Projection source(N, K, BlockWeights{{QuantizedSegment::planes(format, N, K,
+        upload(backend, packed.w0), upload(backend, packed.w1), upload(backend, packed.meta))}});
+    source.destination = FloatOutput::Float32;
+    const auto compact = model::CompactDraftHead::createIfEnabled(true, backend, source, path, 512);
+    require(compact->validation().comparisons == uint64_t{SPLASH_DRAFT_QUERY_ROWS} * 512 &&
+                compact->validation().maximumAbsoluteError == 0,
+            "same public file must validate independently against different model heads");
   }
 }
 
@@ -173,6 +250,7 @@ int main(int argc, char **argv) {
     if (argc != 2) throw std::invalid_argument("usage: compact-projection TEST_PRODUCTION_METALLIB");
     metal::MetalBackend backend(argv[1]);
     for (uint32_t f = 0; f < GGUF_FMT_COUNT; ++f) formatCheck(backend, f);
+    publicSharingCheck(backend);
     mappingCheck(backend);
     dflash2MappingCheck(backend);
     std::cout << "compact projection: " << GGUF_FMT_COUNT

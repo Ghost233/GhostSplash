@@ -124,8 +124,20 @@ OPTIONS = {
     "--prompt-lookup-min-match": values(
         "--prompt-lookup-min-match", {"2": 2, "4": 4, "3": 3}, ("1", "5", "3x")
     ),
-    "--compact-draft-head": values(
-        "--compact-draft-head", {"off": "off", "on": "on"}, ("1", "yes")
+    "--compact-draft-head": (
+        [
+            (["--compact-draft-head", "off"], "off"),
+            (
+                [
+                    "--compact-draft-head",
+                    "on",
+                    "--compact-draft-ranking",
+                    "/tmp/public-ranking",
+                ],
+                "on",
+            ),
+        ],
+        [["--compact-draft-head", value] for value in ("1", "yes")],
     ),
     "--compact-draft-capacity": values(
         "--compact-draft-capacity",
@@ -326,6 +338,31 @@ class ServeOptionsTests(unittest.TestCase):
                 self.assertEqual(args.fast_topk, "off")
                 self.assertEqual(args.prompt_lookup_min_match, 2)
                 self.assertEqual(args.compact_draft_capacity, 98304)
+
+    def test_compact_requires_an_explicit_file_and_file_alone_does_not_enable(self):
+        for parse, required in PARSERS:
+            self.assertIn(
+                "--compact-draft-ranking",
+                self.refuse(parse, [*required, "--compact-draft-head", "on"]),
+            )
+            args = parse(
+                [
+                    *required,
+                    "--compact-draft-ranking",
+                    "/tmp/missing-public-rank.splash",
+                ]
+            )
+            self.assertEqual(args.compact_draft_head, "off")
+            args = parse(
+                [
+                    *required,
+                    "--compact-draft-head",
+                    "on",
+                    "--compact-draft-ranking",
+                    "/tmp/public-rank.splash",
+                ]
+            )
+            self.assertEqual(args.compact_draft_head, "on")
 
     def test_each_parse_has_its_own_lists(self):
         for parse, required in PARSERS:

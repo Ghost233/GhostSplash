@@ -1,6 +1,7 @@
 import ast
 import contextlib
 import io
+import json
 import os
 import socket
 import sys
@@ -47,6 +48,7 @@ class LocalLauncherTests(unittest.TestCase):
         installed=False,
         invalid=False,
         wrong_target=False,
+        wrong_draft=False,
         kv_format="int8",
         startup_options=(),
     ):
@@ -62,14 +64,43 @@ class LocalLauncherTests(unittest.TestCase):
             )
             draft_dir.mkdir(parents=True, exist_ok=True)
             (draft_dir / "model.safetensors").touch()
+        if script.name in {
+            "qwen38miniplusv3splash.sh",
+            "qwen38valapexminiplusv3splash.sh",
+        }:
+            draft_dir.mkdir(exist_ok=True)
+            (draft_dir / "model.safetensors").touch()
+            (draft_dir / "config.json").write_text("{}")
+            (draft_dir / "conversion.json").write_text(
+                json.dumps(
+                    {
+                        "source_gguf": str(
+                            self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"
+                        ),
+                    }
+                )
+            )
         arguments = [str(self.root), str(self.target)]
-        if script.name == "coder39027bsplash.sh":
+        if script.name in {
+            "coder39027bsplash.sh",
+            "qwen38miniplusv3splash.sh",
+            "qwen38valapexminiplusv3splash.sh",
+        }:
             arguments.append(str(draft_dir))
+        if script.name in {
+            "qwen38miniplusv3splash.sh",
+            "qwen38valapexminiplusv3splash.sh",
+        }:
+            arguments.append(str(self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"))
         arguments.append(model_id)
         if script.name == "tielminiplus35ba3bsplash.sh":
             arguments.append(str(self.template))
         arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4", kv_format])
-        if script.name == "swift1527biq3ssplash.sh":
+        if script.name in {
+            "swift1527biq3ssplash.sh",
+            "qwen38miniplusv3splash.sh",
+            "qwen38valapexminiplusv3splash.sh",
+        }:
             arguments.extend([str(self.root / "build/splash"), *startup_options])
         record = {
             "sources": {
@@ -79,7 +110,10 @@ class LocalLauncherTests(unittest.TestCase):
                 },
                 "draft": None
                 if script.name == "qwen3.54bsplash.sh"
-                else {"repo": str(draft_dir), "revision": None},
+                else {
+                    "repo": "wrong" if wrong_draft else str(draft_dir),
+                    "revision": None,
+                },
             }
         }
         scratches = []
@@ -120,7 +154,7 @@ class LocalLauncherTests(unittest.TestCase):
             mock.patch.object(os, "execv", side_effect=ServerStarted) as execute,
             contextlib.redirect_stdout(io.StringIO()),
         ):
-            if invalid or wrong_target:
+            if invalid or wrong_target or wrong_draft:
                 with self.assertRaises(models.ModelError):
                     exec(compile(tree, str(script), "exec"), {})
                 execute.assert_not_called()
@@ -176,7 +210,7 @@ class LocalLauncherTests(unittest.TestCase):
             if script.name in EXPLICIT_DRAFTS and not installed:
                 self.assertEqual(len(scratches), 1)
             self.assertTrue(all(not scratch.exists() for scratch in scratches))
-        return parsed if not invalid and not wrong_target else None
+        return parsed if not invalid and not wrong_target and not wrong_draft else None
 
     def test_swift_forwards_independent_startup_switches_and_paths_with_spaces(self):
         binary = self.root / "alternate binary"
@@ -217,6 +251,66 @@ class LocalLauncherTests(unittest.TestCase):
         self.assertEqual(parsed.compact_draft_head, "off")
         self.assertEqual(parsed.fast_topk, "on")
         self.assertEqual(parsed.compact_draft_ranking, self.root / "rank file")
+
+    def test_saluki_launcher_is_removed(self):
+        self.assertFalse((ROOT / "saluki27biq2mixsplash.sh").exists())
+
+    def test_val_apex_miniplus_uses_shared_draft_and_keeps_compact_off(self):
+        parsed = self.launch(ROOT / "qwen38valapexminiplusv3splash.sh", installed=True)
+        self.assertEqual(parsed.compact_draft_head, "off")
+        self.assertIsNone(parsed.compact_draft_ranking)
+        self.assertEqual(parsed.prompt_lookup, "on")
+        self.assertIsNone(parsed.ane_ffn_share)
+        self.launch(
+            ROOT / "qwen38valapexminiplusv3splash.sh", installed=True, wrong_draft=True
+        )
+
+    def test_miniplus_uses_its_converted_draft_and_independent_switches(self):
+        parsed = self.launch(ROOT / "qwen38miniplusv3splash.sh", installed=True)
+        self.assertEqual(parsed.compact_draft_head, "off")
+        self.assertEqual(parsed.prompt_lookup, "on")
+        parsed = self.launch(
+            ROOT / "qwen38miniplusv3splash.sh",
+            installed=True,
+            startup_options=(
+                "--compact-draft-head",
+                "on",
+                "--compact-draft-ranking",
+                str(self.root / "model rank"),
+                "--prompt-lookup",
+                "off",
+            ),
+        )
+        self.assertEqual(parsed.compact_draft_head, "on")
+        self.assertEqual(parsed.compact_draft_ranking, self.root / "model rank")
+        self.assertEqual(parsed.prompt_lookup, "off")
+
+    def test_miniplus_refuses_another_draft_before_starting_server(self):
+        self.launch(
+            ROOT / "qwen38miniplusv3splash.sh", installed=True, wrong_draft=True
+        )
+
+    def test_modern_launchers_default_compact_off_and_require_explicit_public_ranking(
+        self,
+    ):
+        for name in (
+            "swift1527biq3ssplash.sh",
+            "qwen38miniplusv3splash.sh",
+            "qwen38valapexminiplusv3splash.sh",
+        ):
+            with self.subTest(launcher=name):
+                parsed = self.launch(ROOT / name, installed=True)
+                self.assertEqual(parsed.compact_draft_head, "off")
+                self.assertIsNone(parsed.compact_draft_ranking)
+                parsed = self.launch(
+                    ROOT / name,
+                    installed=True,
+                    startup_options=(
+                        "--compact-draft-ranking",
+                        str(self.root / "public ranking.splash"),
+                    ),
+                )
+                self.assertEqual(parsed.compact_draft_head, "off")
 
     def test_every_gguf_launcher_first_install_and_server_arguments(self):
         for script in GGUF_SCRIPTS:

@@ -3,6 +3,7 @@
 #include "ops/PagedKv.hpp"
 #include "ops/Vision.hpp"
 #include "model/StateTransfer.hpp"
+#include "model/OptionalFeatures.hpp"
 
 #include <array>
 #include <atomic>
@@ -588,6 +589,7 @@ public:
   virtual WarmupStepResult warmupCompositeStateRestore() = 0;
   [[nodiscard]] virtual ModelMemoryActual actualRuntimeMemory() const = 0;
   [[nodiscard]] virtual ModelTelemetry telemetry() const noexcept = 0;
+  [[nodiscard]] virtual OptionalFeatureReport optionalFeatureReport() const { return {}; }
 };
 
 } // namespace model

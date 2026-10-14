@@ -1,0 +1,20 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+E
+======================================================================
+ERROR: test_miniplus_uses_its_converted_draft_and_independent_switches (dev.tests.install.test_local_launchers.LocalLauncherTests.test_miniplus_uses_its_converted_draft_and_independent_switches)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_local_launchers.py", line 266, in test_miniplus_uses_its_converted_draft_and_independent_switches
+    parsed = self.launch(ROOT / "qwen38miniplusv3splash.sh", installed=True)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_local_launchers.py", line 162, in launch
+    exec(compile(tree, str(script), "exec"), {})
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/qwen38miniplusv3splash.sh", line 43, in <module>
+    parser.add_argument("--port", type=int, default=int(port))
+                                                    ~~~^^^^^^
+ValueError: invalid literal for int() with base 10: '127.0.0.1'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.009s
+
+FAILED (errors=1)

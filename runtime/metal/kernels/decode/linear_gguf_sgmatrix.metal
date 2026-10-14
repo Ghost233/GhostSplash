@@ -40,7 +40,7 @@ template <class F> struct Shape {
     // bf16 bits of the operand of code 0: 128, or 160 - zero when seeded
     Operand = 0x4300 + (Seeded ? kZeroPointOffset - 128 - F::Zero : 0),
     CG = Seeded || F::Group == 16 ? 2 : 1,                    // coefficient groups per 32 inputs
-    // Spans decoded per coefficient unit: every span of eight groups (one meta unit of eight, or two of four), or
+    // Spans decoded per coefficient unit: every span of eight groups (one meta unit of eight, two of four, or four of two), or
     // half of them where a span's coefficients take twice Q4_K's storage (Q2_K's (s, b) per 16 inputs)
     UnitSpans = F::MetaGroups == 1 ? 1 : CG * (HasMin ? 2 : 1) <= 2 ? 4 : 2,
     J = 2 * UnitSpans * CG,                                   // coefficients per column and unit

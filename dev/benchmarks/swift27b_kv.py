@@ -422,7 +422,6 @@ def run():
         counts = Counter(token for prompt in prompts for token in prompt["token_ids"])
         write_ranking(
             rank,
-            raw["target_manifest_sha256"],
             sorted(range(len(codec)), key=lambda token: (-counts[token], token)),
         )
         os.environ.update(

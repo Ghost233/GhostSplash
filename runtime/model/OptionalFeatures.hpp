@@ -21,6 +21,8 @@ struct OptionalFeatures final {
   uint32_t compactCapacity = 98304;
 
   void validate() const {
+    if (compactDraftHead && compactRanking.empty())
+      throw std::invalid_argument("--compact-draft-head on requires --compact-draft-ranking FILE");
     if (lookupMinimumMatch < 2 || lookupMinimumMatch > 4)
       throw std::invalid_argument("--prompt-lookup-min-match must be 2, 3 or 4");
     if (compactCapacity <= 256 || compactCapacity > 98304 || compactCapacity % 256)
@@ -31,7 +33,10 @@ struct OptionalFeatures final {
 struct OptionalFeatureReport final {
   OptionalFeatures configured;
   uint64_t lookupAttempts = 0, lookupHits = 0, lookupAccepted = 0;
-  uint64_t compactCycles = 0, compactFallbacks = 0;
+  uint64_t compactCycles = 0, compactFallbacks = 0, compactCoverageFallbacks = 0, compactRequestFallbacks = 0;
+  bool compactValidated = false;
+  uint64_t compactValidationComparisons = 0;
+  float compactValidationMaximumError = 0;
   uint64_t fastTopKSelections = 0, fastTopKFallbacks = 0;
   uint32_t compactRows = 0, compactCapacity = 0;
   uint64_t extraMetalBytes = 0;

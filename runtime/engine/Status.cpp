@@ -111,7 +111,8 @@ std::string runtimeStatusJson(
     const MemoryGovernorSnapshot &memoryGovernor, bool metalHealthy,
     std::string metalFailureReason, const ResourceWaitSnapshot &resourceWait,
     const NativeLoopTiming &loop, const WeightsSnapshot &weights,
-    const AneFfnSnapshot &aneFfn, ThermalState thermalState) {
+    const AneFfnSnapshot &aneFfn, ThermalState thermalState,
+    const std::optional<RuntimeFeatureSnapshot> &features) {
   const auto &resources = core.resources;
   const auto &scheduler = core.scheduler;
   const auto &pool = resources.pool;
@@ -196,6 +197,29 @@ std::string runtimeStatusJson(
   appendWeights(out, weights);
   out << ",\"ane_ffn\":";
   appendAneFfn(out, aneFfn, executorTelemetry.aneFfnReruns);
+  if (features) {
+    const auto &f = *features;
+    const auto &o = f.optional;
+    out << ",\"startup_features\":{\"drafter\":" << json::quote(f.drafter)
+        << ",\"draft_layers\":" << f.draftLayers
+        << ",\"draft_block_size\":" << f.draftBlockSize
+        << ",\"draft_tokens\":" << f.draftTokens
+        << ",\"prefill_token_budget\":" << model::ExecutionLimits::prefillTokenBudget
+        << ",\"ffn_cache_bytes\":" << f.ffnCacheBytes
+        << ",\"optional\":{\"prompt_lookup\":" << boolean(o.configured.promptLookup)
+        << ",\"lookup_reason\":" << json::quote(o.lookupReason)
+        << ",\"compact_draft_head\":" << boolean(o.configured.compactDraftHead)
+        << ",\"compact_validated\":" << boolean(o.compactValidated)
+        << ",\"compact_capacity\":" << o.compactCapacity
+        << ",\"compact_validation_comparisons\":" << o.compactValidationComparisons
+        << ",\"compact_validation_maximum_error\":" << o.compactValidationMaximumError
+        << ",\"compact_coverage_fallbacks\":" << o.compactCoverageFallbacks
+        << ",\"compact_request_fallbacks\":" << o.compactRequestFallbacks
+        << ",\"compact_reason\":" << json::quote(o.compactReason)
+        << ",\"fast_topk\":" << boolean(o.configured.fastTopK)
+        << ",\"fast_topk_reason\":" << json::quote(o.fastTopKReason)
+        << ",\"extra_metal_bytes\":" << o.extraMetalBytes << "}}";
+  }
   out << ",\"kv\":{\"block_tokens\":" << kv::kPageTokens
       << ",\"pages_allocated\":" << pool.pagesAllocated
       << ",\"pages_active\":" << pool.pagesActive

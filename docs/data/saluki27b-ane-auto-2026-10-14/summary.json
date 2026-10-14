@@ -1,0 +1,1058 @@
+{
+  "status": "complete",
+  "completed": 10,
+  "planned": 10,
+  "mode": "native_auto",
+  "base_parameters": {
+    "kv_format": "q4h",
+    "ane_minimum_rows": null,
+    "auto_calibration": true,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 16,
+    "concurrency": 1,
+    "input_tokens": 8192,
+    "output_tokens": 4096,
+    "context_tokens": 262144,
+    "memory_budget_bytes": 42949672960,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true,
+    "ane_requested": true,
+    "ane_share": null
+  },
+  "selection_counts": {
+    "0.411764706/512": 4,
+    "0.529411765/1337": 1,
+    "0.352941176/546": 1,
+    "0.441176471/535": 1,
+    "0.382352941/570": 1,
+    "0.441176471/512": 1,
+    "0.411764706/551": 1
+  },
+  "records": [
+    {
+      "run": 1,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-01-attempt3",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.41 for chunks of 512 rows or more: 37.4 ms per 2048-row FFN layer against 54.8 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 32.5 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.41 for chunks of 512 rows or more: 37.4 ms per 2048-row FFN layer against 54.8 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 32.5 s)",
+        "share": 0.4117647058823529,
+        "evaluations": 256,
+        "minimum_rows": 512,
+        "auto_calibration": true,
+        "prepared_share": 0.4117647058823529,
+        "prepared_minimum_rows": 512
+      },
+      "prefill_tok_s": 598.8027581511151,
+      "decode_tok_s": 61.47237112011045,
+      "timings": {
+        "decode_wall_seconds": 66.63156025,
+        "total_wall_seconds": 80.312191958,
+        "prefill_wall_seconds": 13.680631708,
+        "ttft_seconds": 13.680712
+      },
+      "startup_timings": {
+        "resources_seconds": 36.627679167,
+        "source_weights_seconds": 4.055221209,
+        "ane_prepare_seconds": 32.508398458,
+        "ffn_cache_build_seconds": 2.5e-07,
+        "warmup_seconds": 3.480356,
+        "hot_telemetry_seconds": 1.583e-06,
+        "storage_seconds": 0.007552625
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11933157764,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11949113344,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 277645316,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11949113344,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11933157764,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98106,
+        "compact_fallbacks": 114,
+        "lookup_accepted_tokens": 2679,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 546,
+        "compact_cycles": 170,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 830,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "eb81ad1987081e9961e7e8e90c06a7468043b215b556f7a8323cf6fa2f38049c",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4117647058823529,
+          512,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "0-3-7cd0f1d268064ca1abff80e2b46a2d9d"
+    },
+    {
+      "run": 2,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-02-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.53 for chunks of 1337 rows or more: 32.5 ms per 2048-row FFN layer against 39.2 on the GPU alone, 1.6% from the GPU alone on the Neural Engine's part (calibrated in 31.9 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.53 for chunks of 1337 rows or more: 32.5 ms per 2048-row FFN layer against 39.2 on the GPU alone, 1.6% from the GPU alone on the Neural Engine's part (calibrated in 31.9 s)",
+        "share": 0.5294117647058824,
+        "evaluations": 256,
+        "minimum_rows": 1337,
+        "auto_calibration": true,
+        "prepared_share": 0.5294117647058824,
+        "prepared_minimum_rows": 1337
+      },
+      "prefill_tok_s": 558.8013712605568,
+      "decode_tok_s": 66.46867776311316,
+      "timings": {
+        "decode_wall_seconds": 61.623010083,
+        "total_wall_seconds": 76.282959792,
+        "prefill_wall_seconds": 14.659949709,
+        "ttft_seconds": 14.66028275
+      },
+      "startup_timings": {
+        "resources_seconds": 35.51429125,
+        "source_weights_seconds": 3.589581,
+        "ane_prepare_seconds": 31.859922125,
+        "ffn_cache_build_seconds": 1.875e-06,
+        "warmup_seconds": 3.687453417,
+        "hot_telemetry_seconds": 2.208e-06,
+        "storage_seconds": 0.006555833
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11997120900,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 12013076480,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 341608452,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 12013076480,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11997120900,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98101,
+        "compact_fallbacks": 84,
+        "lookup_accepted_tokens": 2730,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 540,
+        "compact_cycles": 157,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 781,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "ee57e040de60107b36fec9e310d9b4ed180c2126aa1921984f1abe7eb9ca1066",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.5294117647058824,
+          1337,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "1-1-82807738116643129d8986576c090487"
+    },
+    {
+      "run": 3,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-03-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.35 for chunks of 546 rows or more: 24.4 ms per 2048-row FFN layer against 43.1 on the GPU alone, 2.1% from the GPU alone on the Neural Engine's part (calibrated in 24.8 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.35 for chunks of 546 rows or more: 24.4 ms per 2048-row FFN layer against 43.1 on the GPU alone, 2.1% from the GPU alone on the Neural Engine's part (calibrated in 24.8 s)",
+        "share": 0.35294117647058826,
+        "evaluations": 256,
+        "minimum_rows": 546,
+        "auto_calibration": true,
+        "prepared_share": 0.35294117647058826,
+        "prepared_minimum_rows": 546
+      },
+      "prefill_tok_s": 589.5583243562049,
+      "decode_tok_s": 70.66495566614739,
+      "timings": {
+        "decode_wall_seconds": 57.963667583,
+        "total_wall_seconds": 71.858815292,
+        "prefill_wall_seconds": 13.895147709,
+        "ttft_seconds": 13.895221917
+      },
+      "startup_timings": {
+        "resources_seconds": 29.088440042,
+        "source_weights_seconds": 4.181907541,
+        "ane_prepare_seconds": 24.845153667,
+        "ffn_cache_build_seconds": 1.67e-07,
+        "warmup_seconds": 3.634311541,
+        "hot_telemetry_seconds": 1.833e-06,
+        "storage_seconds": 0.006860542
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11901176196,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11917131776,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 245663748,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11917131776,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11901176196,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98107,
+        "compact_fallbacks": 91,
+        "lookup_accepted_tokens": 2784,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 436,
+        "compact_cycles": 175,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 702,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "e2cf025e7768e6024ae393de6a585e400c97fa9b810d793beebccd65a1890b91",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.35294117647058826,
+          546,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "2-1-26e2b1b249cd4cd8bac0e981487bff20"
+    },
+    {
+      "run": 4,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-04-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.44 for chunks of 535 rows or more: 26.8 ms per 2048-row FFN layer against 38.2 on the GPU alone, 1.8% from the GPU alone on the Neural Engine's part (calibrated in 27.6 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.44 for chunks of 535 rows or more: 26.8 ms per 2048-row FFN layer against 38.2 on the GPU alone, 1.8% from the GPU alone on the Neural Engine's part (calibrated in 27.6 s)",
+        "share": 0.4411764705882353,
+        "evaluations": 256,
+        "minimum_rows": 535,
+        "auto_calibration": true,
+        "prepared_share": 0.4411764705882353,
+        "prepared_minimum_rows": 535
+      },
+      "prefill_tok_s": 635.6087278726679,
+      "decode_tok_s": 55.93724765842183,
+      "timings": {
+        "decode_wall_seconds": 73.224911333,
+        "total_wall_seconds": 86.113343541,
+        "prefill_wall_seconds": 12.888432208,
+        "ttft_seconds": 12.888521416
+      },
+      "startup_timings": {
+        "resources_seconds": 31.187662125,
+        "source_weights_seconds": 3.546864083,
+        "ane_prepare_seconds": 27.572935625,
+        "ffn_cache_build_seconds": 1.67e-07,
+        "warmup_seconds": 3.345579333,
+        "hot_telemetry_seconds": 1.458e-06,
+        "storage_seconds": 0.009500292
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11949148548,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11965104128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 293636100,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11965104128,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11949148548,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98108,
+        "compact_fallbacks": 241,
+        "lookup_accepted_tokens": 2320,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 555,
+        "compact_cycles": 152,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 948,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "fa5c879b1b4a2ecbf321bce8321e9b91276ed30cb1b518f482863d1d027e2a11",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4411764705882353,
+          535,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "3-1-c10d004691b54387a4d44d0c67f1dfa1"
+    },
+    {
+      "run": 5,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-05-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.38 for chunks of 570 rows or more: 28.7 ms per 2048-row FFN layer against 39.2 on the GPU alone, 2.0% from the GPU alone on the Neural Engine's part (calibrated in 27.1 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.38 for chunks of 570 rows or more: 28.7 ms per 2048-row FFN layer against 39.2 on the GPU alone, 2.0% from the GPU alone on the Neural Engine's part (calibrated in 27.1 s)",
+        "share": 0.38235294117647056,
+        "evaluations": 256,
+        "minimum_rows": 570,
+        "auto_calibration": true,
+        "prepared_share": 0.38235294117647056,
+        "prepared_minimum_rows": 570
+      },
+      "prefill_tok_s": 493.91614278234385,
+      "decode_tok_s": 60.326352532822206,
+      "timings": {
+        "decode_wall_seconds": 67.89735875,
+        "total_wall_seconds": 84.483170167,
+        "prefill_wall_seconds": 16.585811417,
+        "ttft_seconds": 16.585872625
+      },
+      "startup_timings": {
+        "resources_seconds": 31.395786,
+        "source_weights_seconds": 4.243123167,
+        "ane_prepare_seconds": 27.090337041,
+        "ffn_cache_build_seconds": 4.2e-08,
+        "warmup_seconds": 4.791956208,
+        "hot_telemetry_seconds": 4.541e-06,
+        "storage_seconds": 0.006355125
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 207618048,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11847960964,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11863916544,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 261654532,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11863916544,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11847960964,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98108,
+        "compact_fallbacks": 172,
+        "lookup_accepted_tokens": 2488,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 541,
+        "compact_cycles": 185,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 898,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "15817e1c469f40310a042786f135dfc68faba3f3c5fad23595467d148c6ee163",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.38235294117647056,
+          570,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "4-1-7fe8a1880201419e841e4ba675a029f5"
+    },
+    {
+      "run": 6,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-06-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.44 for chunks of 512 rows or more: 26.8 ms per 2048-row FFN layer against 40.2 on the GPU alone, 1.8% from the GPU alone on the Neural Engine's part (calibrated in 9.4 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.44 for chunks of 512 rows or more: 26.8 ms per 2048-row FFN layer against 40.2 on the GPU alone, 1.8% from the GPU alone on the Neural Engine's part (calibrated in 9.4 s)",
+        "share": 0.4411764705882353,
+        "evaluations": 256,
+        "minimum_rows": 512,
+        "auto_calibration": true,
+        "prepared_share": 0.4411764705882353,
+        "prepared_minimum_rows": 512
+      },
+      "prefill_tok_s": 636.9269435870798,
+      "decode_tok_s": 58.06642412077383,
+      "timings": {
+        "decode_wall_seconds": 70.539904291,
+        "total_wall_seconds": 83.401661958,
+        "prefill_wall_seconds": 12.861757667,
+        "ttft_seconds": 12.861839458
+      },
+      "startup_timings": {
+        "resources_seconds": 12.573484916,
+        "source_weights_seconds": 3.126325666,
+        "ane_prepare_seconds": 9.383359,
+        "ffn_cache_build_seconds": 2.09e-07,
+        "warmup_seconds": 3.282992875,
+        "hot_telemetry_seconds": 1.417e-06,
+        "storage_seconds": 0.006891583
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11949148548,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11965104128,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 293636100,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11965104128,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11949148548,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98108,
+        "compact_fallbacks": 241,
+        "lookup_accepted_tokens": 2320,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 555,
+        "compact_cycles": 152,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 948,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "fa5c879b1b4a2ecbf321bce8321e9b91276ed30cb1b518f482863d1d027e2a11",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4411764705882353,
+          512,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "5-1-bcc1414ae3e54be3b226b6ec58d85789"
+    },
+    {
+      "run": 7,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-07-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.41 for chunks of 512 rows or more: 27.4 ms per 2048-row FFN layer against 39.2 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.1 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.41 for chunks of 512 rows or more: 27.4 ms per 2048-row FFN layer against 39.2 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.1 s)",
+        "share": 0.4117647058823529,
+        "evaluations": 256,
+        "minimum_rows": 512,
+        "auto_calibration": true,
+        "prepared_share": 0.4117647058823529,
+        "prepared_minimum_rows": 512
+      },
+      "prefill_tok_s": 652.0820335926966,
+      "decode_tok_s": 68.19638669168488,
+      "timings": {
+        "decode_wall_seconds": 60.061833166,
+        "total_wall_seconds": 72.624669708,
+        "prefill_wall_seconds": 12.562836542,
+        "ttft_seconds": 12.562909833
+      },
+      "startup_timings": {
+        "resources_seconds": 11.811161125,
+        "source_weights_seconds": 2.630905458,
+        "ane_prepare_seconds": 9.119096708,
+        "ffn_cache_build_seconds": 4.2e-08,
+        "warmup_seconds": 3.290704542,
+        "hot_telemetry_seconds": 1.541e-06,
+        "storage_seconds": 0.006711875
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11933157764,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11949113344,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 277645316,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11949113344,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11933157764,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98106,
+        "compact_fallbacks": 114,
+        "lookup_accepted_tokens": 2679,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 546,
+        "compact_cycles": 170,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 830,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "eb81ad1987081e9961e7e8e90c06a7468043b215b556f7a8323cf6fa2f38049c",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4117647058823529,
+          512,
+          1,
+          256
+        ],
+        "compared": true,
+        "passed": true,
+        "first_difference": null
+      },
+      "calibration_cache_nonce": "6-1-063d392df4454c8fb2d2b92b1db80abb"
+    },
+    {
+      "run": 8,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-08-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.41 for chunks of 551 rows or more: 25.1 ms per 2048-row FFN layer against 39.1 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.0 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.41 for chunks of 551 rows or more: 25.1 ms per 2048-row FFN layer against 39.1 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.0 s)",
+        "share": 0.4117647058823529,
+        "evaluations": 256,
+        "minimum_rows": 551,
+        "auto_calibration": true,
+        "prepared_share": 0.4117647058823529,
+        "prepared_minimum_rows": 551
+      },
+      "prefill_tok_s": 671.4783361056308,
+      "decode_tok_s": 69.35943624048883,
+      "timings": {
+        "decode_wall_seconds": 59.054689917,
+        "total_wall_seconds": 71.25463675,
+        "prefill_wall_seconds": 12.199946833,
+        "ttft_seconds": 12.20002825
+      },
+      "startup_timings": {
+        "resources_seconds": 11.337052292,
+        "source_weights_seconds": 2.282700875,
+        "ane_prepare_seconds": 8.992585959,
+        "ffn_cache_build_seconds": 2.5e-07,
+        "warmup_seconds": 3.144846333,
+        "hot_telemetry_seconds": 1.75e-06,
+        "storage_seconds": 0.006759833
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11933157764,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11949113344,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 277645316,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11949113344,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11933157764,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98106,
+        "compact_fallbacks": 114,
+        "lookup_accepted_tokens": 2679,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 546,
+        "compact_cycles": 170,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 830,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "eb81ad1987081e9961e7e8e90c06a7468043b215b556f7a8323cf6fa2f38049c",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4117647058823529,
+          551,
+          1,
+          256
+        ],
+        "compared": false
+      },
+      "calibration_cache_nonce": "7-1-67816a2fb045412887255ac8831c74d2"
+    },
+    {
+      "run": 9,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-09-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.41 for chunks of 512 rows or more: 25.7 ms per 2048-row FFN layer against 38.2 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 8.9 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.41 for chunks of 512 rows or more: 25.7 ms per 2048-row FFN layer against 38.2 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 8.9 s)",
+        "share": 0.4117647058823529,
+        "evaluations": 256,
+        "minimum_rows": 512,
+        "auto_calibration": true,
+        "prepared_share": 0.4117647058823529,
+        "prepared_minimum_rows": 512
+      },
+      "prefill_tok_s": 667.0829261954632,
+      "decode_tok_s": 67.18385661154184,
+      "timings": {
+        "decode_wall_seconds": 60.967027,
+        "total_wall_seconds": 73.247359292,
+        "prefill_wall_seconds": 12.280332292,
+        "ttft_seconds": 12.280418625
+      },
+      "startup_timings": {
+        "resources_seconds": 11.333835584,
+        "source_weights_seconds": 2.34157125,
+        "ane_prepare_seconds": 8.937143,
+        "ffn_cache_build_seconds": 2.09e-07,
+        "warmup_seconds": 3.117212,
+        "hot_telemetry_seconds": 1.625e-06,
+        "storage_seconds": 0.004922875
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11933157764,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11949113344,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 277645316,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11949113344,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11933157764,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98106,
+        "compact_fallbacks": 114,
+        "lookup_accepted_tokens": 2679,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 546,
+        "compact_cycles": 170,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 830,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "eb81ad1987081e9961e7e8e90c06a7468043b215b556f7a8323cf6fa2f38049c",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4117647058823529,
+          512,
+          1,
+          256
+        ],
+        "compared": true,
+        "passed": true,
+        "first_difference": null
+      },
+      "calibration_cache_nonce": "8-1-ffd99e9c32b940b882af119994097fef"
+    },
+    {
+      "run": 10,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/auto-10-attempt1",
+      "ane_actual": {
+        "prepared_state": 1,
+        "prepared_reason": "at share 0.41 for chunks of 512 rows or more: 29.1 ms per 2048-row FFN layer against 41.3 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.4 s)",
+        "enabled": true,
+        "end_state": 1,
+        "fallback_reason": "at share 0.41 for chunks of 512 rows or more: 29.1 ms per 2048-row FFN layer against 41.3 on the GPU alone, 1.9% from the GPU alone on the Neural Engine's part (calibrated in 9.4 s)",
+        "share": 0.4117647058823529,
+        "evaluations": 256,
+        "minimum_rows": 512,
+        "auto_calibration": true,
+        "prepared_share": 0.4117647058823529,
+        "prepared_minimum_rows": 512
+      },
+      "prefill_tok_s": 646.0658899272732,
+      "decode_tok_s": 66.92814462815845,
+      "timings": {
+        "decode_wall_seconds": 61.199963375,
+        "total_wall_seconds": 73.879784625,
+        "prefill_wall_seconds": 12.67982125,
+        "ttft_seconds": 12.679869042
+      },
+      "startup_timings": {
+        "resources_seconds": 11.834721417,
+        "source_weights_seconds": 2.376329791,
+        "ane_prepare_seconds": 9.398287333,
+        "ffn_cache_build_seconds": 4.2e-08,
+        "warmup_seconds": 3.202569208,
+        "hot_telemetry_seconds": 1.75e-06,
+        "storage_seconds": 0.008072667
+      },
+      "memory_report": {
+        "state_bytes": 676200448,
+        "ffn_fp16_cache_bytes": 0,
+        "vision_weights_bytes": 0,
+        "draft_state_bytes": 59637760,
+        "kv_bytes": 276824064,
+        "draft_weights_bytes": 1266647040,
+        "backend_peak_bytes": 11933157764,
+        "state_staging_bytes": 0,
+        "device_current_bytes": 11949113344,
+        "ffn_cached_matrices": 0,
+        "ane_bytes": 277645316,
+        "prefill_workspace_bytes": 763576320,
+        "unclassified_bytes": 0,
+        "device_peak_bytes": 11949113344,
+        "ffn_formats": {
+          "iq2xxs": 86,
+          "q4k": 1,
+          "iq3xxs": 10,
+          "q2k": 16,
+          "iq4xs": 2,
+          "iq1s": 25,
+          "iq2s": 20,
+          "iq1m": 10,
+          "iq2xs": 13,
+          "iq3s": 9
+        },
+        "decode_workspace_bytes": 505954688,
+        "backend_current_bytes": 11933157764,
+        "target_source_weights_bytes": 8166309888,
+        "ffn_quantized_payload_bytes": 4873543680
+      },
+      "optional_features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "lookup_maximum_match": 4,
+        "compact_rows": 98106,
+        "compact_fallbacks": 114,
+        "lookup_accepted_tokens": 2679,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "lookup_minimum_match": 2,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 546,
+        "compact_cycles": 170,
+        "extra_metal_bytes": 255983616,
+        "fast_topk_selections": 0,
+        "compact_capacity": 98304,
+        "lookup_attempts": 830,
+        "compact_requested_capacity": 98304,
+        "fast_topk_fallback_reason": ""
+      },
+      "facts_pass": true,
+      "output_sha256": "eb81ad1987081e9961e7e8e90c06a7468043b215b556f7a8323cf6fa2f38049c",
+      "repeat_token_check": {
+        "effective_execution_signature": [
+          0.4117647058823529,
+          512,
+          1,
+          256
+        ],
+        "compared": true,
+        "passed": true,
+        "first_difference": null
+      },
+      "calibration_cache_nonce": "9-1-9727b170b4ab4cada5f2360ae290a4cc"
+    }
+  ],
+  "medians": {
+    "prefill_tok_s": 636.2678357298739,
+    "decode_tok_s": 66.6984111956358
+  },
+  "median_total_seconds": 75.0813722085,
+  "actual_ane_used_runs": 10,
+  "peak_gib": 11.173189524561167
+}

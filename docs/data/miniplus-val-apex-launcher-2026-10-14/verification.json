@@ -1,0 +1,121 @@
+{
+  "created_at": "2026-10-14T12:43:48.940515+08:00",
+  "workspace": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash",
+  "branch": "codex/qwen4b-quantized-ffn",
+  "base_commit": "3f43aa2460f59330e658fdc89945d72ce92d538c",
+  "uncommitted_changes": true,
+  "launcher": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/qwen38valapexminiplusv3splash.sh",
+  "launcher_sha256": "7c10001bbdd3f104fd7dccf7365810897bd41831192b887ae7a97f04e429ccf4",
+  "test_source_sha256": "0f6965254a95fcacf2636a50f4aac436263ec1bd3105d3c14e62afd1bdb7b7ca",
+  "binary": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/startup-checklist-20261014/splash",
+  "binary_sha256": "f4189324b7b76a20ea3dc0abf595e06f8a7b38a5858fbdb3c70c2e7986a1bb5e",
+  "native_identity": {
+    "build_id": "src-b370030303bec02e1514af221c4293bc56a7c2e9e27d36ad388d074cb90d352e",
+    "schema_version": 1,
+    "source_sha256": "b370030303bec02e1514af221c4293bc56a7c2e9e27d36ad388d074cb90d352e"
+  },
+  "defaults": {
+    "port": 8009,
+    "host": "0.0.0.0",
+    "context": 262144,
+    "kv": "q4h",
+    "queue": 1,
+    "memory": "40G",
+    "disk": "50G",
+    "ane": "auto",
+    "lookup": "on",
+    "compact": "off",
+    "fast_topk": "off",
+    "draft_block": 8
+  },
+  "checks": {
+    "install-tests": 0,
+    "preparation": 0,
+    "planner-build": 0,
+    "planner": 0,
+    "tokenizer": 0,
+    "source-check": 0,
+    "launcher-help": 0
+  },
+  "install_tests": {
+    "count": 232,
+    "skipped": 4,
+    "exit_code": 0
+  },
+  "commands": [
+    ".venv/bin/python -m unittest dev.tests.install.test_local_launchers",
+    ".venv/bin/python -m unittest discover -s dev/tests/install -t .",
+    "sh -n qwen38valapexminiplusv3splash.sh",
+    "sh qwen38valapexminiplusv3splash.sh --help",
+    "xcrun -sdk macosx clang++ -std=c++20 -O2 -Iruntime -Idev -Idev/tests/engine -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 docs/data/miniplus-v3-local-draft-2026-10-14/cpu-check.cpp build/startup-checklist-20261014/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o /private/tmp/miniplus-val-apex-cpu-check",
+    "make BUILD=build/startup-checklist-20261014 DRAFT_BLOCK_SIZE=8 BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python check-source verify-build-identity"
+  ],
+  "cpu_plan": {
+    "command": [
+      "/private/tmp/miniplus-val-apex-cpu-check",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293"
+    ],
+    "exit_code": 0,
+    "plan": {
+      "target_images": 66,
+      "draft_images": 6,
+      "draft_tensors": 81,
+      "target_image_bytes": 14401732608,
+      "draft_image_bytes": 1266647040,
+      "widened_gdn_tensors": 47,
+      "widened_gdn_bytes": 46202880
+    },
+    "inference_run": false
+  },
+  "binding": {
+    "selection": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.selections/094eeb350ebe80ecbe6a7d8809ac09c2fb7fe31670b189522e190257cad2325d",
+    "resolved": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293",
+    "model": "IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3",
+    "sources": {
+      "draft": {
+        "repo": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16",
+        "revision": null
+      },
+      "target": {
+        "repo": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF",
+        "revision": null
+      }
+    },
+    "target_bytes": 14160865248,
+    "main_file": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
+    "family": "Qwen3.8-27B",
+    "context": 262144,
+    "weights_copied": false,
+    "inference_run": false,
+    "exit_code": 0
+  },
+  "saluki_launcher_removed": true,
+  "saluki_running_processes": 0,
+  "saluki_history_and_public_rankings_preserved": true,
+  "old_efficientthink_launcher_preserved": true,
+  "production_service_started": false,
+  "performance_tests_run": false,
+  "generation_correctness_run": false,
+  "tool_setup_errors_corrected": [
+    {
+      "exit_code": 1,
+      "log": "preparation-tool-error.log",
+      "reason": "used a nonexistent helper name; changed to require_loadable"
+    },
+    {
+      "exit_code": 1,
+      "log": "preparation-config-tool-error.log",
+      "reason": "configuration context is nested in text_config"
+    },
+    {
+      "exit_code": 1,
+      "log": "planner-build-initial-error.log",
+      "reason": "added existing reference header include directory"
+    },
+    {
+      "exit_code": 1,
+      "log": "tokenizer-tool-error.log",
+      "reason": "corrected validation import to server.constraints"
+    }
+  ]
+}

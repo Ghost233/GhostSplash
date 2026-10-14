@@ -1,0 +1,23 @@
+2026-10-14 11:35:27.973 dflash-standard[22842:12016025] Metal API Validation Enabled
+2026-10-14 11:35:27.973 dflash-standard[22842:12016025] Metal GPU Validation Enabled
+standard context graph: PASS rows=8 storage_rows=8
+standard layer causal=0 stage=prepared_V failures=0 max_abs=0 bound_ratio=0 index=0 got=0.597656 expected=0.597656
+standard layer causal=0 stage=normalized_K failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.21875 expected=-1.21875
+standard layer causal=0 stage=attention_reorder failures=0 max_abs=0 bound_ratio=0 index=0 got=0.601562 expected=0.601562
+standard layer causal=0 stage=attention_residual failures=0 max_abs=0 bound_ratio=0 index=0 got=-0.847656 expected=-0.847656
+standard layer causal=0 stage=post_attention_norm failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.25781 expected=-1.25781
+standard layer causal=0 stage=SwiGLU failures=0 max_abs=0 bound_ratio=0 index=0 got=-0 expected=0
+standard layer causal=0 stage=final_residual failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.54688 expected=-1.54688
+standard layer causal=0 stage=final_norm failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.71875 expected=-1.71875
+standard layer causal=0 stage=shared_head_logits failures=0 max_abs=1.78814e-07 bound_ratio=2.16765e-06 index=256 got=-2.73307 expected=-2.73307
+standard context graph: PASS rows=8 storage_rows=8
+standard layer causal=1 stage=prepared_V failures=0 max_abs=0 bound_ratio=0 index=0 got=0.597656 expected=0.597656
+standard layer causal=1 stage=normalized_K failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.21875 expected=-1.21875
+standard layer causal=1 stage=attention_reorder failures=0 max_abs=0 bound_ratio=0 index=0 got=0.597656 expected=0.597656
+standard layer causal=1 stage=attention_residual failures=0 max_abs=0 bound_ratio=0 index=0 got=-0.851562 expected=-0.851562
+standard layer causal=1 stage=post_attention_norm failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.26562 expected=-1.26562
+standard layer causal=1 stage=SwiGLU failures=0 max_abs=0 bound_ratio=0 index=0 got=-0 expected=0
+standard layer causal=1 stage=final_residual failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.60938 expected=-1.60938
+standard layer causal=1 stage=final_norm failures=0 max_abs=0 bound_ratio=0 index=0 got=-1.72656 expected=-1.72656
+standard layer causal=1 stage=shared_head_logits failures=0 max_abs=1.19209e-07 bound_ratio=1.44341e-06 index=1792 got=-2.73629 expected=-2.73629
+dflash-standard: PASS

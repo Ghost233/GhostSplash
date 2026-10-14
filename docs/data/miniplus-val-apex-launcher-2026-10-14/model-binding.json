@@ -1,0 +1,80 @@
+{
+  "selection": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.selections/094eeb350ebe80ecbe6a7d8809ac09c2fb7fe31670b189522e190257cad2325d",
+  "resolved": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293",
+  "model": "IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3",
+  "sources": {
+    "draft": {
+      "repo": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16",
+      "revision": null
+    },
+    "target": {
+      "repo": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF",
+      "revision": null
+    }
+  },
+  "target_bytes": 14160865248,
+  "main_file": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
+  "family": "Qwen3.8-27B",
+  "context": 262144,
+  "files": {
+    "config.json": {
+      "bytes": 288,
+      "ctime_ns": 1791952496282289248,
+      "digest": "db7d36a53e2797e27fd4e3614b9a234c7f3a10f0859e1b855c5f031e7cf3712c",
+      "mtime_ns": 1791952496282289248,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/1b8d3d723fc81dd9a5e74c8fc807c1f556114a32197643a6cfc822488fef5980/config.json"
+    },
+    "draft/config.json": {
+      "bytes": 995,
+      "ctime_ns": 1791943249491381468,
+      "digest": "c06b6779119d8757062f61be830d2e024067b75838f3487388773c3d01cabdd0",
+      "mtime_ns": 1791943249491381468,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16/config.json"
+    },
+    "draft/model.safetensors": {
+      "bytes": 3848817872,
+      "ctime_ns": 1791943093513121347,
+      "digest": "db45fb5626822cdcad6190a944221b62d805aab7b175892a89b2936031d0d5c5",
+      "mtime_ns": 1791943093508343958,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16/model.safetensors"
+    },
+    "target/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf": {
+      "bytes": 14160865248,
+      "ctime_ns": 1791877133911052366,
+      "digest": "d59d1cc7638cea6da89e54af2441b5507ee7c4ea4d8fe6a89ab336a7f976ff4d",
+      "mtime_ns": 1791877120954465267,
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf"
+    },
+    "tokenizer/chat_template.jinja": {
+      "bytes": 9993,
+      "ctime_ns": 1791952496286533760,
+      "digest": "12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce",
+      "mtime_ns": 1791952496286533760,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/1b8d3d723fc81dd9a5e74c8fc807c1f556114a32197643a6cfc822488fef5980/tokenizer/chat_template.jinja"
+    },
+    "tokenizer/config.json": {
+      "bytes": 288,
+      "ctime_ns": 1791952496282289248,
+      "digest": "db7d36a53e2797e27fd4e3614b9a234c7f3a10f0859e1b855c5f031e7cf3712c",
+      "mtime_ns": 1791952496282289248,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/1b8d3d723fc81dd9a5e74c8fc807c1f556114a32197643a6cfc822488fef5980/config.json"
+    },
+    "tokenizer/tokenizer.json": {
+      "bytes": 10085571,
+      "ctime_ns": 1791952496285734049,
+      "digest": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+      "mtime_ns": 1791952496285734049,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/1b8d3d723fc81dd9a5e74c8fc807c1f556114a32197643a6cfc822488fef5980/tokenizer/tokenizer.json"
+    },
+    "tokenizer/tokenizer_config.json": {
+      "bytes": 6198,
+      "ctime_ns": 1791952496286311301,
+      "digest": "c0435ea80b819a4fb16914a820960ff7c38f9d48cb94e7e8a28780fe01e8dea0",
+      "mtime_ns": 1791952496286311301,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/1b8d3d723fc81dd9a5e74c8fc807c1f556114a32197643a6cfc822488fef5980/tokenizer/tokenizer_config.json"
+    }
+  },
+  "weights_copied": false,
+  "inference_run": false,
+  "exit_code": 0
+}

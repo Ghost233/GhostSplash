@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metal/abi/ExecutionGeometry.h"
+#include "metal/abi/KvCodec.h"
 #include "metal/MetalBackend.hpp"
 
 #include <algorithm>
@@ -145,7 +146,7 @@ struct Layout final {
 
   [[nodiscard]] constexpr bool valid() const noexcept {
     return attentionLayers && kvHeads && headDimension && validFormat(format) &&
-           ((format != Format::Int4Hadamard && !isQ4_0(format)) || headDimension == 256);
+           ((format != Format::Int4Hadamard && !isQ4_0(format)) || headDimension == SPLASH_KV_KEY_ROTATION_BLOCK);
   }
   [[nodiscard]] constexpr uint32_t elementsPerScale() const noexcept {
     return isQ4_0(format) ? 32 : format != Format::BFloat16 ? headDimension : 0;
@@ -160,7 +161,7 @@ struct Layout final {
   // Keys and values share one data and one scale geometry per layer page.
   [[nodiscard]] constexpr uint64_t dataBytesPerLayerPage() const noexcept {
     if (isQ4_0(format)) return elementsPerLayerPage() / 32 * 18;
-    if (format == Format::Int4Hadamard) return elementsPerLayerPage() / 2;
+    if (format == Format::Int4Hadamard) return elementsPerLayerPage() / SPLASH_Q4H_VALUES_PER_BYTE;
     return elementsPerLayerPage() * (format == Format::Int8 ? 1 : 2);
   }
   [[nodiscard]] constexpr uint64_t scaleBytesPerLayerPage() const noexcept {
