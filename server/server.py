@@ -1597,6 +1597,27 @@ def parse_args(argv=None):
 
 
 def _native_command(args):
+    if getattr(args, "decision_type", None) == "laya":
+        if any(
+            getattr(args, key) == "on"
+            for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
+        ):
+            raise ValueError("encoder decision models have no decode features")
+        if args.ane_ffn_share is not None or args.ane_power_recovery == "on":
+            raise ValueError(
+                "ModernBERT ANE programs are not implemented; use the GPU encoder"
+            )
+        return [
+            args.binary,
+            "serve-encoder-native",
+            args.model_root,
+            "auto" if args.max_context is None else str(args.max_context),
+            "auto" if args.max_memory is None else str(args.max_memory),
+            "--encoder-option-queries",
+            getattr(args, "encoder_option_queries", "on"),
+            "--encoder-submit-batch-size",
+            str(getattr(args, "encoder_submit_batch_size", 4)),
+        ]
     command = [
         args.binary,
         "serve-native",
@@ -1720,13 +1741,26 @@ def main():
                 # GGUF-derived Qwen configs omit transformers_version, which
                 # triggers Transformers' local Mistral heuristic. Keep Qwen's regex.
                 tokenizer_options["fix_mistral_regex"] = False
+        args.decision_type = decision_config.get("type") if decision_config else None
+        if args.decision_type == "laya":
+            tokenizer_options["fix_mistral_regex"] = False
         tokenizer = AutoTokenizer.from_pretrained(
             args.tokenizer,
             local_files_only=True,
             trust_remote_code=False,
             **tokenizer_options,
         )
-        validate_tokenizer(tokenizer)
+        if args.decision_type == "laya":
+            vocabulary = model_config["text_config"]["vocab_size"]
+            ids = tokenizer.get_vocab().values()
+            if not ids or any(
+                type(token) is not int or not 0 <= token < vocabulary for token in ids
+            ):
+                raise ValueError(
+                    "encoder tokenizer vocabulary does not match its model"
+                )
+        else:
+            validate_tokenizer(tokenizer)
         stage = "chat template"
         chat_templates = ChatTemplates(tokenizer)
         print_status(f"Chat template · {chat_templates.describe()}")
@@ -1757,7 +1791,9 @@ def main():
             )
         effective_context = readiness.max_context_tokens
         stage = "frontend"
-        constraint_factory = ConstraintFactory(tokenizer)
+        constraint_factory = (
+            None if decision_config is not None else ConstraintFactory(tokenizer)
+        )
         app = Frontend(
             tokenizer,
             backend,

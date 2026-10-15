@@ -1,0 +1,326 @@
+{
+  "command": [
+    "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+    "-m",
+    "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18146",
+    "-c",
+    "8193",
+    "-np",
+    "1",
+    "-ngl",
+    "99",
+    "-b",
+    "2048",
+    "-ub",
+    "2048",
+    "-ctk",
+    "bf16",
+    "-ctv",
+    "bf16",
+    "--no-warmup",
+    "--embd-normalize",
+    "-1"
+  ],
+  "runs": [
+    {
+      "name": "billing",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.054939082428033116,
+              "billing": 0.945060917571967
+            },
+            "confidence": 0.890121835143934
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "sentiment",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "mood": {
+            "type": "choice",
+            "choice": "positive",
+            "probabilities": {
+              "negative": 0.008521731661166746,
+              "positive": 0.9914782683388332
+            },
+            "confidence": 0.9829565366776665
+          }
+        },
+        "usage": {
+          "input_tokens": 32,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "noul",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "refund": {
+            "type": "noul",
+            "noul": 0.9723302292954119
+          }
+        },
+        "usage": {
+          "input_tokens": 24,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "rating",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.825153307063387,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.43284578373911614,
+              "1": 0.3091551254583805,
+              "2": 0.2579990908025033
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "json",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "billing": 0.9813089814992543,
+              "shipping": 0.018691018500745702
+            },
+            "confidence": 0.9626179629985085
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "escaped_marker",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "billing": 0.8711862816256573,
+              "shipping": 0.12881371837434272
+            },
+            "confidence": 0.7423725632513145
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_128",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.014880149202429489,
+              "billing": 0.9851198507975706
+            },
+            "confidence": 0.9702397015951412
+          }
+        },
+        "usage": {
+          "input_tokens": 128,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_512",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.011685147239897163,
+              "billing": 0.9883148527601028
+            },
+            "confidence": 0.9766297055202056
+          }
+        },
+        "usage": {
+          "input_tokens": 512,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_1049",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.01286626500307676,
+              "billing": 0.9871337349969231
+            },
+            "confidence": 0.9742674699938463
+          }
+        },
+        "usage": {
+          "input_tokens": 1049,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_2048",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.01269187930647385,
+              "billing": 0.9873081206935261
+            },
+            "confidence": 0.9746162413870523
+          }
+        },
+        "usage": {
+          "input_tokens": 2048,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_4096",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.013477056469818022,
+              "billing": 0.9865229435301819
+            },
+            "confidence": 0.9730458870603638
+          }
+        },
+        "usage": {
+          "input_tokens": 4096,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "length_8192",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.015350591652475308,
+              "billing": 0.9846494083475247
+            },
+            "confidence": 0.9692988166950494
+          }
+        },
+        "usage": {
+          "input_tokens": 8192,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "name": "multi_question",
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.07279660654647341,
+              "billing": 0.9272033934535266
+            },
+            "confidence": 0.8544067869070533
+          },
+          "refund": {
+            "type": "noul",
+            "noul": 0.952104702401246
+          },
+          "urgency": {
+            "type": "score",
+            "score": 0.8942085345785034,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.4057481233321344,
+              "1": 0.2942952187572279,
+              "2": 0.29995665791063775
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 87,
+          "output_tokens": 0
+        }
+      }
+    }
+  ],
+  "performance_test": false,
+  "status": "passed",
+  "exit": 0
+}

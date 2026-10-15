@@ -224,8 +224,8 @@ inline void staged_accumulate_any(uint fmt, device bfloat *input, device uchar *
 }
 
 // Shared prefill stage and epilogue, also instantiated by target FFN candidates.
-template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone>
-inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device bfloat *output,
+template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone, typename Out = bfloat>
+inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device Out *output,
                     uint input_size, uint output_origin, uint rows, threadgroup half *stage, threadgroup half2 *tl,
                     uint simd_lane, uint simd_group, uint out_stride, uint out_offset, device bfloat *aux = nullptr) {
   const bool owns_rows = simd_group * RowsPerSG < rows;   // uniform per simdgroup
@@ -241,6 +241,9 @@ inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uch
     if (!acc.is_valid_element(i)) continue;
     auto index = acc.get_multidimensional_index(i);
     const ulong o = (ulong(simd_group) * RowsPerSG + index[1]) * out_stride + out_offset + output_origin + index[0];
-    output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
+    if constexpr (sizeof(Out) == sizeof(float)) {
+      static_assert(Ep == EpNone, "FP32 prefill takes no epilogue");
+      output[o] = acc[i];
+    } else output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
   }
 }

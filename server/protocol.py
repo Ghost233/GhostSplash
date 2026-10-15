@@ -189,6 +189,8 @@ class RequestFlag(IntFlag):
     RETURN_PROGRESS = 1 << 1
     # score_tokens carry ordered option-end positions; the final position is the query.
     DECISION_SCORING = 1 << 2
+    DECISION_SCORE_TYPE = 1 << 3
+    DECISION_NOUL_TYPE = 1 << 4
 
 
 # A request with any other bit set is a request error.
@@ -196,6 +198,8 @@ _REQUEST_FLAG_BITS = int(
     RequestFlag.IGNORE_END_OF_SEQUENCE
     | RequestFlag.RETURN_PROGRESS
     | RequestFlag.DECISION_SCORING
+    | RequestFlag.DECISION_SCORE_TYPE
+    | RequestFlag.DECISION_NOUL_TYPE
 )
 
 
@@ -613,6 +617,17 @@ def _validated_request(
         )
         if flags & ~_REQUEST_FLAG_BITS:
             raise ValueError("request flags are not defined by native protocol")
+        encoder_types = flags & (
+            RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE
+        )
+        if encoder_types and (
+            not flags & RequestFlag.DECISION_SCORING
+            or encoder_types
+            == (RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE)
+        ):
+            raise ValueError(
+                "encoder question-type flags require a single decision type"
+            )
     except ValueError as error:
         _fail_request(IssueCode.INVALID_ENUM_VALUE, str(error), request_id)
     try:

@@ -412,6 +412,7 @@ inline void gdn_commit_prefix_batch_phase(
 
 GDN_COMMIT_ENTRY(verify_gdn_commit, 16, 48, 128, 10240, 16640)
 GDN_COMMIT_ENTRY(verify_gdn_commit_vh32, 16, 32, 128, 8192, 12544)
+GDN_COMMIT_ENTRY(verify_gdn_commit_vh16, 16, 16, 128, 6144, 8448)
 #undef GDN_COMMIT_ENTRY
 
 // Grid {value heads, lanes}.
@@ -531,13 +532,17 @@ inline void gdn_decode_batch_phase(
 // Two rows overlap reductions and arithmetic without the register cost of four.
 GDN_DECODE_ENTRY(verify_gdn_fused, 16, 48, 128, 10240, 16640, bfloat)
 GDN_DECODE_ENTRY(verify_gdn_fused_vh32, 16, 32, 128, 8192, 12544, bfloat)
+GDN_DECODE_ENTRY(verify_gdn_fused_vh16, 16, 16, 128, 6144, 8448, bfloat)
 // Table16 feeds the register tile, after norms that are F32 (a GGUF's) or bf16 (an MLX target's).
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16, 16, 48, 128, 10240, 16640, gguf_sg::Table16, bfloat)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh32, 16, 32, 128, 8192, 12544, gguf_sg::Table16, bfloat)
+GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh16, 16, 16, 128, 6144, 8448, gguf_sg::Table16, bfloat)
 GDN_DECODE_ENTRY(verify_gdn_fused_f32, 16, 48, 128, 10240, 16640, float)
 GDN_DECODE_ENTRY(verify_gdn_fused_vh32_f32, 16, 32, 128, 8192, 12544, float)
+GDN_DECODE_ENTRY(verify_gdn_fused_vh16_f32, 16, 16, 128, 6144, 8448, float)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_f32, 16, 48, 128, 10240, 16640, gguf_sg::Table16, float)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh32_f32, 16, 32, 128, 8192, 12544, gguf_sg::Table16, float)
+GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh16_f32, 16, 16, 128, 6144, 8448, gguf_sg::Table16, float)
 #undef GDN_DECODE_ENTRY
 #undef GDN_DECODE_TABLE_ENTRY
 #undef GDN_DECODE_BODY

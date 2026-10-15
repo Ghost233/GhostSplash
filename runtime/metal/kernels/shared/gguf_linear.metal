@@ -236,6 +236,19 @@ GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32) GGUF_DECODE_FUS
                                          local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group,        \
                                          p.out_stride, p.offset[s]);                                               \
   }
+// Decision encoders keep projection outputs and residual additions in FP32.
+kernel void gguf_prefill_q80_a_f32(device bfloat *input [[buffer(0)]], GGUF_SEGMENTS,
+                                 device float *output [[buffer(10)]],
+                                 constant GgufPrefillSegmentsParams &p [[buffer(11)]], GGUF_PREFILL_THREAD) {
+  GGUF_PREFILL_TABLES(FmtQ80);
+  GGUF_SEGMENT_OF(group.y, p.cols);
+  const uint first = group.x * GGUF_PREFILL_ROWS, rows = p.rows > first ? p.rows - first : 0;
+  gguf_prefill_tile<FmtQ80, GGUF_PREFILL_SIMDGROUP_ROWS, GGUF_PREFILL_SIMDGROUPS,
+                   GGUF_TILE_COLUMNS, GGUF_PREFILL_STEP, EpNone, float>(
+      input + ulong(first) * p.input_size, w0, w1, meta, output + ulong(first) * p.out_stride,
+      p.input_size, local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group, p.out_stride, p.offset[s]);
+}
+
 #define GGUF_PREFILL_EPILOGUE(F, f, ep, Ep)                                                                        \
   kernel void gguf_prefill_##f##_##ep(GGUF_PREFILL_BUFFERS, device bfloat *aux [[buffer(5)]],                    \
                                       constant GgufPrefillParams &p [[buffer(6)]], GGUF_PREFILL_THREAD) {          \

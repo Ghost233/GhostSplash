@@ -39,6 +39,28 @@ struct Qwen3_5_4BLayout final : QwenHybridLayout<0> {
   bool operator==(const Qwen3_5_4BLayout &) const = default;
 };
 
+// Kev-0.8B uses the same hybrid and pointer-head semantics with 16 GDN value heads.
+struct Qwen3_5_0_8BLayout final : QwenHybridLayout<0> {
+  static constexpr std::string_view family = "Kev-0.8B";
+  static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
+  static constexpr std::string_view headMagic = Qwen3_5_4BLayout::headMagic;
+  constexpr Qwen3_5_0_8BLayout()
+      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{}), {}} {
+    layers = 24;
+    hiddenSize = 1024;
+    packedGdnWidth = 8448;
+    packedFullWidth = 5120;
+    convolutionDimension = 6144;
+    gdnValueHeads = 16;
+    attentionWidth = 2048;
+    attentionQueryHeads = 8;
+    attentionKvHeads = 2;
+    intermediateSize = 3584;
+    decisionHeadSize = 512;
+  }
+  bool operator==(const Qwen3_5_0_8BLayout &) const = default;
+};
+
 struct Qwen3_5_4BDFlashLayout final : QwenHybridLayout<8> {
   static constexpr std::string_view family = Qwen3_5_4BLayout::family;
   static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
@@ -55,6 +77,10 @@ inline constexpr DFlashDraftLayout kQwen3_5_4BDFlashDraftLayout{
     .intermediateSize = 9216, .attentionHeadDimension = 128,
     .rotaryTheta = 10'000'000.0F, .targetHiddenSize = 20480,
     .selectorRank = 0, .kvHeads = 8, .kind = DraftKind::Standard};
+
+using Qwen3_5_0_8BWeights = QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights>;
+[[nodiscard]] Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &, Qwen3_5_0_8BLayout, const QwenTargetFiles &);
+void buildQwen3_5_0_8BPrefillCache(metal::MetalBackend &, WeightImages &, Qwen3_5_0_8BWeights &, uint64_t budgetBytes = UINT64_MAX);
 
 using Qwen3_5_4BWeights = QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeights>;
 using Qwen3_5_4BDFlashWeights = QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights>;

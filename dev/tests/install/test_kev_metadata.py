@@ -3,10 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from install import assembly, gguf
-
 from dev.tests import fixture_files
 from dev.tests.install.test_gguf_metadata import fixture
+from install import assembly, gguf
 
 
 def kev_metadata():
@@ -77,6 +76,24 @@ class KevMetadataTests(unittest.TestCase):
             bad.shapes = dict(header.shapes, **{"cls.output.weight": shape})
             with self.assertRaisesRegex(gguf.ModelError, "shape"):
                 gguf.require_loadable(bad)
+
+    def test_kev_08_accepts_its_actual_pointer_head_width(self):
+        values = kev_metadata() | {
+            "qwen35.embedding_length": 1024,
+            "qwen35.block_count": 24,
+            "qwen35.attention.head_count": 8,
+            "qwen35.attention.head_count_kv": 2,
+        }
+        header = self.metadata(values)
+        required = gguf.loaded_tensors(header)
+        header.tensors = {
+            name: 0 if types == {"F32"} else 8 for name, types in required.items()
+        }
+        header.shapes = {"cls.output.weight": (1024, 512), "cls.output.bias": (512,)}
+        gguf.require_loadable(header)
+        header.shapes["cls.output.weight"] = (2560, 512)
+        with self.assertRaisesRegex(gguf.ModelError, "shape"):
+            gguf.require_loadable(header)
 
     def test_kev_assembly_accepts_no_draft_without_relaxing_other_families(self):
         record = {

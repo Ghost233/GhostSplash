@@ -1,0 +1,159 @@
+START Kev-0.8B 128 1 llama
+END Kev-0.8B 128 1 llama 63.203 ms
+WAIT idle {'gpu': 52, 'busy_pids': []}
+WAIT idle {'gpu': 53, 'busy_pids': []}
+START Kev-0.8B 128 1 splash
+END Kev-0.8B 128 1 splash 25.808 ms
+START Kev-0.8B 128 2 splash
+END Kev-0.8B 128 2 splash 26.408 ms
+WAIT idle {'gpu': 53, 'busy_pids': []}
+WAIT idle {'gpu': 52, 'busy_pids': []}
+START Kev-0.8B 128 2 llama
+END Kev-0.8B 128 2 llama 61.812 ms
+START Kev-0.8B 128 3 llama
+END Kev-0.8B 128 3 llama 60.456 ms
+START Kev-0.8B 128 3 splash
+END Kev-0.8B 128 3 splash 28.228 ms
+WAIT idle {'gpu': 86, 'busy_pids': []}
+START Kev-0.8B 512 1 llama
+END Kev-0.8B 512 1 llama 102.308 ms
+START Kev-0.8B 512 1 splash
+END Kev-0.8B 512 1 splash 44.674 ms
+START Kev-0.8B 512 2 splash
+END Kev-0.8B 512 2 splash 45.663 ms
+START Kev-0.8B 512 2 llama
+END Kev-0.8B 512 2 llama 106.548 ms
+START Kev-0.8B 512 3 llama
+END Kev-0.8B 512 3 llama 106.091 ms
+START Kev-0.8B 512 3 splash
+END Kev-0.8B 512 3 splash 47.431 ms
+WAIT idle {'gpu': 96, 'busy_pids': []}
+START Kev-0.8B 2048 1 llama
+END Kev-0.8B 2048 1 llama 318.485 ms
+START Kev-0.8B 2048 1 splash
+END Kev-0.8B 2048 1 splash 128.407 ms
+START Kev-0.8B 2048 2 splash
+END Kev-0.8B 2048 2 splash 126.643 ms
+START Kev-0.8B 2048 2 llama
+END Kev-0.8B 2048 2 llama 321.69 ms
+START Kev-0.8B 2048 3 llama
+END Kev-0.8B 2048 3 llama 321.495 ms
+START Kev-0.8B 2048 3 splash
+END Kev-0.8B 2048 3 splash 126.742 ms
+WAIT idle {'gpu': 99, 'busy_pids': []}
+START Kev-0.8B 8192 1 llama
+END Kev-0.8B 8192 1 llama 1530.566 ms
+START Kev-0.8B 8192 1 splash
+END Kev-0.8B 8192 1 splash 532.488 ms
+START Kev-0.8B 8192 2 splash
+END Kev-0.8B 8192 2 splash 526.363 ms
+START Kev-0.8B 8192 2 llama
+END Kev-0.8B 8192 2 llama 1524.677 ms
+START Kev-0.8B 8192 3 llama
+END Kev-0.8B 8192 3 llama 1523.486 ms
+START Kev-0.8B 8192 3 splash
+END Kev-0.8B 8192 3 splash 524.384 ms
+START Julia-1 128 1 llama
+END Julia-1 128 1 llama 11.42 ms
+START Julia-1 128 1 splash
+END Julia-1 128 1 splash 9.351 ms
+START Julia-1 128 2 splash
+END Julia-1 128 2 splash 9.911 ms
+START Julia-1 128 2 llama
+END Julia-1 128 2 llama 12.142 ms
+START Julia-1 128 3 llama
+END Julia-1 128 3 llama 9.946 ms
+START Julia-1 128 3 splash
+END Julia-1 128 3 splash 9.328 ms
+WAIT idle {'gpu': 62, 'busy_pids': []}
+START Julia-1 512 1 llama
+END Julia-1 512 1 llama 15.82 ms
+START Julia-1 512 1 splash
+END Julia-1 512 1 splash 12.414 ms
+START Julia-1 512 2 splash
+END Julia-1 512 2 splash 14.642 ms
+START Julia-1 512 2 llama
+END Julia-1 512 2 llama 15.995 ms
+START Julia-1 512 3 llama
+END Julia-1 512 3 llama 15.953 ms
+START Julia-1 512 3 splash
+END Julia-1 512 3 splash 11.448 ms
+WAIT idle {'gpu': 77, 'busy_pids': []}
+START Julia-1 2048 1 llama
+END Julia-1 2048 1 llama 57.905 ms
+START Julia-1 2048 1 splash
+END Julia-1 2048 1 splash 27.728 ms
+START Julia-1 2048 2 splash
+END Julia-1 2048 2 splash 30.392 ms
+START Julia-1 2048 2 llama
+END Julia-1 2048 2 llama 57.94 ms
+START Julia-1 2048 3 llama
+END Julia-1 2048 3 llama 58.99 ms
+START Julia-1 2048 3 splash
+END Julia-1 2048 3 splash 27.967 ms
+WAIT idle {'gpu': 95, 'busy_pids': []}
+START Julia-1 8192 1 llama
+END Julia-1 8192 1 llama 464.747 ms
+START Julia-1 8192 1 splash
+END Julia-1 8192 1 splash 145.49 ms
+START Julia-1 8192 2 splash
+END Julia-1 8192 2 splash 140.521 ms
+START Julia-1 8192 2 llama
+END Julia-1 8192 2 llama 454.544 ms
+START Julia-1 8192 3 llama
+END Julia-1 8192 3 llama 466.689 ms
+START Julia-1 8192 3 splash
+END Julia-1 8192 3 splash 149.31 ms
+WAIT idle {'gpu': 52, 'busy_pids': []}
+START Laya 128 1 llama
+END Laya 128 1 llama 19.456 ms
+START Laya 128 1 splash
+END Laya 128 1 splash 14.371 ms
+START Laya 128 2 splash
+END Laya 128 2 splash 14.422 ms
+START Laya 128 2 llama
+END Laya 128 2 llama 22.07 ms
+WAIT idle {'gpu': 57, 'busy_pids': []}
+START Laya 128 3 llama
+END Laya 128 3 llama 19.872 ms
+START Laya 128 3 splash
+END Laya 128 3 splash 14.633 ms
+WAIT idle {'gpu': 95, 'busy_pids': []}
+START Laya 512 1 llama
+END Laya 512 1 llama 43.913 ms
+START Laya 512 1 splash
+END Laya 512 1 splash 28.697 ms
+START Laya 512 2 splash
+END Laya 512 2 splash 29.418 ms
+START Laya 512 2 llama
+END Laya 512 2 llama 44.777 ms
+START Laya 512 3 llama
+END Laya 512 3 llama 42.379 ms
+START Laya 512 3 splash
+END Laya 512 3 splash 26.803 ms
+WAIT idle {'gpu': 96, 'busy_pids': []}
+START Laya 2048 1 llama
+END Laya 2048 1 llama 179.242 ms
+START Laya 2048 1 splash
+END Laya 2048 1 splash 96.814 ms
+START Laya 2048 2 splash
+END Laya 2048 2 splash 94.801 ms
+START Laya 2048 2 llama
+END Laya 2048 2 llama 174.858 ms
+START Laya 2048 3 llama
+END Laya 2048 3 llama 177.669 ms
+START Laya 2048 3 splash
+END Laya 2048 3 splash 97.672 ms
+WAIT idle {'gpu': 99, 'busy_pids': []}
+START Laya 8192 1 llama
+END Laya 8192 1 llama 1177.986 ms
+START Laya 8192 1 splash
+END Laya 8192 1 splash 524.389 ms
+START Laya 8192 2 splash
+END Laya 8192 2 splash 516.639 ms
+START Laya 8192 2 llama
+END Laya 8192 2 llama 1171.586 ms
+START Laya 8192 3 llama
+END Laya 8192 3 llama 1170.783 ms
+START Laya 8192 3 splash
+END Laya 8192 3 splash 517.412 ms

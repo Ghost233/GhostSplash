@@ -615,6 +615,12 @@ void prefill(MetalBackend &backend, const Linear &linear) {
       const Outcome whole = run(backend, linear, Linear::plan(w, kTiles, FloatOutput::BFloat16), p, nullptr,
                                 storageRows(x, K, chunk, storage), aux, kPoisonNaN, covered, name);
       checkValues(whole, dots, {}, aux, w, chunk, covered, true, name);
+      if (epilogue == LinearEpilogue::None && p.blocks().segments.size() == 1 &&
+          p.blocks().segments.front().formatId == GGUF_FMT_Q80) {
+        Projection fp32 = p; fp32.destination = FloatOutput::Float32;
+        floatOutput(backend, linear, Linear::plan(w, kTiles, FloatOutput::Float32), fp32,
+                    storageRows(x, K, chunk, storage), whole, dots, covered, true, name);
+      }
       const uint32_t written = (chunk + kSimdgroupRows - 1) / kSimdgroupRows * kSimdgroupRows;
       if (!std::all_of(whole.output.begin() + uint64_t{written} * columns, whole.output.end(),
                        [](uint16_t v) { return v == kUnwritten; }))

@@ -34,6 +34,12 @@ def values(flag, accepted, refused, repeatable=False):
 # Every shared option: accepted arguments with the value they parse to, and
 # refused arguments.
 OPTIONS = {
+    "--encoder-option-queries": values(
+        "--encoder-option-queries", {"on": "on", "off": "off"}, ("auto", "")
+    ),
+    "--encoder-submit-batch-size": values(
+        "--encoder-submit-batch-size", {"4": 4, "2": 2, "1": 1}, ("0", "3", "5", "auto")
+    ),
     "--host": values(
         "--host", {"0.0.0.0": "0.0.0.0", "mymac.local": "mymac.local"}, ()
     ),

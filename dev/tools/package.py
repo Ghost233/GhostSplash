@@ -49,6 +49,7 @@ SERVER_FILES = (
     "chat_templates.py",
     "judgments.py",
     "kev.py",
+    "modernbert.py",
     "diagnostics.py",
     "api_shapes.py",
     "tool_schema.py",

@@ -49,6 +49,7 @@ template QwenTarget::QwenTarget(const Qwen3_8Weights &, const QwenTargetGeometry
                                 const ops::ExecutionPlans &);
 template QwenTarget::QwenTarget(const Qwen3_6MoeWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
                                 const ops::ExecutionPlans &);
+template QwenTarget::QwenTarget(const Qwen3_5_0_8BWeights &, const QwenTargetGeometry &, metal::MetalBackend &, const ops::ExecutionPlans &);
 template QwenTarget::QwenTarget(const Qwen3_5_4BWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
                                 const ops::ExecutionPlans &);
 template QwenTarget::QwenTarget(const Qwen3_5_4BDFlashWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
@@ -121,6 +122,7 @@ QwenTargetGeometry qwenTargetGeometry(const QwenTargetWeights<Layout, Layer> &we
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_8Weights &);
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_6MoeWeights &);
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BWeights &);
+template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_0_8BWeights &);
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BDFlashWeights &);
 
 const ops::Projection &QwenTarget::vocabularyProjection() const noexcept {

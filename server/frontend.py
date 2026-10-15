@@ -36,6 +36,7 @@ from .errors import (
 from .latency import LatencyMetrics
 from .lru import LRUCache
 from .metrics import is_finite_number
+from .modernbert import ModernBertScorer
 from .serve_options import REASONING_EFFORTS, parse_served_model_name
 from .tokenization import PromptTokenizer, tokenizable
 from .tool_schema import (
@@ -267,7 +268,11 @@ class Frontend:
         self.latencies = LatencyMetrics()
         self.tokenizer = tokenizer
         self.decision_scorer = (
-            kev.KevScorer(tokenizer, decision_config)
+            (
+                ModernBertScorer(tokenizer, decision_config)
+                if decision_config.get("type") == "laya"
+                else kev.KevScorer(tokenizer, decision_config)
+            )
             if decision_config is not None
             else None
         )
@@ -329,7 +334,11 @@ class Frontend:
                 "active": self.preparation_active,
                 "waiting": self.preparation_waiting,
             }
-        status["grammar_cache"] = self.constraint_factory.stats()
+        status["grammar_cache"] = (
+            self.constraint_factory.stats()
+            if self.constraint_factory is not None
+            else {"enabled": False}
+        )
         status["response_store"] = self.response_store.stats()
         status["image_cache"] = self.images.stats()
         status["tokenizer_cache"] = self.prompt_tokenizer.stats()
@@ -722,7 +731,7 @@ class Frontend:
                         )
                     total_tokens += len(tokens)
                     job = self._score_job(tokens, positions, deadline, priority)
-                    job.flags = wire.RequestFlag.DECISION_SCORING
+                    job.flags = self.decision_scorer.flags(spec)
                     jobs.append((qid, spec, job))
                     continue
                 slots = judgments.slot_labels(self.tokenizer)

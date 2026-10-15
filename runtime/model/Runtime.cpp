@@ -3073,6 +3073,7 @@ std::vector<ops::SwiGluProjections> aneFfnLayers(const LoadedModel &model) {
   std::visit([&](const auto &target) {
     using Weights = std::remove_cvref_t<decltype(target)>;
     if constexpr (std::is_same_v<Weights, Qwen3_8Weights> ||
+                  std::is_same_v<Weights, Qwen3_5_0_8BWeights> ||
                   std::is_same_v<Weights, Qwen3_5_4BWeights> ||
                   std::is_same_v<Weights, Qwen3_5_4BDFlashWeights>)
       for (const Qwen3_8LayerWeights &layer : target.layers)

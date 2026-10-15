@@ -100,11 +100,19 @@ class KevScorer:
             raise ValueError("unexpected layout of the Kev decision prompt")
         return tokens, positions
 
+    def temperature(self, spec):
+        return self.temperatures[spec.kind]
+
+    def flags(self, spec):
+        from . import protocol as wire
+
+        return wire.RequestFlag.DECISION_SCORING
+
     def probabilities(self, spec, logits):
         if len(logits) != len(spec.labels):
             raise ValueError("Kev result does not match the option count")
         probabilities = judgments.softmax(
-            [value / self.temperatures[spec.kind] for value in logits]
+            [value / self.temperature(spec) for value in logits]
         )
         ordered = [0.0] * len(probabilities)
         for index, probability in zip(self.order(spec), probabilities):

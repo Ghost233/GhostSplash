@@ -4,6 +4,16 @@
 
 namespace splash::model {
 
+Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &backend, Qwen3_5_0_8BLayout layout,
+                                          const QwenTargetFiles &files) {
+  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
+    layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
+    layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
+    layer.downProjection = format.projection(file, layout.hiddenSize, layout.intermediateSize, "mlp-down");
+  };
+  return loadQwenTarget<Qwen3_5_0_8BWeights>(backend, layout, files, readFfn);
+}
+
 Qwen3_5_4BWeights loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
                                       const QwenTargetFiles &files) {
   const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
@@ -57,6 +67,10 @@ void buildPrefillCache(metal::MetalBackend &backend, WeightImages &images, Weigh
   }
   const uint64_t bytes = metal::allocationDelta(baseline, backend.memoryStats().allocatedBytes);
   weights.actualAllocatedBytes += bytes;
+}
+
+void buildQwen3_5_0_8BPrefillCache(metal::MetalBackend &backend, WeightImages &images, Qwen3_5_0_8BWeights &weights, uint64_t budgetBytes) {
+  buildPrefillCache(backend, images, weights, budgetBytes);
 }
 
 void buildQwen3_5_4BPrefillCache(metal::MetalBackend &backend, WeightImages &images, Qwen3_5_4BWeights &weights, uint64_t budgetBytes) {

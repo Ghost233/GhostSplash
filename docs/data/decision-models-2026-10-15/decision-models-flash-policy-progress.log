@@ -1,0 +1,2 @@
+auto second response sec 0.496811708988389 memory {'rss_bytes': 9382985728, 'physical_footprint_bytes': 9190514176, 'lifetime_peak_physical_footprint_bytes': 9190514176}
+on second response sec 0.47807408298831433 memory {'rss_bytes': 9382805504, 'physical_footprint_bytes': 9190383080, 'lifetime_peak_physical_footprint_bytes': 9190383080}

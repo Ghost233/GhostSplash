@@ -108,6 +108,10 @@ def effective_lines(status, readiness, args=None):
     yield f"  Build = {_text(identity.get('cache', {}).get('build_id', 'unknown'))}"
     governor = status.get("memory_governor", {})
     yield f"  Metal budget = {governor.get('limit_bytes', 'unknown')} bytes"
+    if status.get("model_kind") == "modern-bert":
+        encoder = status.get("features", {}).get("encoder_option_queries")
+        yield f"  Encoder option queries = {'on' if encoder is True else 'off' if encoder is False else 'unknown'}"
+        yield "  Encoder state = full bidirectional sequence; causal prefix cache off"
     features = status.get("startup_features", {})
     drafter = features.get("drafter", "unknown")
     draft_state = (

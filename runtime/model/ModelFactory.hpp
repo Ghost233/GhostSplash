@@ -27,7 +27,7 @@ namespace splash::model {
 class QwenStateStorage;
 class VisionLoader;
 
-using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen3_5_4BWeights, Qwen3_5_4BDFlashWeights>;
+using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen3_5_4BWeights, Qwen3_5_4BDFlashWeights, Qwen3_5_0_8BWeights>;
 
 // Qwen3.5-4B FFN prefill only; decode and source quantization stay unchanged.
 enum class FfnWeightMode { FullFp16, Quantized, LimitedFp16 };

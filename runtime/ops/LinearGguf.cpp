@@ -510,6 +510,9 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
   const LinearWorkload w = plan.workload();
   const auto [n, k] = w.matrix;
   const char epilogue = epilogueSuffix(w.epilogue);
+  if (plan.destination() == FloatOutput::Float32 && std::ranges::any_of(p.blocks().segments, [](const auto &s) {
+        return s.formatId != GGUF_FMT_Q80 || bool(s.prefillHalf);
+      })) throw std::invalid_argument("FP32 quantized prefill requires uncached Q8_0");
   const auto candidate = ffnPrefillKernel(p, plan);
   if (candidate != FfnPrefillKernel::Baseline) {
     const auto &segment = p.blocks().segments.front();
@@ -564,7 +567,7 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
         bindings.insert(bindings.end(), {s.plane0, s.plane1Slot(), s.meta});
       }
       bindings.push_back(b.output);
-      graph.add(prefillKernel(group.front()->name(), epilogue), std::move(bindings), params,
+      graph.add(kernelInstance(prefillKernel(group.front()->name(), epilogue), plan.destination()), std::move(bindings), params,
                 {rowTiles, columns / GGUF_TILE_COLUMNS, 1}, {GGUF_PREFILL_THREADS, 1, 1});
     }
     return;

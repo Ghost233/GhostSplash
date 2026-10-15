@@ -1,0 +1,1749 @@
+diff --git a/.gitattributes b/.gitattributes
+index 5b9506c4..30aa59ca 100644
+--- a/.gitattributes
++++ b/.gitattributes
+@@ -7,3 +7,5 @@
+ /.gitattributes export-ignore
+ *.patch -whitespace
+ *.pdf binary
++# Preserve the exact captured terminal prompt in this historical evidence file.
++docs/data/optional-feature-memory-plan-2026-10-15/original-startup.log -whitespace
+diff --git a/Makefile b/Makefile
+index bdd48c79..75a84e5f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -244,6 +244,7 @@ ENGINE_CPP_SOURCES := \
+ 	runtime/ops/GDN.cpp \
+ 	runtime/ops/GgufPrefillCache.cpp \
+ 	runtime/ops/SingleTokenLinear.cpp \
++	runtime/ops/ModernBert.cpp \
+ 	runtime/ops/Linear.cpp \
+ 	runtime/ops/LinearGguf.cpp \
+ 	runtime/ops/MoE.cpp \
+@@ -289,6 +290,8 @@ ENGINE_CPP_SOURCES := \
+ 	runtime/model/Qwen3_6Moe.cpp \
+ 	runtime/model/Qwen3_8.cpp \
+ 	runtime/model/Qwen3_5_4B.cpp \
++	runtime/model/ModernBert.cpp \
++	runtime/encoder/Service.cpp \
+ 	runtime/model/QwenVision.cpp \
+ 	runtime/model/VisionPreparation.cpp \
+ 	runtime/model/VisionLoader.cpp \
+diff --git a/dev/native.mk b/dev/native.mk
+index 47da886e..382793dd 100644
+--- a/dev/native.mk
++++ b/dev/native.mk
+@@ -112,6 +112,7 @@ TEST_Q8_METAL_TEST := $(ENGINE_TEST_BUILD)/q8-paged-kv-metal
+ TEST_Q8_STORAGE_TEST := $(ENGINE_TEST_BUILD)/q8-page-storage
+ TEST_Q8_ATTENTION_TEST := $(ENGINE_TEST_BUILD)/q8-flash-attention
+ TEST_Q8_PREFILL_TEST := $(ENGINE_TEST_BUILD)/q8-chunked-prefill
++TEST_MODERN_BERT := $(ENGINE_TEST_BUILD)/modernbert-kernels
+ TEST_GDN_METAL_TEST := $(ENGINE_TEST_BUILD)/gdn-metal
+ TEST_OPERATOR_WORKSPACE := $(ENGINE_TEST_BUILD)/operator-workspace
+ TEST_EXECUTION_PLANS := $(ENGINE_TEST_BUILD)/execution-plans
+@@ -219,7 +220,7 @@ TEST_METAL_TARGETS := $(TEST_COMPACT_PROJECTION) $(TEST_DRAFT_BLOCK_ACCEPTANCE)
+ 	$(LIB) $(TEST_METAL_BACKEND_LIB) $(TEST_PRODUCTION_LIB) $(TEST_Q8_LIB) $(TEST_Q8_ATTENTION_LIB) \
+ 	$(TEST_GGUF_DEQUANT_LIB)
+ 
+-TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY)
++TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY) $(TEST_MODERN_BERT)
+ 
+ # Keep every output that uses a flag set together, including standalone
+ # benchmarks, real-model tests and intermediate test AIRs/metallibs.
+@@ -558,6 +559,7 @@ test-gguf-iq1s-replay: $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB)
+ 
+ test-engine-metal: test-gguf-iq1s-replay
+ test-engine-metal: $(TEST_METAL_TARGETS)
++	$(METAL_TEST_ENV) $(TEST_MODERN_BERT) $(LIB)
+ 	$(METAL_TEST_ENV) $(TEST_COMPACT_PROJECTION) $(TEST_PRODUCTION_LIB)
+ 	$(METAL_TEST_ENV) $(BUILD_ID_PYTHON) dev/tests/engine/run_draft_preparation.py $(TEST_DRAFT_PREPARATION) $(LIB) \
+ 		$(WEIGHT_GOLDENS)
+@@ -731,3 +733,6 @@ $(TEST_ANE_RECOVERY): dev/tests/engine/ane_recovery_test.cpp runtime/ops/AneFfnR
+ .PHONY: test-ane-power-reference
+ test-ane-power-reference: $(TEST_ANE_FFN) $(LIB)
+ 	$(TEST_ANE_FFN) $(LIB) power-reference
++
++$(TEST_MODERN_BERT): dev/tests/engine/modernbert_kernels_test.mm $(ENGINE_LIBRARY) $(LIB) | $(ENGINE_TEST_BUILD)
++	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -Idev/tests/engine -fobjc-arc $< $(ENGINE_LIBRARY) $(ENGINE_LINKFLAGS) -o $@
+diff --git a/dev/tests/engine/gdn_metal_test.mm b/dev/tests/engine/gdn_metal_test.mm
+index 697b4793..9c5058dd 100644
+--- a/dev/tests/engine/gdn_metal_test.mm
++++ b/dev/tests/engine/gdn_metal_test.mm
+@@ -554,7 +554,7 @@ void bufferExtents(MetalBackend &backend, const GdnShape &shape, bool float32) {
+ void run(const std::string &metallib) {
+   MetalBackend backend(metallib);
+   for (const GdnShape &shape :
+-       {GdnShape{16, 48, 128, 10240, 16640}, GdnShape{16, 32, 128, 8192, 12544}}) {
++       {GdnShape{16, 48, 128, 10240, 16640}, GdnShape{16, 32, 128, 8192, 12544}, GdnShape{16, 16, 128, 6144, 8448}}) {
+     for (bool float32 : {false, true})
+       bufferExtents(backend, shape, float32);
+     for (uint32_t tokens : {1u, 37u, 1000u, 2048u})
+diff --git a/dev/tests/engine/gguf_projection_test.mm b/dev/tests/engine/gguf_projection_test.mm
+index 70ce2c0c..fa1315d6 100644
+--- a/dev/tests/engine/gguf_projection_test.mm
++++ b/dev/tests/engine/gguf_projection_test.mm
+@@ -615,6 +615,12 @@ void prefill(MetalBackend &backend, const Linear &linear) {
+       const Outcome whole = run(backend, linear, Linear::plan(w, kTiles, FloatOutput::BFloat16), p, nullptr,
+                                 storageRows(x, K, chunk, storage), aux, kPoisonNaN, covered, name);
+       checkValues(whole, dots, {}, aux, w, chunk, covered, true, name);
++      if (epilogue == LinearEpilogue::None && p.blocks().segments.size() == 1 &&
++          p.blocks().segments.front().formatId == GGUF_FMT_Q80) {
++        Projection fp32 = p; fp32.destination = FloatOutput::Float32;
++        floatOutput(backend, linear, Linear::plan(w, kTiles, FloatOutput::Float32), fp32,
++                    storageRows(x, K, chunk, storage), whole, dots, covered, true, name);
++      }
+       const uint32_t written = (chunk + kSimdgroupRows - 1) / kSimdgroupRows * kSimdgroupRows;
+       if (!std::all_of(whole.output.begin() + uint64_t{written} * columns, whole.output.end(),
+                        [](uint16_t v) { return v == kUnwritten; }))
+diff --git a/dev/tests/engine/gguf_single_token_test.mm b/dev/tests/engine/gguf_single_token_test.mm
+index 9b6bffeb..ade3bdbb 100644
+--- a/dev/tests/engine/gguf_single_token_test.mm
++++ b/dev/tests/engine/gguf_single_token_test.mm
+@@ -365,25 +365,27 @@ void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
+   const model::GgufFile file(source);
+   test::require(file.require("cls.output.weight").type == kQuantFormats[GGUF_FMT_Q80].ggml_type,
+                 "Kev fixture must use its native Q8_0 pointer head");
++  const uint32_t hidden = file.metadata().unsignedValue("qwen35.embedding_length").value_or(0);
+   model::Qwen3_5_4BLayout layout;
++  if (hidden == 1024) static_cast<model::QwenTargetDimensions &>(layout) = model::Qwen3_5_0_8BLayout{};
+   layout.decisionHeadSize = 512;
+   model::WeightImages images(backend, std::string(64, 'f'));
+   model::GgufTargetLoader loader(backend, images, path, layout);
+   auto head = loader.head();
+-  static_cast<void>(model::readNorm(head, 2560, true, "Kev final norm"));
+-  auto projection = model::readBlockProjection(head, 512, 2560, "Kev pointer head");
++  static_cast<void>(model::readNorm(head, hidden, true, "Kev final norm"));
++  auto projection = model::readBlockProjection(head, 512, hidden, "Kev pointer head");
+   projection.destination = FloatOutput::Float32;
+   static_cast<void>(head.section(512 * sizeof(float), "Kev bias"));
+   head.finish();
+   const auto &tensor = file.require("cls.output.weight");
+   std::vector<uint8_t> native(tensor.bytes);
+   source.readData(tensor.offset, native);
+-  auto input = test::sharedBuffer(backend, 2560 * sizeof(uint16_t));
++  auto input = test::sharedBuffer(backend, hidden * sizeof(uint16_t));
+   auto output = test::sharedBuffer(backend, 512 * sizeof(float));
+-  std::vector<float> x(2560), weight(2560);
++  std::vector<float> x(hidden), weight(hidden);
+   double maximumError = 0;
+   for (uint32_t probe = 0; probe < 8; ++probe) {
+-    for (uint32_t k = 0; k < 2560; ++k) {
++    for (uint32_t k = 0; k < hidden; ++k) {
+       const float value = float(int((k * 17 + probe * 31) % 127) - 63) / 64.0F;
+       static_cast<uint16_t *>(input.contents())[k] = floatToBf16(value);
+       x[k] = bf16ToFloat(floatToBf16(value));
+@@ -393,11 +395,11 @@ void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
+     static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
+     const auto *actual = static_cast<const float *>(output.contents());
+     for (uint32_t n = 0; n < 512; ++n) {
+-      rowValues(Q80, native.data() + n * rowBytes(Q80, 2560), 2560, weight.data());
+-      const auto expected = product(dot(x.data(), weight.data(), 2560), true);
++      rowValues(Q80, native.data() + n * rowBytes(Q80, hidden), hidden, weight.data());
++      const auto expected = product(dot(x.data(), weight.data(), hidden), true);
+       test::require(std::isfinite(actual[n]) && actual[n] >= expected.lo && actual[n] <= expected.hi,
+                     "Kev head FP32 output outside existing unrounded FP64 bound");
+-      maximumError = std::max(maximumError, std::fabs(actual[n] - dot(x.data(), weight.data(), 2560).value));
++      maximumError = std::max(maximumError, std::fabs(actual[n] - dot(x.data(), weight.data(), hidden).value));
+     }
+   }
+   std::cout << "Kev real-head numerical check: 4096 FP64 comparisons PASS; max absolute error "
+diff --git a/dev/tests/engine/linear_plan_test.mm b/dev/tests/engine/linear_plan_test.mm
+index 77e26562..7c8f8528 100644
+--- a/dev/tests/engine/linear_plan_test.mm
++++ b/dev/tests/engine/linear_plan_test.mm
+@@ -94,13 +94,13 @@ void floatOutputPlans() {
+     }
+   std::vector<LinearWorkload> others{{{5120, 2048}, 8, LinearPhase::Decode, LinearEpilogue::Residual},
+                                      {{5120, 2048}, 8, LinearPhase::Decode, LinearEpilogue::GateUp}};
+-  for (const auto epilogue : {LinearEpilogue::None, LinearEpilogue::Residual, LinearEpilogue::UpWithGate})
++  for (const auto epilogue : {LinearEpilogue::Residual, LinearEpilogue::UpWithGate})
+     for (const uint32_t rows : {8U, 2048U}) others.push_back({{5120, 2048}, rows, LinearPhase::Prefill, epilogue});
+   const Linear linear = gpu(10, 20);
+   const Projection p = blockProjection(5120, 2048, 1);
+   for (const LinearWorkload &w : others) {
+     (void)linear.plan(w, p);
+-    rejects([&] { (void)linear.plan(w, fp32(p)); }, "an fp32 destination takes a plain decode projection",
++    rejects([&] { (void)linear.plan(w, fp32(p)); }, "an fp32 destination takes a plain projection",
+             "an fp32 plan of other than a plain decode was accepted");
+   }
+ }
+diff --git a/dev/tests/engine/q8_flash_attention_metal_test.mm b/dev/tests/engine/q8_flash_attention_metal_test.mm
+index 5f472647..8a514936 100644
+--- a/dev/tests/engine/q8_flash_attention_metal_test.mm
++++ b/dev/tests/engine/q8_flash_attention_metal_test.mm
+@@ -40,7 +40,7 @@
+   uint32_t fusedRows() const { return kRows * queryHeadsPerKvHead; }
+   Layout layout() const { return {1, kvHeads, kHeadDimension}; }
+ };
+-constexpr std::array<Shape, 2> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}}};
++constexpr std::array<Shape, 3> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}, {2, 4, "_kv2_g4"}}};
+ 
+ using splash::test::require;
+ 
+diff --git a/dev/tests/install/test_kev_metadata.py b/dev/tests/install/test_kev_metadata.py
+index 81116b11..f278fee7 100644
+--- a/dev/tests/install/test_kev_metadata.py
++++ b/dev/tests/install/test_kev_metadata.py
+@@ -3,10 +3,9 @@ import tempfile
+ import unittest
+ from pathlib import Path
+ 
+-from install import assembly, gguf
+-
+ from dev.tests import fixture_files
+ from dev.tests.install.test_gguf_metadata import fixture
++from install import assembly, gguf
+ 
+ 
+ def kev_metadata():
+@@ -78,6 +77,24 @@ class KevMetadataTests(unittest.TestCase):
+             with self.assertRaisesRegex(gguf.ModelError, "shape"):
+                 gguf.require_loadable(bad)
+ 
++    def test_kev_08_accepts_its_actual_pointer_head_width(self):
++        values = kev_metadata() | {
++            "qwen35.embedding_length": 1024,
++            "qwen35.block_count": 24,
++            "qwen35.attention.head_count": 8,
++            "qwen35.attention.head_count_kv": 2,
++        }
++        header = self.metadata(values)
++        required = gguf.loaded_tensors(header)
++        header.tensors = {
++            name: 0 if types == {"F32"} else 8 for name, types in required.items()
++        }
++        header.shapes = {"cls.output.weight": (1024, 512), "cls.output.bias": (512,)}
++        gguf.require_loadable(header)
++        header.shapes["cls.output.weight"] = (2560, 512)
++        with self.assertRaisesRegex(gguf.ModelError, "shape"):
++            gguf.require_loadable(header)
++
+     def test_kev_assembly_accepts_no_draft_without_relaxing_other_families(self):
+         record = {
+             "version": 1,
+diff --git a/dev/tests/install/test_local_launchers.py b/dev/tests/install/test_local_launchers.py
+index a78d24ea..509471ef 100644
+--- a/dev/tests/install/test_local_launchers.py
++++ b/dev/tests/install/test_local_launchers.py
+@@ -102,6 +102,9 @@ class LocalLauncherTests(unittest.TestCase):
+         if script.name in {
+             "swift1527biq3ssplash.sh",
+             "kev4bsplash.sh",
++            "kev08bsplash.sh",
++            "julia1splash.sh",
++            "layasplash.sh",
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
+             "qwen3827bmlx4bitsplash.sh",
+@@ -114,15 +117,32 @@ class LocalLauncherTests(unittest.TestCase):
+                     "revision": None,
+                 },
+                 "draft": None
+-                if script.name in {"qwen3.54bsplash.sh", "kev4bsplash.sh"}
++                if script.name
++                in {
++                    "qwen3.54bsplash.sh",
++                    "kev4bsplash.sh",
++                    "kev08bsplash.sh",
++                    "julia1splash.sh",
++                    "layasplash.sh",
++                }
+                 else {
+                     "repo": "wrong" if wrong_draft else str(draft_dir),
+                     "revision": None,
+                 },
+             }
+         }
+-        if script.name == "kev4bsplash.sh":
+-            record["family"] = "Kev-4B"
++        if script.name in {
++            "kev4bsplash.sh",
++            "kev08bsplash.sh",
++            "julia1splash.sh",
++            "layasplash.sh",
++        }:
++            record["family"] = {
++                "kev4bsplash.sh": "Kev-4B",
++                "kev08bsplash.sh": "Kev-0.8B",
++                "julia1splash.sh": "Julia-1",
++                "layasplash.sh": "Laya",
++            }[script.name]
+         scratches = []
+ 
+         def inspect(repo, variant, language_only, scratch):
+@@ -348,6 +368,9 @@ class LocalLauncherTests(unittest.TestCase):
+         for name in (
+             "swift1527biq3ssplash.sh",
+             "kev4bsplash.sh",
++            "kev08bsplash.sh",
++            "julia1splash.sh",
++            "layasplash.sh",
+             "qwen38miniplusv3splash.sh",
+             "qwen38valapexminiplusv3splash.sh",
+         ):
+@@ -392,6 +415,9 @@ class LocalLauncherTests(unittest.TestCase):
+                         "qwen3.54bsplash.sh",
+                         "qwen3.54bdflashsplash.sh",
+                         "kev4bsplash.sh",
++                        "kev08bsplash.sh",
++                        "julia1splash.sh",
++                        "layasplash.sh",
+                     }
+                     else "0.0.0.0",
+                 )
+diff --git a/dev/tests/server/test_kev.py b/dev/tests/server/test_kev.py
+index 3a9c5ef2..a780e89a 100644
+--- a/dev/tests/server/test_kev.py
++++ b/dev/tests/server/test_kev.py
+@@ -3,8 +3,6 @@ import math
+ import re
+ from dataclasses import replace
+ 
+-from server import protocol as wire
+-
+ from dev.tests.install.test_kev_metadata import kev_metadata
+ from dev.tests.server_fixtures import (
+     FOREVER,
+@@ -14,6 +12,7 @@ from dev.tests.server_fixtures import (
+     Plan,
+     stays_connected,
+ )
++from server import protocol as wire
+ 
+ MARKERS = {
+     "<|fim_prefix|>": 248060,
+diff --git a/dev/tests/server/test_serve_options.py b/dev/tests/server/test_serve_options.py
+index 6679288a..c4ea0321 100644
+--- a/dev/tests/server/test_serve_options.py
++++ b/dev/tests/server/test_serve_options.py
+@@ -34,6 +34,12 @@ def values(flag, accepted, refused, repeatable=False):
+ # Every shared option: accepted arguments with the value they parse to, and
+ # refused arguments.
+ OPTIONS = {
++    "--encoder-option-queries": values(
++        "--encoder-option-queries", {"on": "on", "off": "off"}, ("auto", "")
++    ),
++    "--encoder-submit-batch-size": values(
++        "--encoder-submit-batch-size", {"4": 4, "2": 2, "1": 1}, ("0", "3", "5", "auto")
++    ),
+     "--host": values(
+         "--host", {"0.0.0.0": "0.0.0.0", "mymac.local": "mymac.local"}, ()
+     ),
+diff --git a/dev/tests/server_fixtures.py b/dev/tests/server_fixtures.py
+index cbf6a1b7..32acbdac 100644
+--- a/dev/tests/server_fixtures.py
++++ b/dev/tests/server_fixtures.py
+@@ -786,6 +786,8 @@ def main_args(**overrides):
+             "compact_draft_capacity": 98304,
+             "compact_draft_ranking": None,
+             "fast_topk": "off",
++            "encoder_option_queries": "on",
++            "encoder_submit_batch_size": 4,
+             "max_image_pixels": images.MAX_PIXELS,
+             "request_timeout": None,
+             "queue_size": 1,
+diff --git a/dev/tools/package.py b/dev/tools/package.py
+index bc1f55b4..5aa43aeb 100644
+--- a/dev/tools/package.py
++++ b/dev/tools/package.py
+@@ -49,6 +49,7 @@ SERVER_FILES = (
+     "chat_templates.py",
+     "judgments.py",
+     "kev.py",
++    "modernbert.py",
+     "diagnostics.py",
+     "api_shapes.py",
+     "tool_schema.py",
+diff --git a/install/assembly.py b/install/assembly.py
+index 43b4a6b3..1920466b 100644
+--- a/install/assembly.py
++++ b/install/assembly.py
+@@ -185,7 +185,8 @@ def _well_formed(record):
+             (
+                 source is None
+                 and role == "draft"
+-                and record["family"] in {"Qwen3.5-4B", "Kev-4B"}
++                and record["family"]
++                in {"Qwen3.5-4B", "Kev-4B", "Kev-0.8B", "Julia-1", "Laya"}
+             )
+             or (
+                 isinstance(source, dict)
+diff --git a/install/families.py b/install/families.py
+index 8643dad5..f9704bd5 100644
+--- a/install/families.py
++++ b/install/families.py
+@@ -24,6 +24,9 @@ class ModelFamily:
+ FAMILIES = (
+     ModelFamily("Qwen3.5-4B", None),
+     ModelFamily("Kev-4B", None),
++    ModelFamily("Kev-0.8B", None),
++    ModelFamily("Julia-1", None),
++    ModelFamily("Laya", None),
+     ModelFamily("Qwen3.8-27B", "incoai/Qwen3.8-27B-DFlash2"),
+     ModelFamily("Qwen3.6-35B-A3B", "incoai/Qwen3.6-35B-A3B-DFlash2"),
+ )
+diff --git a/install/gguf.py b/install/gguf.py
+index d67b98a4..59c290e7 100644
+--- a/install/gguf.py
++++ b/install/gguf.py
+@@ -179,11 +179,11 @@ def tokenizer_files(metadata):
+     )
+     from tokenizers import models as token_models
+ 
+-    if (
+-        metadata.require("tokenizer.ggml.model", str) != "gpt2"
+-        or metadata.require("tokenizer.ggml.pre", str) != "qwen35"
+-    ):
++    if metadata.require("tokenizer.ggml.model", str) != "gpt2" or metadata.require(
++        "tokenizer.ggml.pre", str
++    ) not in {"qwen35", "modern-bert", "mmbert"}:
+         raise ModelError("unsupported GGUF tokenizer profile; expected gpt2/qwen35")
++    profile = metadata.require("tokenizer.ggml.pre", str)
+     tokens = metadata.require("tokenizer.ggml.tokens", list)
+     types = metadata.require("tokenizer.ggml.token_type", list)
+     merges = metadata.require("tokenizer.ggml.merges", list)
+@@ -199,35 +199,64 @@ def tokenizer_files(metadata):
+         )
+     ):
+         raise ModelError("invalid or unsupported GGUF tokenizer vocabulary")
+-    if not set(pre_tokenizers.ByteLevel.alphabet()) <= set(tokens):
+-        raise ModelError("GGUF byte-level tokenizer is missing byte tokens")
++    if profile != "mmbert":
++        missing = set(pre_tokenizers.ByteLevel.alphabet()) - set(tokens)
++        # ModernBERT's published vocabulary omits bytes that cannot occur in valid UTF-8.
++        permitted = (
++            {chr(b) for b in (0xC0, 0xC1, *range(0xF5, 0x100))}
++            if profile == "modern-bert"
++            else set()
++        )
++        if missing - permitted:
++            raise ModelError("GGUF byte-level tokenizer is missing byte tokens")
+     pairs = []
+     for merge in merges:
+         if not isinstance(merge, str) or len(parts := merge.split(" ")) != 2:
+             raise ModelError("invalid GGUF BPE merge")
+         pairs.append(tuple(parts))
+     for key in ("tokenizer.ggml.add_bos_token", "tokenizer.ggml.add_eos_token"):
+-        if metadata.values.get(key, False) is not False:
++        if profile == "qwen35" and metadata.values.get(key, False) is not False:
+             raise ModelError("GGUF automatic BOS/EOS insertion is unsupported: " + key)
+     try:
+         backend = Tokenizer(
+-            token_models.BPE({t: i for i, t in enumerate(tokens)}, pairs)
++            token_models.BPE(
++                {t: i for i, t in enumerate(tokens)},
++                pairs,
++                **(
++                    {"unk_token": "<unk>", "byte_fallback": True, "fuse_unk": True}
++                    if profile == "mmbert"
++                    else {}
++                ),
++            )
+         )
+     except Exception as error:
+         raise ModelError("invalid GGUF BPE vocabulary or merges") from error
+-    backend.normalizer = normalizers.NFC()
+-    backend.pre_tokenizer = pre_tokenizers.Sequence(
+-        [
+-            pre_tokenizers.Split(Regex(QWEN35_PATTERN), behavior="isolated"),
+-            pre_tokenizers.ByteLevel(
+-                add_prefix_space=False, use_regex=False, trim_offsets=False
+-            ),
+-        ]
+-    )
+-    backend.post_processor = processors.ByteLevel(
+-        add_prefix_space=False, use_regex=False, trim_offsets=False
+-    )
+-    backend.decoder = decoders.ByteLevel()
++    if profile == "mmbert":
++        backend.normalizer = normalizers.Replace(" ", "▁")
++        backend.pre_tokenizer = pre_tokenizers.Metaspace(
++            replacement="▁", prepend_scheme="always"
++        )
++        backend.decoder = decoders.Sequence(
++            [decoders.Replace("▁", " "), decoders.ByteFallback(), decoders.Fuse()]
++        )
++    else:
++        backend.normalizer = normalizers.NFC()
++        backend.pre_tokenizer = (
++            pre_tokenizers.ByteLevel(add_prefix_space=False)
++            if profile == "modern-bert"
++            else pre_tokenizers.Sequence(
++                [
++                    pre_tokenizers.Split(Regex(QWEN35_PATTERN), behavior="isolated"),
++                    pre_tokenizers.ByteLevel(
++                        add_prefix_space=False, use_regex=False, trim_offsets=False
++                    ),
++                ]
++            )
++        )
++        backend.post_processor = processors.ByteLevel(
++            add_prefix_space=False, use_regex=False, trim_offsets=False
++        )
++        backend.decoder = decoders.ByteLevel()
+     # The index of each added token, and whether it is special.
+     added = {
+         index: kind == CONTROL_TOKEN
+@@ -250,7 +279,20 @@ def tokenizer_files(metadata):
+             raise ModelError("invalid GGUF special token: " + key)
+         return tokens[index]
+ 
+-    template = metadata.require("tokenizer.chat_template", str)
++    if profile != "qwen35":
++        bos = metadata.require("tokenizer.ggml.bos_token_id", int)
++        eos = metadata.require("tokenizer.ggml.eos_token_id", int)
++        backend.post_processor = processors.TemplateProcessing(
++            single=f"{tokens[bos]} $A {tokens[eos]}",
++            pair=f"{tokens[bos]} $A {tokens[eos]} $B {tokens[eos]}",
++            special_tokens=[(tokens[bos], bos), (tokens[eos], eos)],
++        )
++    template = metadata.values.get("tokenizer.chat_template")
++    if template is None and profile != "qwen35":
++        # Serving rejects generation for these decision-only encoders.
++        template = "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}{% if add_generation_prompt %}assistant: {% endif %}"
++    if not isinstance(template, str):
++        raise ModelError("missing or invalid GGUF chat template")
+     if not template.strip():
+         raise ModelError("GGUF chat template is empty")
+     config = {
+@@ -283,7 +325,11 @@ def tokenizer_files(metadata):
+ 
+ # The GGUF text architectures Splash serves, and the model type of each one's
+ # text configuration.
+-TEXT_MODEL_TYPES = {"qwen35": "qwen3_5_text", "qwen35moe": "qwen3_5_moe_text"}
++TEXT_MODEL_TYPES = {
++    "qwen35": "qwen3_5_text",
++    "qwen35moe": "qwen3_5_moe_text",
++    "modern-bert": "modernbert_text",
++}
+ 
+ 
+ def text_architecture(metadata):
+@@ -298,6 +344,22 @@ def decision_config(metadata):
+     kind = metadata.values.get(arch + ".decision.type")
+     if kind is None:
+         return None
++    if kind == "laya" and arch == "modern-bert":
++        temperatures = {}
++        for key, value in metadata.values.items():
++            if key.startswith(arch + ".decision.temperature."):
++                if type(value) is not float or not math.isfinite(value) or value <= 0:
++                    raise ModelError("invalid encoder decision temperature")
++                temperatures[key.removeprefix(arch + ".decision.temperature.")] = value
++        return {
++            "type": "laya",
++            "head_size": 1,
++            "temperatures": temperatures,
++            "chat_template": metadata.require("tokenizer.chat_template.systemone", str),
++            "max_head_tokens": metadata.positive(arch + ".decision.max_head_tokens"),
++            "mask_token_id": metadata.require("tokenizer.ggml.mask_token_id", int),
++            "sep_token_id": metadata.require("tokenizer.ggml.seperator_token_id", int),
++        }
+     if kind != "kev" or arch != "qwen35":
+         raise ModelError("unsupported GGUF decision model: " + str(kind))
+     if metadata.positive(arch + ".embedding_length_out") != 512:
+@@ -321,6 +383,25 @@ def decision_config(metadata):
+ 
+ def model_config(metadata, vision=None):
+     arch = text_architecture(metadata)
++    if arch == "modern-bert":
++        hidden = metadata.positive(arch + ".embedding_length")
++        heads = metadata.positive(arch + ".attention.head_count")
++        if hidden % heads:
++            raise ModelError("ModernBERT hidden width is not divisible by heads")
++        return {
++            "model_type": "modernbert",
++            "text_config": {
++                "model_type": "modernbert_text",
++                "hidden_size": hidden,
++                "num_attention_heads": heads,
++                "num_key_value_heads": heads,
++                "head_dim": hidden // heads,
++                "num_hidden_layers": metadata.positive(arch + ".block_count"),
++                "max_position_embeddings": metadata.positive(arch + ".context_length"),
++                "vocab_size": len(metadata.require("tokenizer.ggml.tokens", list)),
++            },
++            "decision_config": decision_config(metadata),
++        }
+     fields = {
+         "hidden_size": "embedding_length",
+         "max_position_embeddings": "context_length",
+@@ -534,6 +615,10 @@ def loaded_tensors(metadata):
+     describes, with the types it accepts. MTP layers are not loaded; every
+     full_attention_interval-th layer is full attention, the others GDN."""
+     arch = text_architecture(metadata)
++    if arch == "modern-bert":
++        return {
++            name: types for name, (_, types) in modernbert_tensors(metadata).items()
++        }
+     period = metadata.positive(arch + ".full_attention_interval")
+     ffn = MOE_TENSORS if arch == "qwen35moe" else DENSE_TENSORS
+     tensors = dict(MODEL_TENSORS)
+@@ -600,9 +685,17 @@ def require_loadable(metadata):
+     so an unusable file is never downloaded: every tensor it reads must be
+     present, with a type it accepts for that tensor."""
+     require_rotation(metadata)
++    if text_architecture(metadata) == "modern-bert":
++        expected = modernbert_tensors(metadata)
++        for name, (shape, types) in expected.items():
++            if metadata.shapes.get(name) != shape:
++                raise ModelError("unexpected ModernBERT tensor shape: " + name)
++            if TENSOR_TYPES.get(metadata.tensors.get(name)) not in types:
++                raise ModelError("unsupported ModernBERT tensor type: " + name)
++        return
+     if decision_config(metadata) is not None:
+         for name, shape in (
+-            ("cls.output.weight", (2560, 512)),
++            ("cls.output.weight", (metadata.positive("qwen35.embedding_length"), 512)),
+             ("cls.output.bias", (512,)),
+         ):
+             if name in metadata.tensors and metadata.shapes.get(name) != shape:
+@@ -639,3 +732,68 @@ def require_loadable(metadata):
+         raise ModelError(
+             f"this GGUF stores tensors Splash cannot load: {listed}; choose another variant"
+         )
++
++
++def modernbert_tensors(metadata):
++    arch = "modern-bert"
++    hidden = metadata.positive(arch + ".embedding_length")
++    layers = metadata.positive(arch + ".block_count")
++    vocab = metadata.positive(arch + ".vocab_size")
++    ffn = metadata.require(arch + ".feed_forward_length", list)
++    if (hidden, layers, vocab) not in {(384, 24, 256000), (1024, 30, 50368)}:
++        raise ModelError("unsupported ModernBERT decision dimensions")
++    if (
++        metadata.values.get(arch + ".attention.causal") is not False
++        or metadata.positive(arch + ".decision.block_count") != 2
++    ):
++        raise ModelError(
++            "ModernBERT decisions require a bidirectional encoder and two head blocks"
++        )
++    if len(ffn) != layers or any(type(n) is not int or n <= 0 for n in ffn):
++        raise ModelError("invalid ModernBERT per-layer FFN widths")
++    if decision_config(metadata) is None:
++        raise ModelError("ModernBERT decision metadata is required")
++    result = {}
++
++    def add(name, shape, types):
++        result[name] = (shape, types)
++
++    for name in (
++        "token_embd_norm.weight",
++        "output_norm.weight",
++        "cls.norm.weight",
++        "cls.norm.bias",
++        "cls.bias",
++    ):
++        add(name, (hidden,), {"F32"})
++    add("token_embd.weight", (hidden, vocab), {"Q8_0"})
++    add("token_types.weight", (hidden, 3), {"F32"})
++    add("cls.weight", (hidden, hidden), {"Q8_0"})
++    add("cls.output.weight", (hidden,), {"BF16"})
++    add("cls.output.bias", (1,), {"F32"})
++    for layer in range(layers):
++        prefix = f"blk.{layer}."
++        head = layer >= layers - 2
++        for name in ("ffn_norm.weight",):
++            add(prefix + name, (hidden,), {"F32"})
++        if layer:
++            add(prefix + "attn_norm.weight", (hidden,), {"F32"})
++        add(prefix + "attn_qkv.weight", (hidden, 3 * hidden), {"Q8_0"})
++        add(prefix + "attn_output.weight", (hidden, hidden), {"Q8_0"})
++        add(
++            prefix + "ffn_up.weight",
++            (hidden, ffn[layer] * (1 if head else 2)),
++            {"Q8_0"},
++        )
++        add(prefix + "ffn_down.weight", (ffn[layer], hidden), {"Q8_0"})
++        if head:
++            for name in (
++                "attn_norm.bias",
++                "attn_output.bias",
++                "ffn_norm.bias",
++                "ffn_down.bias",
++            ):
++                add(prefix + name, (hidden,), {"F32"})
++            add(prefix + "attn_qkv.bias", (3 * hidden,), {"F32"})
++            add(prefix + "ffn_up.bias", (ffn[layer],), {"F32"})
++    return result
+diff --git a/runtime/engine/Bootstrap.mm b/runtime/engine/Bootstrap.mm
+index f9c7d340..5b51f383 100644
+--- a/runtime/engine/Bootstrap.mm
++++ b/runtime/engine/Bootstrap.mm
+@@ -319,7 +319,7 @@ bool memoryMayNotHold(const EngineMemoryPlan &plan,
+   }
+   config.nativeLoop.engine.vocabularySize =
+       config.resources.model.capabilities.vocabularySize;
+-  config.nativeLoop.engine.decisionScoring = config.resources.model.family() == "Kev-4B";
++  config.nativeLoop.engine.decisionScoring = config.resources.model.family().starts_with("Kev-");
+   // Images are admitted up to the server's pixel cap; a model without vision
+   // admits none.
+   config.nativeLoop.engine.maxImagePatches =
+diff --git a/runtime/engine/Engine.cpp b/runtime/engine/Engine.cpp
+index 50fdf930..5d8a33ba 100644
+--- a/runtime/engine/Engine.cpp
++++ b/runtime/engine/Engine.cpp
+@@ -75,6 +75,8 @@ void Engine::submit(EngineRequest value) {
+   if (std::any_of(value.prompt.begin(), value.prompt.end(), outOfVocabulary)) {
+     throw std::invalid_argument("prompt token is out of vocabulary");
+   }
++  if (value.flags & (RequestDecisionScoreType | RequestDecisionNoulType))
++    throw std::invalid_argument("encoder question-type flags require an encoder model");
+   const bool decision = value.flags & RequestDecisionScoring;
+   if (decision != config_.decisionScoring)
+     throw std::invalid_argument("request scoring mode does not match the model");
+diff --git a/runtime/engine/Protocol.cpp b/runtime/engine/Protocol.cpp
+index 045e0651..405acaef 100644
+--- a/runtime/engine/Protocol.cpp
++++ b/runtime/engine/Protocol.cpp
+@@ -303,6 +303,9 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
+   }
+   const bool scoring = !request.scoreTokens.empty();
+   const bool decision = request.flags & RequestDecisionScoring;
++  const uint32_t encoderType = request.flags & (RequestDecisionScoreType | RequestDecisionNoulType);
++  if (encoderType && (!decision || encoderType == (RequestDecisionScoreType | RequestDecisionNoulType)))
++    return invalid(IssueCode::InvalidEnumValue, "encoder question-type flags require a single decision type");
+   if (decision && !scoring)
+     return invalid(IssueCode::InvalidCount, "decision requests need option positions");
+   if (scoring) {
+diff --git a/runtime/main.mm b/runtime/main.mm
+index a6a022b6..e5b768c3 100644
+--- a/runtime/main.mm
++++ b/runtime/main.mm
+@@ -2,6 +2,7 @@
+ #include "StderrLine.hpp"
+ #include "engine/FdTransport.hpp"
+ #include "engine/Bootstrap.hpp"
++#include "encoder/Service.hpp"
+ #include "engine/NativeArguments.hpp"
+ #include "engine/Status.hpp"
+ #include "model/ModelDescriptor.hpp"
+@@ -395,6 +396,8 @@ int main(int argc, char **argv) {
+     try {
+       if (argc == 2 && std::string_view(argv[1]) == "device-check")
+         return splash::checkDevice();
++      if (argc > 1 && std::string_view(argv[1]) == "serve-encoder-native")
++        return splash::encoder::serveModernBert(argc, argv, std::filesystem::path(argv[0]).parent_path() / "splash.metallib", SPLASH_BUILD_ID);
+       if (argc > 1 && std::string_view(argv[1]) == "model-check")
+         return splash::checkModel(argc, argv);
+       const splash::engine::NativeArguments arguments =
+diff --git a/runtime/metal/kernels/common/gguf_staged_tile.h b/runtime/metal/kernels/common/gguf_staged_tile.h
+index 5a2ba6fe..ec82b969 100644
+--- a/runtime/metal/kernels/common/gguf_staged_tile.h
++++ b/runtime/metal/kernels/common/gguf_staged_tile.h
+@@ -224,8 +224,8 @@ inline void staged_accumulate_any(uint fmt, device bfloat *input, device uchar *
+ }
+ 
+ // Shared prefill stage and epilogue, also instantiated by target FFN candidates.
+-template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone>
+-inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device bfloat *output,
++template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone, typename Out = bfloat>
++inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device Out *output,
+                     uint input_size, uint output_origin, uint rows, threadgroup half *stage, threadgroup half2 *tl,
+                     uint simd_lane, uint simd_group, uint out_stride, uint out_offset, device bfloat *aux = nullptr) {
+   const bool owns_rows = simd_group * RowsPerSG < rows;   // uniform per simdgroup
+@@ -241,6 +241,9 @@ inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uch
+     if (!acc.is_valid_element(i)) continue;
+     auto index = acc.get_multidimensional_index(i);
+     const ulong o = (ulong(simd_group) * RowsPerSG + index[1]) * out_stride + out_offset + output_origin + index[0];
+-    output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
++    if constexpr (sizeof(Out) == sizeof(float)) {
++      static_assert(Ep == EpNone, "FP32 prefill takes no epilogue");
++      output[o] = acc[i];
++    } else output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
+   }
+ }
+diff --git a/runtime/metal/kernels/decode/attention_qkv.metal b/runtime/metal/kernels/decode/attention_qkv.metal
+index cd9c74d0..810e4ae5 100644
+--- a/runtime/metal/kernels/decode/attention_qkv.metal
++++ b/runtime/metal/kernels/decode/attention_qkv.metal
+@@ -51,14 +51,18 @@ inline void full_qkv_decode_phase(
+   }
+ VERIFY_ATTENTION_QKV(verify_attention_qkv, 24, 4, bfloat, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8, 16, 2, bfloat, false)
++VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g4, 8, 2, bfloat, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_kv4_g4, 16, 4, bfloat, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_f32, 24, 4, float, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g8_f32, 16, 2, float, false)
++VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g4_f32, 8, 2, float, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_kv4_g4_f32, 16, 4, float, false)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h, 24, 4, bfloat, true)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_f32, 24, 4, float, true)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g8, 16, 2, bfloat, true)
++VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g4, 8, 2, bfloat, true)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g8_f32, 16, 2, float, true)
++VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g4_f32, 8, 2, float, true)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
+ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
+ #undef VERIFY_ATTENTION_QKV
+@@ -99,6 +103,7 @@ inline void full_attention_gate_decode_phase(
+   }
+ VERIFY_ATTENTION_GATE(verify_attention_gate, 24, 4)
+ VERIFY_ATTENTION_GATE(verify_attention_gate_kv2_g8, 16, 2)
++VERIFY_ATTENTION_GATE(verify_attention_gate_kv2_g4, 8, 2)
+ VERIFY_ATTENTION_GATE(verify_attention_gate_kv4_g4, 16, 4)
+ #undef VERIFY_ATTENTION_GATE
+ 
+@@ -121,5 +126,6 @@ VERIFY_ATTENTION_GATE(verify_attention_gate_kv4_g4, 16, 4)
+   }
+ ATTENTION_GATE_TABLE(verify_attention_gate_table16, 24, 4, gguf_sg::Table16)
+ ATTENTION_GATE_TABLE(verify_attention_gate_table16_kv2_g8, 16, 2, gguf_sg::Table16)
++ATTENTION_GATE_TABLE(verify_attention_gate_table16_kv2_g4, 8, 2, gguf_sg::Table16)
+ ATTENTION_GATE_TABLE(verify_attention_gate_table16_kv4_g4, 16, 4, gguf_sg::Table16)
+ #undef ATTENTION_GATE_TABLE
+diff --git a/runtime/metal/kernels/decode/gdn.metal b/runtime/metal/kernels/decode/gdn.metal
+index 75a4a26d..e6a31ff7 100644
+--- a/runtime/metal/kernels/decode/gdn.metal
++++ b/runtime/metal/kernels/decode/gdn.metal
+@@ -412,6 +412,7 @@ inline void gdn_commit_prefix_batch_phase(
+ 
+ GDN_COMMIT_ENTRY(verify_gdn_commit, 16, 48, 128, 10240, 16640)
+ GDN_COMMIT_ENTRY(verify_gdn_commit_vh32, 16, 32, 128, 8192, 12544)
++GDN_COMMIT_ENTRY(verify_gdn_commit_vh16, 16, 16, 128, 6144, 8448)
+ #undef GDN_COMMIT_ENTRY
+ 
+ // Grid {value heads, lanes}.
+@@ -531,13 +532,17 @@ inline void gdn_decode_batch_phase(
+ // Two rows overlap reductions and arithmetic without the register cost of four.
+ GDN_DECODE_ENTRY(verify_gdn_fused, 16, 48, 128, 10240, 16640, bfloat)
+ GDN_DECODE_ENTRY(verify_gdn_fused_vh32, 16, 32, 128, 8192, 12544, bfloat)
++GDN_DECODE_ENTRY(verify_gdn_fused_vh16, 16, 16, 128, 6144, 8448, bfloat)
+ // Table16 feeds the register tile, after norms that are F32 (a GGUF's) or bf16 (an MLX target's).
+ GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16, 16, 48, 128, 10240, 16640, gguf_sg::Table16, bfloat)
+ GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh32, 16, 32, 128, 8192, 12544, gguf_sg::Table16, bfloat)
++GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh16, 16, 16, 128, 6144, 8448, gguf_sg::Table16, bfloat)
+ GDN_DECODE_ENTRY(verify_gdn_fused_f32, 16, 48, 128, 10240, 16640, float)
+ GDN_DECODE_ENTRY(verify_gdn_fused_vh32_f32, 16, 32, 128, 8192, 12544, float)
++GDN_DECODE_ENTRY(verify_gdn_fused_vh16_f32, 16, 16, 128, 6144, 8448, float)
+ GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_f32, 16, 48, 128, 10240, 16640, gguf_sg::Table16, float)
+ GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh32_f32, 16, 32, 128, 8192, 12544, gguf_sg::Table16, float)
++GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh16_f32, 16, 16, 128, 6144, 8448, gguf_sg::Table16, float)
+ #undef GDN_DECODE_ENTRY
+ #undef GDN_DECODE_TABLE_ENTRY
+ #undef GDN_DECODE_BODY
+diff --git a/runtime/metal/kernels/decode/paged_attention.metal b/runtime/metal/kernels/decode/paged_attention.metal
+index abfbf2de..568f4593 100644
+--- a/runtime/metal/kernels/decode/paged_attention.metal
++++ b/runtime/metal/kernels/decode/paged_attention.metal
+@@ -102,6 +102,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q8_split, 4, 6, int8_t)
+ #endif
+ #if SPLASH_TARGET_VERIFY_ROWS != 16
+ PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g8, 2, 8, int8_t)
++PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g4, 2, 4, int8_t)
+ #endif
+ PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g4, 4, 4, int8_t)
+ // BF16 shares the page loop and reduction, without quantization scales.
+@@ -110,6 +111,7 @@ PAGED_VERIFY_SPLIT(verify_attention_bf16_split, 4, 6, bfloat)
+ #endif
+ #if SPLASH_TARGET_VERIFY_ROWS != 16
+ PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g8, 2, 8, bfloat)
++PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g4, 2, 4, bfloat)
+ #endif
+ PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g4, 4, 4, bfloat)
+ #if SPLASH_TARGET_VERIFY_ROWS != 2 && SPLASH_TARGET_VERIFY_ROWS != 16
+@@ -117,6 +119,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q4h_split, 4, 6, uchar)
+ #endif
+ #if SPLASH_TARGET_VERIFY_ROWS != 16
+ PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g8, 2, 8, uchar)
++PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g4, 2, 4, uchar)
+ #endif
+ PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv4_g4, 4, 4, uchar)
+ #if SPLASH_TARGET_VERIFY_ROWS != 2 && SPLASH_TARGET_VERIFY_ROWS != 16
+@@ -124,6 +127,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q4_0_split, 4, 6, SplashQ4Block)
+ #endif
+ #if SPLASH_TARGET_VERIFY_ROWS != 16
+ PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g8, 2, 8, SplashQ4Block)
++PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g4, 2, 4, SplashQ4Block)
+ #endif
+ PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv4_g4, 4, 4, SplashQ4Block)
+ #undef PAGED_VERIFY_SPLIT
+@@ -177,9 +181,11 @@ inline void splash_verify_attention_reduce_phase(
+   }
+ PAGED_VERIFY_REDUCE(verify_attention_reduce, 4, 6, false)
+ PAGED_VERIFY_REDUCE(verify_attention_reduce_kv2_g8, 2, 8, false)
++PAGED_VERIFY_REDUCE(verify_attention_reduce_kv2_g4, 2, 4, false)
+ PAGED_VERIFY_REDUCE(verify_attention_reduce_kv4_g4, 4, 4, false)
+ PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce, 4, 6, true)
+ PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv2_g8, 2, 8, true)
++PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv2_g4, 2, 4, true)
+ PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv4_g4, 4, 4, true)
+ #undef PAGED_VERIFY_REDUCE
+ 
+diff --git a/runtime/metal/kernels/decode/paged_attention_store.metal b/runtime/metal/kernels/decode/paged_attention_store.metal
+index 5340c5c1..ada1e8bb 100644
+--- a/runtime/metal/kernels/decode/paged_attention_store.metal
++++ b/runtime/metal/kernels/decode/paged_attention_store.metal
+@@ -57,10 +57,14 @@ inline void splash_store_verify_phase(
+   }
+ PAGED_VERIFY_STORE(verify_attention_q8_store, 4, int8_t)
+ PAGED_VERIFY_STORE(verify_attention_q8_store_kv2_g8, 2, int8_t)
++PAGED_VERIFY_STORE(verify_attention_q8_store_kv2_g4, 2, int8_t)
+ PAGED_VERIFY_STORE(verify_attention_bf16_store, 4, bfloat)
+ PAGED_VERIFY_STORE(verify_attention_bf16_store_kv2_g8, 2, bfloat)
++PAGED_VERIFY_STORE(verify_attention_bf16_store_kv2_g4, 2, bfloat)
+ PAGED_VERIFY_STORE(verify_attention_q4h_store, 4, uchar)
+ PAGED_VERIFY_STORE(verify_attention_q4h_store_kv2_g8, 2, uchar)
++PAGED_VERIFY_STORE(verify_attention_q4h_store_kv2_g4, 2, uchar)
+ PAGED_VERIFY_STORE(verify_attention_q4_0_store, 4, SplashQ4Block)
+ PAGED_VERIFY_STORE(verify_attention_q4_0_store_kv2_g8, 2, SplashQ4Block)
++PAGED_VERIFY_STORE(verify_attention_q4_0_store_kv2_g4, 2, SplashQ4Block)
+ #undef PAGED_VERIFY_STORE
+diff --git a/runtime/metal/kernels/prefill/attention_qkv.metal b/runtime/metal/kernels/prefill/attention_qkv.metal
+index c6368327..9ded9ef4 100644
+--- a/runtime/metal/kernels/prefill/attention_qkv.metal
++++ b/runtime/metal/kernels/prefill/attention_qkv.metal
+@@ -28,14 +28,18 @@
+   }
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv, 24, 4, bfloat, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8, 16, 2, bfloat, false)
++PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g4, 8, 2, bfloat, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4, 16, 4, bfloat, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_f32, 24, 4, float, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8_f32, 16, 2, float, false)
++PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g4_f32, 8, 2, float, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4_f32, 16, 4, float, false)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h, 24, 4, bfloat, true)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_f32, 24, 4, float, true)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8, 16, 2, bfloat, true)
++PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g4, 8, 2, bfloat, true)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8_f32, 16, 2, float, true)
++PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g4_f32, 8, 2, float, true)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
+ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
+ #undef PREFILL_ATTENTION_QKV
+@@ -63,5 +67,6 @@ inline void full_attention_gate_prefill_phase(
+   }
+ PREFILL_ATTENTION_GATE(prefill_attention_gate, 24, 4)
+ PREFILL_ATTENTION_GATE(prefill_attention_gate_kv2_g8, 16, 2)
++PREFILL_ATTENTION_GATE(prefill_attention_gate_kv2_g4, 8, 2)
+ PREFILL_ATTENTION_GATE(prefill_attention_gate_kv4_g4, 16, 4)
+ #undef PREFILL_ATTENTION_GATE
+diff --git a/runtime/metal/kernels/prefill/gdn.metal b/runtime/metal/kernels/prefill/gdn.metal
+index bf72a7d0..131acf42 100644
+--- a/runtime/metal/kernels/prefill/gdn.metal
++++ b/runtime/metal/kernels/prefill/gdn.metal
+@@ -184,6 +184,7 @@ inline void gdn_scan_prefill_phase(
+ 
+ GDN_SCAN_PREFILL_ENTRY(prefill_gdn_scan, 16, 48, 128)
+ GDN_SCAN_PREFILL_ENTRY(prefill_gdn_scan_vh32, 16, 32, 128)
++GDN_SCAN_PREFILL_ENTRY(prefill_gdn_scan_vh16, 16, 16, 128)
+ #undef GDN_SCAN_PREFILL_ENTRY
+ 
+ // Prepares one token of one key head: causal convolution, SiLU, q/k RMS
+@@ -296,6 +297,7 @@ inline void gdn_prepare_prefill_phase(
+ 
+ GDN_PREPARE_PREFILL_ENTRY(prefill_gdn_prepare, 16, 48, 128, 10240, 16640)
+ GDN_PREPARE_PREFILL_ENTRY(prefill_gdn_prepare_vh32, 16, 32, 128, 8192, 12544)
++GDN_PREPARE_PREFILL_ENTRY(prefill_gdn_prepare_vh16, 16, 16, 128, 6144, 8448)
+ #undef GDN_PREPARE_PREFILL_ENTRY
+ 
+ // W: the norm weights' stored type (float: a GGUF's F32 norms, _f32).
+@@ -319,7 +321,9 @@ GDN_PREPARE_PREFILL_ENTRY(prefill_gdn_prepare_vh32, 16, 32, 128, 8192, 12544)
+ 
+ GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate, 16, 48, 128, 10240, 16640, bfloat)
+ GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate_vh32, 16, 32, 128, 8192, 12544, bfloat)
++GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate_vh16, 16, 16, 128, 6144, 8448, bfloat)
+ GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate_f32, 16, 48, 128, 10240, 16640, float)
+ GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate_vh32_f32, 16, 32, 128, 8192, 12544,
+                        float)
++GDN_GATE_PREFILL_ENTRY(prefill_gdn_gate_vh16_f32, 16, 16, 128, 6144, 8448, float)
+ #undef GDN_GATE_PREFILL_ENTRY
+diff --git a/runtime/metal/kernels/prefill/paged_attention.metal b/runtime/metal/kernels/prefill/paged_attention.metal
+index a4b41f26..e29cffec 100644
+--- a/runtime/metal/kernels/prefill/paged_attention.metal
++++ b/runtime/metal/kernels/prefill/paged_attention.metal
+@@ -89,22 +89,26 @@ inline void splash_prefill_attention_reduce_phase(
+ 
+ PAGED_PREFILL_SPLIT(prefill_attention_q8_split, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, int8_t)
+ PAGED_PREFILL_SPLIT(prefill_attention_q8_split_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, int8_t)
++PAGED_PREFILL_SPLIT(prefill_attention_q8_split_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, int8_t)
+ PAGED_PREFILL_SPLIT(prefill_attention_q8_split_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, int8_t)
+ PAGED_PREFILL_SPLIT(prefill_attention_q8_split_kv4_g4_r2, 4, 4, 2, int8_t)
+ PAGED_PREFILL_SPLIT(prefill_attention_q8_split_kv4_g4_r16, 4, 4, 16, int8_t)
+ // BF16 shares the page loop and reduction, without quantization scales.
+ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, bfloat)
+ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, bfloat)
++PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, bfloat)
+ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, bfloat)
+ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv4_g4_r2, 4, 4, 2, bfloat)
+ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv4_g4_r16, 4, 4, 16, bfloat)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4h_split, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar)
++PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv4_g4_r2, 4, 4, 2, uchar)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv4_g4_r16, 4, 4, 16, uchar)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, SplashQ4Block)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, SplashQ4Block)
++PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, SplashQ4Block)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, SplashQ4Block)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv4_g4_r2, 4, 4, 2, SplashQ4Block)
+ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv4_g4_r16, 4, 4, 16, SplashQ4Block)
+@@ -127,11 +131,13 @@ PAGED_PREFILL_SPLIT(prefill_attention_q4_0_split_kv4_g4_r16, 4, 4, 16, SplashQ4B
+   }
+ PAGED_PREFILL_REDUCE(prefill_attention_reduce, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, false)
+ PAGED_PREFILL_REDUCE(prefill_attention_reduce_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, false)
++PAGED_PREFILL_REDUCE(prefill_attention_reduce_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, false)
+ PAGED_PREFILL_REDUCE(prefill_attention_reduce_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, false)
+ PAGED_PREFILL_REDUCE(prefill_attention_reduce_kv4_g4_r2, 4, 4, 2, false)
+ PAGED_PREFILL_REDUCE(prefill_attention_reduce_kv4_g4_r16, 4, 4, 16, false)
+ PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce, 4, 6, SPLASH_PREFILL_ATTENTION_TILE_ROWS, true)
+ PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce_kv2_g8, 2, 8, SPLASH_PREFILL_ATTENTION_TILE_ROWS, true)
++PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce_kv2_g4, 2, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, true)
+ PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce_kv4_g4, 4, 4, SPLASH_PREFILL_ATTENTION_TILE_ROWS, true)
+ PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce_kv4_g4_r2, 4, 4, 2, true)
+ PAGED_PREFILL_REDUCE(prefill_attention_q4h_reduce_kv4_g4_r16, 4, 4, 16, true)
+diff --git a/runtime/metal/kernels/prefill/paged_attention_store.metal b/runtime/metal/kernels/prefill/paged_attention_store.metal
+index bdd73c9a..7115f858 100644
+--- a/runtime/metal/kernels/prefill/paged_attention_store.metal
++++ b/runtime/metal/kernels/prefill/paged_attention_store.metal
+@@ -42,10 +42,14 @@ inline void splash_store_chunk_phase(
+   }
+ PAGED_PREFILL_STORE(prefill_attention_q8_store, 4, int8_t)
+ PAGED_PREFILL_STORE(prefill_attention_q8_store_kv2_g8, 2, int8_t)
++PAGED_PREFILL_STORE(prefill_attention_q8_store_kv2_g4, 2, int8_t)
+ PAGED_PREFILL_STORE(prefill_attention_bf16_store, 4, bfloat)
+ PAGED_PREFILL_STORE(prefill_attention_bf16_store_kv2_g8, 2, bfloat)
++PAGED_PREFILL_STORE(prefill_attention_bf16_store_kv2_g4, 2, bfloat)
+ PAGED_PREFILL_STORE(prefill_attention_q4h_store, 4, uchar)
+ PAGED_PREFILL_STORE(prefill_attention_q4h_store_kv2_g8, 2, uchar)
++PAGED_PREFILL_STORE(prefill_attention_q4h_store_kv2_g4, 2, uchar)
+ PAGED_PREFILL_STORE(prefill_attention_q4_0_store, 4, SplashQ4Block)
+ PAGED_PREFILL_STORE(prefill_attention_q4_0_store_kv2_g8, 2, SplashQ4Block)
++PAGED_PREFILL_STORE(prefill_attention_q4_0_store_kv2_g4, 2, SplashQ4Block)
+ #undef PAGED_PREFILL_STORE
+diff --git a/runtime/metal/kernels/shared/gguf_linear.metal b/runtime/metal/kernels/shared/gguf_linear.metal
+index c40f49ce..47797e54 100644
+--- a/runtime/metal/kernels/shared/gguf_linear.metal
++++ b/runtime/metal/kernels/shared/gguf_linear.metal
+@@ -236,6 +236,19 @@ GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32) GGUF_DECODE_FUS
+                                          local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group,        \
+                                          p.out_stride, p.offset[s]);                                               \
+   }
++// Decision encoders keep projection outputs and residual additions in FP32.
++kernel void gguf_prefill_q80_a_f32(device bfloat *input [[buffer(0)]], GGUF_SEGMENTS,
++                                 device float *output [[buffer(10)]],
++                                 constant GgufPrefillSegmentsParams &p [[buffer(11)]], GGUF_PREFILL_THREAD) {
++  GGUF_PREFILL_TABLES(FmtQ80);
++  GGUF_SEGMENT_OF(group.y, p.cols);
++  const uint first = group.x * GGUF_PREFILL_ROWS, rows = p.rows > first ? p.rows - first : 0;
++  gguf_prefill_tile<FmtQ80, GGUF_PREFILL_SIMDGROUP_ROWS, GGUF_PREFILL_SIMDGROUPS,
++                   GGUF_TILE_COLUMNS, GGUF_PREFILL_STEP, EpNone, float>(
++      input + ulong(first) * p.input_size, w0, w1, meta, output + ulong(first) * p.out_stride,
++      p.input_size, local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group, p.out_stride, p.offset[s]);
++}
++
+ #define GGUF_PREFILL_EPILOGUE(F, f, ep, Ep)                                                                        \
+   kernel void gguf_prefill_##f##_##ep(GGUF_PREFILL_BUFFERS, device bfloat *aux [[buffer(5)]],                    \
+                                       constant GgufPrefillParams &p [[buffer(6)]], GGUF_PREFILL_THREAD) {          \
+diff --git a/runtime/model/GgufImage.cpp b/runtime/model/GgufImage.cpp
+index ec611ebc..affc5ef0 100644
+--- a/runtime/model/GgufImage.cpp
++++ b/runtime/model/GgufImage.cpp
+@@ -392,10 +392,11 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
+     throw GgufError("GGUF architecture is " + metadata.architecture() + ", but the model's target is " + arch);
+   const auto decision = metadata.stringValue(arch + ".decision.type");
+   if (geometry.decisionHeadSize) {
+-    if (geometry.hiddenSize != 2560 || geometry.layers != 32 || geometry.decisionHeadSize != 512 ||
++    if (!((geometry.hiddenSize == 2560 && geometry.layers == 32) ||
++          (geometry.hiddenSize == 1024 && geometry.layers == 24)) || geometry.decisionHeadSize != 512 ||
+         (!decision || *decision != "kev") ||
+         metadata.unsignedValue(arch + ".embedding_length_out") != 512)
+-      throw GgufError("GGUF decision metadata does not match Kev-4B");
++      throw GgufError("GGUF decision metadata does not match a supported Kev layout");
+     for (const char *kind : {"choice", "score", "noul"}) {
+       const auto temperature = metadata.floatValue(arch + ".decision.temperature." + kind);
+       if (!temperature || !std::isfinite(*temperature) || *temperature <= 0)
+diff --git a/runtime/model/Model.hpp b/runtime/model/Model.hpp
+index e0b705e9..21171e1d 100644
+--- a/runtime/model/Model.hpp
++++ b/runtime/model/Model.hpp
+@@ -47,9 +47,11 @@ enum RequestFlag : uint32_t {
+   // scoreTokens are ordered option-end prompt positions, not vocabulary ids.
+   // The last prompt position supplies Kev's query; no tokens are generated.
+   RequestDecisionScoring = 1U << 2,
++  RequestDecisionScoreType = 1U << 3,
++  RequestDecisionNoulType = 1U << 4,
+ };
+ 
+-inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence | RequestDecisionScoring;
++inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence | RequestDecisionScoring | RequestDecisionScoreType | RequestDecisionNoulType;
+ 
+ // A request's token selection, its fields in the native request frame's
+ // order. The defaults are greedy selection with nothing changing the logits.
+diff --git a/runtime/model/ModelDescriptor.hpp b/runtime/model/ModelDescriptor.hpp
+index 02993cad..ed35f5ae 100644
+--- a/runtime/model/ModelDescriptor.hpp
++++ b/runtime/model/ModelDescriptor.hpp
+@@ -16,7 +16,7 @@
+ 
+ namespace splash::model {
+ 
+-using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout>;
++using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout, Qwen3_5_0_8BLayout>;
+ 
+ // Where a model's weights come from: a safetensors checkpoint (MLX's, Model
+ // Optimizer's or compressed-tensors') or a GGUF, prepared into images when it
+@@ -55,7 +55,7 @@ struct ModelDescriptor final {
+   }
+   [[nodiscard]] std::string_view family() const noexcept {
+     return std::visit([](const auto &layout) -> std::string_view {
+-      return layout.decisionHeadSize ? "Kev-4B" : layout.family;
++      return layout.decisionHeadSize ? (layout.hiddenSize == 1024 ? "Kev-0.8B" : "Kev-4B") : layout.family;
+     }, target);
+   }
+   [[nodiscard]] bool valid() const noexcept;
+diff --git a/runtime/model/ModelDescriptor.mm b/runtime/model/ModelDescriptor.mm
+index 024bca87..eddb423c 100644
+--- a/runtime/model/ModelDescriptor.mm
++++ b/runtime/model/ModelDescriptor.mm
+@@ -690,11 +690,15 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
+       result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BLayout{}, {}, {},
+                                    targetSource, visionSource);
+   }
++  const bool kev08 = !moe && targetSource == TargetSource::Gguf && config[@"decision_config"] &&
++      [text[@"hidden_size"] doubleValue] == 1024 && [text[@"num_hidden_layers"] doubleValue] == 24;
++  if (kev08)
++    result = makeModelDescriptor(std::move(result.name), Qwen3_5_0_8BLayout{}, {}, {}, targetSource, visionSource);
+   if (config[@"decision_config"]) {
+     NSDictionary *decision = requireObject(config, @"decision_config", "decision config");
+-    if (!smallDense || draft || visionSource != VisionSource::None ||
++    if ((!smallDense && !kev08) || draft || visionSource != VisionSource::None ||
+         requireString(decision, @"type", "decision type") != "kev")
+-      throw std::invalid_argument("Kev requires a text-only GGUF Qwen3.5-4B without a draft");
++      throw std::invalid_argument("Kev requires a supported text-only GGUF Qwen3.5 layout without a draft");
+     requireNumbers(decision, "Kev", "decision config", {{"head_size", 512}});
+     NSDictionary *temperatures = requireObject(decision, @"temperatures", "decision temperatures");
+     for (NSString *key in @[@"choice", @"score", @"noul"])
+@@ -702,11 +706,12 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
+         throw std::invalid_argument("Kev decision temperatures must be positive");
+     if (requireString(decision, @"chat_template", "Kev systemone template").empty())
+       throw std::invalid_argument("Kev systemone template is empty");
+-    std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
++    if (smallDense) std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
+   }
+   std::visit([&](const auto &layout) {
+     validateTextConfig(text, layout, layout.family, result.targetSource);
+-    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
++    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> &&
++                  !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
+                   !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
+       if (result.targetSource == TargetSource::Safetensors) requireQuantization(config, layout);
+     if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
+@@ -779,7 +784,7 @@ ModelDescriptor makeModelDescriptor(std::string name, TargetLayout target,
+       !targetKvLayout.valid() || !stateLayout.valid() ||
+       stateLayout.draft != draft.stateLayout() ||
+       (hasVision() && hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
+-      (!hasDraft() && (!std::holds_alternative<Qwen3_5_4BLayout>(target) ||
++      (!hasDraft() && ((!std::holds_alternative<Qwen3_5_4BLayout>(target) && !std::holds_alternative<Qwen3_5_0_8BLayout>(target)) ||
+                       draft != DFlashDraftLayout{} || hasVision()))) {
+     return false;
+   }
+@@ -822,6 +827,27 @@ ModelDescriptor inspectModelRoot(const std::filesystem::path &root) {
+                                             const std::optional<std::filesystem::path> &draft) {
+   @autoreleasepool {
+     NSDictionary *target = readObject(config, "upstream model config");
++    NSDictionary *text = target[@"text_config"];
++    if ([text[@"model_type"] isEqual:@"modernbert_text"]) {
++      if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufMetadata)
++        throw std::invalid_argument("ModernBERT decisions require text-only GGUF without a draft");
++      const bool julia = [text[@"hidden_size"] doubleValue] == 384;
++      requireNumbers(text, "ModernBERT", "encoder config",
++                     {{"hidden_size", julia ? 384 : 1024}, {"num_hidden_layers", julia ? 24 : 30},
++                      {"vocab_size", julia ? 256000 : 50368}, {"num_attention_heads", julia ? 6 : 16},
++                      {"num_key_value_heads", julia ? 6 : 16}, {"head_dim", 64}, {"max_position_embeddings", 8192}});
++      NSDictionary *decision = requireObject(target, @"decision_config", "encoder decision config");
++      requireEqual(requireString(decision, @"type", "decision type"), "laya", "config", "decision type");
++      requireNumbers(decision, "ModernBERT", "decision config", {{"head_size", 1}, {"max_head_tokens", julia ? 256 : 192}});
++      const auto metadata = readGgufMetadata(*ggufMetadata);
++      if (metadata.architecture() != "modern-bert" || metadata.stringValue("modern-bert.decision.type") != "laya" ||
++          metadata.unsignedValue("modern-bert.embedding_length") != (julia ? 384U : 1024U) ||
++          metadata.unsignedValue("modern-bert.block_count") != (julia ? 24U : 30U) ||
++          metadata.unsignedValue("modern-bert.attention.causal") != 0 ||
++          metadata.unsignedValue("modern-bert.decision.block_count") != 2)
++        throw std::invalid_argument("ModernBERT config does not match GGUF metadata");
++      return julia ? "Julia-1" : "Laya";
++    }
+     NSDictionary *checkpoint = draft ? readObject(*draft, "draft config") : nil;
+     // Unnamed: the record names an installation, which this precedes.
+     const ModelDescriptor descriptor = describeSourceModel({}, targetFormat, visionFormat, target, checkpoint);
+diff --git a/runtime/model/ModelFactory.cpp b/runtime/model/ModelFactory.cpp
+index 9388315e..1b680b73 100644
+--- a/runtime/model/ModelFactory.cpp
++++ b/runtime/model/ModelFactory.cpp
+@@ -54,6 +54,10 @@ TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_6MoeLayout &l
+   return loadQwen3_6MoeWeights(backend, layout, files);
+ }
+ 
++TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_0_8BLayout &layout, const QwenTargetFiles &files) {
++  return loadQwen3_5_0_8BWeights(backend, layout, files);
++}
++
+ TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BLayout &layout,
+                          const QwenTargetFiles &files) {
+   return loadQwen3_5_4BWeights(backend, layout, files);
+@@ -82,6 +86,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
+   if ((ffn.mode == FfnWeightMode::LimitedFp16) != (ffn.budgetBytes > 0))
+     throw std::invalid_argument("limited FFN cache requires a positive budget, other modes require zero");
+   if ((ffn.mode != FfnWeightMode::FullFp16 || ffn.variant != ops::FfnPrefillVariant::Baseline) &&
++      !std::holds_alternative<Qwen3_5_0_8BLayout>(descriptor.target) &&
+       !std::holds_alternative<Qwen3_5_4BLayout>(descriptor.target) &&
+       !std::holds_alternative<Qwen3_5_4BDFlashLayout>(descriptor.target))
+     throw std::invalid_argument("quantized FFN experiment requires Qwen3.5-4B");
+@@ -101,7 +106,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
+         const std::filesystem::path directory = root / "target";
+         switch (result.descriptor.targetSource) {
+         case TargetSource::Safetensors: {
+-          if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
++          if constexpr (std::is_same_v<Layout, Qwen3_5_0_8BLayout> || std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
+             throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
+           } else {
+             SafetensorsTargetLoader loader(backend, images, directory, layout);
+@@ -121,7 +126,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
+   const auto loadedAt = AwakeClock::now();
+   result.loadTimings.sourceSeconds = std::chrono::duration<double>(loadedAt - started).count();
+   const auto policy = [&](auto &target) {
+-    if constexpr (std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BWeights> ||
++    if constexpr (std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_0_8BWeights> || std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BWeights> ||
+                   std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BDFlashWeights>)
+       for (auto &layer : target.layers) {
+         layer.gateProjection.ffn = {ops::FfnRole::Gate, ffn.variant, ffn.trace};
+@@ -131,6 +136,8 @@ LoadedModel loadModel(metal::MetalBackend &backend,
+   };
+   std::visit(policy, result.target);
+   if (ffn.mode != FfnWeightMode::Quantized) {
++    if (auto *target = std::get_if<Qwen3_5_0_8BWeights>(&result.target))
++      buildQwen3_5_0_8BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
+     if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
+       buildQwen3_5_4BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
+     if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
+@@ -161,7 +168,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
+         [&](const auto &layout) {
+           const auto plans = gguf::planImages(file, layout);
+           uint64_t targetBytes = imageBytes(plans);
+-          if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
++          if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> || std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+                         std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>) {
+             if (ffn.mode != FfnWeightMode::Quantized) {
+               uint64_t cachedBytes = 0;
+@@ -186,7 +193,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
+         descriptor.target);
+   } else {
+     bytes = std::visit([&](const auto &layout) -> uint64_t {
+-      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
++      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> || std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+                     std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
+         throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
+       else return safetensorsTargetImageBytes(root / "target", layout);
+diff --git a/runtime/model/ModelFactory.hpp b/runtime/model/ModelFactory.hpp
+index 5602b90b..49f8206f 100644
+--- a/runtime/model/ModelFactory.hpp
++++ b/runtime/model/ModelFactory.hpp
+@@ -27,7 +27,7 @@ namespace splash::model {
+ class QwenStateStorage;
+ class VisionLoader;
+ 
+-using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen3_5_4BWeights, Qwen3_5_4BDFlashWeights>;
++using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen3_5_4BWeights, Qwen3_5_4BDFlashWeights, Qwen3_5_0_8BWeights>;
+ 
+ // Qwen3.5-4B FFN prefill only; decode and source quantization stay unchanged.
+ enum class FfnWeightMode { FullFp16, Quantized, LimitedFp16 };
+diff --git a/runtime/model/Qwen3_5_4B.cpp b/runtime/model/Qwen3_5_4B.cpp
+index 46e49cdd..7b83f286 100644
+--- a/runtime/model/Qwen3_5_4B.cpp
++++ b/runtime/model/Qwen3_5_4B.cpp
+@@ -4,6 +4,16 @@
+ 
+ namespace splash::model {
+ 
++Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &backend, Qwen3_5_0_8BLayout layout,
++                                          const QwenTargetFiles &files) {
++  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
++    layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
++    layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
++    layer.downProjection = format.projection(file, layout.hiddenSize, layout.intermediateSize, "mlp-down");
++  };
++  return loadQwenTarget<Qwen3_5_0_8BWeights>(backend, layout, files, readFfn);
++}
++
+ Qwen3_5_4BWeights loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
+                                       const QwenTargetFiles &files) {
+   const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
+@@ -59,6 +69,10 @@ void buildPrefillCache(metal::MetalBackend &backend, WeightImages &images, Weigh
+   weights.actualAllocatedBytes += bytes;
+ }
+ 
++void buildQwen3_5_0_8BPrefillCache(metal::MetalBackend &backend, WeightImages &images, Qwen3_5_0_8BWeights &weights, uint64_t budgetBytes) {
++  buildPrefillCache(backend, images, weights, budgetBytes);
++}
++
+ void buildQwen3_5_4BPrefillCache(metal::MetalBackend &backend, WeightImages &images, Qwen3_5_4BWeights &weights, uint64_t budgetBytes) {
+   buildPrefillCache(backend, images, weights, budgetBytes);
+ }
+diff --git a/runtime/model/Qwen3_5_4B.hpp b/runtime/model/Qwen3_5_4B.hpp
+index ba5c6f95..5b732ce3 100644
+--- a/runtime/model/Qwen3_5_4B.hpp
++++ b/runtime/model/Qwen3_5_4B.hpp
+@@ -39,6 +39,28 @@ struct Qwen3_5_4BLayout final : QwenHybridLayout<0> {
+   bool operator==(const Qwen3_5_4BLayout &) const = default;
+ };
+ 
++// Kev-0.8B uses the same hybrid and pointer-head semantics with 16 GDN value heads.
++struct Qwen3_5_0_8BLayout final : QwenHybridLayout<0> {
++  static constexpr std::string_view family = "Kev-0.8B";
++  static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
++  static constexpr std::string_view headMagic = Qwen3_5_4BLayout::headMagic;
++  constexpr Qwen3_5_0_8BLayout()
++      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{}), {}} {
++    layers = 24;
++    hiddenSize = 1024;
++    packedGdnWidth = 8448;
++    packedFullWidth = 5120;
++    convolutionDimension = 6144;
++    gdnValueHeads = 16;
++    attentionWidth = 2048;
++    attentionQueryHeads = 8;
++    attentionKvHeads = 2;
++    intermediateSize = 3584;
++    decisionHeadSize = 512;
++  }
++  bool operator==(const Qwen3_5_0_8BLayout &) const = default;
++};
++
+ struct Qwen3_5_4BDFlashLayout final : QwenHybridLayout<8> {
+   static constexpr std::string_view family = Qwen3_5_4BLayout::family;
+   static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
+@@ -56,6 +78,10 @@ inline constexpr DFlashDraftLayout kQwen3_5_4BDFlashDraftLayout{
+     .rotaryTheta = 10'000'000.0F, .targetHiddenSize = 20480,
+     .selectorRank = 0, .kvHeads = 8, .kind = DraftKind::Standard};
+ 
++using Qwen3_5_0_8BWeights = QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights>;
++[[nodiscard]] Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &, Qwen3_5_0_8BLayout, const QwenTargetFiles &);
++void buildQwen3_5_0_8BPrefillCache(metal::MetalBackend &, WeightImages &, Qwen3_5_0_8BWeights &, uint64_t budgetBytes = UINT64_MAX);
++
+ using Qwen3_5_4BWeights = QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeights>;
+ using Qwen3_5_4BDFlashWeights = QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights>;
+ [[nodiscard]] Qwen3_5_4BDFlashWeights
+diff --git a/runtime/model/QwenTarget.cpp b/runtime/model/QwenTarget.cpp
+index 9f6d9bce..70fe417b 100644
+--- a/runtime/model/QwenTarget.cpp
++++ b/runtime/model/QwenTarget.cpp
+@@ -49,6 +49,7 @@ template QwenTarget::QwenTarget(const Qwen3_8Weights &, const QwenTargetGeometry
+                                 const ops::ExecutionPlans &);
+ template QwenTarget::QwenTarget(const Qwen3_6MoeWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
+                                 const ops::ExecutionPlans &);
++template QwenTarget::QwenTarget(const Qwen3_5_0_8BWeights &, const QwenTargetGeometry &, metal::MetalBackend &, const ops::ExecutionPlans &);
+ template QwenTarget::QwenTarget(const Qwen3_5_4BWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
+                                 const ops::ExecutionPlans &);
+ template QwenTarget::QwenTarget(const Qwen3_5_4BDFlashWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
+@@ -121,6 +122,7 @@ QwenTargetGeometry qwenTargetGeometry(const QwenTargetWeights<Layout, Layer> &we
+ template QwenTargetGeometry qwenTargetGeometry(const Qwen3_8Weights &);
+ template QwenTargetGeometry qwenTargetGeometry(const Qwen3_6MoeWeights &);
+ template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BWeights &);
++template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_0_8BWeights &);
+ template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BDFlashWeights &);
+ 
+ const ops::Projection &QwenTarget::vocabularyProjection() const noexcept {
+diff --git a/runtime/model/QwenTarget.hpp b/runtime/model/QwenTarget.hpp
+index 71411666..875f248b 100644
+--- a/runtime/model/QwenTarget.hpp
++++ b/runtime/model/QwenTarget.hpp
+@@ -27,6 +27,7 @@ class AneFfn;
+ namespace splash::model {
+ 
+ struct Qwen3_5_4BLayout;
++struct Qwen3_5_0_8BLayout;
+ struct Qwen3_5_4BDFlashLayout;
+ struct Qwen3_8Layout;
+ struct Qwen3_8LayerWeights;
+@@ -304,7 +305,8 @@ private:
+       std::variant<const QwenTargetWeights<Qwen3_8Layout, Qwen3_8LayerWeights> *,
+                    const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *,
+                    const QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeights> *,
+-                   const QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights> *>;
++                   const QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights> *,
++                   const QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights> *>;
+   struct PrefillStep;
+   struct VerifyStep;
+ 
+diff --git a/runtime/model/Runtime.cpp b/runtime/model/Runtime.cpp
+index a2ddb73c..c02c51fb 100644
+--- a/runtime/model/Runtime.cpp
++++ b/runtime/model/Runtime.cpp
+@@ -3073,6 +3073,7 @@ std::vector<ops::SwiGluProjections> aneFfnLayers(const LoadedModel &model) {
+   std::visit([&](const auto &target) {
+     using Weights = std::remove_cvref_t<decltype(target)>;
+     if constexpr (std::is_same_v<Weights, Qwen3_8Weights> ||
++                  std::is_same_v<Weights, Qwen3_5_0_8BWeights> ||
+                   std::is_same_v<Weights, Qwen3_5_4BWeights> ||
+                   std::is_same_v<Weights, Qwen3_5_4BDFlashWeights>)
+       for (const Qwen3_8LayerWeights &layer : target.layers)
+diff --git a/runtime/ops/GDN.cpp b/runtime/ops/GDN.cpp
+index 7f764dd8..cf0e15b3 100644
+--- a/runtime/ops/GDN.cpp
++++ b/runtime/ops/GDN.cpp
+@@ -16,7 +16,7 @@ namespace {
+ 
+ static_assert(offsetof(GDNDecodeBatchParams, conv_layer_bytes) == 8);
+ 
+-enum class KernelLayout : uint8_t { Value48, Value32 };
++enum class KernelLayout : uint8_t { Value48, Value32, Value16 };
+ 
+ [[nodiscard]] KernelLayout kernelShape(const GdnShape &shape) {
+   if (!shape.valid())
+@@ -25,13 +25,20 @@ enum class KernelLayout : uint8_t { Value48, Value32 };
+     return KernelLayout::Value48;
+   if (shape == GdnShape{16, 32, 128, 8192, 12544})
+     return KernelLayout::Value32;
++  if (shape == GdnShape{16, 16, 128, 6144, 8448}) return KernelLayout::Value16;
+   throw std::invalid_argument("unsupported compiled GDN shape");
+ }
+ 
+-[[nodiscard]] const char *kernelName(KernelLayout shape,
++[[nodiscard]] std::string kernelName(KernelLayout shape,
+                                      const char *value48,
+                                      const char *value32) noexcept {
+-  return shape == KernelLayout::Value48 ? value48 : value32;
++  if (shape == KernelLayout::Value48) return value48;
++  std::string name = value32;
++  if (shape == KernelLayout::Value16) {
++    const auto at = name.find("vh32");
++    if (at != std::string::npos) name.replace(at, 4, "vh16");
++  }
++  return name;
+ }
+ 
+ uint64_t valueWidth(const GdnShape &shape) { return uint64_t{shape.valueHeads} * shape.headDimension; }
+diff --git a/runtime/ops/Linear.cpp b/runtime/ops/Linear.cpp
+index bb4b8ff3..8b328e04 100644
+--- a/runtime/ops/Linear.cpp
++++ b/runtime/ops/Linear.cpp
+@@ -137,8 +137,8 @@ LinearPlan::LinearPlan(LinearWorkload w, LinearConfig config, FloatOutput destin
+     : workload_(w), config_(config), destination_(destination) {
+   validate(w);
+   if (destination == FloatOutput::Float32 &&
+-      (w.phase != LinearPhase::Decode || w.epilogue != LinearEpilogue::None))
+-    throw std::invalid_argument("an fp32 destination takes a plain decode projection");
++      w.epilogue != LinearEpilogue::None)
++    throw std::invalid_argument("an fp32 destination takes a plain projection");
+   // Kernel names follow the segment formats (LinearGguf.cpp).
+   requireConfiguration();
+ }
+diff --git a/runtime/ops/LinearGguf.cpp b/runtime/ops/LinearGguf.cpp
+index dd837705..146f56e4 100644
+--- a/runtime/ops/LinearGguf.cpp
++++ b/runtime/ops/LinearGguf.cpp
+@@ -510,6 +510,9 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
+   const LinearWorkload w = plan.workload();
+   const auto [n, k] = w.matrix;
+   const char epilogue = epilogueSuffix(w.epilogue);
++  if (plan.destination() == FloatOutput::Float32 && std::ranges::any_of(p.blocks().segments, [](const auto &s) {
++        return s.formatId != GGUF_FMT_Q80 || bool(s.prefillHalf);
++      })) throw std::invalid_argument("FP32 quantized prefill requires uncached Q8_0");
+   const auto candidate = ffnPrefillKernel(p, plan);
+   if (candidate != FfnPrefillKernel::Baseline) {
+     const auto &segment = p.blocks().segments.front();
+@@ -564,7 +567,7 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
+         bindings.insert(bindings.end(), {s.plane0, s.plane1Slot(), s.meta});
+       }
+       bindings.push_back(b.output);
+-      graph.add(prefillKernel(group.front()->name(), epilogue), std::move(bindings), params,
++      graph.add(kernelInstance(prefillKernel(group.front()->name(), epilogue), plan.destination()), std::move(bindings), params,
+                 {rowTiles, columns / GGUF_TILE_COLUMNS, 1}, {GGUF_PREFILL_THREADS, 1, 1});
+     }
+     return;
+diff --git a/runtime/ops/PagedAttention.cpp b/runtime/ops/PagedAttention.cpp
+index 4c8dc258..9051eb24 100644
+--- a/runtime/ops/PagedAttention.cpp
++++ b/runtime/ops/PagedAttention.cpp
+@@ -13,7 +13,7 @@
+ namespace splash::ops {
+ namespace {
+ 
+-enum class KernelLayout : uint8_t { Kv4Group6, Kv2Group8, Kv4Group4 };
++enum class KernelLayout : uint8_t { Kv4Group6, Kv2Group8, Kv4Group4, Kv2Group4 };
+ 
+ // One thread per gate element, across rows x query heads x head dimension.
+ uint64_t gateGroups(uint64_t rows, uint32_t queryHeads, uint32_t headDimension) {
+@@ -41,13 +41,50 @@ KernelLayout attentionKernelLayout(uint32_t queryHeads, kv::Layout layout) {
+     return result;
+   if (result == KernelLayout::Kv4Group6 && queryHeads == 16)
+     return KernelLayout::Kv4Group4;
++  if (result == KernelLayout::Kv2Group8 && queryHeads == 8) return KernelLayout::Kv2Group4;
+   throw std::invalid_argument("no paged-attention kernel for layout");
+ }
+ 
+ std::string_view pipeline(KernelLayout layout, std::string_view kv4Group6,
+-                          std::string_view kv2Group8, std::string_view kv4Group4) noexcept {
++                          std::string_view kv2Group8, std::string_view kv4Group4) {
+   if (layout == KernelLayout::Kv4Group4) return kv4Group4;
+-  return layout == KernelLayout::Kv4Group6 ? kv4Group6 : kv2Group8;
++  if (layout == KernelLayout::Kv4Group6) return kv4Group6;
++  if (layout == KernelLayout::Kv2Group4) {
++    static constexpr std::pair<std::string_view, std::string_view> names[]{
++      {"_kv2_g8", "_kv2_g4"},
++      {"kv2_g8", "kv2_g4"},
++      {"prefill_attention_bf16_split_kv2_g8", "prefill_attention_bf16_split_kv2_g4"},
++      {"prefill_attention_bf16_store_kv2_g8", "prefill_attention_bf16_store_kv2_g4"},
++      {"prefill_attention_gate_kv2_g8", "prefill_attention_gate_kv2_g4"},
++      {"prefill_attention_q4_0_split_kv2_g8", "prefill_attention_q4_0_split_kv2_g4"},
++      {"prefill_attention_q4_0_store_kv2_g8", "prefill_attention_q4_0_store_kv2_g4"},
++      {"prefill_attention_q4h_reduce_kv2_g8", "prefill_attention_q4h_reduce_kv2_g4"},
++      {"prefill_attention_q4h_split_kv2_g8", "prefill_attention_q4h_split_kv2_g4"},
++      {"prefill_attention_q4h_store_kv2_g8", "prefill_attention_q4h_store_kv2_g4"},
++      {"prefill_attention_q8_split_kv2_g8", "prefill_attention_q8_split_kv2_g4"},
++      {"prefill_attention_q8_store_kv2_g8", "prefill_attention_q8_store_kv2_g4"},
++      {"prefill_attention_qkv_kv2_g8", "prefill_attention_qkv_kv2_g4"},
++      {"prefill_attention_qkv_q4h_kv2_g8", "prefill_attention_qkv_q4h_kv2_g4"},
++      {"prefill_attention_reduce_kv2_g8", "prefill_attention_reduce_kv2_g4"},
++      {"verify_attention_bf16_split_kv2_g8", "verify_attention_bf16_split_kv2_g4"},
++      {"verify_attention_bf16_store_kv2_g8", "verify_attention_bf16_store_kv2_g4"},
++      {"verify_attention_gate_kv2_g8", "verify_attention_gate_kv2_g4"},
++      {"verify_attention_q4_0_split_kv2_g8", "verify_attention_q4_0_split_kv2_g4"},
++      {"verify_attention_q4_0_store_kv2_g8", "verify_attention_q4_0_store_kv2_g4"},
++      {"verify_attention_q4h_reduce_kv2_g8", "verify_attention_q4h_reduce_kv2_g4"},
++      {"verify_attention_q4h_split_kv2_g8", "verify_attention_q4h_split_kv2_g4"},
++      {"verify_attention_q4h_store_kv2_g8", "verify_attention_q4h_store_kv2_g4"},
++      {"verify_attention_q8_split_kv2_g8", "verify_attention_q8_split_kv2_g4"},
++      {"verify_attention_q8_store_kv2_g8", "verify_attention_q8_store_kv2_g4"},
++      {"verify_attention_qkv_kv2_g8", "verify_attention_qkv_kv2_g4"},
++      {"verify_attention_qkv_q4h_kv2_g8", "verify_attention_qkv_q4h_kv2_g4"},
++      {"verify_attention_reduce_kv2_g8", "verify_attention_reduce_kv2_g4"},
++    };
++    for (const auto &[oldName, name] : names)
++      if (oldName == kv2Group8) return name;
++    throw std::logic_error("missing 8Q/2KV attention pipeline");
++  }
++  return kv2Group8;
+ }
+ 
+ // One dispatch normalizes both the queries and the keys, so their norms must
+diff --git a/server/frontend.py b/server/frontend.py
+index c008b4b5..3c6b8771 100644
+--- a/server/frontend.py
++++ b/server/frontend.py
+@@ -36,6 +36,7 @@ from .errors import (
+ from .latency import LatencyMetrics
+ from .lru import LRUCache
+ from .metrics import is_finite_number
++from .modernbert import ModernBertScorer
+ from .serve_options import REASONING_EFFORTS, parse_served_model_name
+ from .tokenization import PromptTokenizer, tokenizable
+ from .tool_schema import (
+@@ -267,7 +268,11 @@ class Frontend:
+         self.latencies = LatencyMetrics()
+         self.tokenizer = tokenizer
+         self.decision_scorer = (
+-            kev.KevScorer(tokenizer, decision_config)
++            (
++                ModernBertScorer(tokenizer, decision_config)
++                if decision_config.get("type") == "laya"
++                else kev.KevScorer(tokenizer, decision_config)
++            )
+             if decision_config is not None
+             else None
+         )
+@@ -329,7 +334,11 @@ class Frontend:
+                 "active": self.preparation_active,
+                 "waiting": self.preparation_waiting,
+             }
+-        status["grammar_cache"] = self.constraint_factory.stats()
++        status["grammar_cache"] = (
++            self.constraint_factory.stats()
++            if self.constraint_factory is not None
++            else {"enabled": False}
++        )
+         status["response_store"] = self.response_store.stats()
+         status["image_cache"] = self.images.stats()
+         status["tokenizer_cache"] = self.prompt_tokenizer.stats()
+@@ -722,7 +731,7 @@ class Frontend:
+                         )
+                     total_tokens += len(tokens)
+                     job = self._score_job(tokens, positions, deadline, priority)
+-                    job.flags = wire.RequestFlag.DECISION_SCORING
++                    job.flags = self.decision_scorer.flags(spec)
+                     jobs.append((qid, spec, job))
+                     continue
+                 slots = judgments.slot_labels(self.tokenizer)
+diff --git a/server/kev.py b/server/kev.py
+index 8dcc402e..561a9e1f 100644
+--- a/server/kev.py
++++ b/server/kev.py
+@@ -100,11 +100,19 @@ class KevScorer:
+             raise ValueError("unexpected layout of the Kev decision prompt")
+         return tokens, positions
+ 
++    def temperature(self, spec):
++        return self.temperatures[spec.kind]
++
++    def flags(self, spec):
++        from . import protocol as wire
++
++        return wire.RequestFlag.DECISION_SCORING
++
+     def probabilities(self, spec, logits):
+         if len(logits) != len(spec.labels):
+             raise ValueError("Kev result does not match the option count")
+         probabilities = judgments.softmax(
+-            [value / self.temperatures[spec.kind] for value in logits]
++            [value / self.temperature(spec) for value in logits]
+         )
+         ordered = [0.0] * len(probabilities)
+         for index, probability in zip(self.order(spec), probabilities):
+diff --git a/server/protocol.py b/server/protocol.py
+index a0943370..e3711fb1 100644
+--- a/server/protocol.py
++++ b/server/protocol.py
+@@ -189,6 +189,8 @@ class RequestFlag(IntFlag):
+     RETURN_PROGRESS = 1 << 1
+     # score_tokens carry ordered option-end positions; the final position is the query.
+     DECISION_SCORING = 1 << 2
++    DECISION_SCORE_TYPE = 1 << 3
++    DECISION_NOUL_TYPE = 1 << 4
+ 
+ 
+ # A request with any other bit set is a request error.
+@@ -196,6 +198,8 @@ _REQUEST_FLAG_BITS = int(
+     RequestFlag.IGNORE_END_OF_SEQUENCE
+     | RequestFlag.RETURN_PROGRESS
+     | RequestFlag.DECISION_SCORING
++    | RequestFlag.DECISION_SCORE_TYPE
++    | RequestFlag.DECISION_NOUL_TYPE
+ )
+ 
+ 
+@@ -613,6 +617,17 @@ def _validated_request(
+         )
+         if flags & ~_REQUEST_FLAG_BITS:
+             raise ValueError("request flags are not defined by native protocol")
++        encoder_types = flags & (
++            RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE
++        )
++        if encoder_types and (
++            not flags & RequestFlag.DECISION_SCORING
++            or encoder_types
++            == (RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE)
++        ):
++            raise ValueError(
++                "encoder question-type flags require a single decision type"
++            )
+     except ValueError as error:
+         _fail_request(IssueCode.INVALID_ENUM_VALUE, str(error), request_id)
+     try:
+diff --git a/server/serve_options.py b/server/serve_options.py
+index a52d2004..47d1d554 100644
+--- a/server/serve_options.py
++++ b/server/serve_options.py
+@@ -687,6 +687,25 @@ SERVE_OPTIONS = (
+             help="explicit public draft ranking file; does not enable compact by itself",
+         ),
+     ),
++    ServeOption(
++        "--encoder-submit-batch-size",
++        "requests",
++        dict(
++            type=int,
++            choices=(1, 2, 4),
++            default=4,
++            help="maximum short encoder requests per Metal submission (default: 4)",
++        ),
++    ),
++    ServeOption(
++        "--encoder-option-queries",
++        "requests",
++        dict(
++            choices=("on", "off"),
++            default="on",
++            help="ModernBERT final-head option query selection (default: on)",
++        ),
++    ),
+     ServeOption(
+         "--fast-topk",
+         "requests",
+diff --git a/server/server.py b/server/server.py
+index 69972fa9..beb0e058 100644
+--- a/server/server.py
++++ b/server/server.py
+@@ -1597,6 +1597,27 @@ def parse_args(argv=None):
+ 
+ 
+ def _native_command(args):
++    if getattr(args, "decision_type", None) == "laya":
++        if any(
++            getattr(args, key) == "on"
++            for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
++        ):
++            raise ValueError("encoder decision models have no decode features")
++        if args.ane_ffn_share is not None or args.ane_power_recovery == "on":
++            raise ValueError(
++                "ModernBERT ANE programs are not implemented; use the GPU encoder"
++            )
++        return [
++            args.binary,
++            "serve-encoder-native",
++            args.model_root,
++            "auto" if args.max_context is None else str(args.max_context),
++            "auto" if args.max_memory is None else str(args.max_memory),
++            "--encoder-option-queries",
++            getattr(args, "encoder_option_queries", "on"),
++            "--encoder-submit-batch-size",
++            str(getattr(args, "encoder_submit_batch_size", 4)),
++        ]
+     command = [
+         args.binary,
+         "serve-native",
+@@ -1720,13 +1741,26 @@ def main():
+                 # GGUF-derived Qwen configs omit transformers_version, which
+                 # triggers Transformers' local Mistral heuristic. Keep Qwen's regex.
+                 tokenizer_options["fix_mistral_regex"] = False
++        args.decision_type = decision_config.get("type") if decision_config else None
++        if args.decision_type == "laya":
++            tokenizer_options["fix_mistral_regex"] = False
+         tokenizer = AutoTokenizer.from_pretrained(
+             args.tokenizer,
+             local_files_only=True,
+             trust_remote_code=False,
+             **tokenizer_options,
+         )
+-        validate_tokenizer(tokenizer)
++        if args.decision_type == "laya":
++            vocabulary = model_config["text_config"]["vocab_size"]
++            ids = tokenizer.get_vocab().values()
++            if not ids or any(
++                type(token) is not int or not 0 <= token < vocabulary for token in ids
++            ):
++                raise ValueError(
++                    "encoder tokenizer vocabulary does not match its model"
++                )
++        else:
++            validate_tokenizer(tokenizer)
+         stage = "chat template"
+         chat_templates = ChatTemplates(tokenizer)
+         print_status(f"Chat template · {chat_templates.describe()}")
+@@ -1757,7 +1791,9 @@ def main():
+             )
+         effective_context = readiness.max_context_tokens
+         stage = "frontend"
+-        constraint_factory = ConstraintFactory(tokenizer)
++        constraint_factory = (
++            None if decision_config is not None else ConstraintFactory(tokenizer)
++        )
+         app = Frontend(
+             tokenizer,
+             backend,
+diff --git a/server/startup_report.py b/server/startup_report.py
+index 96f76551..8e6af262 100644
+--- a/server/startup_report.py
++++ b/server/startup_report.py
+@@ -108,6 +108,10 @@ def effective_lines(status, readiness, args=None):
+     yield f"  Build = {_text(identity.get('cache', {}).get('build_id', 'unknown'))}"
+     governor = status.get("memory_governor", {})
+     yield f"  Metal budget = {governor.get('limit_bytes', 'unknown')} bytes"
++    if status.get("model_kind") == "modern-bert":
++        encoder = status.get("features", {}).get("encoder_option_queries")
++        yield f"  Encoder option queries = {'on' if encoder is True else 'off' if encoder is False else 'unknown'}"
++        yield "  Encoder state = full bidirectional sequence; causal prefix cache off"
+     features = status.get("startup_features", {})
+     drafter = features.get("drafter", "unknown")
+     draft_state = (

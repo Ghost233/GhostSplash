@@ -54,6 +54,10 @@ TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_6MoeLayout &l
   return loadQwen3_6MoeWeights(backend, layout, files);
 }
 
+TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_0_8BLayout &layout, const QwenTargetFiles &files) {
+  return loadQwen3_5_0_8BWeights(backend, layout, files);
+}
+
 TargetWeights readTarget(metal::MetalBackend &backend, const Qwen3_5_4BLayout &layout,
                          const QwenTargetFiles &files) {
   return loadQwen3_5_4BWeights(backend, layout, files);
@@ -82,6 +86,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   if ((ffn.mode == FfnWeightMode::LimitedFp16) != (ffn.budgetBytes > 0))
     throw std::invalid_argument("limited FFN cache requires a positive budget, other modes require zero");
   if ((ffn.mode != FfnWeightMode::FullFp16 || ffn.variant != ops::FfnPrefillVariant::Baseline) &&
+      !std::holds_alternative<Qwen3_5_0_8BLayout>(descriptor.target) &&
       !std::holds_alternative<Qwen3_5_4BLayout>(descriptor.target) &&
       !std::holds_alternative<Qwen3_5_4BDFlashLayout>(descriptor.target))
     throw std::invalid_argument("quantized FFN experiment requires Qwen3.5-4B");
@@ -101,7 +106,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         const std::filesystem::path directory = root / "target";
         switch (result.descriptor.targetSource) {
         case TargetSource::Safetensors: {
-          if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
+          if constexpr (std::is_same_v<Layout, Qwen3_5_0_8BLayout> || std::is_same_v<Layout, Qwen3_5_4BLayout> || std::is_same_v<Layout, Qwen3_5_4BDFlashLayout>) {
             throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
           } else {
             SafetensorsTargetLoader loader(backend, images, directory, layout);
@@ -121,7 +126,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   const auto loadedAt = AwakeClock::now();
   result.loadTimings.sourceSeconds = std::chrono::duration<double>(loadedAt - started).count();
   const auto policy = [&](auto &target) {
-    if constexpr (std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BWeights> ||
+    if constexpr (std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_0_8BWeights> || std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BWeights> ||
                   std::is_same_v<std::remove_cvref_t<decltype(target)>, Qwen3_5_4BDFlashWeights>)
       for (auto &layer : target.layers) {
         layer.gateProjection.ffn = {ops::FfnRole::Gate, ffn.variant, ffn.trace};
@@ -131,6 +136,8 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   };
   std::visit(policy, result.target);
   if (ffn.mode != FfnWeightMode::Quantized) {
+    if (auto *target = std::get_if<Qwen3_5_0_8BWeights>(&result.target))
+      buildQwen3_5_0_8BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
     if (auto *target = std::get_if<Qwen3_5_4BWeights>(&result.target))
       buildQwen3_5_4BPrefillCache(backend, images, *target, ffn.mode == FfnWeightMode::LimitedFp16 ? ffn.budgetBytes : UINT64_MAX);
     if (auto *target = std::get_if<Qwen3_5_4BDFlashWeights>(&result.target))
@@ -161,7 +168,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
         [&](const auto &layout) {
           const auto plans = gguf::planImages(file, layout);
           uint64_t targetBytes = imageBytes(plans);
-          if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+          if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> || std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
                         std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>) {
             if (ffn.mode != FfnWeightMode::Quantized) {
               uint64_t cachedBytes = 0;
@@ -186,7 +193,7 @@ uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescript
         descriptor.target);
   } else {
     bytes = std::visit([&](const auto &layout) -> uint64_t {
-      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
+      if constexpr (std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> || std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> ||
                     std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
         throw std::invalid_argument("Qwen3.5-4B currently requires a GGUF target");
       else return safetensorsTargetImageBytes(root / "target", layout);

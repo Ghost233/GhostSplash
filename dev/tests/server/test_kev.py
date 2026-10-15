@@ -3,8 +3,6 @@ import math
 import re
 from dataclasses import replace
 
-from server import protocol as wire
-
 from dev.tests.install.test_kev_metadata import kev_metadata
 from dev.tests.server_fixtures import (
     FOREVER,
@@ -14,6 +12,7 @@ from dev.tests.server_fixtures import (
     Plan,
     stays_connected,
 )
+from server import protocol as wire
 
 MARKERS = {
     "<|fim_prefix|>": 248060,

@@ -102,6 +102,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q8_split, 4, 6, int8_t)
 #endif
 #if SPLASH_TARGET_VERIFY_ROWS != 16
 PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g8, 2, 8, int8_t)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g4, 2, 4, int8_t)
 #endif
 PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g4, 4, 4, int8_t)
 // BF16 shares the page loop and reduction, without quantization scales.
@@ -110,6 +111,7 @@ PAGED_VERIFY_SPLIT(verify_attention_bf16_split, 4, 6, bfloat)
 #endif
 #if SPLASH_TARGET_VERIFY_ROWS != 16
 PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g8, 2, 8, bfloat)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g4, 2, 4, bfloat)
 #endif
 PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g4, 4, 4, bfloat)
 #if SPLASH_TARGET_VERIFY_ROWS != 2 && SPLASH_TARGET_VERIFY_ROWS != 16
@@ -117,6 +119,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q4h_split, 4, 6, uchar)
 #endif
 #if SPLASH_TARGET_VERIFY_ROWS != 16
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g8, 2, 8, uchar)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g4, 2, 4, uchar)
 #endif
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv4_g4, 4, 4, uchar)
 #if SPLASH_TARGET_VERIFY_ROWS != 2 && SPLASH_TARGET_VERIFY_ROWS != 16
@@ -124,6 +127,7 @@ PAGED_VERIFY_SPLIT(verify_attention_q4_0_split, 4, 6, SplashQ4Block)
 #endif
 #if SPLASH_TARGET_VERIFY_ROWS != 16
 PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g8, 2, 8, SplashQ4Block)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g4, 2, 4, SplashQ4Block)
 #endif
 PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv4_g4, 4, 4, SplashQ4Block)
 #undef PAGED_VERIFY_SPLIT
@@ -177,9 +181,11 @@ inline void splash_verify_attention_reduce_phase(
   }
 PAGED_VERIFY_REDUCE(verify_attention_reduce, 4, 6, false)
 PAGED_VERIFY_REDUCE(verify_attention_reduce_kv2_g8, 2, 8, false)
+PAGED_VERIFY_REDUCE(verify_attention_reduce_kv2_g4, 2, 4, false)
 PAGED_VERIFY_REDUCE(verify_attention_reduce_kv4_g4, 4, 4, false)
 PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce, 4, 6, true)
 PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv2_g8, 2, 8, true)
+PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv2_g4, 2, 4, true)
 PAGED_VERIFY_REDUCE(verify_attention_q4h_reduce_kv4_g4, 4, 4, true)
 #undef PAGED_VERIFY_REDUCE
 

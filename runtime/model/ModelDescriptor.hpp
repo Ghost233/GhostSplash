@@ -16,7 +16,7 @@
 
 namespace splash::model {
 
-using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout>;
+using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout, Qwen3_5_0_8BLayout>;
 
 // Where a model's weights come from: a safetensors checkpoint (MLX's, Model
 // Optimizer's or compressed-tensors') or a GGUF, prepared into images when it
@@ -55,7 +55,7 @@ struct ModelDescriptor final {
   }
   [[nodiscard]] std::string_view family() const noexcept {
     return std::visit([](const auto &layout) -> std::string_view {
-      return layout.decisionHeadSize ? "Kev-4B" : layout.family;
+      return layout.decisionHeadSize ? (layout.hiddenSize == 1024 ? "Kev-0.8B" : "Kev-4B") : layout.family;
     }, target);
   }
   [[nodiscard]] bool valid() const noexcept;

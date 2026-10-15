@@ -94,13 +94,13 @@ void floatOutputPlans() {
     }
   std::vector<LinearWorkload> others{{{5120, 2048}, 8, LinearPhase::Decode, LinearEpilogue::Residual},
                                      {{5120, 2048}, 8, LinearPhase::Decode, LinearEpilogue::GateUp}};
-  for (const auto epilogue : {LinearEpilogue::None, LinearEpilogue::Residual, LinearEpilogue::UpWithGate})
+  for (const auto epilogue : {LinearEpilogue::Residual, LinearEpilogue::UpWithGate})
     for (const uint32_t rows : {8U, 2048U}) others.push_back({{5120, 2048}, rows, LinearPhase::Prefill, epilogue});
   const Linear linear = gpu(10, 20);
   const Projection p = blockProjection(5120, 2048, 1);
   for (const LinearWorkload &w : others) {
     (void)linear.plan(w, p);
-    rejects([&] { (void)linear.plan(w, fp32(p)); }, "an fp32 destination takes a plain decode projection",
+    rejects([&] { (void)linear.plan(w, fp32(p)); }, "an fp32 destination takes a plain projection",
             "an fp32 plan of other than a plain decode was accepted");
   }
 }

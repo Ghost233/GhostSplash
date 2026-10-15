@@ -1,0 +1,58 @@
+START Kev-0.8B 128 1 llama
+END Kev-0.8B 128 1 llama 37.36 ms
+START Kev-0.8B 128 1 splash
+END Kev-0.8B 128 1 splash 23.202 ms
+START Kev-0.8B 128 2 splash
+END Kev-0.8B 128 2 splash 23.547 ms
+START Kev-0.8B 128 2 llama
+END Kev-0.8B 128 2 llama 32.803 ms
+START Kev-0.8B 128 3 llama
+END Kev-0.8B 128 3 llama 35.406 ms
+START Kev-0.8B 128 3 splash
+END Kev-0.8B 128 3 splash 25.599 ms
+WAIT idle {'gpu': 90, 'busy_pids': []}
+WAIT idle {'gpu': 51, 'busy_pids': []}
+WAIT idle {'gpu': 57, 'busy_pids': []}
+WAIT idle {'gpu': 51, 'busy_pids': []}
+WAIT idle {'gpu': 64, 'busy_pids': []}
+WAIT idle {'gpu': 64, 'busy_pids': []}
+START Kev-0.8B 512 1 llama
+END Kev-0.8B 512 1 llama 88.773 ms
+WAIT idle {'gpu': 51, 'busy_pids': []}
+START Kev-0.8B 512 1 splash
+END Kev-0.8B 512 1 splash 45.652 ms
+START Kev-0.8B 512 2 splash
+END Kev-0.8B 512 2 splash 44.958 ms
+START Kev-0.8B 512 2 llama
+END Kev-0.8B 512 2 llama 86.359 ms
+WAIT idle {'gpu': 51, 'busy_pids': []}
+START Kev-0.8B 512 3 llama
+END Kev-0.8B 512 3 llama 79.858 ms
+START Kev-0.8B 512 3 splash
+END Kev-0.8B 512 3 splash 44.637 ms
+WAIT idle {'gpu': 97, 'busy_pids': []}
+START Kev-0.8B 2048 1 llama
+END Kev-0.8B 2048 1 llama 303.791 ms
+START Kev-0.8B 2048 1 splash
+END Kev-0.8B 2048 1 splash 125.584 ms
+START Kev-0.8B 2048 2 splash
+END Kev-0.8B 2048 2 splash 126.444 ms
+START Kev-0.8B 2048 2 llama
+END Kev-0.8B 2048 2 llama 302.396 ms
+START Kev-0.8B 2048 3 llama
+END Kev-0.8B 2048 3 llama 299.535 ms
+START Kev-0.8B 2048 3 splash
+END Kev-0.8B 2048 3 splash 126.431 ms
+WAIT idle {'gpu': 98, 'busy_pids': []}
+START Kev-0.8B 8192 1 llama
+END Kev-0.8B 8192 1 llama 1406.365 ms
+START Kev-0.8B 8192 1 splash
+END Kev-0.8B 8192 1 splash 529.201 ms
+START Kev-0.8B 8192 2 splash
+END Kev-0.8B 8192 2 splash 531.43 ms
+START Kev-0.8B 8192 2 llama
+END Kev-0.8B 8192 2 llama 1408.554 ms
+START Kev-0.8B 8192 3 llama
+END Kev-0.8B 8192 3 llama 1424.7 ms
+START Kev-0.8B 8192 3 splash
+END Kev-0.8B 8192 3 splash 526.251 ms

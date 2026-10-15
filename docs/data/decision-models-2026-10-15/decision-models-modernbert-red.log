@@ -1,0 +1,37 @@
+EE
+======================================================================
+ERROR: test_actual_julia_and_laya_headers_are_loadable (dev.tests.install.test_modernbert_metadata.ModernBertMetadataTests.test_actual_julia_and_laya_headers_are_loadable) (model='Julia-1-GGUF')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_modernbert_metadata.py", line 19, in test_actual_julia_and_laya_headers_are_loadable
+    gguf.require_loadable(metadata)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 603, in require_loadable
+    if decision_config(metadata) is not None:
+       ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 297, in decision_config
+    arch = text_architecture(metadata)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 292, in text_architecture
+    raise ModelError("unsupported GGUF model architecture: " + arch)
+install.models.ModelError: unsupported GGUF model architecture: modern-bert
+
+======================================================================
+ERROR: test_actual_julia_and_laya_headers_are_loadable (dev.tests.install.test_modernbert_metadata.ModernBertMetadataTests.test_actual_julia_and_laya_headers_are_loadable) (model='Laya-GGUF')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_modernbert_metadata.py", line 19, in test_actual_julia_and_laya_headers_are_loadable
+    gguf.require_loadable(metadata)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 603, in require_loadable
+    if decision_config(metadata) is not None:
+       ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 297, in decision_config
+    arch = text_architecture(metadata)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 292, in text_architecture
+    raise ModelError("unsupported GGUF model architecture: " + arch)
+install.models.ModelError: unsupported GGUF model architecture: modern-bert
+
+----------------------------------------------------------------------
+Ran 1 test in 0.340s
+
+FAILED (errors=2)

@@ -1,0 +1,105 @@
+{
+  "base_commit": "1889aa593a759b2859e67ee2c94f4a76073ce754",
+  "branch": "codex/qwen4b-quantized-ffn",
+  "working_tree_changes": true,
+  "native_build_id": "src-12dc3a813f59c5080161e5dd47d6941ad3c77b7e208002ba2bf8c42edd2f2d08",
+  "build": "build/decision-modernbert-20261015/splash",
+  "hardware": {
+    "device": "Apple M5 Pro",
+    "gpu_cores": 20,
+    "gpu_family": 10,
+    "physical_memory_gib": 64,
+    "macos": "27.0.1"
+  },
+  "validation": [
+    {
+      "command": "make -j4 BUILD=build/decision-modernbert-20261015 BUILD_ID_PYTHON=<absolute .venv/bin/python> check-native-cpu check-native-build",
+      "exit": 0,
+      "log": "decision-models-native-gates1.log"
+    },
+    {
+      "command": "make ... check-python",
+      "exit": 0,
+      "tests": 1353,
+      "skipped": 4,
+      "log": "decision-models-python-gate-final2.log"
+    },
+    {
+      "command": "make ... check-native-metal",
+      "exit": 0,
+      "log": "decision-models-metal-gate.log"
+    },
+    {
+      "command": "make ... test-sanitizers",
+      "exit": 0,
+      "log": "decision-models-sanitizers.log"
+    },
+    {
+      "command": "make ... check-source",
+      "exit": 0,
+      "log": "decision-models-source-check-final.log"
+    },
+    {
+      "command": "make ... verify-build-identity",
+      "exit": 0,
+      "log": "decision-models-build-identity-final.log"
+    },
+    {
+      "command": "python -m unittest dev.tests.install.test_local_launchers",
+      "exit": 0,
+      "tests": 13,
+      "log": "decision-models-launchers-final.log"
+    },
+    {
+      "command": "new encoder service TSan objects with actual Julia GGUF protocol isolation/cancellation",
+      "exit": 0,
+      "log": "decision-models-control-tsan2.log"
+    },
+    {
+      "command": "new encoder model/operator/service ASan+UBSan objects with actual Julia GGUF protocol isolation/cancellation",
+      "exit": 0,
+      "log": "decision-models-control-asan.log"
+    },
+    {
+      "command": "budget admission and startup interruption",
+      "exit": 0,
+      "negative_expected_engine_exit": 70,
+      "log": "decision-models-budget.log"
+    },
+    {
+      "command": "final default launchers, 13 actual cases each, 8K/repeat/concurrency4, full/selected head",
+      "exit": 0,
+      "data": "correctness-final-defaults.json"
+    },
+    {
+      "command": "benchmark 3 rounds x5 actual requests, all3 then corrected Kev2048 physical/logical batch",
+      "exit": 0,
+      "primary_valid_timed_requests": 360,
+      "data": "performance-summary.json"
+    }
+  ],
+  "limits": [
+    "No new ModernBERT ANE program. All speed/memory comparisons use GPU and no drafter.",
+    "Probabilities are not bit-identical to reference: BF16 activation and FP32 accumulation paths differ; operator FP64 gates and all reference choices pass.",
+    "Kev retains 528482304 bytes FFN FP16 cache. ModernBERT retains zero full FP16 cache.",
+    "Physical footprint and RSS use different macOS accounting, especially mmap clean pages; both are preserved.",
+    "Models remain independent processes; Julia/Laya share implementation, and requests within each encoder process share large workspaces."
+  ],
+  "history_evidence_sha256": "6c11feb1493a24b960f1f0ac5d4d00d07a98bc5686906596eaa324163a38cb75",
+  "post_benchmark_validation": {
+    "focused_tests": 27,
+    "focused_exit": 0,
+    "ruff_exit": 0,
+    "format_exit": 0,
+    "architecture_whitespace_build_identity_exit": 0
+  },
+  "reference_policy_probe": {
+    "model": "Julia-1",
+    "actual_input_tokens": 8192,
+    "auto_second_seconds": 0.496811708988389,
+    "on_second_seconds": 0.47807408298831433,
+    "both_exit": 0,
+    "formal_speed_sample": false
+  },
+  "performance_source": "performance-kev-matched for Kev-0.8B; performance-initial for Julia-1 and Laya"
+}

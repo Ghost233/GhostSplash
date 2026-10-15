@@ -365,25 +365,27 @@ void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
   const model::GgufFile file(source);
   test::require(file.require("cls.output.weight").type == kQuantFormats[GGUF_FMT_Q80].ggml_type,
                 "Kev fixture must use its native Q8_0 pointer head");
+  const uint32_t hidden = file.metadata().unsignedValue("qwen35.embedding_length").value_or(0);
   model::Qwen3_5_4BLayout layout;
+  if (hidden == 1024) static_cast<model::QwenTargetDimensions &>(layout) = model::Qwen3_5_0_8BLayout{};
   layout.decisionHeadSize = 512;
   model::WeightImages images(backend, std::string(64, 'f'));
   model::GgufTargetLoader loader(backend, images, path, layout);
   auto head = loader.head();
-  static_cast<void>(model::readNorm(head, 2560, true, "Kev final norm"));
-  auto projection = model::readBlockProjection(head, 512, 2560, "Kev pointer head");
+  static_cast<void>(model::readNorm(head, hidden, true, "Kev final norm"));
+  auto projection = model::readBlockProjection(head, 512, hidden, "Kev pointer head");
   projection.destination = FloatOutput::Float32;
   static_cast<void>(head.section(512 * sizeof(float), "Kev bias"));
   head.finish();
   const auto &tensor = file.require("cls.output.weight");
   std::vector<uint8_t> native(tensor.bytes);
   source.readData(tensor.offset, native);
-  auto input = test::sharedBuffer(backend, 2560 * sizeof(uint16_t));
+  auto input = test::sharedBuffer(backend, hidden * sizeof(uint16_t));
   auto output = test::sharedBuffer(backend, 512 * sizeof(float));
-  std::vector<float> x(2560), weight(2560);
+  std::vector<float> x(hidden), weight(hidden);
   double maximumError = 0;
   for (uint32_t probe = 0; probe < 8; ++probe) {
-    for (uint32_t k = 0; k < 2560; ++k) {
+    for (uint32_t k = 0; k < hidden; ++k) {
       const float value = float(int((k * 17 + probe * 31) % 127) - 63) / 64.0F;
       static_cast<uint16_t *>(input.contents())[k] = floatToBf16(value);
       x[k] = bf16ToFloat(floatToBf16(value));
@@ -393,11 +395,11 @@ void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
     static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
     const auto *actual = static_cast<const float *>(output.contents());
     for (uint32_t n = 0; n < 512; ++n) {
-      rowValues(Q80, native.data() + n * rowBytes(Q80, 2560), 2560, weight.data());
-      const auto expected = product(dot(x.data(), weight.data(), 2560), true);
+      rowValues(Q80, native.data() + n * rowBytes(Q80, hidden), hidden, weight.data());
+      const auto expected = product(dot(x.data(), weight.data(), hidden), true);
       test::require(std::isfinite(actual[n]) && actual[n] >= expected.lo && actual[n] <= expected.hi,
                     "Kev head FP32 output outside existing unrounded FP64 bound");
-      maximumError = std::max(maximumError, std::fabs(actual[n] - dot(x.data(), weight.data(), 2560).value));
+      maximumError = std::max(maximumError, std::fabs(actual[n] - dot(x.data(), weight.data(), hidden).value));
     }
   }
   std::cout << "Kev real-head numerical check: 4096 FP64 comparisons PASS; max absolute error "

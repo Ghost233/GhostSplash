@@ -303,6 +303,9 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
   }
   const bool scoring = !request.scoreTokens.empty();
   const bool decision = request.flags & RequestDecisionScoring;
+  const uint32_t encoderType = request.flags & (RequestDecisionScoreType | RequestDecisionNoulType);
+  if (encoderType && (!decision || encoderType == (RequestDecisionScoreType | RequestDecisionNoulType)))
+    return invalid(IssueCode::InvalidEnumValue, "encoder question-type flags require a single decision type");
   if (decision && !scoring)
     return invalid(IssueCode::InvalidCount, "decision requests need option positions");
   if (scoring) {

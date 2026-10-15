@@ -392,10 +392,11 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
     throw GgufError("GGUF architecture is " + metadata.architecture() + ", but the model's target is " + arch);
   const auto decision = metadata.stringValue(arch + ".decision.type");
   if (geometry.decisionHeadSize) {
-    if (geometry.hiddenSize != 2560 || geometry.layers != 32 || geometry.decisionHeadSize != 512 ||
+    if (!((geometry.hiddenSize == 2560 && geometry.layers == 32) ||
+          (geometry.hiddenSize == 1024 && geometry.layers == 24)) || geometry.decisionHeadSize != 512 ||
         (!decision || *decision != "kev") ||
         metadata.unsignedValue(arch + ".embedding_length_out") != 512)
-      throw GgufError("GGUF decision metadata does not match Kev-4B");
+      throw GgufError("GGUF decision metadata does not match a supported Kev layout");
     for (const char *kind : {"choice", "score", "noul"}) {
       const auto temperature = metadata.floatValue(arch + ".decision.temperature." + kind);
       if (!temperature || !std::isfinite(*temperature) || *temperature <= 0)

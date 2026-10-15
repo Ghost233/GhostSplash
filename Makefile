@@ -244,6 +244,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/ops/GDN.cpp \
 	runtime/ops/GgufPrefillCache.cpp \
 	runtime/ops/SingleTokenLinear.cpp \
+	runtime/ops/ModernBert.cpp \
 	runtime/ops/Linear.cpp \
 	runtime/ops/LinearGguf.cpp \
 	runtime/ops/MoE.cpp \
@@ -289,6 +290,8 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/Qwen3_6Moe.cpp \
 	runtime/model/Qwen3_8.cpp \
 	runtime/model/Qwen3_5_4B.cpp \
+	runtime/model/ModernBert.cpp \
+	runtime/encoder/Service.cpp \
 	runtime/model/QwenVision.cpp \
 	runtime/model/VisionPreparation.cpp \
 	runtime/model/VisionLoader.cpp \

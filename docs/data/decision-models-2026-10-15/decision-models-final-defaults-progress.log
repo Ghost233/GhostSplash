@@ -1,0 +1,82 @@
+Kev-0.8B-splash-defaults 27329 START
+Kev-0.8B-splash-defaults billing PASS {'input_tokens': 39, 'output_tokens': 0}
+Kev-0.8B-splash-defaults sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+Kev-0.8B-splash-defaults noul PASS {'input_tokens': 24, 'output_tokens': 0}
+Kev-0.8B-splash-defaults rating PASS {'input_tokens': 33, 'output_tokens': 0}
+Kev-0.8B-splash-defaults json PASS {'input_tokens': 33, 'output_tokens': 0}
+Kev-0.8B-splash-defaults escaped_marker PASS {'input_tokens': 39, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Kev-0.8B-splash-defaults length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Kev-0.8B-splash-defaults multi_question PASS {'input_tokens': 87, 'output_tokens': 0}
+Kev-0.8B-splash-defaults repeat/concurrent4/memory PASS
+Kev-0.8B-splash-defaults EXIT 0
+Kev-0.8B REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.024881776832053892
+Julia-1-splash-defaults 27472 START
+Julia-1-splash-defaults billing PASS {'input_tokens': 37, 'output_tokens': 0}
+Julia-1-splash-defaults sentiment PASS {'input_tokens': 29, 'output_tokens': 0}
+Julia-1-splash-defaults noul PASS {'input_tokens': 27, 'output_tokens': 0}
+Julia-1-splash-defaults rating PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash-defaults json PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash-defaults escaped_marker PASS {'input_tokens': 36, 'output_tokens': 0}
+Julia-1-splash-defaults length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Julia-1-splash-defaults length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Julia-1-splash-defaults length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Julia-1-splash-defaults length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Julia-1-splash-defaults length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Julia-1-splash-defaults length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Julia-1-splash-defaults multi_question PASS {'input_tokens': 89, 'output_tokens': 0}
+Julia-1-splash-defaults repeat/concurrent4/memory PASS
+Julia-1-splash-defaults EXIT 0
+Julia-1-splash_full_head-defaults 27589 START
+Julia-1-splash_full_head-defaults billing PASS {'input_tokens': 37, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults sentiment PASS {'input_tokens': 29, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults noul PASS {'input_tokens': 27, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults rating PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults json PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults escaped_marker PASS {'input_tokens': 36, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults multi_question PASS {'input_tokens': 89, 'output_tokens': 0}
+Julia-1-splash_full_head-defaults EXIT 0
+Julia-1 REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.02773213253829987
+Laya-splash-defaults 27701 START
+Laya-splash-defaults billing PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-defaults sentiment PASS {'input_tokens': 35, 'output_tokens': 0}
+Laya-splash-defaults noul PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-defaults rating PASS {'input_tokens': 43, 'output_tokens': 0}
+Laya-splash-defaults json PASS {'input_tokens': 40, 'output_tokens': 0}
+Laya-splash-defaults escaped_marker PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-defaults length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Laya-splash-defaults length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Laya-splash-defaults length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Laya-splash-defaults length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Laya-splash-defaults length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Laya-splash-defaults length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Laya-splash-defaults multi_question PASS {'input_tokens': 118, 'output_tokens': 0}
+Laya-splash-defaults repeat/concurrent4/memory PASS
+Laya-splash-defaults EXIT 0
+Laya-splash_full_head-defaults 27894 START
+Laya-splash_full_head-defaults billing PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-defaults sentiment PASS {'input_tokens': 35, 'output_tokens': 0}
+Laya-splash_full_head-defaults noul PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-defaults rating PASS {'input_tokens': 43, 'output_tokens': 0}
+Laya-splash_full_head-defaults json PASS {'input_tokens': 40, 'output_tokens': 0}
+Laya-splash_full_head-defaults escaped_marker PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Laya-splash_full_head-defaults length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Laya-splash_full_head-defaults multi_question PASS {'input_tokens': 118, 'output_tokens': 0}
+Laya-splash_full_head-defaults EXIT 0
+Laya REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.02145437251441018
+ALL EXTENDED CORRECTNESS PASS

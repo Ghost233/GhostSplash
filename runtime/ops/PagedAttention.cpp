@@ -13,7 +13,7 @@
 namespace splash::ops {
 namespace {
 
-enum class KernelLayout : uint8_t { Kv4Group6, Kv2Group8, Kv4Group4 };
+enum class KernelLayout : uint8_t { Kv4Group6, Kv2Group8, Kv4Group4, Kv2Group4 };
 
 // One thread per gate element, across rows x query heads x head dimension.
 uint64_t gateGroups(uint64_t rows, uint32_t queryHeads, uint32_t headDimension) {
@@ -41,13 +41,50 @@ KernelLayout attentionKernelLayout(uint32_t queryHeads, kv::Layout layout) {
     return result;
   if (result == KernelLayout::Kv4Group6 && queryHeads == 16)
     return KernelLayout::Kv4Group4;
+  if (result == KernelLayout::Kv2Group8 && queryHeads == 8) return KernelLayout::Kv2Group4;
   throw std::invalid_argument("no paged-attention kernel for layout");
 }
 
 std::string_view pipeline(KernelLayout layout, std::string_view kv4Group6,
-                          std::string_view kv2Group8, std::string_view kv4Group4) noexcept {
+                          std::string_view kv2Group8, std::string_view kv4Group4) {
   if (layout == KernelLayout::Kv4Group4) return kv4Group4;
-  return layout == KernelLayout::Kv4Group6 ? kv4Group6 : kv2Group8;
+  if (layout == KernelLayout::Kv4Group6) return kv4Group6;
+  if (layout == KernelLayout::Kv2Group4) {
+    static constexpr std::pair<std::string_view, std::string_view> names[]{
+      {"_kv2_g8", "_kv2_g4"},
+      {"kv2_g8", "kv2_g4"},
+      {"prefill_attention_bf16_split_kv2_g8", "prefill_attention_bf16_split_kv2_g4"},
+      {"prefill_attention_bf16_store_kv2_g8", "prefill_attention_bf16_store_kv2_g4"},
+      {"prefill_attention_gate_kv2_g8", "prefill_attention_gate_kv2_g4"},
+      {"prefill_attention_q4_0_split_kv2_g8", "prefill_attention_q4_0_split_kv2_g4"},
+      {"prefill_attention_q4_0_store_kv2_g8", "prefill_attention_q4_0_store_kv2_g4"},
+      {"prefill_attention_q4h_reduce_kv2_g8", "prefill_attention_q4h_reduce_kv2_g4"},
+      {"prefill_attention_q4h_split_kv2_g8", "prefill_attention_q4h_split_kv2_g4"},
+      {"prefill_attention_q4h_store_kv2_g8", "prefill_attention_q4h_store_kv2_g4"},
+      {"prefill_attention_q8_split_kv2_g8", "prefill_attention_q8_split_kv2_g4"},
+      {"prefill_attention_q8_store_kv2_g8", "prefill_attention_q8_store_kv2_g4"},
+      {"prefill_attention_qkv_kv2_g8", "prefill_attention_qkv_kv2_g4"},
+      {"prefill_attention_qkv_q4h_kv2_g8", "prefill_attention_qkv_q4h_kv2_g4"},
+      {"prefill_attention_reduce_kv2_g8", "prefill_attention_reduce_kv2_g4"},
+      {"verify_attention_bf16_split_kv2_g8", "verify_attention_bf16_split_kv2_g4"},
+      {"verify_attention_bf16_store_kv2_g8", "verify_attention_bf16_store_kv2_g4"},
+      {"verify_attention_gate_kv2_g8", "verify_attention_gate_kv2_g4"},
+      {"verify_attention_q4_0_split_kv2_g8", "verify_attention_q4_0_split_kv2_g4"},
+      {"verify_attention_q4_0_store_kv2_g8", "verify_attention_q4_0_store_kv2_g4"},
+      {"verify_attention_q4h_reduce_kv2_g8", "verify_attention_q4h_reduce_kv2_g4"},
+      {"verify_attention_q4h_split_kv2_g8", "verify_attention_q4h_split_kv2_g4"},
+      {"verify_attention_q4h_store_kv2_g8", "verify_attention_q4h_store_kv2_g4"},
+      {"verify_attention_q8_split_kv2_g8", "verify_attention_q8_split_kv2_g4"},
+      {"verify_attention_q8_store_kv2_g8", "verify_attention_q8_store_kv2_g4"},
+      {"verify_attention_qkv_kv2_g8", "verify_attention_qkv_kv2_g4"},
+      {"verify_attention_qkv_q4h_kv2_g8", "verify_attention_qkv_q4h_kv2_g4"},
+      {"verify_attention_reduce_kv2_g8", "verify_attention_reduce_kv2_g4"},
+    };
+    for (const auto &[oldName, name] : names)
+      if (oldName == kv2Group8) return name;
+    throw std::logic_error("missing 8Q/2KV attention pipeline");
+  }
+  return kv2Group8;
 }
 
 // One dispatch normalizes both the queries and the keys, so their norms must

@@ -16,7 +16,7 @@ namespace {
 
 static_assert(offsetof(GDNDecodeBatchParams, conv_layer_bytes) == 8);
 
-enum class KernelLayout : uint8_t { Value48, Value32 };
+enum class KernelLayout : uint8_t { Value48, Value32, Value16 };
 
 [[nodiscard]] KernelLayout kernelShape(const GdnShape &shape) {
   if (!shape.valid())
@@ -25,13 +25,20 @@ enum class KernelLayout : uint8_t { Value48, Value32 };
     return KernelLayout::Value48;
   if (shape == GdnShape{16, 32, 128, 8192, 12544})
     return KernelLayout::Value32;
+  if (shape == GdnShape{16, 16, 128, 6144, 8448}) return KernelLayout::Value16;
   throw std::invalid_argument("unsupported compiled GDN shape");
 }
 
-[[nodiscard]] const char *kernelName(KernelLayout shape,
+[[nodiscard]] std::string kernelName(KernelLayout shape,
                                      const char *value48,
                                      const char *value32) noexcept {
-  return shape == KernelLayout::Value48 ? value48 : value32;
+  if (shape == KernelLayout::Value48) return value48;
+  std::string name = value32;
+  if (shape == KernelLayout::Value16) {
+    const auto at = name.find("vh32");
+    if (at != std::string::npos) name.replace(at, 4, "vh16");
+  }
+  return name;
 }
 
 uint64_t valueWidth(const GdnShape &shape) { return uint64_t{shape.valueHeads} * shape.headDimension; }

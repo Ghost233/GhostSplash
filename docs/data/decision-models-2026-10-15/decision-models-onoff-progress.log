@@ -1,0 +1,82 @@
+Kev-0.8B-splash-final 93014 START
+Kev-0.8B-splash-final billing PASS {'input_tokens': 39, 'output_tokens': 0}
+Kev-0.8B-splash-final sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+Kev-0.8B-splash-final noul PASS {'input_tokens': 24, 'output_tokens': 0}
+Kev-0.8B-splash-final rating PASS {'input_tokens': 33, 'output_tokens': 0}
+Kev-0.8B-splash-final json PASS {'input_tokens': 33, 'output_tokens': 0}
+Kev-0.8B-splash-final escaped_marker PASS {'input_tokens': 39, 'output_tokens': 0}
+Kev-0.8B-splash-final length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Kev-0.8B-splash-final length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Kev-0.8B-splash-final length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Kev-0.8B-splash-final length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Kev-0.8B-splash-final length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Kev-0.8B-splash-final length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Kev-0.8B-splash-final multi_question PASS {'input_tokens': 87, 'output_tokens': 0}
+Kev-0.8B-splash-final repeat/concurrent4/memory PASS
+Kev-0.8B-splash-final EXIT 0
+Kev-0.8B REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.024881776832053892
+Julia-1-splash-final 93211 START
+Julia-1-splash-final billing PASS {'input_tokens': 37, 'output_tokens': 0}
+Julia-1-splash-final sentiment PASS {'input_tokens': 29, 'output_tokens': 0}
+Julia-1-splash-final noul PASS {'input_tokens': 27, 'output_tokens': 0}
+Julia-1-splash-final rating PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash-final json PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash-final escaped_marker PASS {'input_tokens': 36, 'output_tokens': 0}
+Julia-1-splash-final length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Julia-1-splash-final length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Julia-1-splash-final length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Julia-1-splash-final length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Julia-1-splash-final length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Julia-1-splash-final length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Julia-1-splash-final multi_question PASS {'input_tokens': 89, 'output_tokens': 0}
+Julia-1-splash-final repeat/concurrent4/memory PASS
+Julia-1-splash-final EXIT 0
+Julia-1-splash_full_head-final 93354 START
+Julia-1-splash_full_head-final billing PASS {'input_tokens': 37, 'output_tokens': 0}
+Julia-1-splash_full_head-final sentiment PASS {'input_tokens': 29, 'output_tokens': 0}
+Julia-1-splash_full_head-final noul PASS {'input_tokens': 27, 'output_tokens': 0}
+Julia-1-splash_full_head-final rating PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash_full_head-final json PASS {'input_tokens': 34, 'output_tokens': 0}
+Julia-1-splash_full_head-final escaped_marker PASS {'input_tokens': 36, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Julia-1-splash_full_head-final length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Julia-1-splash_full_head-final multi_question PASS {'input_tokens': 89, 'output_tokens': 0}
+Julia-1-splash_full_head-final EXIT 0
+Julia-1 REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.02773213253829987
+Laya-splash-final 93483 START
+Laya-splash-final billing PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-final sentiment PASS {'input_tokens': 35, 'output_tokens': 0}
+Laya-splash-final noul PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-final rating PASS {'input_tokens': 43, 'output_tokens': 0}
+Laya-splash-final json PASS {'input_tokens': 40, 'output_tokens': 0}
+Laya-splash-final escaped_marker PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash-final length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Laya-splash-final length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Laya-splash-final length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Laya-splash-final length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Laya-splash-final length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Laya-splash-final length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Laya-splash-final multi_question PASS {'input_tokens': 118, 'output_tokens': 0}
+Laya-splash-final repeat/concurrent4/memory PASS
+Laya-splash-final EXIT 0
+Laya-splash_full_head-final 93769 START
+Laya-splash_full_head-final billing PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-final sentiment PASS {'input_tokens': 35, 'output_tokens': 0}
+Laya-splash_full_head-final noul PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-final rating PASS {'input_tokens': 43, 'output_tokens': 0}
+Laya-splash_full_head-final json PASS {'input_tokens': 40, 'output_tokens': 0}
+Laya-splash_full_head-final escaped_marker PASS {'input_tokens': 41, 'output_tokens': 0}
+Laya-splash_full_head-final length_128 PASS {'input_tokens': 128, 'output_tokens': 0}
+Laya-splash_full_head-final length_512 PASS {'input_tokens': 512, 'output_tokens': 0}
+Laya-splash_full_head-final length_1049 PASS {'input_tokens': 1049, 'output_tokens': 0}
+Laya-splash_full_head-final length_2048 PASS {'input_tokens': 2048, 'output_tokens': 0}
+Laya-splash_full_head-final length_4096 PASS {'input_tokens': 4096, 'output_tokens': 0}
+Laya-splash_full_head-final length_8192 PASS {'input_tokens': 8192, 'output_tokens': 0}
+Laya-splash_full_head-final multi_question PASS {'input_tokens': 118, 'output_tokens': 0}
+Laya-splash_full_head-final EXIT 0
+Laya REFERENCE CHOICES/TOKEN COUNTS PASS; maximum probability delta 0.02145437251441018
+ALL EXTENDED CORRECTNESS PASS

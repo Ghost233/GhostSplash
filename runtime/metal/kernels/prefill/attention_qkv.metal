@@ -28,14 +28,18 @@
   }
 PREFILL_ATTENTION_QKV(prefill_attention_qkv, 24, 4, bfloat, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8, 16, 2, bfloat, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g4, 8, 2, bfloat, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4, 16, 4, bfloat, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_f32, 24, 4, float, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g8_f32, 16, 2, float, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g4_f32, 8, 2, float, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv4_g4_f32, 16, 4, float, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h, 24, 4, bfloat, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_f32, 24, 4, float, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8, 16, 2, bfloat, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g4, 8, 2, bfloat, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g8_f32, 16, 2, float, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g4_f32, 8, 2, float, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
 #undef PREFILL_ATTENTION_QKV
@@ -63,5 +67,6 @@ inline void full_attention_gate_prefill_phase(
   }
 PREFILL_ATTENTION_GATE(prefill_attention_gate, 24, 4)
 PREFILL_ATTENTION_GATE(prefill_attention_gate_kv2_g8, 16, 2)
+PREFILL_ATTENTION_GATE(prefill_attention_gate_kv2_g4, 8, 2)
 PREFILL_ATTENTION_GATE(prefill_attention_gate_kv4_g4, 16, 4)
 #undef PREFILL_ATTENTION_GATE

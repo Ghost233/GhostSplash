@@ -40,7 +40,7 @@ struct Shape {
   uint32_t fusedRows() const { return kRows * queryHeadsPerKvHead; }
   Layout layout() const { return {1, kvHeads, kHeadDimension}; }
 };
-constexpr std::array<Shape, 2> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}}};
+constexpr std::array<Shape, 3> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}, {2, 4, "_kv2_g4"}}};
 
 using splash::test::require;
 

@@ -102,6 +102,9 @@ class LocalLauncherTests(unittest.TestCase):
         if script.name in {
             "swift1527biq3ssplash.sh",
             "kev4bsplash.sh",
+            "kev08bsplash.sh",
+            "julia1splash.sh",
+            "layasplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
@@ -114,15 +117,32 @@ class LocalLauncherTests(unittest.TestCase):
                     "revision": None,
                 },
                 "draft": None
-                if script.name in {"qwen3.54bsplash.sh", "kev4bsplash.sh"}
+                if script.name
+                in {
+                    "qwen3.54bsplash.sh",
+                    "kev4bsplash.sh",
+                    "kev08bsplash.sh",
+                    "julia1splash.sh",
+                    "layasplash.sh",
+                }
                 else {
                     "repo": "wrong" if wrong_draft else str(draft_dir),
                     "revision": None,
                 },
             }
         }
-        if script.name == "kev4bsplash.sh":
-            record["family"] = "Kev-4B"
+        if script.name in {
+            "kev4bsplash.sh",
+            "kev08bsplash.sh",
+            "julia1splash.sh",
+            "layasplash.sh",
+        }:
+            record["family"] = {
+                "kev4bsplash.sh": "Kev-4B",
+                "kev08bsplash.sh": "Kev-0.8B",
+                "julia1splash.sh": "Julia-1",
+                "layasplash.sh": "Laya",
+            }[script.name]
         scratches = []
 
         def inspect(repo, variant, language_only, scratch):
@@ -348,6 +368,9 @@ class LocalLauncherTests(unittest.TestCase):
         for name in (
             "swift1527biq3ssplash.sh",
             "kev4bsplash.sh",
+            "kev08bsplash.sh",
+            "julia1splash.sh",
+            "layasplash.sh",
             "qwen38miniplusv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
         ):
@@ -392,6 +415,9 @@ class LocalLauncherTests(unittest.TestCase):
                         "qwen3.54bsplash.sh",
                         "qwen3.54bdflashsplash.sh",
                         "kev4bsplash.sh",
+                        "kev08bsplash.sh",
+                        "julia1splash.sh",
+                        "layasplash.sh",
                     }
                     else "0.0.0.0",
                 )

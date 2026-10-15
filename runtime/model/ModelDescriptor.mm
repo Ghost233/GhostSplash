@@ -690,11 +690,15 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
       result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BLayout{}, {}, {},
                                    targetSource, visionSource);
   }
+  const bool kev08 = !moe && targetSource == TargetSource::Gguf && config[@"decision_config"] &&
+      [text[@"hidden_size"] doubleValue] == 1024 && [text[@"num_hidden_layers"] doubleValue] == 24;
+  if (kev08)
+    result = makeModelDescriptor(std::move(result.name), Qwen3_5_0_8BLayout{}, {}, {}, targetSource, visionSource);
   if (config[@"decision_config"]) {
     NSDictionary *decision = requireObject(config, @"decision_config", "decision config");
-    if (!smallDense || draft || visionSource != VisionSource::None ||
+    if ((!smallDense && !kev08) || draft || visionSource != VisionSource::None ||
         requireString(decision, @"type", "decision type") != "kev")
-      throw std::invalid_argument("Kev requires a text-only GGUF Qwen3.5-4B without a draft");
+      throw std::invalid_argument("Kev requires a supported text-only GGUF Qwen3.5 layout without a draft");
     requireNumbers(decision, "Kev", "decision config", {{"head_size", 512}});
     NSDictionary *temperatures = requireObject(decision, @"temperatures", "decision temperatures");
     for (NSString *key in @[@"choice", @"score", @"noul"])
@@ -702,11 +706,12 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
         throw std::invalid_argument("Kev decision temperatures must be positive");
     if (requireString(decision, @"chat_template", "Kev systemone template").empty())
       throw std::invalid_argument("Kev systemone template is empty");
-    std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
+    if (smallDense) std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
   }
   std::visit([&](const auto &layout) {
     validateTextConfig(text, layout, layout.family, result.targetSource);
-    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
+    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> &&
+                  !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
                   !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
       if (result.targetSource == TargetSource::Safetensors) requireQuantization(config, layout);
     if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
@@ -779,7 +784,7 @@ bool ModelDescriptor::valid() const noexcept {
       !targetKvLayout.valid() || !stateLayout.valid() ||
       stateLayout.draft != draft.stateLayout() ||
       (hasVision() && hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
-      (!hasDraft() && (!std::holds_alternative<Qwen3_5_4BLayout>(target) ||
+      (!hasDraft() && ((!std::holds_alternative<Qwen3_5_4BLayout>(target) && !std::holds_alternative<Qwen3_5_0_8BLayout>(target)) ||
                       draft != DFlashDraftLayout{} || hasVision()))) {
     return false;
   }
@@ -822,6 +827,27 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
                                             const std::optional<std::filesystem::path> &draft) {
   @autoreleasepool {
     NSDictionary *target = readObject(config, "upstream model config");
+    NSDictionary *text = target[@"text_config"];
+    if ([text[@"model_type"] isEqual:@"modernbert_text"]) {
+      if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufMetadata)
+        throw std::invalid_argument("ModernBERT decisions require text-only GGUF without a draft");
+      const bool julia = [text[@"hidden_size"] doubleValue] == 384;
+      requireNumbers(text, "ModernBERT", "encoder config",
+                     {{"hidden_size", julia ? 384 : 1024}, {"num_hidden_layers", julia ? 24 : 30},
+                      {"vocab_size", julia ? 256000 : 50368}, {"num_attention_heads", julia ? 6 : 16},
+                      {"num_key_value_heads", julia ? 6 : 16}, {"head_dim", 64}, {"max_position_embeddings", 8192}});
+      NSDictionary *decision = requireObject(target, @"decision_config", "encoder decision config");
+      requireEqual(requireString(decision, @"type", "decision type"), "laya", "config", "decision type");
+      requireNumbers(decision, "ModernBERT", "decision config", {{"head_size", 1}, {"max_head_tokens", julia ? 256 : 192}});
+      const auto metadata = readGgufMetadata(*ggufMetadata);
+      if (metadata.architecture() != "modern-bert" || metadata.stringValue("modern-bert.decision.type") != "laya" ||
+          metadata.unsignedValue("modern-bert.embedding_length") != (julia ? 384U : 1024U) ||
+          metadata.unsignedValue("modern-bert.block_count") != (julia ? 24U : 30U) ||
+          metadata.unsignedValue("modern-bert.attention.causal") != 0 ||
+          metadata.unsignedValue("modern-bert.decision.block_count") != 2)
+        throw std::invalid_argument("ModernBERT config does not match GGUF metadata");
+      return julia ? "Julia-1" : "Laya";
+    }
     NSDictionary *checkpoint = draft ? readObject(*draft, "draft config") : nil;
     // Unnamed: the record names an installation, which this precedes.
     const ModelDescriptor descriptor = describeSourceModel({}, targetFormat, visionFormat, target, checkpoint);

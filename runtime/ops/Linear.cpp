@@ -137,8 +137,8 @@ LinearPlan::LinearPlan(LinearWorkload w, LinearConfig config, FloatOutput destin
     : workload_(w), config_(config), destination_(destination) {
   validate(w);
   if (destination == FloatOutput::Float32 &&
-      (w.phase != LinearPhase::Decode || w.epilogue != LinearEpilogue::None))
-    throw std::invalid_argument("an fp32 destination takes a plain decode projection");
+      w.epilogue != LinearEpilogue::None)
+    throw std::invalid_argument("an fp32 destination takes a plain projection");
   // Kernel names follow the segment formats (LinearGguf.cpp).
   requireConfiguration();
 }

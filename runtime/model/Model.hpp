@@ -47,9 +47,11 @@ enum RequestFlag : uint32_t {
   // scoreTokens are ordered option-end prompt positions, not vocabulary ids.
   // The last prompt position supplies Kev's query; no tokens are generated.
   RequestDecisionScoring = 1U << 2,
+  RequestDecisionScoreType = 1U << 3,
+  RequestDecisionNoulType = 1U << 4,
 };
 
-inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence | RequestDecisionScoring;
+inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence | RequestDecisionScoring | RequestDecisionScoreType | RequestDecisionNoulType;
 
 // A request's token selection, its fields in the native request frame's
 // order. The defaults are greedy selection with nothing changing the logits.

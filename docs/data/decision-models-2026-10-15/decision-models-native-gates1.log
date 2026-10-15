@@ -1,0 +1,457 @@
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/encoder/Service.o' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -MMD -MP -c runtime/encoder/Service.cpp -o build/decision-modernbert-20261015/engine/encoder/Service.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/model/ModernBert.o' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -MMD -MP -c runtime/model/ModernBert.cpp -o build/decision-modernbert-20261015/engine/model/ModernBert.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-ffn-program-grid' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/ane_ffn_program_grid_test.cpp -o build/decision-modernbert-20261015/engine-tests/ane-ffn-program-grid
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/slot-file' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/model/SlotFile.cpp dev/tests/engine/slot_file_test.cpp -o build/decision-modernbert-20261015/engine-tests/slot-file
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/cache-directory' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/CacheDirectory.cpp dev/tests/engine/cache_directory_test.cpp -o build/decision-modernbert-20261015/engine-tests/cache-directory
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/weight-source' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/weight_source_test.cpp runtime/model/WeightSource.cpp -o build/decision-modernbert-20261015/engine-tests/weight-source
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-file' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/gguf_file_test.cpp runtime/model/GgufFile.cpp runtime/model/WeightSource.cpp -o build/decision-modernbert-20261015/engine-tests/gguf-file
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-ffn-calibration' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/ops/AneFfnCalibration.cpp dev/tests/engine/ane_ffn_calibration_test.cpp -o build/decision-modernbert-20261015/engine-tests/ane-ffn-calibration
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-recovery' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/ane_recovery_test.cpp -o build/decision-modernbert-20261015/engine-tests/ane-recovery
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/engine-memory-plan' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/metal/DeviceCapabilities.cpp runtime/engine/MemoryPlan.cpp dev/tests/engine/engine_memory_plan_test.cpp -o build/decision-modernbert-20261015/engine-tests/engine-memory-plan
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kv-page-cache' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp dev/tests/engine/kv_page_cache_test.cpp -o build/decision-modernbert-20261015/engine-tests/kv-page-cache
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/engine-cache' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/engine_cache_test.cpp -o build/decision-modernbert-20261015/engine-tests/engine-cache
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/persistent-cache' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/persistent_cache_test.cpp -o build/decision-modernbert-20261015/engine-tests/persistent-cache
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-context-plan' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/model/DraftContextPlan.cpp dev/tests/engine/draft_context_plan_test.cpp -o build/decision-modernbert-20261015/engine-tests/draft-context-plan
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ragged-scheduler' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/Scheduler.cpp dev/tests/engine/ragged_scheduler_test.cpp -o build/decision-modernbert-20261015/engine-tests/ragged-scheduler
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/engine' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp dev/tests/engine/engine_test.cpp -o build/decision-modernbert-20261015/engine-tests/engine
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/elastic-kv-pool' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/KvPool.cpp dev/tests/engine/elastic_kv_pool_test.cpp -o build/decision-modernbert-20261015/engine-tests/elastic-kv-pool
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/protocol' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/Protocol.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/protocol_test.cpp -o build/decision-modernbert-20261015/engine-tests/protocol
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/native-engine-loop' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp runtime/engine/Protocol.cpp runtime/engine/NativeRuntime.cpp runtime/engine/MemoryGovernor.cpp runtime/engine/MemoryControl.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/native_engine_loop_test.cpp -o build/decision-modernbert-20261015/engine-tests/native-engine-loop
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/native-fd-transport' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp runtime/engine/Protocol.cpp runtime/engine/NativeRuntime.cpp runtime/engine/FdTransport.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/native_fd_transport_test.cpp -o build/decision-modernbert-20261015/engine-tests/native-fd-transport
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/runtime-metrics' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/runtime_metrics_test.cpp -o build/decision-modernbert-20261015/engine-tests/runtime-metrics
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/memory-audit' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/metal/DeviceCapabilities.cpp runtime/engine/MemoryPlan.cpp runtime/engine/MemoryAudit.cpp dev/tests/engine/memory_audit_test.cpp -o build/decision-modernbert-20261015/engine-tests/memory-audit
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/memory-governor' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/metal/DeviceCapabilities.cpp runtime/engine/MemoryPlan.cpp runtime/engine/MemoryGovernor.cpp dev/tests/engine/memory_governor_test.cpp -o build/decision-modernbert-20261015/engine-tests/memory-governor
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/runtime-status' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/metal/DeviceCapabilities.cpp runtime/engine/MemoryPlan.cpp runtime/engine/MemoryAudit.cpp runtime/engine/Status.cpp dev/tests/engine/runtime_status_test.cpp -o build/decision-modernbert-20261015/engine-tests/runtime-status
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-paged-kv' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/q8_paged_kv_test.cc -o build/decision-modernbert-20261015/engine-tests/q8-paged-kv
+.venv/bin/python dev/benchmarks/qwen4b_matrix_attention.py runtime/ops/PagedAttention.cpp build/decision-modernbert-20261015/engine-tests/matrix-PagedAttention.cpp
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/ane/ProgramInstrumented.o' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -MMD -MP \
+		-DSPLASH_ANE_INSTRUMENTATION=1 -c runtime/ane/Program.mm -o build/decision-modernbert-20261015/engine/ane/ProgramInstrumented.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-dequant.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c dev/tests/engine/gguf_dequant_test.metal -o build/decision-modernbert-20261015/engine-tests/gguf-dequant.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kernels/shared/residency.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/shared/residency.metal -o build/decision-modernbert-20261015/engine-tests/kernels/shared/residency.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/metal-backend.air' --config 8381c06c405a71e2 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c dev/tests/engine/metal_backend_test.metal -o build/decision-modernbert-20261015/engine-tests/metal-backend.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/metal/MetalBackendInstrumented.o' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -MMD -MP \
+		-DSPLASH_BACKEND_INSTRUMENTATION=1 -c runtime/metal/MetalBackend.mm -o build/decision-modernbert-20261015/engine/metal/MetalBackendInstrumented.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/metal-backend.metallib' --config 8381c06c405a71e2 -- xcrun -sdk macosx metallib build/decision-modernbert-20261015/engine-tests/metal-backend.air build/decision-modernbert-20261015/engine-tests/kernels/shared/residency.air -o build/decision-modernbert-20261015/engine-tests/metal-backend.metallib
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/prefill/paged_attention.metal -o build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/paged_attention.metal -o build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention_store.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/prefill/paged_attention_store.metal -o build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention_store.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention_store.air' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/paged_attention_store.metal -o build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention_store.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-paged-kv-metal' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/q8_paged_kv_metal_test.mm \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/q8-paged-kv-metal
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-paged-kv.air' --config 8381c06c405a71e2 -- xcrun -sdk macosx metal -std=metal4.0 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c dev/tests/engine/q8_page_format_oracle.metal -o build/decision-modernbert-20261015/engine-tests/q8-paged-kv.air
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/main.o' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -MMD -MP \
+		-include build/decision-modernbert-20261015/engine/BuildIdentity.hpp -c runtime/main.mm -o build/decision-modernbert-20261015/engine/main.o
+rm -f build/decision-modernbert-20261015/engine/libsplash.a
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine/libsplash.a' --config 0dfae3b7877bf53a -- xcrun -sdk macosx ar rcs build/decision-modernbert-20261015/engine/libsplash.a build/decision-modernbert-20261015/engine/ops/AneFfn.o build/decision-modernbert-20261015/engine/ops/AneFfnCalibration.o build/decision-modernbert-20261015/engine/ops/AneFfnMeasurement.o build/decision-modernbert-20261015/engine/ops/DraftAttention.o build/decision-modernbert-20261015/engine/ops/DraftSelector.o build/decision-modernbert-20261015/engine/ops/Embedding.o build/decision-modernbert-20261015/engine/ops/ExecutionPlans.o build/decision-modernbert-20261015/engine/ops/GDN.o build/decision-modernbert-20261015/engine/ops/GgufPrefillCache.o build/decision-modernbert-20261015/engine/ops/SingleTokenLinear.o build/decision-modernbert-20261015/engine/ops/ModernBert.o build/decision-modernbert-20261015/engine/ops/Linear.o build/decision-modernbert-20261015/engine/ops/LinearGguf.o build/decision-modernbert-20261015/engine/ops/MoE.o build/decision-modernbert-20261015/engine/ops/Normalization.o build/decision-modernbert-20261015/engine/ops/PagedAttention.o build/decision-modernbert-20261015/engine/ops/PageStorage.o build/decision-modernbert-20261015/engine/ops/RoPE.o build/decision-modernbert-20261015/engine/ops/RowCopy.o build/decision-modernbert-20261015/engine/ops/Sampling.o build/decision-modernbert-20261015/engine/ops/CompactProjection.o build/decision-modernbert-20261015/engine/ops/Vision.o build/decision-modernbert-20261015/engine/metal/DeviceCapabilities.o build/decision-modernbert-20261015/engine/engine/MemoryPlan.o build/decision-modernbert-20261015/engine/engine/AneFfnStartup.o build/decision-modernbert-20261015/engine/engine/Scheduler.o build/decision-modernbert-20261015/engine/engine/Cache.o build/decision-modernbert-20261015/engine/engine/WriteBehind.o build/decision-modernbert-20261015/engine/engine/Engine.o build/decision-modernbert-20261015/engine/engine/MemoryGovernor.o build/decision-modernbert-20261015/engine/engine/MemoryControl.o build/decision-modernbert-20261015/engine/engine/KvPool.o build/decision-modernbert-20261015/engine/engine/KvCache.o build/decision-modernbert-20261015/engine/engine/KvPageTier.o build/decision-modernbert-20261015/engine/engine/CacheDirectory.o build/decision-modernbert-20261015/engine/engine/StateCache.o build/decision-modernbert-20261015/engine/model/DraftContextPlan.o build/decision-modernbert-20261015/engine/engine/Protocol.o build/decision-modernbert-20261015/engine/engine/NativeRuntime.o build/decision-modernbert-20261015/engine/engine/NativeArguments.o build/decision-modernbert-20261015/engine/engine/FdTransport.o build/decision-modernbert-20261015/engine/engine/MemoryAudit.o build/decision-modernbert-20261015/engine/engine/Status.o build/decision-modernbert-20261015/engine/model/WeightStore.o build/decision-modernbert-20261015/engine/model/GgufFile.o build/decision-modernbert-20261015/engine/model/GgufImage.o build/decision-modernbert-20261015/engine/model/GgufTarget.o build/decision-modernbert-20261015/engine/model/SafetensorsImage.o build/decision-modernbert-20261015/engine/model/SafetensorsTarget.o build/decision-modernbert-20261015/engine/model/DraftCheckpoint.o build/decision-modernbert-20261015/engine/model/WeightSource.o build/decision-modernbert-20261015/engine/model/WeightImages.o build/decision-modernbert-20261015/engine/model/GgufPreparation.o build/decision-modernbert-20261015/engine/model/Qwen3_6Moe.o build/decision-modernbert-20261015/engine/model/Qwen3_8.o build/decision-modernbert-20261015/engine/model/Qwen3_5_4B.o build/decision-modernbert-20261015/engine/model/ModernBert.o build/decision-modernbert-20261015/engine/encoder/Service.o build/decision-modernbert-20261015/engine/model/QwenVision.o build/decision-modernbert-20261015/engine/model/VisionPreparation.o build/decision-modernbert-20261015/engine/model/VisionLoader.o build/decision-modernbert-20261015/engine/model/QwenTarget.o build/decision-modernbert-20261015/engine/model/QwenTargetLoader.o build/decision-modernbert-20261015/engine/model/DFlashDraft.o build/decision-modernbert-20261015/engine/model/CompactDraftHead.o build/decision-modernbert-20261015/engine/model/ModelFactory.o build/decision-modernbert-20261015/engine/model/SlotFile.o build/decision-modernbert-20261015/engine/model/QwenState.o build/decision-modernbert-20261015/engine/model/Runtime.o build/decision-modernbert-20261015/engine/model/RuntimeArenas.o build/decision-modernbert-20261015/engine/ane/Handoff.o build/decision-modernbert-20261015/engine/ane/Power.o build/decision-modernbert-20261015/engine/ane/Program.o build/decision-modernbert-20261015/engine/model/SafetensorsCheckpoint.o build/decision-modernbert-20261015/engine/model/ModelDescriptor.o build/decision-modernbert-20261015/engine/engine/ThermalState.o build/decision-modernbert-20261015/engine/engine/RuntimeResources.o build/decision-modernbert-20261015/engine/engine/Bootstrap.o build/decision-modernbert-20261015/engine/metal/MetalBackend.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-dequant.metallib' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metallib build/decision-modernbert-20261015/engine-tests/gguf-dequant.air build/decision-modernbert-20261015/engine-tests/kernels/shared/residency.air -o build/decision-modernbert-20261015/engine-tests/gguf-dequant.metallib
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/production-and-test.metallib' --config 8381c06c405a71e2 -- xcrun -sdk macosx metallib build/decision-modernbert-20261015/metal/decode/attention_qkv.air build/decision-modernbert-20261015/metal/decode/draft.air build/decision-modernbert-20261015/metal/decode/gdn.air build/decision-modernbert-20261015/metal/decode/gdn_single.air build/decision-modernbert-20261015/metal/decode/gguf_single.air build/decision-modernbert-20261015/metal/decode/linear_gguf_sgmatrix.air build/decision-modernbert-20261015/metal/decode/paged_attention.air build/decision-modernbert-20261015/metal/decode/paged_attention_store.air build/decision-modernbert-20261015/metal/decode/sampling.air build/decision-modernbert-20261015/metal/prefill/ane_ffn.air build/decision-modernbert-20261015/metal/prefill/attention_qkv.air build/decision-modernbert-20261015/metal/prefill/draft_context.air build/decision-modernbert-20261015/metal/prefill/gdn.air build/decision-modernbert-20261015/metal/prefill/paged_attention.air build/decision-modernbert-20261015/metal/prefill/paged_attention_store.air build/decision-modernbert-20261015/metal/shared/embedding.air build/decision-modernbert-20261015/metal/shared/ffn_prefill.air build/decision-modernbert-20261015/metal/shared/gguf_float.air build/decision-modernbert-20261015/metal/shared/gguf_linear.air build/decision-modernbert-20261015/metal/shared/gguf_prefill_cache.air build/decision-modernbert-20261015/metal/shared/gguf_repack.air build/decision-modernbert-20261015/metal/shared/gguf_rotation.air build/decision-modernbert-20261015/metal/shared/modernbert.air build/decision-modernbert-20261015/metal/shared/moe.air build/decision-modernbert-20261015/metal/shared/moe_gguf.air build/decision-modernbert-20261015/metal/shared/normalization.air build/decision-modernbert-20261015/metal/shared/optional_features.air build/decision-modernbert-20261015/metal/shared/residency.air build/decision-modernbert-20261015/metal/shared/rope.air build/decision-modernbert-20261015/metal/shared/row_copy.air build/decision-modernbert-20261015/metal/shared/vision.air build/decision-modernbert-20261015/engine-tests/metal-backend.air -o build/decision-modernbert-20261015/engine-tests/production-and-test.metallib
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-moe' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_moe_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-moe
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-prefill-cache' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_prefill_cache_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-prefill-cache
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-preparation' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_preparation_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-preparation
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-projection' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_projection_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-projection
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-rotation' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_rotation_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-rotation
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-single-token' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_single_token_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-single-token
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/handoff' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/handoff_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/handoff
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/kv-page-tier' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/kv_page_tier_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/kv-page-tier
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/metal-backend' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/metal_backend_test.mm build/decision-modernbert-20261015/engine/metal/MetalBackendInstrumented.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/metal-backend
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/model-loading' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/model_loading_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/model-loading
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/modernbert-kernels' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -Idev/tests/engine -fobjc-arc dev/tests/engine/modernbert_kernels_test.mm build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/modernbert-kernels
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/paged-attention-plan' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/paged_attention_plan_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/paged-attention-plan
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-attention.metallib' --config 8381c06c405a71e2-7fc36398fa0ef9b6 -- xcrun -sdk macosx metallib build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention.air build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention.air build/decision-modernbert-20261015/engine-tests/kernels/prefill/paged_attention_store.air build/decision-modernbert-20261015/engine-tests/kernels/decode/paged_attention_store.air -o build/decision-modernbert-20261015/engine-tests/q8-attention.metallib
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-page-storage' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/q8_page_storage_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/q8-page-storage
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-paged-kv.metallib' --config 8381c06c405a71e2 -- xcrun -sdk macosx metallib build/decision-modernbert-20261015/engine-tests/q8-paged-kv.air build/decision-modernbert-20261015/engine-tests/kernels/shared/residency.air -o build/decision-modernbert-20261015/engine-tests/q8-paged-kv.metallib
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/qwen-state-storage' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/qwen_state_storage_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/qwen-state-storage
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/runtime-resources' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/runtime_resources_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/runtime-resources
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/target-sampling' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/target_sampling_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/target-sampling
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/vision-metal' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/vision_metal_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/vision-metal
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/model-runtime-oracle' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -include build/decision-modernbert-20261015/engine/BuildIdentity.hpp -fobjc-arc dev/tests/engine/model_runtime_oracle_test.mm build/decision-modernbert-20261015/engine/metal/MetalBackendInstrumented.o build/decision-modernbert-20261015/engine/ane/ProgramInstrumented.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/model-runtime-oracle
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/vision-encoder' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/vision_encoder_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/vision-encoder
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/decode-profile' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/decode_profile.mm build/decision-modernbert-20261015/engine/metal/MetalBackendInstrumented.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/decode-profile
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-projection-benchmark' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_projection_benchmark.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-projection-benchmark
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-moe-benchmark' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_moe_benchmark.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-moe-benchmark
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/qwen4b-operator-candidates' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/qwen4b_operator_candidates.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/qwen4b-operator-candidates
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/drafter-fc-precision-benchmark' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/drafter_fc_precision_benchmark.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/drafter-fc-precision-benchmark
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/backend-benchmark' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -include build/decision-modernbert-20261015/engine/BuildIdentity.hpp dev/benchmarks/backend_benchmark.mm \
+		build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/backend-benchmark
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/weight-digests' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tools/weight_digests.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/weight-digests
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/splash' --config 0dfae3b7877bf53a -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc build/decision-modernbert-20261015/engine/main.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/splash
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/optional-features' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/optional_features_test.cpp build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/optional-features
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ffn-policy' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/ffn_policy_test.cpp build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/ffn-policy
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-block-contract' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -DTEST_EXPECTED_DRAFT_BLOCK=8 dev/tests/engine/draft_block_contract_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/draft-block-contract
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-ffn-4b-registration' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/ane_ffn_4b_registration_test.cpp build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/ane-ffn-4b-registration
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/vision-preparation' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/vision_preparation_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/vision-preparation
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/safetensors-checkpoint' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/safetensors_checkpoint_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/safetensors-checkpoint
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/operator-workspace' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/operator_workspace_test.cc build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/operator-workspace
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/model-configuration' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/model_configuration_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/model-configuration
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/standard-draft-checkpoint' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/standard_draft_checkpoint_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/standard-draft-checkpoint
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-reference' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_reference_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-reference
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-planner' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_planner_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-planner
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/linear-plan' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/linear_plan_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/linear-plan
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-ffn-startup' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/ane_ffn_startup_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/ane-ffn-startup
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/execution-plans' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/execution_plans_test.cc build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/execution-plans
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/model-execution-plans' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/model_execution_plan_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/model-execution-plans
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/runtime-bootstrap' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/runtime_bootstrap_test.mm dev/tests/engine/ProtocolPeer.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/runtime-bootstrap
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/native-arguments' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/native_arguments_test.cpp build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/native-arguments
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/attention-sweep' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/attention_sweep.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/attention-sweep
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/qwen4b-ffn-check' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/qwen4b_ffn_check.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/qwen4b-ffn-check
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/matrix-PagedAttention.o' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c build/decision-modernbert-20261015/engine-tests/matrix-PagedAttention.cpp -o build/decision-modernbert-20261015/engine-tests/matrix-PagedAttention.o
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-ffn' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/ane_ffn_test.mm build/decision-modernbert-20261015/engine/ane/ProgramInstrumented.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/ane-ffn
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/ane-program-faults' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/ane_program_faults_test.mm build/decision-modernbert-20261015/engine/ane/ProgramInstrumented.o build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/ane-program-faults
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/compact-projection' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/compact_projection_test.mm build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/compact-projection
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/dflash-batch-control' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/dflash_batch_control_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/dflash-batch-control
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/dflash-standard' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/dflash_standard_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/dflash-standard
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-attention' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_attention_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/draft-attention
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-block-acceptance' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_block_acceptance_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/draft-block-acceptance
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-preparation' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_preparation_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/draft-preparation
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/draft-selector' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_selector_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/draft-selector
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gdn-decode' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gdn_decode_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gdn-decode
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gdn-metal' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gdn_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gdn-metal
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-dequant' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/gguf_dequant_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-dequant
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/gguf-iq1s-replay' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc \
+		dev/tests/engine/gguf_iq1s_replay_test.mm build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/gguf-iq1s-replay
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-chunked-prefill' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/q8_chunked_prefill_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/q8-chunked-prefill
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/q8-flash-attention' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/q8_flash_attention_metal_test.mm build/decision-modernbert-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/q8-flash-attention
+build/decision-modernbert-20261015/engine-tests/optional-features
+.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/engine-tests/qwen4b-matrix-native' --config 8381c06c405a71e2 -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -include build/decision-modernbert-20261015/engine/BuildIdentity.hpp dev/benchmarks/qwen4b_matrix_native.mm \
+		build/decision-modernbert-20261015/engine-tests/matrix-PagedAttention.o build/decision-modernbert-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/decision-modernbert-20261015/engine-tests/qwen4b-matrix-native
+optional features CPU checks passed
+build/decision-modernbert-20261015/engine-tests/ffn-policy
+FFN policy, leading-input stride and submission attribution passed
+build/decision-modernbert-20261015/engine-tests/draft-block-contract
+draft-block-contract: PASS block=8
+build/decision-modernbert-20261015/engine-tests/ane-ffn-4b-registration
+ANE FFN dense registration and 2560/5120 shape checks passed
+build/decision-modernbert-20261015/engine-tests/ane-ffn-program-grid
+ANE4096 function grid: all qualifying chunks covered by 15 functions
+build/decision-modernbert-20261015/engine-tests/slot-file
+Slot file tests passed
+build/decision-modernbert-20261015/engine-tests/cache-directory
+Cache directory tests passed
+.venv/bin/python dev/tests/engine/run_vision_preparation.py build/decision-modernbert-20261015/engine-tests/vision-preparation dev/tests/fixtures/weight-goldens/goldens.json
+Vision layouts from MLX, transformers and GGUF, exact BF16 conversion, rejected sources and zero padding PASS
+build/decision-modernbert-20261015/engine-tests/safetensors-checkpoint
+safetensors checkpoint: bounded reads, metadata, written and malformed sources PASS
+build/decision-modernbert-20261015/engine-tests/model-configuration dev/tests/fixtures/model-configs
+model configuration: both families, sources, one rule per value, quantization, vision, the installer's check PASS
+build/decision-modernbert-20261015/engine-tests/standard-draft-checkpoint
+standard DFlash: exact 69 BF16 tensors, seven AF4G64 block images, no fabricated sections, 357892096 prepared bytes PASS
+build/decision-modernbert-20261015/engine-tests/weight-source
+weight source: reads, writes to the open file, replacement and naming PASS
+build/decision-modernbert-20261015/engine-tests/gguf-file
+GGUF parser bounds tests passed
+build/decision-modernbert-20261015/engine-tests/gguf-reference dev/tests/fixtures/weight-goldens/goldens.json dev/tests/fixtures/mlx-quantization/fixture.json
+CPU reference matches the GGML golden hash: q4k                  ok
+CPU reference matches the GGML golden hash: iq4xs                ok
+CPU reference matches the GGML golden hash: iq4nl                ok
+CPU reference matches the GGML golden hash: q5k                  ok
+CPU reference matches the GGML golden hash: q6k                  ok
+CPU reference matches the GGML golden hash: q3k                  ok
+CPU reference matches the GGML golden hash: q80                  ok
+CPU reference matches the GGML golden hash: iq3s                 ok
+CPU reference matches the GGML golden hash: q2k                  ok
+CPU reference matches the GGML golden hash: iq3xxs               ok
+CPU reference matches the GGML golden hash: iq2xxs               ok
+CPU reference matches the GGML golden hash: iq2xs                ok
+CPU reference matches the GGML golden hash: iq2s                 ok
+CPU reference matches the GGML golden hash: iq1s                 ok
+CPU reference matches the GGML golden hash: iq1m                 ok
+CPU reference matches the GGML golden hash: q40                  ok
+CPU reference matches the GGML golden hash: q41                  ok
+CPU reference matches the GGML golden hash: mxfp4                ok
+CPU reference matches the GGML golden hash: pq20                 ok
+CPU reference matches the GGML golden hash: llama.cpp's NVFP4    ok
+MLX fixture holds every MLX affine format, mxfp4 and nvfp4       ok
+CPU reference reads MLX's codes: af2g32                          ok
+CPU reference matches MLX's values: af2g32                       ok
+CPU reference reads MLX's codes: af2g64                          ok
+CPU reference matches MLX's values: af2g64                       ok
+CPU reference reads MLX's codes: af2g128                         ok
+CPU reference matches MLX's values: af2g128                      ok
+CPU reference reads MLX's codes: af3g32                          ok
+CPU reference matches MLX's values: af3g32                       ok
+CPU reference reads MLX's codes: af3g64                          ok
+CPU reference matches MLX's values: af3g64                       ok
+CPU reference reads MLX's codes: af3g128                         ok
+CPU reference matches MLX's values: af3g128                      ok
+CPU reference reads MLX's codes: af4g32                          ok
+CPU reference matches MLX's values: af4g32                       ok
+CPU reference reads MLX's codes: af4g64                          ok
+CPU reference matches MLX's values: af4g64                       ok
+CPU reference reads MLX's codes: af4g128                         ok
+CPU reference matches MLX's values: af4g128                      ok
+CPU reference reads MLX's codes: af5g32                          ok
+CPU reference matches MLX's values: af5g32                       ok
+CPU reference reads MLX's codes: af5g64                          ok
+CPU reference matches MLX's values: af5g64                       ok
+CPU reference reads MLX's codes: af5g128                         ok
+CPU reference matches MLX's values: af5g128                      ok
+CPU reference reads MLX's codes: af6g32                          ok
+CPU reference matches MLX's values: af6g32                       ok
+CPU reference reads MLX's codes: af6g64                          ok
+CPU reference matches MLX's values: af6g64                       ok
+CPU reference reads MLX's codes: af6g128                         ok
+CPU reference matches MLX's values: af6g128                      ok
+CPU reference reads MLX's codes: af8g32                          ok
+CPU reference matches MLX's values: af8g32                       ok
+CPU reference reads MLX's codes: af8g64                          ok
+CPU reference matches MLX's values: af8g64                       ok
+CPU reference reads MLX's codes: af8g128                         ok
+CPU reference matches MLX's values: af8g128                      ok
+CPU reference matches MLX's values: mxfp4 (MLX mxfp4)            ok
+CPU reference matches MLX's values: nvfp4 (MLX nvfp4)            ok
+GGUF reference tests passed (0 failures)
+build/decision-modernbert-20261015/engine-tests/gguf-planner
+planner accepts a shared embedding/output tensor                 ok
+shared output projection must read the actual embedding weights  ok
+an untied model must still reject a missing output projection    ok
+planner plans the dense target                                   ok
+planner keeps F32 values as stored: blk.0.attn_norm.weight       ok
+planner keeps F32 values as stored: blk.0.ssm_norm.weight        ok
+planner keeps F32 values as stored: blk.0.post_attention_norm.weight ok
+planner keeps F32 values as stored: blk.1.attn_norm.weight       ok
+planner keeps F32 values as stored: blk.1.attn_q_norm.weight     ok
+planner keeps F32 values as stored: blk.1.attn_k_norm.weight     ok
+planner keeps F32 values as stored: blk.1.post_attention_norm.weight ok
+planner keeps F32 values as stored: output_norm.weight           ok
+planner narrows the convolution to bf16 and groups its value heads ok
+planner keeps the decay F32 and groups its value heads           ok
+planner narrows the time bias to bf16 and groups its value heads ok
+planner refuses mismatched KV rows by name: blk.1.attn_k.weight rows=256 ok
+planner refuses mismatched KV rows by name: blk.1.attn_k.weight rows=768 ok
+planner refuses mismatched KV rows by name: blk.1.attn_v.weight rows=256 ok
+planner refuses mismatched KV rows by name: blk.1.attn_v.weight rows=768 ok
+planner names a metadata mismatch                                ok
+planner checks the architecture against the model's target       ok
+planner plans the MoE target                                     ok
+planner F32 alpha/beta tensor: beta then alpha rows in grouped order ok
+planner copies the F32 tensor as stored: blk.0.ffn_gate_inp.weight ok
+planner copies the F32 tensor as stored: blk.0.ffn_gate_inp_shexp.weight ok
+planner repacks blk.0.attn_qkv.weight as 1024 rows of 512        ok
+planner repacks blk.0.attn_gate.weight as 512 rows of 512        ok
+planner repacks blk.0.ssm_out.weight as 512 rows of 512          ok
+planner repacks blk.0.ffn_gate_exps.weight as 1024 rows of 512   ok
+planner repacks blk.0.ffn_up_exps.weight as 1024 rows of 512     ok
+planner repacks blk.0.ffn_down_exps.weight as 2048 rows of 256   ok
+planner repacks blk.0.ffn_gate_shexp.weight as 256 rows of 512   ok
+planner repacks blk.0.ffn_up_shexp.weight as 256 rows of 512     ok
+planner repacks blk.0.ffn_down_shexp.weight as 512 rows of 256   ok
+planner repacks only the layer's quantized tensors               ok
+planner alpha/beta: one 256-row Q4_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ4_XS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ4_NL tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q5_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q6_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q3_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q8_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ3_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q2_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ3_XXS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_XXS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_XS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ1_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ1_M tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q4_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q4_1 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row MXFP4 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row PQ2_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row NVFP4 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q2_0 tensor of beta then alpha rows (qwen35) ok
+planner accepts mixed F32/q3k alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q3k alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q40 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q40 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q80 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q80 alpha/beta with exact F32 size and grouped rows ok
+planner refuses alpha/beta of two types by both names: blk.0.ssm_beta.weight (IQ4_XS), blk.0.ssm_alpha.weight (Q8_0) ok
+planner refuses alpha/beta of two types by both names: blk.0.ssm_beta.weight (Q4_K), blk.0.ssm_alpha.weight (F32) ok
+planner alpha/beta: one 256-row Q4_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ4_XS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ4_NL tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q5_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q6_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q3_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q8_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ3_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q2_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ3_XXS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_XXS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_XS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ1_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ1_M tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q4_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q4_1 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row MXFP4 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row PQ2_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row NVFP4 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q2_0 tensor of beta then alpha rows (qwen35moe) ok
+planner accepts mixed F32/q3k alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q3k alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q40 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q40 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q80 alpha/beta with exact F32 size and grouped rows ok
+planner accepts mixed F32/q80 alpha/beta with exact F32 size and grouped rows ok
+planner refuses alpha/beta of two types by both names: blk.0.ssm_beta.weight (IQ4_XS), blk.0.ssm_alpha.weight (Q8_0) ok
+planner refuses alpha/beta of two types by both names: blk.0.ssm_beta.weight (Q4_K), blk.0.ssm_alpha.weight (F32) ok
+planner accepts a GGUF that declares no RoPE scaling             ok
+planner refuses RoPE scaling                                     ok
+planner names another rotated width, RoPE base and RMS epsilon   ok
+planner requires the rotary and norm metadata                    ok
+planner plans a rotation of F32 alpha/beta                       ok
+planner plans a rotation that names Q8_0 alpha/beta              ok
+planner refuses a rotation that leaves out Q8_0 alpha/beta       ok
+planner plans a rotation that names IQ4_XS alpha/beta            ok
+planner refuses a rotation that leaves out IQ4_XS alpha/beta     ok
+GGUF planner tests passed (0 failures)
+build/decision-modernbert-20261015/engine-tests/linear-plan --cpu
+Linear CPU plans: PASS
+/bin/sh dev/tests/attention_sweep_cli.sh build/decision-modernbert-20261015/engine-tests/attention-sweep
+attention-sweep CLI validation: PASS
+build/decision-modernbert-20261015/engine-tests/operator-workspace
+operator workspace: PASS
+build/decision-modernbert-20261015/engine-tests/ane-ffn-calibration
+ane ffn calibration tests passed
+build/decision-modernbert-20261015/engine-tests/ane-ffn-startup
+ane ffn startup tests passed
+build/decision-modernbert-20261015/engine-tests/ane-recovery
+ANE recovery cooldown, power validity, quiet window and backoff: PASS
+build/decision-modernbert-20261015/engine-tests/execution-plans
+PASS execution plans: device policies, device MoE tiles, B1-B4 and prefill workspace bounds (CPU only)
+build/decision-modernbert-20261015/engine-tests/model-execution-plans
+model execution plans: PASS (two paired geometries)
+build/decision-modernbert-20261015/engine-tests/engine-memory-plan
+elastic memory plan tests passed
+build/decision-modernbert-20261015/engine-tests/kv-page-cache
+KV image identity ok
+KV page cache tests passed
+build/decision-modernbert-20261015/engine-tests/engine-cache
+engine cache tests passed
+build/decision-modernbert-20261015/engine-tests/persistent-cache
+Persistent cache tests passed
+build/decision-modernbert-20261015/engine-tests/draft-context-plan
+draft context plan tests passed
+build/decision-modernbert-20261015/engine-tests/ragged-scheduler
+ragged scheduler tests passed
+build/decision-modernbert-20261015/engine-tests/engine
+engine tests passed
+build/decision-modernbert-20261015/engine-tests/elastic-kv-pool
+elastic KV pool tests passed
+build/decision-modernbert-20261015/engine-tests/protocol dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+build/decision-modernbert-20261015/engine-tests/native-engine-loop
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Memory: growth available; resource wait cleared
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights wait for memory to be restored: host memory reserve protected
+11:29:42 Memory: growth available; waiting=1; suspended=0
+11:29:42 Weights restored in 0.40 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Memory: growth available; resource wait cleared
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights wait for memory to be restored: host memory reserve protected
+11:29:42 Memory: growth available; waiting=2; suspended=0
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights wait for memory to be restored: host memory reserve protected
+11:29:42 Weights not restored, 2 waiting requests failed: memory did not become available within the resource wait limit: macOS is short of memory; close memory-heavy applications; the next request restores them
+11:29:42 Memory: growth available; resource wait cleared
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights wait for memory to be restored: host memory reserve protected
+11:29:42 Memory: growth available; waiting=1; suspended=0
+11:29:42 Weights restored in 0.00 s
+11:29:42 Weights released after 2 s without a request; the next request restores them
+11:29:42 Memory: growth available; resource wait cleared
+11:29:42 Memory: growth paused; waiting=0; suspended=0
+11:29:42 Weights wait for memory to be restored: host memory reserve protected
+11:29:42 Weights not restored: no request waits for them
+native engine loop tests passed
+build/decision-modernbert-20261015/engine-tests/native-fd-transport
+native fd transport tests passed
+build/decision-modernbert-20261015/engine-tests/runtime-bootstrap
+native bootstrap tests passed
+build/decision-modernbert-20261015/engine-tests/native-arguments dev/tests/engine/native_command_golden.txt dev/tests/fixtures/model-configs
+native arguments tests passed
+build/decision-modernbert-20261015/engine-tests/runtime-metrics
+runtime metrics tests passed
+build/decision-modernbert-20261015/engine-tests/memory-audit
+elastic memory audit tests passed
+build/decision-modernbert-20261015/engine-tests/memory-governor
+memory governor tests passed
+build/decision-modernbert-20261015/engine-tests/runtime-status dev/tests/engine/status_golden.json
+runtime status tests passed
+build/decision-modernbert-20261015/engine-tests/q8-paged-kv
+q8_paged_kv_test: ok

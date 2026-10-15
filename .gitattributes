@@ -7,3 +7,7 @@
 /.gitattributes export-ignore
 *.patch -whitespace
 *.pdf binary
+# Preserve the exact captured terminal prompt in this historical evidence file.
+docs/data/optional-feature-memory-plan-2026-10-15/original-startup.log -whitespace
+# CSV writer used CRLF; retain the original measurements byte for byte.
+docs/data/decision-models-2026-10-15/performance-summary.csv whitespace=cr-at-eol

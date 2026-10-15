@@ -1,0 +1,33 @@
+2026-10-15 10:54:59.060 modernbert-kernels-poison[7967:30740836] Metal GPU Validation Enabled
+FP64 LayerNorm width=384 PASS
+FP64 LayerNorm width=1024 PASS
+nonuniform attention FP64 mixed-precision bound PASS
+FP64 GeGLU-erf PASS
+FP64 ReLU PASS
+uniform FP64 attention tokens=128 window=0 PASS
+uniform FP64 attention tokens=128 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+uniform FP64 attention tokens=129 window=0 PASS
+uniform FP64 attention tokens=129 window=128 PASS
+FAIL uniform attention differs from FP64 mean at t=56 c=3: actual=0.000000 expected=0.523438

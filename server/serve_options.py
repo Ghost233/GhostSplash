@@ -688,6 +688,25 @@ SERVE_OPTIONS = (
         ),
     ),
     ServeOption(
+        "--encoder-submit-batch-size",
+        "requests",
+        dict(
+            type=int,
+            choices=(1, 2, 4),
+            default=4,
+            help="maximum short encoder requests per Metal submission (default: 4)",
+        ),
+    ),
+    ServeOption(
+        "--encoder-option-queries",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="on",
+            help="ModernBERT final-head option query selection (default: on)",
+        ),
+    ),
+    ServeOption(
         "--fast-topk",
         "requests",
         dict(

@@ -1,0 +1,606 @@
+{
+  "models": {
+    "Kev-0.8B": {
+      "table": [
+        {
+          "input_tokens": 128,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 35.18947213694143,
+              "median_ms": 24.210625007981434,
+              "minimum_ms": 23.563666007248685,
+              "maximum_ms": 87.64570800121874,
+              "input_tokens_per_second": 3637.451550903696,
+              "questions_per_second": 28.417590241435125,
+              "physical_peak_bytes": 497633272,
+              "rss_after_median_bytes": 1309605888,
+              "round_means_ms": [
+                37.35971659771167,
+                32.802608207566664,
+                35.40609160554595
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 24.115902806321778,
+              "median_ms": 21.354166005039588,
+              "minimum_ms": 20.89629101101309,
+              "maximum_ms": 40.24950001621619,
+              "input_tokens_per_second": 5307.700940246197,
+              "questions_per_second": 41.466413595673416,
+              "physical_peak_bytes": 2525334912,
+              "rss_after_median_bytes": 1058766848,
+              "round_means_ms": [
+                23.20169180748053,
+                23.546750005334616,
+                25.599266606150195
+              ]
+            }
+          },
+          "speedup": 1.459181205843839
+        },
+        {
+          "input_tokens": 512,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 84.99639160193813,
+              "median_ms": 75.83558300393634,
+              "minimum_ms": 69.78037502267398,
+              "maximum_ms": 133.3232499891892,
+              "input_tokens_per_second": 6023.7851319364145,
+              "questions_per_second": 11.76520533581331,
+              "physical_peak_bytes": 890652976,
+              "rss_after_median_bytes": 1702658048,
+              "round_means_ms": [
+                88.7725165928714,
+                86.35911660385318,
+                79.85754160908982
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 45.082321999749794,
+              "median_ms": 42.42837498895824,
+              "minimum_ms": 40.47658300260082,
+              "maximum_ms": 57.998792006401345,
+              "input_tokens_per_second": 11357.001531616797,
+              "questions_per_second": 22.181643616439057,
+              "physical_peak_bytes": 2733198888,
+              "rss_after_median_bytes": 1243660288,
+              "round_means_ms": [
+                45.65219959476963,
+                44.95760819991119,
+                44.63715820456855
+              ]
+            }
+          },
+          "speedup": 1.885359667197485
+        },
+        {
+          "input_tokens": 2048,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 301.9073082638594,
+              "median_ms": 294.5398750016466,
+              "minimum_ms": 284.33137497631833,
+              "maximum_ms": 343.66195800248533,
+              "input_tokens_per_second": 6783.539000023476,
+              "questions_per_second": 3.3122749023552127,
+              "physical_peak_bytes": 2475396480,
+              "rss_after_median_bytes": 3286745088,
+              "round_means_ms": [
+                303.7909831968136,
+                302.39614179590717,
+                299.5347997988574
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 126.15310293428288,
+              "median_ms": 123.09599999571219,
+              "minimum_ms": 121.48483298369683,
+              "maximum_ms": 141.13054200424813,
+              "input_tokens_per_second": 16234.241983464073,
+              "questions_per_second": 7.926875968488317,
+              "physical_peak_bytes": 3446918936,
+              "rss_after_median_bytes": 1562902528,
+              "round_means_ms": [
+                125.58374200016259,
+                126.44422519952059,
+                126.43134160316549
+              ]
+            }
+          },
+          "speedup": 2.3931817865877814
+        },
+        {
+          "input_tokens": 8192,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 1413.2061666750815,
+              "median_ms": 1401.5950830071233,
+              "minimum_ms": 1386.3970420206897,
+              "maximum_ms": 1460.0699170259759,
+              "input_tokens_per_second": 5796.7479856627815,
+              "questions_per_second": 0.7076108380936013,
+              "physical_peak_bytes": 2528644480,
+              "rss_after_median_bytes": 3339599872,
+              "round_means_ms": [
+                1406.3646832073573,
+                1408.5540250060149,
+                1424.6997918118723
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 528.9604471996427,
+              "median_ms": 526.7024170025252,
+              "minimum_ms": 520.190042007016,
+              "maximum_ms": 549.3237500195391,
+              "input_tokens_per_second": 15486.980252245852,
+              "questions_per_second": 1.89050051907298,
+              "physical_peak_bytes": 3763490224,
+              "rss_after_median_bytes": 1111785472,
+              "round_means_ms": [
+                529.2007331911009,
+                531.4297500066459,
+                526.2508584011812
+              ]
+            }
+          },
+          "speedup": 2.6716669916563776
+        }
+      ],
+      "commands": {
+        "llama": [
+          "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+          "-m",
+          "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18144",
+          "-c",
+          "8193",
+          "-np",
+          "1",
+          "-ngl",
+          "99",
+          "-b",
+          "2048",
+          "-ub",
+          "2048",
+          "--no-warmup",
+          "--embd-normalize",
+          "-1",
+          "-ctk",
+          "bf16",
+          "-ctv",
+          "bf16"
+        ],
+        "splash": [
+          "sh",
+          "kev08bsplash.sh",
+          "--binary",
+          "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash",
+          "--port",
+          "18145",
+          "--queue-size",
+          "1"
+        ]
+      },
+      "cleanup": {
+        "splash": 0,
+        "llama": 0
+      }
+    },
+    "Julia-1": {
+      "table": [
+        {
+          "input_tokens": 128,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 11.169311062743267,
+              "median_ms": 6.815958971856162,
+              "minimum_ms": 5.5537500011269,
+              "maximum_ms": 31.906292017083615,
+              "input_tokens_per_second": 11459.972712816741,
+              "questions_per_second": 89.53103681888079,
+              "physical_peak_bytes": 312919480,
+              "rss_after_median_bytes": 510017536,
+              "round_means_ms": [
+                11.41980019165203,
+                12.141691596480086,
+                9.946441400097683
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 9.529936135125656,
+              "median_ms": 7.37025000853464,
+              "minimum_ms": 5.92370901722461,
+              "maximum_ms": 21.408375003375113,
+              "input_tokens_per_second": 13431.359684375499,
+              "questions_per_second": 104.93249753418358,
+              "physical_peak_bytes": 676432560,
+              "rss_after_median_bytes": 863158272,
+              "round_means_ms": [
+                9.351100004278123,
+                9.910924796713516,
+                9.327783604385331
+              ]
+            }
+          },
+          "speedup": 1.1720237055498375
+        },
+        {
+          "input_tokens": 512,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 15.922708467890821,
+              "median_ms": 11.729624995496124,
+              "minimum_ms": 10.986709006829187,
+              "maximum_ms": 34.081874997355044,
+              "input_tokens_per_second": 32155.333436675133,
+              "questions_per_second": 62.80338561850612,
+              "physical_peak_bytes": 712230664,
+              "rss_after_median_bytes": 909295616,
+              "round_means_ms": [
+                15.820291807176545,
+                15.995333396131173,
+                15.95250020036474
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 12.83486646328432,
+              "median_ms": 9.174167003948241,
+              "minimum_ms": 8.283000002847984,
+              "maximum_ms": 39.06745801214129,
+              "input_tokens_per_second": 39891.338290479114,
+              "questions_per_second": 77.91277009859202,
+              "physical_peak_bytes": 582879896,
+              "rss_after_median_bytes": 726843392,
+              "round_means_ms": [
+                12.413891596952453,
+                14.642232994083315,
+                11.448474798817188
+              ]
+            }
+          },
+          "speedup": 1.240582324205682
+        },
+        {
+          "input_tokens": 2048,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 58.27843046087462,
+              "median_ms": 54.31204100023024,
+              "minimum_ms": 51.67895799968392,
+              "maximum_ms": 83.92133301822469,
+              "input_tokens_per_second": 35141.646468583785,
+              "questions_per_second": 17.159007064738176,
+              "physical_peak_bytes": 2332724080,
+              "rss_after_median_bytes": 2529099776,
+              "round_means_ms": [
+                57.90529979276471,
+                57.94023339403793,
+                58.989758195821196
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 28.69569999941935,
+              "median_ms": 26.538957987213507,
+              "minimum_ms": 24.690333986654878,
+              "maximum_ms": 39.73083299933933,
+              "input_tokens_per_second": 71369.57802184441,
+              "questions_per_second": 34.84842676847872,
+              "physical_peak_bytes": 529058480,
+              "rss_after_median_bytes": 759037952,
+              "round_means_ms": [
+                27.727733395295218,
+                30.39194180164486,
+                27.967424801317975
+              ]
+            }
+          },
+          "speedup": 2.0309116160976686
+        },
+        {
+          "input_tokens": 8192,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 461.9934499283166,
+              "median_ms": 456.5336660016328,
+              "minimum_ms": 445.08929198491387,
+              "maximum_ms": 500.1489160058554,
+              "input_tokens_per_second": 17731.8531275088,
+              "questions_per_second": 2.1645328524791014,
+              "physical_peak_bytes": 9192562200,
+              "rss_after_median_bytes": 9385213952,
+              "round_means_ms": [
+                464.7474500001408,
+                454.5441665977705,
+                466.68873318703845
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 145.10709720004039,
+              "median_ms": 144.10350000252947,
+              "minimum_ms": 136.26108400058,
+              "maximum_ms": 166.29358299542218,
+              "input_tokens_per_second": 56454.854091021814,
+              "questions_per_second": 6.891461681032936,
+              "physical_peak_bytes": 668928784,
+              "rss_after_median_bytes": 893091840,
+              "round_means_ms": [
+                145.49043320585042,
+                140.52071659825742,
+                149.31014179601334
+              ]
+            }
+          },
+          "speedup": 3.1838101570692023
+        }
+      ],
+      "commands": {
+        "llama": [
+          "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+          "-m",
+          "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18144",
+          "-c",
+          "8193",
+          "-np",
+          "1",
+          "-ngl",
+          "99",
+          "-b",
+          "8192",
+          "-ub",
+          "8192",
+          "--no-warmup",
+          "--embd-normalize",
+          "-1"
+        ],
+        "splash": [
+          "sh",
+          "julia1splash.sh",
+          "--binary",
+          "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash",
+          "--port",
+          "18145",
+          "--queue-size",
+          "1"
+        ]
+      },
+      "cleanup": {
+        "splash": 0,
+        "llama": 0
+      }
+    },
+    "Laya": {
+      "table": [
+        {
+          "input_tokens": 128,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 20.46600280251975,
+              "median_ms": 15.28145800693892,
+              "minimum_ms": 14.623041002778336,
+              "maximum_ms": 48.763500002678484,
+              "input_tokens_per_second": 6254.274527131443,
+              "questions_per_second": 48.8615197432144,
+              "physical_peak_bytes": 167855736,
+              "rss_after_median_bytes": 589955072,
+              "round_means_ms": [
+                19.45639180485159,
+                22.06978340400383,
+                19.871833198703825
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 14.475266664521769,
+              "median_ms": 11.91875000949949,
+              "minimum_ms": 11.207000003196299,
+              "maximum_ms": 27.414999989559874,
+              "input_tokens_per_second": 8842.669566407525,
+              "questions_per_second": 69.08335598755879,
+              "physical_peak_bytes": 708594256,
+              "rss_after_median_bytes": 702857216,
+              "round_means_ms": [
+                14.370808406965807,
+                14.422166597796604,
+                14.632824988802895
+              ]
+            }
+          },
+          "speedup": 1.4138601572488476
+        },
+        {
+          "input_tokens": 512,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 43.68939999840222,
+              "median_ms": 38.06445901864208,
+              "minimum_ms": 36.97858299710788,
+              "maximum_ms": 68.01312501193024,
+              "input_tokens_per_second": 11719.089756753914,
+              "questions_per_second": 22.88884718115999,
+              "physical_peak_bytes": 257246888,
+              "rss_after_median_bytes": 679641088,
+              "round_means_ms": [
+                43.91279160045087,
+                44.77653340436518,
+                42.378874990390614
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 28.30603906768374,
+              "median_ms": 26.33775002323091,
+              "minimum_ms": 23.29729200573638,
+              "maximum_ms": 44.0977499820292,
+              "input_tokens_per_second": 18088.0129069184,
+              "questions_per_second": 35.328150208825,
+              "physical_peak_bytes": 721390160,
+              "rss_after_median_bytes": 711933952,
+              "round_means_ms": [
+                28.69665040052496,
+                29.41840040148236,
+                26.803066401043907
+              ]
+            }
+          },
+          "speedup": 1.5434656856769924
+        },
+        {
+          "input_tokens": 2048,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 177.2564444031256,
+              "median_ms": 171.16262501804158,
+              "minimum_ms": 168.32137500750832,
+              "maximum_ms": 208.44987500458956,
+              "input_tokens_per_second": 11553.88176094932,
+              "questions_per_second": 5.641543828588535,
+              "physical_peak_bytes": 637290392,
+              "rss_after_median_bytes": 1059553280,
+              "round_means_ms": [
+                179.2421331978403,
+                174.85788321355358,
+                177.6693167979829
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 96.42898053862154,
+              "median_ms": 93.73541601235047,
+              "minimum_ms": 91.79058301378973,
+              "maximum_ms": 110.90970801888034,
+              "input_tokens_per_second": 21238.428411879133,
+              "questions_per_second": 10.370326372987858,
+              "physical_peak_bytes": 778504832,
+              "rss_after_median_bytes": 785629184,
+              "round_means_ms": [
+                96.81415020604618,
+                94.80107500567101,
+                97.67171640414745
+              ]
+            }
+          },
+          "speedup": 1.8382071801757898
+        },
+        {
+          "input_tokens": 8192,
+          "stats": {
+            "llama": {
+              "requests": 15,
+              "mean_ms": 1173.4517249996618,
+              "median_ms": 1169.6856670023408,
+              "minimum_ms": 1165.154457994504,
+              "maximum_ms": 1207.0336250180844,
+              "input_tokens_per_second": 6981.113773557545,
+              "questions_per_second": 0.8521867399362237,
+              "physical_peak_bytes": 2534902856,
+              "rss_after_median_bytes": 2956345344,
+              "round_means_ms": [
+                1177.9859166010283,
+                1171.58598320093,
+                1170.7832751970273
+              ]
+            },
+            "splash": {
+              "requests": 15,
+              "mean_ms": 519.4801028682075,
+              "median_ms": 515.5442919931374,
+              "minimum_ms": 512.349249998806,
+              "maximum_ms": 540.9993339853827,
+              "input_tokens_per_second": 15769.61264689346,
+              "questions_per_second": 1.9250015438102368,
+              "physical_peak_bytes": 1070549824,
+              "rss_after_median_bytes": 1077624832,
+              "round_means_ms": [
+                524.3890418030787,
+                516.6394501982722,
+                517.4118166032713
+              ]
+            }
+          },
+          "speedup": 2.2588963822111343
+        }
+      ],
+      "commands": {
+        "llama": [
+          "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+          "-m",
+          "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "18144",
+          "-c",
+          "8193",
+          "-np",
+          "1",
+          "-ngl",
+          "99",
+          "-b",
+          "8192",
+          "-ub",
+          "8192",
+          "--no-warmup",
+          "--embd-normalize",
+          "-1"
+        ],
+        "splash": [
+          "sh",
+          "layasplash.sh",
+          "--binary",
+          "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash",
+          "--port",
+          "18145",
+          "--queue-size",
+          "1"
+        ]
+      },
+      "cleanup": {
+        "splash": 0,
+        "llama": 0
+      }
+    }
+  },
+  "timed_requests": 360,
+  "method": {
+    "rounds": 3,
+    "samples_per_round": 5,
+    "latency": "HTTP end-to-end",
+    "splash_prefill_rows": 2048,
+    "reference_prefill_rows": {
+      "Kev-0.8B": 2048,
+      "Julia-1": 8192,
+      "Laya": 8192
+    },
+    "memory": "combined process physical footprint; RSS separately",
+    "reference_flash_attention": "auto",
+    "reference_context": 8193,
+    "splash_context": 8192
+  }
+}

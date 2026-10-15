@@ -786,6 +786,8 @@ def main_args(**overrides):
             "compact_draft_capacity": 98304,
             "compact_draft_ranking": None,
             "fast_topk": "off",
+            "encoder_option_queries": "on",
+            "encoder_submit_batch_size": 4,
             "max_image_pixels": images.MAX_PIXELS,
             "request_timeout": None,
             "queue_size": 1,

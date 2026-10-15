@@ -27,6 +27,7 @@ class AneFfn;
 namespace splash::model {
 
 struct Qwen3_5_4BLayout;
+struct Qwen3_5_0_8BLayout;
 struct Qwen3_5_4BDFlashLayout;
 struct Qwen3_8Layout;
 struct Qwen3_8LayerWeights;
@@ -304,7 +305,8 @@ private:
       std::variant<const QwenTargetWeights<Qwen3_8Layout, Qwen3_8LayerWeights> *,
                    const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *,
                    const QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeights> *,
-                   const QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights> *>;
+                   const QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights> *,
+                   const QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights> *>;
   struct PrefillStep;
   struct VerifyStep;
 

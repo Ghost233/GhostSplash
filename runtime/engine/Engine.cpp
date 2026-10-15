@@ -75,6 +75,8 @@ void Engine::submit(EngineRequest value) {
   if (std::any_of(value.prompt.begin(), value.prompt.end(), outOfVocabulary)) {
     throw std::invalid_argument("prompt token is out of vocabulary");
   }
+  if (value.flags & (RequestDecisionScoreType | RequestDecisionNoulType))
+    throw std::invalid_argument("encoder question-type flags require an encoder model");
   const bool decision = value.flags & RequestDecisionScoring;
   if (decision != config_.decisionScoring)
     throw std::invalid_argument("request scoring mode does not match the model");
