@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metal/abi/PagedAttention.h"
+#include "metal/kernels/common/kv_codec.h"
 #include "metal/kernels/common/kv_extent.h"
 #include "metal/kernels/common/kv_paging.h"
 #include <metal_stdlib>
@@ -42,6 +43,8 @@ inline ulong splash_current_value_index(uint stride, uint head, uint token,
 // simdgroup maxima for INT8; BF16 copies the source bits and has none.
 #define SPLASH_STORE_MAXIMA_int8_t threadgroup float maxima[8];
 #define SPLASH_STORE_MAXIMA_bfloat threadgroup float *maxima = nullptr;
+#define SPLASH_STORE_MAXIMA_uchar threadgroup float maxima[8];
+#define SPLASH_STORE_MAXIMA_SplashQ4Block threadgroup float *maxima = nullptr;
 
 // One lane per dimension stores a current row in its final page slot.
 // INT8 derives a per-row scale; BF16 copies the original bits. Slots are
@@ -66,43 +69,6 @@ __attribute__((always_inline)) inline void splash_store_kv_row(
                                                 chunk_token, dimension);
   bfloat source = value_tensor ? chunk_values[source_index] : chunk_keys[source_index];
 
-  if constexpr (is_same<CacheElement, bfloat>::value) {
-    if (value_tensor)
-      slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] = source;
-    else
-      slab.keys[splash_kv_key_index<KVHeads>(0, 0, page_token, dimension)] = source;
-    return;
-  } else {
-
-    float value = float(source);
-    float local_maximum = simd_max(abs(value));
-    if (simd_lane == 0)
-      maxima[simd_group] = local_maximum;
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    if (simd_group == 0) {
-      for (uint offset = 4; offset != 0; offset >>= 1) {
-        if (simd_lane < offset)
-          maxima[simd_lane] = max(maxima[simd_lane], maxima[simd_lane + offset]);
-        simdgroup_barrier(mem_flags::mem_threadgroup);
-      }
-    }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
-    float maximum = maxima[0];
-    float scale = maximum == 0.0f ? 0.0f : maximum / 127.0f;
-    int quantized = maximum == 0.0f
-                        ? 0
-                        : clamp(int(rint(value * 127.0f / maximum)), -127, 127);
-
-    if (value_tensor) {
-      slab.values[splash_kv_value_index<KVHeads>(0, 0, page_token, dimension)] =
-          char(quantized);
-      if (dimension == 0)
-        slab.value_scales[splash_q8_scale_index<KVHeads>(0, 0, page_token)] = scale;
-    } else {
-      slab.keys[splash_kv_key_index<KVHeads>(0, 0, page_token, dimension)] =
-          char(quantized);
-      if (dimension == 0)
-        slab.key_scales[splash_q8_scale_index<KVHeads>(0, 0, page_token)] = scale;
-    }
-  }
+  splash_kv_store_row(slab, source, maxima, value_tensor, page_token,
+                      dimension, simd_lane, simd_group);
 }

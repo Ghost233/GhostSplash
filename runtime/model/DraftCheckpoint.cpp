@@ -4,6 +4,7 @@
 #include "model/GgufPreparation.hpp"
 
 #include <initializer_list>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,8 +16,9 @@ namespace {
 // shapes the draft reads.
 class Builder {
 public:
-  Builder(const SafetensorsCheckpoint &checkpoint, std::string name, uint32_t layer, uint32_t type)
-      : checkpoint_(checkpoint), image_(std::move(name), layer, type) {}
+  Builder(const SafetensorsCheckpoint &checkpoint, std::set<std::string> &consumed,
+          std::string name, uint32_t layer, uint32_t type)
+      : checkpoint_(checkpoint), consumed_(consumed), image_(std::move(name), layer, type) {}
 
   // A tensor copied as stored: a norm, a convolution's base kernel or a
   // selector codebook.
@@ -48,15 +50,18 @@ private:
     const SourceTensor &tensor = checkpoint_.require(name);
     if (tensor.dtype != "BF16" || tensor.shape != shape)
       throw WeightStoreError("source tensor type or shape does not match: " + name);
+    consumed_.insert(name);
     return tensor;
   }
 
   const SafetensorsCheckpoint &checkpoint_;
+  std::set<std::string> &consumed_;
   gguf::ImageBuilder image_;
 };
 
-gguf::Image layerImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraftLayout &layout, uint32_t layer) {
-  Builder b(checkpoint, "layer-" + std::to_string(layer) + ".bin", layer, 0);
+gguf::Image layerImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraftLayout &layout,
+                       uint32_t layer, std::set<std::string> &consumed) {
+  Builder b(checkpoint, consumed, "layer-" + std::to_string(layer) + ".bin", layer, 0);
   const std::string prefix = "layers." + std::to_string(layer) + ".";
   const std::string attention = prefix + "self_attn.";
   const uint64_t hidden = layout.hiddenSize, kv = uint64_t{layout.kvHeads} * layout.attentionHeadDimension;
@@ -65,30 +70,33 @@ gguf::Image layerImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraf
     b.projection({{name + ".kernel_projection", layout.dynamicSize}}, hidden);
   };
   b.stored(prefix + "input_layernorm.weight", {hidden});
-  convolution(prefix + "attention_conv");
+  if (layout.kind == DraftKind::DFlash2) convolution(prefix + "attention_conv");
   b.projection({{attention + "q_proj", layout.attentionSize}, {attention + "k_proj", kv}, {attention + "v_proj", kv}},
                hidden);
   b.stored(attention + "q_norm.weight", {layout.attentionHeadDimension});
   b.stored(attention + "k_norm.weight", {layout.attentionHeadDimension});
   b.projection({{attention + "o_proj", hidden}}, layout.attentionSize);
   b.stored(prefix + "post_attention_layernorm.weight", {hidden});
-  convolution(prefix + "mlp_conv");
+  if (layout.kind == DraftKind::DFlash2) convolution(prefix + "mlp_conv");
   b.projection({{prefix + "mlp.gate_proj", layout.intermediateSize}}, hidden);
   b.projection({{prefix + "mlp.up_proj", layout.intermediateSize}}, hidden);
   b.projection({{prefix + "mlp.down_proj", hidden}}, layout.intermediateSize);
   return b.finish();
 }
 
-gguf::Image modelImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraftLayout &layout) {
-  Builder b(checkpoint, "model.bin", layout.layers, 1);
+gguf::Image modelImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraftLayout &layout,
+                       std::set<std::string> &consumed) {
+  Builder b(checkpoint, consumed, "model.bin", layout.layers, 1);
   const std::string selector = "candidate_selector.";
   const uint64_t hidden = layout.hiddenSize;
   b.projection({{"fc", hidden}}, layout.targetHiddenSize);
   b.stored("hidden_norm.weight", {hidden});
   b.stored("norm.weight", {hidden});
-  b.projection({{selector + "hidden_projection", layout.selectorRank}}, hidden);
-  b.stored(selector + "predecessor_codebook", {layout.vocabularySize, layout.selectorRank});
-  b.stored(selector + "successor_codebook", {layout.vocabularySize, layout.selectorRank});
+  if (layout.kind == DraftKind::DFlash2) {
+    b.projection({{selector + "hidden_projection", layout.selectorRank}}, hidden);
+    b.stored(selector + "predecessor_codebook", {layout.vocabularySize, layout.selectorRank});
+    b.stored(selector + "successor_codebook", {layout.vocabularySize, layout.selectorRank});
+  }
   return b.finish();
 }
 
@@ -96,8 +104,13 @@ gguf::Image modelImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraf
 
 std::vector<gguf::Image> planDraftImages(const SafetensorsCheckpoint &checkpoint, const DFlashDraftLayout &layout) {
   std::vector<gguf::Image> images;
-  for (uint32_t layer = 0; layer < layout.layers; ++layer) images.push_back(layerImage(checkpoint, layout, layer));
-  images.push_back(modelImage(checkpoint, layout));
+  std::set<std::string> consumed;
+  for (uint32_t layer = 0; layer < layout.layers; ++layer)
+    images.push_back(layerImage(checkpoint, layout, layer, consumed));
+  images.push_back(modelImage(checkpoint, layout, consumed));
+  if (layout.kind == DraftKind::Standard &&
+      (consumed.size() != uint64_t{layout.layers} * 11 + 3 || checkpoint.tensorCount() != consumed.size()))
+    throw WeightStoreError("standard DFlash checkpoint contains unconsumed tensors");
   return images;
 }
 

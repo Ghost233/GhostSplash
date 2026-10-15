@@ -1284,6 +1284,97 @@ void sharedEventNotifies(const std::string &metallibPath) {
     std::cout << "PASS shared event notifies\n";
 }
 
+IMP originalBoundaryCommit = nullptr;
+std::thread::id boundaryCaller;
+unsigned boundaryCommits = 0;
+void observeBoundaryCommit(id command, SEL selector) {
+    if (std::this_thread::get_id() == boundaryCaller) ++boundaryCommits;
+    reinterpret_cast<void (*)(id, SEL)>(originalBoundaryCommit)(command, selector);
+}
+
+void commandBufferBoundaries(const std::string &metallibPath) {
+    MetalBackend backend(metallibPath);
+    MetalBuffer buffer = sharedBuffer(backend, sizeof(uint32_t));
+    auto *value = static_cast<volatile uint32_t *>(buffer.contents());
+    *value = 0;
+    const uint32_t count = 1, one = 1, ten = 10;
+    std::vector<ComputeDispatch> dispatches{addition(buffer, count, one), addition(buffer, count, ten)};
+    dispatches.front().commandBufferBoundaryAfter = true;
+    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    id<MTLCommandBuffer> probe = [[device newCommandQueue] commandBuffer];
+    {
+        MethodReplacement commits(probe, @selector(commit), reinterpret_cast<IMP>(&observeBoundaryCommit));
+        originalBoundaryCommit = commits.original;
+        boundaryCaller = std::this_thread::get_id(); boundaryCommits = 0;
+        (void)backend.submitCommandAsync(dispatches).wait();
+        require(boundaryCommits == 2, "explicit boundary did not commit two Metal buffers");
+    }
+    require(*value == 11, "buffer boundary changed dispatch order or bindings");
+    std::vector<ComputeDispatch> overflow(512, dispatches.front());
+    rejects([&] { (void)backend.submitCommandAsync(overflow); }, "more boundaries",
+            "a command exceeding queue capacity was accepted");
+    (void)backend.submitCommandAsync(dispatches).wait();
+    require(*value == 22, "refused boundaries poisoned the backend");
+    const SharedEvent event = backend.newSharedEvent();
+    const std::vector<EventStep> events{{1, event, 1, EventStep::Kind::Wait}};
+    CommandTicket ticket = backend.submitCommandAsync(Command{dispatches, events});
+    require(waitFor([&] { return *value == 23; }, std::chrono::seconds(5)) && !ticket.ready(),
+            "a later event wait blocked the earlier buffer or completed the ticket");
+    event.signal(1);
+    (void)ticket.wait();
+    require(*value == 33, "event wait across explicit buffers changed dispatch order");
+    std::cout << "PASS explicit command buffer boundaries\n";
+}
+
+// A slow producer must not spend Metal's event-wait timeout while queued.
+void deferredEventWait(const std::string &metallibPath) {
+    MetalBackend backend(metallibPath);
+    MetalBuffer buffer = sharedBuffer(backend, sizeof(uint32_t));
+    auto *value = static_cast<volatile uint32_t *>(buffer.contents());
+    *value = 0;
+    const uint32_t count = 1, one = 1, ten = 10;
+    std::vector<ComputeDispatch> dispatches{addition(buffer, count, one), addition(buffer, count, ten)};
+    dispatches.front().commandBufferBoundaryAfter = true;
+    const SharedEvent event = backend.newSharedEvent();
+    const std::vector<EventStep> events{{1, event, 1, EventStep::Kind::Wait}};
+    CommandTicket ticket = backend.submitCommandAsync(Command{dispatches, events});
+    require(waitFor([&] { return *value == 1; }, std::chrono::seconds(5)), "producer prefix never completed");
+    std::this_thread::sleep_for(std::chrono::seconds(7));
+    event.signal(1);
+    (void)ticket.wait();
+    require(*value == 11 && backend.healthy(), "slow event producer poisoned the backend or changed output");
+    buffer = {}; dispatches.clear();
+    require(waitFor([&] { return backend.memoryStats().allocatedBytes == 0; }, std::chrono::seconds(3)),
+            "completed deferred ticket retained buffer allocations");
+    std::cout << "PASS deferred event wait preserves output and original command deadline\n";
+}
+
+void deferredEventCancellation(const std::string &metallibPath) {
+    for (bool shutdown : {false, true}) {
+        MetalBackend backend(metallibPath, kResidencyKeepAliveSeconds,
+                             shutdown ? splash::metal::kCommandTimeoutSeconds : kShortCommandTimeoutSeconds);
+        MetalBuffer buffer = sharedBuffer(backend, sizeof(uint32_t));
+        auto *value = static_cast<volatile uint32_t *>(buffer.contents()); *value = 0;
+        const uint32_t count = 1, one = 1;
+        std::vector<ComputeDispatch> dispatches(3, addition(buffer, count, one));
+        dispatches.front().commandBufferBoundaryAfter = true;
+        dispatches[1].commandBufferBoundaryAfter = true;
+        const SharedEvent event = backend.newSharedEvent();
+        const std::vector<EventStep> events{{1, event, 1, EventStep::Kind::Wait}};
+        CommandTicket ticket = backend.submitCommandAsync(Command{dispatches, events});
+        require(waitFor([&] { return *value == 1; }, std::chrono::seconds(5)), "deferred prefix did not run");
+        if (shutdown) backend.setWaitInterrupt([] { return true; });
+        rejects([&] { (void)ticket.wait(); }, shutdown ? "shutdown requested" : "timed out", "deferred wait did not preserve cancellation error");
+        require(!ticket.ready(), "abandoned ticket did not clear its state");
+        rejects([&] { (void)ticket.wait(); }, "ticket is empty", "abandoned ticket retained an active command");
+        require([(__bridge id<MTLSharedEvent>)event.nativeHandle() signaledValue] == 0, "deferred cancellation advanced a foreign event");
+        buffer = {}; dispatches.clear();
+        require(waitFor([&] { return backend.memoryStats().allocatedBytes == 0; }, std::chrono::seconds(3)),
+                "cancelled deferred ticket retained unsubmitted buffers");
+    }
+    std::cout << "PASS deferred cancellation keeps errors, foreign events and allocation lifetime\n";
+}
+
 // Event steps order a command against another agent, the CPU here: the work
 // before a signal completes before the event rises, and the work after a wait
 // runs only once the agent raises the event to its value.
@@ -1744,11 +1835,14 @@ void run(const std::string &metallibPath) {
 
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
-        if (argc != 2) {
-            std::cerr << "usage: metal_backend_test <test.metallib>\n";
+        if (argc != 2 && !(argc == 3 && std::string(argv[2]) == "--deferred-wait")) {
+            std::cerr << "usage: metal_backend_test <test.metallib> [--deferred-wait]\n";
             return 2;
         }
         try {
+            if (argc == 3) { deferredEventWait(argv[1]); deferredEventCancellation(argv[1]); return 0; }
+            deferredEventWait(argv[1]);
+            deferredEventCancellation(argv[1]);
             completionDoesNotWaitForMemoryTelemetry(argv[1]);
             terminalCommandRecovers(argv[1], false);
             terminalCommandRecovers(argv[1], false, true);
@@ -1767,6 +1861,7 @@ int main(int argc, const char *argv[]) {
             releasedMemory(argv[1]);
             wrappedMemory(argv[1]);
             sharedEventNotifies(argv[1]);
+            commandBufferBoundaries(argv[1]);
             eventSteps(argv[1]);
             eventPairsRunInOrder(argv[1]);
             malformedEventStepsRefused(argv[1]);

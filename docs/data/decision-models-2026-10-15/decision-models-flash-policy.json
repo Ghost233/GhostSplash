@@ -1,0 +1,162 @@
+[
+  {
+    "policy": "auto",
+    "command": [
+      "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+      "-m",
+      "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18149",
+      "-c",
+      "8193",
+      "-np",
+      "1",
+      "-ngl",
+      "99",
+      "-b",
+      "8192",
+      "-ub",
+      "8192",
+      "-fa",
+      "auto",
+      "--no-warmup",
+      "--embd-normalize",
+      "-1"
+    ],
+    "run0": {
+      "seconds": 0.9357989999989513,
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "shipping",
+            "probabilities": {
+              "shipping": 0.9984815580418737,
+              "billing": 0.0015184419581263417
+            },
+            "confidence": 0.9969631160837473
+          }
+        },
+        "usage": {
+          "input_tokens": 8192,
+          "output_tokens": 0
+        }
+      },
+      "memory": {
+        "rss_bytes": 9381527552,
+        "physical_footprint_bytes": 9189137920,
+        "lifetime_peak_physical_footprint_bytes": 9189137920
+      }
+    },
+    "run1": {
+      "seconds": 0.496811708988389,
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "shipping",
+            "probabilities": {
+              "shipping": 0.9984815580418737,
+              "billing": 0.0015184419581263417
+            },
+            "confidence": 0.9969631160837473
+          }
+        },
+        "usage": {
+          "input_tokens": 8192,
+          "output_tokens": 0
+        }
+      },
+      "memory": {
+        "rss_bytes": 9382985728,
+        "physical_footprint_bytes": 9190514176,
+        "lifetime_peak_physical_footprint_bytes": 9190514176
+      }
+    },
+    "exit": 0
+  },
+  {
+    "policy": "on",
+    "command": [
+      "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.56.0/llama-server",
+      "-m",
+      "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18149",
+      "-c",
+      "8193",
+      "-np",
+      "1",
+      "-ngl",
+      "99",
+      "-b",
+      "8192",
+      "-ub",
+      "8192",
+      "-fa",
+      "on",
+      "--no-warmup",
+      "--embd-normalize",
+      "-1"
+    ],
+    "run0": {
+      "seconds": 0.8910137090133503,
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "shipping",
+            "probabilities": {
+              "shipping": 0.9984815580418737,
+              "billing": 0.0015184419581263417
+            },
+            "confidence": 0.9969631160837473
+          }
+        },
+        "usage": {
+          "input_tokens": 8192,
+          "output_tokens": 0
+        }
+      },
+      "memory": {
+        "rss_bytes": 9381314560,
+        "physical_footprint_bytes": 9188974056,
+        "lifetime_peak_physical_footprint_bytes": 9188974056
+      }
+    },
+    "run1": {
+      "seconds": 0.47807408298831433,
+      "response": {
+        "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "shipping",
+            "probabilities": {
+              "shipping": 0.9984815580418737,
+              "billing": 0.0015184419581263417
+            },
+            "confidence": 0.9969631160837473
+          }
+        },
+        "usage": {
+          "input_tokens": 8192,
+          "output_tokens": 0
+        }
+      },
+      "memory": {
+        "rss_bytes": 9382805504,
+        "physical_footprint_bytes": 9190383080,
+        "lifetime_peak_physical_footprint_bytes": 9190383080
+      }
+    },
+    "exit": 0
+  }
+]

@@ -1,0 +1,14 @@
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/runtime-resources' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/runtime_resources_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/runtime-resources
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/vision-metal' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 dev/tests/engine/vision_metal_test.cpp build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/vision-metal
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/vision-attention' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/vision_attention_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/vision-attention
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/gguf-iq1s-replay' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc \
+		dev/tests/engine/gguf_iq1s_replay_test.mm build/merge-upstream-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/gguf-iq1s-replay
+dev/tests/engine/runtime_resources_test.mm:751:12: error: no member named 'hostAvailableMemory' in 'splash::engine::RuntimeResourcesConfig'
+  751 |     config.hostAvailableMemory = [] { return std::optional<uint64_t>(64ULL << 30); };
+      |     ~~~~~~ ^
+1 error generated.
+make: *** [build/merge-upstream-20261015/engine-tests/runtime-resources] Error 1
+make: *** Waiting for unfinished jobs....

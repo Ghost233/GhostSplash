@@ -48,6 +48,9 @@ struct QwenTargetDimensions {
   uint32_t experts = 0;
   uint32_t expertsPerToken = 0;
   uint32_t expertIntermediateSize = 0;
+  bool tiedWordEmbeddings = false;
+  // Kev uses a [query | key] pointer projection instead of a vocabulary head.
+  uint32_t decisionHeadSize = 0;
 
   [[nodiscard]] constexpr bool
   isFullAttentionLayer(uint32_t layer) const noexcept {

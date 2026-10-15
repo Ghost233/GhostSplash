@@ -2,10 +2,12 @@
 
 #include "model/Qwen3_6Moe.hpp"
 #include "model/Qwen3_8.hpp"
+#include "model/Qwen3_5_4B.hpp"
 #include "model/WeightStore.hpp"
 #include "ops/AneFfn.hpp"
 #include "ops/Embedding.hpp"
 #include "ops/Normalization.hpp"
+#include "ops/SingleTokenLinear.hpp"
 #include "ops/RowCopy.hpp"
 
 #include <algorithm>
@@ -46,6 +48,11 @@ QwenTarget::QwenTarget(const QwenTargetWeights<Layout, Layer> &weights,
 template QwenTarget::QwenTarget(const Qwen3_8Weights &, const QwenTargetGeometry &, metal::MetalBackend &,
                                 const ops::ExecutionPlans &);
 template QwenTarget::QwenTarget(const Qwen3_6MoeWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
+                                const ops::ExecutionPlans &);
+template QwenTarget::QwenTarget(const Qwen3_5_0_8BWeights &, const QwenTargetGeometry &, metal::MetalBackend &, const ops::ExecutionPlans &);
+template QwenTarget::QwenTarget(const Qwen3_5_4BWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
+                                const ops::ExecutionPlans &);
+template QwenTarget::QwenTarget(const Qwen3_5_4BDFlashWeights &, const QwenTargetGeometry &, metal::MetalBackend &,
                                 const ops::ExecutionPlans &);
 
 namespace {
@@ -127,6 +134,9 @@ QwenTargetGeometry qwenTargetGeometry(const QwenTargetWeights<Layout, Layer> &we
 
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_8Weights &);
 template QwenTargetGeometry qwenTargetGeometry(const Qwen3_6MoeWeights &);
+template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BWeights &);
+template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_0_8BWeights &);
+template QwenTargetGeometry qwenTargetGeometry(const Qwen3_5_4BDFlashWeights &);
 
 const ops::Projection &QwenTarget::vocabularyProjection() const noexcept {
   return weightsBase_.logitsProjection;
@@ -469,6 +479,13 @@ void QwenTarget::addVerifyFfn(VerifyStep &step, const Qwen3_6MoeLayerWeights &la
   ops::Normalization::addRms(step.graph, residual, layer.postAttentionNorm, b.normalized, geometry_.hiddenSize,
                              step.rows);
   ops::MoE::add(step.graph, {b.normalized, residual, output, b.moe}, layer.ffn, *step.moe);
+}
+
+void QwenTarget::addHeadOne(metal::CommandGraph &graph, metal::MetalBuffer hidden,
+                            metal::MetalBuffer finalHidden, metal::MetalBuffer logits) const {
+  ops::Normalization::addRms(graph, std::move(hidden), weightsBase_.finalNorm, finalHidden,
+                             geometry_.hiddenSize, 1);
+  ops::addSingleTokenLinear(graph, std::move(finalHidden), vocabularyProjection(), std::move(logits));
 }
 
 void QwenTarget::addHeadBatch(metal::CommandGraph &graph, metal::MetalBuffer hidden,

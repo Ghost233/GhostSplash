@@ -1,0 +1,2 @@
+11:58:49 ModernBERT: quantized weights=175034628; workspace=3680288; KV=0; FP16 cache=0; selected option queries=on; numerical check passed
+{"status": "passed", "checks": 3, "exit": 0}

@@ -68,10 +68,19 @@ bool sameBytes(const metal::MetalBuffer &buffer, const std::vector<uint8_t> &ima
 }
 
 // Every byte of a lane's current state, in the order its disk copy holds
-// them: its current GDN cell and its context window.
+// them: GDN and the selected window/rings payload, or GDN alone.
 std::vector<std::vector<uint8_t>> stateImage(const model::QwenStateStorage &storage,
                                              uint32_t lane) {
-  return {bytesOf(storage.current(lane).stateBase), bytesOf(storage.window(lane))};
+  std::vector<std::vector<uint8_t>> image{bytesOf(storage.current(lane).stateBase)};
+  if (storage.layout().draft.usesContextWindow()) {
+    image.push_back(bytesOf(storage.window(lane)));
+  } else if (storage.layout().draft.fullHistory) {
+    for (const auto &layer : storage.draft(lane)) {
+      image.push_back(bytesOf(layer.keys));
+      image.push_back(bytesOf(layer.values));
+    }
+  }
+  return image;
 }
 
 // The lengths of a lane at `tokens` whose rings and window hold the last
@@ -494,6 +503,144 @@ void testPersistKeepsTheRamCopy(metal::MetalBackend &backend) {
   storage.releaseLane(0, 7);
 }
 
+void testTargetOnlyState(metal::MetalBackend &backend) {
+  constexpr model::CompositeStateLayout layout{{1, 3, 128, 1, 128, 128}, {}};
+  require(layout.valid() && layout.draft.ringBytes() == 0 && layout.draft.windowBytes() == 0 &&
+              layout.cachedBytes() == layout.target.cellBytes(),
+          "target-only state allocated a draft ring");
+  MemoryGovernor governor(backend, backend.capabilities().recommendedMaxWorkingSetBytes, 1, 1,
+                          queryHostMemory, 0);
+  const uint64_t slot = model::SlotFile::slotBytesFor(layout.cachedBytes());
+  const auto file = std::make_shared<model::SlotFile>(slot, std::make_shared<model::DiskBudget>(slot));
+  model::QwenStateStorage storage(backend, governor.allocationAdmission(), layout, file);
+  require(bool(storage.tryActivateLane(0, 701)), "target-only activation failed");
+  fill(storage.current(0).stateBase, 17);
+  const auto original = stateImage(storage, 0);
+  constexpr uint32_t tokens = kv::kPageTokens;
+  storage.updateLengths(0, {tokens, 0, 0});
+  auto reservation = storage.reserve();
+  require(reservation && !reservation->buffers().draft && !reservation->buffers().window,
+          "target-only reservation allocated a draft payload");
+  storage.copyWindow(0, *reservation);
+  storage.copyState(0, *reservation);
+  auto snapshot = storage.seal(*reservation, {tokens, 0, 0});
+  reservation.reset();
+  require(snapshot != nullptr && storage.draft(0).empty(), "target-only snapshot failed");
+  snapshot.reset();
+  // A cached GDN cell returns to the pool; neither snapshot owns a window.
+  snapshot = storage.snapshot(0);
+  require(snapshot != nullptr, "target-only pooled GDN snapshot failed");
+  storage.releaseLane(0, 701);
+  require(bool(storage.tryActivateLane(1, 702)), "target-only lane move failed");
+  bool committed = false;
+  auto read = storage.beginRestore(1, *snapshot, true, {}, [&] { committed = true; });
+  require(!read && committed && stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths.targetTokens == tokens,
+          "target-only prefix restore changed state or lengths");
+  require(storage.idleWindows() == 0 && original.size() == 1,
+          "target-only cache retained a draft payload");
+  auto write = snapshot->offload({});
+  require(write && finishWhenReady(*write), "target-only disk snapshot failed");
+  auto disk = write->state();
+  write.reset();
+  fill(storage.current(1).stateBase, 23);
+  read = storage.beginRestore(1, *disk, true, {}, [] {});
+  require(read && finishWhenReady(*read) && stateImage(storage, 1) == original,
+          "target-only disk restore lost GDN or required a window");
+  read.reset();
+  storage.releaseLane(1, 702);
+}
+
+void testFullHistoryState(metal::MetalBackend &backend) {
+  constexpr model::CompositeStateLayout layout{{1, 3, 128, 1, 128, 128},
+      {6, 1, 16, 256, true, {4096, 4096, 4096, 4096, 4096, 8192}}};
+  constexpr uint64_t ringPayload = uint64_t{2} * 16 * 2 * (5 * 4096 + 8192);
+  require(layout.valid() && layout.draft.historyCapacity() == 8192 &&
+              !layout.draft.usesContextWindow() && layout.draft.windowBytes() == 0 &&
+              layout.draft.ringBytes() == ringPayload &&
+              layout.cachedBytes() == layout.target.cellBytes() + ringPayload,
+          "standard cached payload replaced full per-layer rings with a short window");
+  MemoryGovernor governor(backend, backend.capabilities().recommendedMaxWorkingSetBytes, 1, 1,
+                          queryHostMemory, 0);
+  const uint64_t slot = model::SlotFile::slotBytesFor(layout.cachedBytes());
+  const auto file = std::make_shared<model::SlotFile>(slot, std::make_shared<model::DiskBudget>(slot));
+  model::QwenStateStorage storage(backend, governor.allocationAdmission(), layout, file);
+  require(bool(storage.tryActivateLane(0, 801)), "full-history state activation failed");
+  fill(storage.current(0).stateBase, 29);
+  for (uint32_t layer = 0; layer < layout.draft.layers; ++layer) {
+    require(storage.draft(0)[layer].capacity == layout.draft.contextTokens(layer) &&
+                storage.draft(0)[layer].keys.sizeBytes() == layout.draft.tensorBytes(layer) &&
+                storage.draft(0)[layer].values.sizeBytes() == layout.draft.tensorBytes(layer),
+            "full-history per-layer cache sizes are incorrect");
+    fill(storage.draft(0)[layer].keys, 41 + layer);
+    fill(storage.draft(0)[layer].values, 71 + layer);
+  }
+  const auto original = stateImage(storage, 0);
+  storage.updateLengths(0, {6144, 0, 6144});
+  // An unsealed reservation gives both the GDN cell and complete rings
+  // back once. It never substitutes a DFlash2 context window.
+  auto reservation = storage.reserve();
+  require(reservation && reservation->buffers().draft && !reservation->buffers().window,
+          "full-history reservation omitted its rings or allocated a window");
+  const uint64_t allocated = storage.actualAllocatedBytes();
+  reservation.reset();
+  require(storage.idleCells() == 1 && storage.idleRings() == 1 && storage.idleWindows() == 0,
+          "unsealed full-history reservation did not return both payloads");
+  reservation = storage.reserve();
+  require(reservation && storage.idleCells() == 0 && storage.idleRings() == 0 &&
+              storage.actualAllocatedBytes() == allocated,
+          "full-history reservation did not reuse its pooled buffers");
+  storage.copyWindow(0, *reservation);
+  storage.copyState(0, *reservation);
+  auto cached = storage.seal(*reservation, {6144, 0, 6144});
+  reservation.reset();
+  require(cached != nullptr && cached->bytes() == layout.cachedBytes(), "full-history snapshot allocation failed");
+  require(storage.idleWindows() == 0 && original.size() == 1 + 2 * layout.draft.layers,
+          "standard snapshot kept a lossy window or omitted a layer");
+  fill(storage.current(0).stateBase, 101);
+  for (const auto &layer : storage.draft(0)) {
+    fill(layer.keys, 103); fill(layer.values, 107);
+  }
+  require(bool(storage.tryActivateLane(1, 802)), "full-history restore activation failed");
+  bool committed = false;
+  require(!storage.beginRestore(1, *cached, true, {}, [&] { committed = true; }) && committed &&
+              stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths == model::QwenLogicalLengths{6144, 0, 6144} &&
+              storage.metadata(1).lengths.hasCompleteDraftWindow(8192),
+          "full-history restore lost prefix cache bytes or metadata");
+  auto write = cached->offload({});
+  require(write && finishWhenReady(*write), "standard rings did not reach disk");
+  auto disk = write->state();
+  write.reset();
+  fill(storage.current(1).stateBase, 109);
+  for (const auto &layer : storage.draft(1)) {
+    fill(layer.keys, 113); fill(layer.values, 127);
+  }
+  auto read = storage.beginRestore(1, *disk, true, {}, [] {});
+  require(read && finishWhenReady(*read) && stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths == model::QwenLogicalLengths{6144, 0, 6144},
+          "standard disk restore truncated history or lost any layer's ring bytes");
+  read.reset();
+  read = storage.beginRestore(1, *disk, false, {}, [] {});
+  require(read && finishWhenReady(*read) && storage.metadata(1).lengths.draftLength == 0,
+          "standard GDN-only restore exposed stale draft metadata");
+  auto promoted = read->snapshot();
+  require(promoted && promoted->bytes() == layout.cachedBytes(),
+          "standard disk promotion lost its full-ring payload");
+  read.reset();
+  require(!storage.beginRestore(1, *promoted, true, {}, [] {}) &&
+              stateImage(storage, 1) == original &&
+              storage.metadata(1).lengths == model::QwenLogicalLengths{6144, 0, 6144},
+          "standard promotion after a skipped draft restore lost complete history");
+  // A legacy-looking last-2048 prefix cannot be cached as a complete full
+  // attention state, even though it still satisfies the old window rule.
+  storage.updateLengths(1, {6144, 4096, 2048});
+  rejects([&] { static_cast<void>(storage.snapshot(1)); },
+          "composite snapshot requires equal page-aligned committed lengths",
+          "partial sliding prefix was accepted as a full-history snapshot");
+  storage.releaseLane(0, 801); storage.releaseLane(1, 802);
+}
+
 // A state a prefill command captures takes its cache slot before the command
 // runs: the pool's buffers, one admission for what the pool lacks, nothing
 // on a refusal. copyWindow() fills the slot's window alone and copyState()
@@ -612,6 +759,8 @@ void run(const std::string &metallib) {
 
   testLayoutFormulas();
   metal::MetalBackend backend(metallib);
+  testTargetOnlyState(backend);
+  testFullHistoryState(backend);
   testOffloadAllocationFailure(backend);
   testDiskRestore(backend);
   testDirectDiskSnapshot(backend);
@@ -663,6 +812,9 @@ void run(const std::string &metallib) {
                 storage.actualAllocatedBytes() == 2 * observedLaneActual,
             "activated lane accounting is not incremental");
     observedStorageActual = storage.actualAllocatedBytes();
+    require(storage.draftAllocatedBytes() ==
+                2 * (storage.draft(0)[0].keys.allocatedBytes() + storage.window(0).allocatedBytes()),
+            "draft memory subset does not count ring and window allocations once per lane");
 
     // A lane's accessors read the cells it holds now: at parity p, current()
     // is its cell p and next() its cell p ^ 1.
@@ -984,7 +1136,7 @@ void run(const std::string &metallib) {
     // No cached state holds rings: without idle rings no number of states
     // makes up a lane.
     constexpr uint32_t kNoStatesSuffice = std::numeric_limits<uint32_t>::max();
-    require(storage.actualAllocatedBytes() == 0 &&
+    require(storage.actualAllocatedBytes() == 0 && storage.draftAllocatedBytes() == 0 &&
                 storage.statesToActivate() == kNoStatesSuffice,
             "reclaimed state cells remain accounted");
 

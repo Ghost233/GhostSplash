@@ -1367,6 +1367,99 @@ kernel void draft_select_dflash(
   }
 }
 
+// Standard greedy proposal selection: one maximum per vocabulary shard,
+// with token-id tie breaking. It does not construct unused top-16 lists.
+kernel void draft_select_argmax_sharded(device const float *logits [[buffer(0)]],
+                                        device uint *partial_ids [[buffer(1)]],
+                                        device float *partial_values [[buffer(2)]],
+                                        constant uint &vocabulary [[buffer(3)]],
+                                        uint group [[threadgroup_position_in_grid]],
+                                        uint tid [[thread_index_in_threadgroup]], uint lane [[thread_index_in_simdgroup]],
+                                        uint simdgroup [[simdgroup_index_in_threadgroup]]) {
+  constexpr uint Positions = SPLASH_DRAFT_PROPOSAL_TOKENS, Shards = SPLASH_DRAFT_SAMPLING_SHARDS;
+  const uint proposal = group / Shards, shard = group % Shards;
+  const uint batch = proposal / Positions, position = proposal % Positions;
+  const uint shardTokens = (vocabulary + Shards - 1) / Shards;
+  const uint begin = min(shard * shardTokens, vocabulary), end = min(begin + shardTokens, vocabulary);
+  device const float *row = logits + (ulong(batch) * SPLASH_DRAFT_QUERY_ROWS + position + 1) * vocabulary;
+  float maximum = -INFINITY; uint token = 0xffffffffu;
+  for (uint at = begin + tid; at < end; at += 256) {
+    const float value = row[at];
+    if (top_beats(value, at, maximum, token)) { maximum = value; token = at; }
+  }
+  const float best = simd_max(maximum);
+  const uint bestId = simd_min(maximum == best ? token : 0xffffffffu);
+  threadgroup float maxima[8]; threadgroup uint ids[8];
+  if (lane == 0) { maxima[simdgroup] = best; ids[simdgroup] = bestId; }
+  threadgroup_barrier(mem_flags::mem_threadgroup);
+  if (tid == 0) {
+    float value = maxima[0]; uint id = ids[0];
+    for (uint other = 1; other < 8; ++other)
+      if (top_beats(maxima[other], ids[other], value, id)) { value = maxima[other]; id = ids[other]; }
+    partial_ids[group] = id; partial_values[group] = value;
+  }
+}
+
+kernel void draft_select_argmax_merge(device const uint *partial_ids [[buffer(0)]],
+                                      device const float *partial_values [[buffer(1)]],
+                                      device uint *tokens [[buffer(2)]], uint row [[threadgroup_position_in_grid]],
+                                      uint lane [[thread_index_in_simdgroup]]) {
+  constexpr uint Shards = SPLASH_DRAFT_SAMPLING_SHARDS;
+  const float value = lane < Shards ? partial_values[row * Shards + lane] : -INFINITY;
+  const uint id = lane < Shards ? partial_ids[row * Shards + lane] : 0xffffffffu;
+  const float best = simd_max(value);
+  const uint token = simd_min(value == best ? id : 0xffffffffu);
+  if (lane == 0) tokens[row] = token;
+}
+
+// Standard DFlash has no edge scores: each proposal row is selected
+// directly from its unary logits. The shared sharded scan is exact over the
+// full vocabulary, so greedy's first candidate is the true argmax.
+kernel void draft_select_unary_merge(device const uint *partial_ids [[buffer(0)]],
+                                     device const float *partial_values [[buffer(1)]],
+                                     device uint *candidates [[buffer(2)]], device float *unary [[buffer(3)]],
+                                     constant uint &positions [[buffer(4)]],
+                                     uint row [[threadgroup_position_in_grid]], uint lane [[thread_index_in_simdgroup]]) {
+  if (row >= positions) return;
+  float value; uint token;
+  top16_merge_shards(partial_ids, partial_values, row, lane, value, token);
+  if (lane < SPLASH_DRAFT_CANDIDATES) {
+    candidates[row * SPLASH_DRAFT_CANDIDATES + lane] = token;
+    unary[row * SPLASH_DRAFT_CANDIDATES + lane] = value;
+  }
+}
+
+kernel void draft_select_unary(device const uint *candidates [[buffer(0)]],
+                               device const float *unary [[buffer(1)]], device const float *uniforms [[buffer(2)]],
+                               device uint *tokens [[buffer(3)]], device float *q_probs [[buffer(4)]],
+                               constant SelectorBatchParams &params [[buffer(5)]], uint batch [[thread_position_in_grid]]) {
+  constexpr uint Positions = SPLASH_DRAFT_PROPOSAL_TOKENS, Candidates = SPLASH_DRAFT_CANDIDATES;
+  const bool sampling = (params.sampling_mask & (1u << batch)) != 0;
+  for (uint position = 0; position < Positions; ++position) {
+    const uint row = batch * Positions + position, base = row * Candidates;
+    uint selected = 0;
+    if (sampling) {
+      const float maximum = unary[base];
+      float probabilities[Candidates], sum = 0.0f;
+      for (uint i = 0; i < Candidates; ++i) {
+        probabilities[i] = exp((unary[base + i] - maximum) / params.temperature[batch]);
+        sum += probabilities[i];
+      }
+      const float uniform = uniforms[batch * SPLASH_SAMPLING_UNIFORMS + SPLASH_UNIFORM_PROPOSALS + position];
+      float cumulative = 0.0f;
+      selected = Candidates - 1;
+      bool crossed = false;
+      for (uint i = 0; i < Candidates; ++i) {
+        const float probability = probabilities[i] / sum;
+        q_probs[base + i] = probability;
+        cumulative += probability;
+        if (!crossed && cumulative > uniform) { selected = i; crossed = true; }
+      }
+    }
+    tokens[row] = candidates[base + selected];
+  }
+}
+
 inline float sparse_lookup(device const uint *ids,
                            device const float *probabilities, uint count,
                            uint token) {
@@ -1625,4 +1718,109 @@ kernel void decode_accept_dflash(
     accept_greedy_lane(lane_draft, lane_target, retained[batch],
                        accepted_count[batch], lane_params);
   }
+}
+
+
+// Opt-in small top-k: exact top-32 shard lists replace full softmax mass and
+// vocabulary partition searches. The existing draw/acceptance kernels still
+// perform the residual correction in token order.
+kernel void decode_sample_topk32_sharded(
+    device const float *logits [[buffer(0)]],
+    device const uint *token_mask [[buffer(1)]],
+    device TopKCandidate *partials [[buffer(2)]],
+    constant TargetSamplingParams &params [[buffer(3)]],
+    uint group [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]],
+    uint lane [[thread_index_in_simdgroup]],
+    uint simd_group [[simdgroup_index_in_threadgroup]]) {
+  constexpr uint Shards = SPLASH_TARGET_SAMPLING_SHARDS;
+  const uint s = group / Shards;
+  if (!lane_samples(params, s)) return;
+  const TargetRow row = selected_row(logits, token_mask, params, s);
+  const uint k = params.top_k[selected_lane(params, s)];
+  TopKCandidate own[32];
+  for (uint i = 0; i < 32; ++i) own[i] = {-INFINITY, 0xffffffffu};
+  for (uint token = (group % Shards) * 256 + tid; token < row.vocabulary;
+       token += Shards * 256) {
+    if (!row.admits(token)) continue;
+    const float value = row.logits[token];
+    if (isnan(value) || value == -INFINITY) continue;
+    for (uint i = 0; i < k; ++i)
+      if (value > own[i].value || (value == own[i].value && token < own[i].id)) {
+        for (uint j = k - 1; j > i; --j) own[j] = own[j - 1];
+        own[i] = {value, token};
+        break;
+      }
+  }
+  threadgroup float values[8];
+  threadgroup uint ids[8];
+  threadgroup TopKCandidate winner;
+  uint at = 0;
+  for (uint i = 0; i < k; ++i) {
+    const float value = at < k ? own[at].value : -INFINITY;
+    const float best = simd_max(value);
+    const uint id = simd_min(value == best && at < k ? own[at].id : 0xffffffffu);
+    if (!lane) { values[simd_group] = best; ids[simd_group] = id; }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    if (!tid) {
+      winner = {-INFINITY, 0xffffffffu};
+      for (uint j = 0; j < 8; ++j)
+        if (values[j] > winner.value || (values[j] == winner.value && ids[j] < winner.id))
+          winner = {values[j], ids[j]};
+      partials[ulong(group) * 32 + i] = winner;
+    }
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    if (at < k && own[at].id == winner.id) ++at;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+  }
+}
+
+kernel void decode_sample_topk32_merge(
+    device const TopKCandidate *partials [[buffer(0)]],
+    device TargetVocabularyRow *records [[buffer(1)]],
+    constant TargetSamplingParams &params [[buffer(2)]],
+    uint s [[threadgroup_position_in_grid]],
+    uint tid [[thread_index_in_threadgroup]]) {
+  if (!lane_samples(params, s) || tid) return;
+  constexpr uint Shards = SPLASH_TARGET_SAMPLING_SHARDS;
+  const uint batch = selected_lane(params, s), k = params.top_k[batch];
+  uint offsets[Shards] = {};
+  TopKCandidate ranked[32];
+  float weights[32], mass = 0.0f, maximum = -FLT_MAX;
+  uint count = 0;
+  for (uint i = 0; i < k; ++i) {
+    TopKCandidate best{-INFINITY, 0xffffffffu};
+    uint shard = 0;
+    for (uint j = 0; j < Shards; ++j) {
+      const TopKCandidate value = offsets[j] < k
+          ? partials[(ulong(s) * Shards + j) * 32 + offsets[j]]
+          : TopKCandidate{-INFINITY, 0xffffffffu};
+      if (value.value > best.value || (value.value == best.value && value.id < best.id)) {
+        best = value; shard = j;
+      }
+    }
+    if (best.id == 0xffffffffu) break;
+    ++offsets[shard];
+    if (!i) maximum = best.value;
+    ranked[i] = best;
+    weights[i] = exp((best.value - maximum) / params.temperature[batch]);
+    mass += weights[i];
+    ++count;
+  }
+  OrderBoundary end{kNoKey, 0};
+  if (count) {
+    end = {logit_key(ranked[count - 1].value), ranked[count - 1].id};
+    if (params.top_p[batch] < 1.0f) {
+      float walked = 0.0f;
+      const float nucleus = params.top_p[batch] * mass;
+      for (uint i = 0; i < count; ++i) {
+        walked += weights[i];
+        if (walked > nucleus) {
+          end = {logit_key(ranked[i].value), ranked[i].id};
+          break;
+        }
+      }
+    }
+  }
+  records[s] = {maximum, end.key, end.last, 0.0f};
 }

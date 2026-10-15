@@ -1,0 +1,74 @@
+Kev-0.8B: context=8192, KV=bf16, queue=1, memory=4294967296
+Decision head=Kev 512; drafter=off; compact=off; lookup=off; fast-topk=off; ANE=off
+System One: http://127.0.0.1:18158/v1/systemone
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+13:16:05 Startup configuration · on/off are configured flags; effective state follows Ready
+13:16:05   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968
+13:16:05   --model = ggml-org/Kev-0.8B-GGUF:Q8_0
+13:16:05   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968/tokenizer
+13:16:05   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/merge-upstream-20261015/splash
+13:16:05   --port = 18158
+13:16:05   --host = 127.0.0.1
+13:16:05   --allowed-host = none
+13:16:05   --allowed-origin = none
+13:16:05   --api-key = off
+13:16:05   --no-webui = on
+13:16:05   --max-memory = 4294967296
+13:16:05   --max-context = 8192
+13:16:05   --kv-format = bf16
+13:16:05   --state-format = fp32
+13:16:05   --idle-release = auto (default 600 s)
+13:16:05   --max-cache-disk = 0
+13:16:05   --max-cache-disk-writes = 0
+13:16:05   --persistent-cache = off
+13:16:05   --cache-dir = off / unset
+13:16:05   --served-model-name = none
+13:16:05   --announce-served-name = off
+13:16:05   --default-reasoning-effort = auto
+13:16:05   --thinking-token-budget = off / unset
+13:16:05   --thinking-end-text = off / unset
+13:16:05   --max-request-size = 134217728
+13:16:05   --max-image-pixels = 4194304
+13:16:05   --request-timeout = off / unset
+13:16:05   --queue-size = 1
+13:16:05   --decode-share = default (0.5)
+13:16:05   --disable-ane = on
+13:16:05   --ane-ffn-share = auto
+13:16:05   --ane-ffn-minimum-rows = auto
+13:16:05   --ane-power-recovery = off
+13:16:05   --ane-power-reference = off
+13:16:05   --ane-recovery-idle-watts = 0.05
+13:16:05   --ane-recovery-max-power-percent = off / unset
+13:16:05   --prompt-lookup = off
+13:16:05   --prompt-lookup-min-match = 2
+13:16:05   --compact-draft-head = off
+13:16:05   --compact-draft-capacity = 98304
+13:16:05   --compact-draft-ranking = off / unset
+13:16:05   --encoder-submit-batch-size = 4
+13:16:05   --encoder-option-queries = on
+13:16:05   --fast-topk = off
+13:16:05   --allow-idle-sleep = off
+13:16:05 Loading · ggml-org/Kev-0.8B-GGUF:Q8_0
+13:16:06 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+13:16:06 Weights loaded in 0.22 s.
+13:16:06 Kernel policy for GPU family 10 with 20 cores.
+13:16:07 Ready · ggml-org/Kev-0.8B-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18158
+13:16:07 Startup effective state · snapshot at Ready; fallback is distinct from error
+13:16:07   Context = 8192 tokens
+13:16:07   Native concurrent capacity = 4 (queue limit is separate)
+13:16:07   Vision = off
+13:16:07   ANE = off; share=0; minimum_rows=0; reason=as given
+13:16:07   ANE power reference = off / unreported; watts=unknown; reason=none
+13:16:07   ANE recovery = off / unreported; phase=unknown; reason=none
+13:16:07   KV = bf16
+13:16:07   Build = src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704
+13:16:07   Metal budget = 4294967296 bytes
+13:16:07   Drafter = off; kind=none; layers=0; block=0; tokens=0
+13:16:07   Prefill block = 2048 tokens (compiled)
+13:16:07   Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+13:16:07   FFN FP16 cache = 528482304 bytes
+13:16:07   Prompt lookup = off; reason=none
+13:16:07   Fast top-k = off; reason=none
+13:16:07   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+13:16:07 Error · unprocessable_entity · POST /v1/systemone
+13:16:07 Stopping · releasing engine resources

@@ -1,0 +1,360 @@
+{
+  "arms": {
+    "A": {
+      "config": "cross-k0-s0-f0",
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    "B": {
+      "config": "cross-k0-s0-f1",
+      "normalized_total_objective": 1.008634507508772,
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    }
+  },
+  "outputs": {
+    "512": {
+      "arms": {
+        "A": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1768.8004335182782,
+            "decode_tok_s": 120.41148026469249,
+            "ttft_seconds": 18.5261807295,
+            "total_seconds": 22.766649041999997,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1632.1391550048802,
+              1866.2207131192245
+            ],
+            "decode_tok_s": [
+              115.5285042273554,
+              124.33068799080947
+            ],
+            "ttft_seconds": [
+              17.558482542,
+              20.076721334
+            ],
+            "total_seconds": [
+              21.857340666,
+              24.30863725
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_ledger_peak_gib": 15.767318725585938
+        },
+        "B": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1772.921706021486,
+            "decode_tok_s": 113.30754528514316,
+            "ttft_seconds": 18.484801708,
+            "total_seconds": 23.056971687500003,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1645.9941782340243,
+              1880.0392920110787
+            ],
+            "decode_tok_s": [
+              111.31370563053848,
+              121.7473611767142
+            ],
+            "ttft_seconds": [
+              17.429424459,
+              19.907727167
+            ],
+            "total_seconds": [
+              21.634852917,
+              24.488464917
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_ledger_peak_gib": 15.767318725585938
+        }
+      },
+      "pairs": [
+        {
+          "pair": 0,
+          "A": "pair-0-01-512-A",
+          "B": "pair-0-02-512-B",
+          "prefill_gain_percent": 7.964105744162864,
+          "decode_gain_percent": -5.604977980016468,
+          "total_reduction_percent": 5.009640462591724
+        },
+        {
+          "pair": 1,
+          "A": "pair-1-05-512-A",
+          "B": "pair-1-06-512-B",
+          "prefill_gain_percent": 1.7778421278140666,
+          "decode_gain_percent": -2.077786953359606,
+          "total_reduction_percent": 1.0179085937297438
+        },
+        {
+          "pair": 2,
+          "A": "pair-2-09-512-A",
+          "B": "pair-2-10-512-B",
+          "prefill_gain_percent": -3.750951354669918,
+          "decode_gain_percent": -0.7752549759349137,
+          "total_reduction_percent": -3.27242859508039
+        },
+        {
+          "pair": 3,
+          "A": "pair-3-13-512-A",
+          "B": "pair-3-14-512-B",
+          "prefill_gain_percent": -3.529806746990438,
+          "decode_gain_percent": -6.559781547826682,
+          "total_reduction_percent": -4.3177023929853675
+        },
+        {
+          "pair": 4,
+          "A": "pair-4-17-512-A",
+          "B": "pair-4-18-512-B",
+          "prefill_gain_percent": -2.968094411170752,
+          "decode_gain_percent": -3.251284498254503,
+          "total_reduction_percent": -3.115178749128056
+        },
+        {
+          "pair": 5,
+          "A": "pair-5-21-512-A",
+          "B": "pair-5-22-512-B",
+          "prefill_gain_percent": -2.958674554659124,
+          "decode_gain_percent": -4.907037521238755,
+          "total_reduction_percent": -3.4426855517970756
+        },
+        {
+          "pair": 6,
+          "A": "pair-6-25-512-A",
+          "B": "pair-6-26-512-B",
+          "prefill_gain_percent": -1.46284415927308,
+          "decode_gain_percent": -7.398418146026486,
+          "total_reduction_percent": -2.6944620454977475
+        },
+        {
+          "pair": 7,
+          "A": "pair-7-29-512-A",
+          "B": "pair-7-30-512-B",
+          "prefill_gain_percent": 1.1803197950310151,
+          "decode_gain_percent": -7.312443646288614,
+          "total_reduction_percent": -0.4100007004711914
+        }
+      ],
+      "paired_median": {
+        "prefill_gain_percent": -2.2107593569661024,
+        "decode_gain_percent": -5.256007750627612,
+        "total_reduction_percent": -2.9048203973129016
+      },
+      "B_wins": {
+        "prefill_gain_percent": 3,
+        "decode_gain_percent": 0,
+        "total_reduction_percent": 2
+      },
+      "all_arm_outputs_identical": true
+    },
+    "2048": {
+      "arms": {
+        "A": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1733.3923009785372,
+            "decode_tok_s": 164.08800368155107,
+            "ttft_seconds": 18.905148042,
+            "total_seconds": 30.980848479000002,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1604.553478720652,
+              1895.0424847546483
+            ],
+            "decode_tok_s": [
+              155.8289796691541,
+              172.8568007495879
+            ],
+            "ttft_seconds": [
+              17.291434625,
+              20.421882625
+            ],
+            "total_seconds": [
+              29.748367542,
+              32.840002375
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_ledger_peak_gib": 15.767318725585938
+        },
+        "B": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1793.0557593070062,
+            "decode_tok_s": 174.7559418403747,
+            "ttft_seconds": 18.274966479,
+            "total_seconds": 30.2647126665,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1719.1517713659305,
+              1912.706275664706
+            ],
+            "decode_tok_s": [
+              164.1849081621234,
+              184.41380046045103
+            ],
+            "ttft_seconds": [
+              17.131748834,
+              19.060564709
+            ],
+            "total_seconds": [
+              28.398712375,
+              30.860415167
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_ledger_peak_gib": 15.767318725585938
+        }
+      },
+      "pairs": [
+        {
+          "pair": 0,
+          "A": "pair-0-03-2048-A",
+          "B": "pair-0-04-2048-B",
+          "prefill_gain_percent": 9.483005194975158,
+          "decode_gain_percent": 5.445437875851855,
+          "total_reduction_percent": 7.2868780214134565
+        },
+        {
+          "pair": 1,
+          "A": "pair-1-07-2048-A",
+          "B": "pair-1-08-2048-B",
+          "prefill_gain_percent": -5.032122413071349,
+          "decode_gain_percent": 5.362242960654728,
+          "total_reduction_percent": -0.8243727618230112
+        },
+        {
+          "pair": 2,
+          "A": "pair-2-11-2048-A",
+          "B": "pair-2-12-2048-B",
+          "prefill_gain_percent": -5.300041315394822,
+          "decode_gain_percent": 6.441842350698268,
+          "total_reduction_percent": -0.7188708176946834
+        },
+        {
+          "pair": 3,
+          "A": "pair-3-15-2048-A",
+          "B": "pair-3-16-2048-B",
+          "prefill_gain_percent": -0.37057990154509834,
+          "decode_gain_percent": 6.561092384338996,
+          "total_reduction_percent": 2.3093684562859207
+        },
+        {
+          "pair": 4,
+          "A": "pair-4-19-2048-A",
+          "B": "pair-4-20-2048-B",
+          "prefill_gain_percent": 5.2426066176229025,
+          "decode_gain_percent": 6.347215686405816,
+          "total_reduction_percent": 5.365977384255283
+        },
+        {
+          "pair": 5,
+          "A": "pair-5-23-2048-A",
+          "B": "pair-5-24-2048-B",
+          "prefill_gain_percent": -0.03477030626214406,
+          "decode_gain_percent": 6.332557236120762,
+          "total_reduction_percent": 2.3436110482704997
+        },
+        {
+          "pair": 6,
+          "A": "pair-6-27-2048-A",
+          "B": "pair-6-28-2048-B",
+          "prefill_gain_percent": 7.742457017574389,
+          "decode_gain_percent": 6.383195562944555,
+          "total_reduction_percent": 6.737646817846798
+        },
+        {
+          "pair": 7,
+          "A": "pair-7-31-2048-A",
+          "B": "pair-7-32-2048-B",
+          "prefill_gain_percent": 11.082451841233642,
+          "decode_gain_percent": 6.685880833583968,
+          "total_reduction_percent": 8.561522366725516
+        }
+      ],
+      "paired_median": {
+        "prefill_gain_percent": 2.603918155680379,
+        "decode_gain_percent": 6.365205624675186,
+        "total_reduction_percent": 3.854794216262891
+      },
+      "B_wins": {
+        "prefill_gain_percent": 4,
+        "decode_gain_percent": 8,
+        "total_reduction_percent": 6
+      },
+      "all_arm_outputs_identical": true
+    }
+  },
+  "metric_definition": {
+    "prefill_tok_s": "actual input tokens / native request prefill wall time",
+    "decode_tok_s": "actual output tokens / native request decode wall time",
+    "memory_peak_gib": "native backend Metal peak; device ledger also reported separately",
+    "paired_gain": "B/A-1 for throughput; 1-B/A for total time"
+  },
+  "elapsed_seconds": 1163.2940731048584
+}

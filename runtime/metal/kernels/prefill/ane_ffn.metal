@@ -57,11 +57,16 @@ kernel void ane_ffn_rotate(device const bfloat *input [[buffer(0)]],
                            uint lane [[thread_index_in_simdgroup]],
                            uint simd_groups [[simdgroups_per_threadgroup]]) {
   threadgroup float peaks[32];
-  const uint blocks = params.hidden / ANE_FFN_INPUT_BLOCK / simd_groups;
+  const uint total_blocks = params.hidden / ANE_FFN_INPUT_BLOCK;
+  const uint common_blocks = total_blocks / simd_groups, extra_blocks = total_blocks % simd_groups;
+  // Keep the original contiguous assignment when all groups have the same
+  // count; otherwise give the first groups one more complete input block.
+  const uint blocks = common_blocks + uint(simd_group < extra_blocks);
+  const uint first_block = simd_group * common_blocks + min(simd_group, extra_blocks);
   float value[ANE_FFN_ROTATE_BLOCKS][1][4];
   float peak = 0.0f;
   for (uint block = 0; block < blocks; ++block) {
-    const uint origin = row * params.hidden + (simd_group * blocks + block) * ANE_FFN_INPUT_BLOCK + lane * 4;
+    const uint origin = row * params.hidden + (first_block + block) * ANE_FFN_INPUT_BLOCK + lane * 4;
     for (uint e = 0; e < 4; ++e) value[block][0][e] = float(input[origin + e]);
     ane_ffn_rotate_block<1>(value[block], lane, sign);
     for (uint e = 0; e < 4; ++e) peak = max(peak, fabs(value[block][0][e]));
@@ -73,7 +78,7 @@ kernel void ane_ffn_rotate(device const bfloat *input [[buffer(0)]],
   for (uint group = 0; group < simd_groups; ++group) peak = max(peak, peaks[group]);
   const float scale = max(peak, ANE_FFN_PEAK_FLOOR) / ANE_FFN_INT8_PEAK, inverse = 1.0f / scale;
   for (uint block = 0; block < blocks; ++block) {
-    const uint origin = row * params.hidden + (simd_group * blocks + block) * ANE_FFN_INPUT_BLOCK + lane * 4;
+    const uint origin = row * params.hidden + (first_block + block) * ANE_FFN_INPUT_BLOCK + lane * 4;
     for (uint e = 0; e < 4; ++e) rotated[origin + e] = half(value[block][0][e] * inverse);
   }
   if (simd_group == 0 && lane == 0) token_scale[row] = half(scale * ANE_FFN_INT8_UNIT);

@@ -872,7 +872,7 @@ void testRequestFlags() {
   RequestFrame progress = request;
   progress.flags |= kReturnProgressFlag;
   CHECK(test, roundTrip(progress) == progress);
-  for (const uint32_t flags : {1U << 2, 1U << 31, 0xffffffffU}) {
+  for (const uint32_t flags : {1U << 3, 1U << 31, 0xffffffffU}) {
     RequestFrame undefined = request;
     undefined.flags = flags;
     expectRequestIssue(test, undefined, IssueCode::InvalidEnumValue);

@@ -1,0 +1,4 @@
+docs/data/miniplus-v3-local-draft-2026-10-14/cpu-check.cpp:1:10: fatal error: 'GgufFormatReference.hpp' file not found
+    1 | #include "GgufFormatReference.hpp"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.

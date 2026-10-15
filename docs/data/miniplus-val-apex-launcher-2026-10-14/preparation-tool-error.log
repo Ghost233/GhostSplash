@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+AttributeError: module 'install.gguf' has no attribute 'require_supported_tensors'

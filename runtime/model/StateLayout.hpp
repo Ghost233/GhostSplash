@@ -7,6 +7,8 @@
 #include "ops/GDN.hpp"
 
 #include <cstdint>
+#include <array>
+#include <algorithm>
 
 namespace splash::model {
 
@@ -61,9 +63,7 @@ struct GdnStateLayout final {
 };
 
 // One ring of SPLASH_DRAFT_SLIDING_WINDOW slots per KV head for the keys and
-// one for the values of every draft layer, and the context window the rings
-// are computed from: the draft's context row (contextWidth values) of each
-// slot, in 4-bit codes (metal/abi/DraftAttention.h).
+// one for the values of every draft layer.
 struct DraftStateLayout final {
   static constexpr uint32_t bfloat16Bytes = 2;
 
@@ -71,43 +71,64 @@ struct DraftStateLayout final {
   uint32_t kvHeads = 0;
   uint32_t headDimension = 0;
   uint32_t contextWidth = 0;
+  bool fullHistory = false;
+  std::array<uint32_t, 8> layerContextTokens{};
 
-  [[nodiscard]] constexpr bool valid() const noexcept {
-    return layers && kvHeads && headDimension && contextWidth &&
-           contextWidth % SPLASH_DRAFT_CONTEXT_GROUP == 0;
+  [[nodiscard]] constexpr uint32_t contextTokens(uint32_t layer = 0) const noexcept {
+    return layer < layerContextTokens.size() && layerContextTokens[layer]
+               ? layerContextTokens[layer] : SPLASH_DRAFT_SLIDING_WINDOW;
   }
-  [[nodiscard]] constexpr uint64_t tensorBytes() const noexcept {
-    return uint64_t{kvHeads} * SPLASH_DRAFT_SLIDING_WINDOW * headDimension *
+  [[nodiscard]] constexpr uint32_t historyCapacity() const noexcept {
+    uint32_t tokens = SPLASH_DRAFT_SLIDING_WINDOW;
+    if (fullHistory)
+      for (uint32_t i = 0; i < layers; ++i) tokens = std::max(tokens, contextTokens(i));
+    return tokens;
+  }
+  [[nodiscard]] constexpr bool usesContextWindow() const noexcept {
+    return layers && !fullHistory;
+  }
+  [[nodiscard]] constexpr bool valid() const noexcept {
+    if (!layers || layers > layerContextTokens.size() || !kvHeads || !headDimension) return false;
+    if (usesContextWindow() && (!contextWidth || contextWidth % SPLASH_DRAFT_CONTEXT_GROUP)) return false;
+    for (uint32_t i = 0; i < layers; ++i)
+      if (contextTokens(i) % 128) return false;
+    return true;
+  }
+  [[nodiscard]] constexpr uint64_t tensorBytes(uint32_t layer = 0) const noexcept {
+    return uint64_t{kvHeads} * contextTokens(layer) * headDimension *
            bfloat16Bytes;
   }
   [[nodiscard]] constexpr uint64_t ringBytes() const noexcept {
-    return uint64_t{layers} * 2 * tensorBytes();
+    uint64_t bytes = 0;
+    for (uint32_t i = 0; i < layers; ++i) bytes += 2 * tensorBytes(i);
+    return bytes;
   }
+
   [[nodiscard]] constexpr uint64_t windowBytes() const noexcept {
-    return draft_context_window_bytes(contextWidth);
+    return usesContextWindow() ? draft_context_window_bytes(contextWidth) : 0;
+  }
+  [[nodiscard]] constexpr uint64_t cachedBytes() const noexcept {
+    return fullHistory ? ringBytes() : windowBytes();
   }
 
   bool operator==(const DraftStateLayout &) const = default;
 };
 
-// A lane holds two GDN cells, its draft rings and their context window; a
-// cached state one GDN cell and the window, from which a restore that needs
-// the rings computes them again.
 struct CompositeStateLayout final {
+  // The GDN cells a lane holds, with one draft ring.
   static constexpr uint32_t kLaneGdnCells = 2;
 
   GdnStateLayout target;
   DraftStateLayout draft;
 
   [[nodiscard]] constexpr bool valid() const noexcept {
-    return target.valid() && draft.valid();
+    return target.valid() && (draft.valid() || draft == DraftStateLayout{});
   }
   [[nodiscard]] constexpr uint64_t laneBytes() const noexcept {
-    return kLaneGdnCells * target.cellBytes() + draft.ringBytes() +
-           draft.windowBytes();
+    return kLaneGdnCells * target.cellBytes() + draft.ringBytes() + draft.windowBytes();
   }
   [[nodiscard]] constexpr uint64_t cachedBytes() const noexcept {
-    return target.cellBytes() + draft.windowBytes();
+    return target.cellBytes() + draft.cachedBytes();
   }
 
   bool operator==(const CompositeStateLayout &) const = default;

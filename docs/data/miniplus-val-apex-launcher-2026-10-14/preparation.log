@@ -1,0 +1,22 @@
+{
+  "selection": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.selections/094eeb350ebe80ecbe6a7d8809ac09c2fb7fe31670b189522e190257cad2325d",
+  "resolved": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/ed623e411ab735109faf1582dba7364d5b3be2a974923baf60200a397e211293",
+  "model": "IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3",
+  "sources": {
+    "draft": {
+      "repo": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16",
+      "revision": null
+    },
+    "target": {
+      "repo": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF",
+      "revision": null
+    }
+  },
+  "target_bytes": 14160865248,
+  "main_file": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
+  "family": "Qwen3.8-27B",
+  "context": 262144,
+  "weights_copied": false,
+  "inference_run": false,
+  "exit_code": 0
+}

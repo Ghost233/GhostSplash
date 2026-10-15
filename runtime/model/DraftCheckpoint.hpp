@@ -12,7 +12,7 @@ namespace splash::model {
 
 struct DFlashDraftLayout;
 
-// A DFlash2 checkpoint as its repository releases it, config.json and BF16
+// A DFlash or DFlash2 checkpoint as its repository releases it, config.json and BF16
 // safetensors -> the draft's block images (DFlashDraft.cpp), laid out as a
 // target's are (model/GgufImage.hpp): every projection quantized into af4g64
 // planes as MLX's affine quantization rounds it, every other tensor copied as

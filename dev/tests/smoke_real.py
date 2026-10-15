@@ -197,14 +197,25 @@ def validate_status(status: dict, kv_format: str | None = None) -> None:
     identity = status.get("identity", {})
     kv = kv_identity(identity)
     actual = kv.get("format")
-    require(actual in ("int8", "bf16"), "unknown KV format")
+    require(
+        actual in ("int8", "bf16", "q4h", "q4_0", "q4_0_unrotated"), "unknown KV format"
+    )
     if kv_format is not None:
         require(actual == kv_format, "runtime KV format differs from requested format")
     quantization, scale_type = (
-        ("symmetric_int8", "float32") if actual == "int8" else ("none", "none")
+        ("symmetric_int8", "float32")
+        if actual == "int8"
+        else ("symmetric_int4_hadamard", "float32")
+        if actual == "q4h"
+        else ("ggml_q4_0", "float16_group32")
+        if actual in ("q4_0", "q4_0_unrotated")
+        else ("none", "none")
     )
     require(kv.get("quantization") == quantization, "wrong KV quantization")
     require(kv.get("scale_type") == scale_type, "wrong KV scale type")
+    if actual in ("q4_0", "q4_0_unrotated"):
+        expected_rotation = "hadamard_qk256_v64_v1" if actual == "q4_0" else "none"
+        require(kv.get("rotation") == expected_rotation, "wrong Q4_0 rotation identity")
 
 
 def chat_body(model: str, prompt: str, **extra) -> dict:
@@ -1689,7 +1700,11 @@ def add_server_arguments(parser):
     parser.add_argument("--max-memory")
     parser.add_argument("--max-cache-disk")
     parser.add_argument("--max-image-pixels", type=int)
-    parser.add_argument("--kv-format", choices=("int8", "bf16"), default="int8")
+    parser.add_argument(
+        "--kv-format",
+        choices=("int8", "bf16", "q4h", "q4_0", "q4_0_unrotated"),
+        default="int8",
+    )
     parser.add_argument("--startup-timeout", type=float, default=1800)
 
 

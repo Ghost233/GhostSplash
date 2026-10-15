@@ -1,0 +1,4 @@
+2026-10-15 10:23:41.160 modernbert-kernels[16224:30193992] Metal GPU Validation Enabled
+FP64 LayerNorm width=384 PASS
+FP64 LayerNorm width=1024 PASS
+FAIL uniform attention differs from FP64 mean at t=0 c=1: actual=0.496094 expected=0.503906

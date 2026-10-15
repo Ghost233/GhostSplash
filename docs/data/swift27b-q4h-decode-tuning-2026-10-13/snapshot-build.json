@@ -1,0 +1,17 @@
+{
+  "command": [
+    "make",
+    "-j4",
+    "BUILD=build",
+    "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "build/engine/libsplash.a",
+    "build/splash.metallib",
+    "build/engine/BuildIdentity.hpp"
+  ],
+  "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048",
+  "exit_code": 0,
+  "runtime_code_sha256": "6139ba1f813572e39306de64babf9f9972cfc6df94427c3d0c3a531e167c385f",
+  "compiled_source_sha256": "583b74c6c1cd1024e66f4b9d5314803185de8e45cf147cac3eb2bf2e60b85881",
+  "library_sha256": "661554381955867388ee9472568cb75a00924675f03cfa97e5e1b99c92f63b6a",
+  "metallib_sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917"
+}

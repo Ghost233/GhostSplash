@@ -191,11 +191,19 @@ class RequestFlag(IntFlag):
     IGNORE_END_OF_SEQUENCE = 1 << 0
     # Report the prompt's progress while it prefills (PromptProgressEvent).
     RETURN_PROGRESS = 1 << 1
+    # score_tokens carry ordered option-end positions; the final position is the query.
+    DECISION_SCORING = 1 << 2
+    DECISION_SCORE_TYPE = 1 << 3
+    DECISION_NOUL_TYPE = 1 << 4
 
 
 # A request with any other bit set is a request error.
 _REQUEST_FLAG_BITS = int(
-    RequestFlag.IGNORE_END_OF_SEQUENCE | RequestFlag.RETURN_PROGRESS
+    RequestFlag.IGNORE_END_OF_SEQUENCE
+    | RequestFlag.RETURN_PROGRESS
+    | RequestFlag.DECISION_SCORING
+    | RequestFlag.DECISION_SCORE_TYPE
+    | RequestFlag.DECISION_NOUL_TYPE
 )
 
 
@@ -658,6 +666,17 @@ def _validated_request(
         )
         if flags & ~_REQUEST_FLAG_BITS:
             raise ValueError("request flags are not defined by native protocol")
+        encoder_types = flags & (
+            RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE
+        )
+        if encoder_types and (
+            not flags & RequestFlag.DECISION_SCORING
+            or encoder_types
+            == (RequestFlag.DECISION_SCORE_TYPE | RequestFlag.DECISION_NOUL_TYPE)
+        ):
+            raise ValueError(
+                "encoder question-type flags require a single decision type"
+            )
     except ValueError as error:
         _fail_request(IssueCode.INVALID_ENUM_VALUE, str(error), request_id)
     try:
@@ -691,6 +710,12 @@ def _validated_request(
         generation = _u32(request.generation_prompt_tokens, "generation prompt tokens")
         if generation >= len(prompt):
             raise ValueError("generation prompt must leave a prompt token")
+        if flags & RequestFlag.DECISION_SCORING and (
+            not scores
+            or list(scores) != sorted(scores)
+            or scores[-1] >= len(prompt) - 1
+        ):
+            raise ValueError("decision positions must be ordered before the query")
         if scores and (request.image_spans or request.image_pixels):
             raise ValueError("score requests are text-only")
         if scores and (

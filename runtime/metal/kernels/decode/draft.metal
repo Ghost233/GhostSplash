@@ -137,7 +137,8 @@ kernel void draft_context_kv_commit(
       context_kv + ulong(batch) * Rows * RowWidth, k_norm,
       rope_cos + ulong(batch) * RopeLaneStride,
       rope_sin + ulong(batch) * RopeLaneStride, keys, values,
-      params.start_position[batch], min(retained[batch], Rows), task,
+      params.start_position[batch], min(retained[batch], Rows),
+      params.capacity, params.sliding_window, task,
       thread_index, lane, simd_group, reductions, normalized);
 }
 
@@ -152,24 +153,38 @@ kernel void draft_context_kv_commit(
 inline void draft_attention_split_phase(
     device bfloat *queries, device bfloat *keys, device bfloat *values,
     device bfloat *query_keys, device bfloat *query_values,
-    device float *partial, uint value_stride, uint cache_length, uint split,
-    threadgroup float *score_storage, threadgroup float *row_max,
-    threadgroup float *row_sum, threadgroup float *previous_scale,
+    device float *partial, uint value_stride, uint cache_length, uint capacity,
+    uint sliding_window, bool causal, uint split,
+    threadgroup float *score_storage,
+#if SPLASH_DRAFT_QUERY_ROWS >= 8
+    device float *row_max, device float *row_sum, device float *previous_scale,
+#else
+    threadgroup float *row_max, threadgroup float *row_sum,
+    threadgroup float *previous_scale,
+#endif
+#if SPLASH_DRAFT_QUERY_ROWS < 8
+    threadgroup bfloat *padded_keys, threadgroup bfloat *padded_values,
+#endif
     uint thread_index, uint lane, uint simd_group) {
-  constexpr ushort M = SPLASH_DRAFT_ATTENTION_ROWS, N = 128,
+  constexpr ushort M = SPLASH_DRAFT_ATTENTION_ROWS, N = (SPLASH_DRAFT_QUERY_ROWS == 4 || SPLASH_DRAFT_QUERY_ROWS == 16) ? 64 : 128,
                    D = SPLASH_DRAFT_HEAD_DIMENSION, TileK = 64;
-  constexpr uint Rows = SPLASH_DRAFT_QUERY_ROWS, Window = SPLASH_DRAFT_SLIDING_WINDOW,
-                 Splits = SPLASH_DRAFT_ATTENTION_SPLITS;
+  constexpr uint Rows = SPLASH_DRAFT_QUERY_ROWS, Splits = SPLASH_DRAFT_ATTENTION_SPLITS;
+#if SPLASH_DRAFT_QUERY_ROWS >= 8
+  constexpr auto ScratchFence = mem_flags::mem_threadgroup | mem_flags::mem_device;
+#else
+  constexpr auto ScratchFence = mem_flags::mem_threadgroup;
+#endif
   uint common_start =
-      cache_length >= Window - 1 ? cache_length - (Window - 1) : 0;
+      sliding_window && cache_length >= sliding_window - 1
+          ? cache_length - (sliding_window - 1) : 0;
   uint old_count = cache_length - common_start;
-  uint physical_start = common_start % Window;
+  uint physical_start = common_start % capacity;
   // Live tiles: [0, wrapped) when the window wraps, then [resume, tail_end);
   // a tile the wrap and the tail both touch is visited once.
   uint physical_end = physical_start + old_count;
   uint wrapped =
-      physical_end > Window ? (physical_end - Window + N - 1) / N : 0;
-  uint tail_end = (min(physical_end, Window) + N - 1) / N;
+      physical_end > capacity ? (physical_end - capacity + N - 1) / N : 0;
+  uint tail_end = (min(physical_end, capacity) + N - 1) / N;
   uint resume = max(physical_start / N, wrapped);
   uint live_tiles = wrapped + tail_end - resume;
   // A split with no tile that is not the last one has nothing to add: it
@@ -201,7 +216,7 @@ inline void draft_attention_split_phase(
     row_max[thread_index] = -INFINITY;
     row_sum[thread_index] = 0.0f;
   }
-  threadgroup_barrier(mem_flags::mem_threadgroup);
+  threadgroup_barrier(ScratchFence);
 
   for (uint tile = split; tile < live_tiles; tile += Splits) {
     uint slot = (tile < wrapped ? tile : resume + tile - wrapped) * N;
@@ -224,23 +239,24 @@ inline void draft_attention_split_phase(
       }
     }
     scores.store(pt.slice<N, M>(0, 0));
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
 
     for (ushort batch = 0; batch < M; batch += 8) {
       ushort matrix_row = batch + simd_group;
       uint proposal_row = matrix_row % Rows;
       uint query_position = cache_length + proposal_row;
       uint row_start =
-          query_position >= Window - 1 ? query_position - (Window - 1) : 0;
+          sliding_window && query_position >= sliding_window - 1
+              ? query_position - (sliding_window - 1) : 0;
       uint hidden_prefix = row_start - common_start;
-      float local_scores[4];
+      float local_scores[N / 32];
       float tile_max = -INFINITY;
-      for (ushort i = 0; i < 4; ++i) {
+      for (ushort i = 0; i < N / 32; ++i) {
         uint column = lane + i * 32;
         uint key = slot + column;
         uint logical_key = key >= physical_start
                                ? key - physical_start
-                               : key + Window - physical_start;
+                               : key + capacity - physical_start;
         bool valid = logical_key < old_count && logical_key >= hidden_prefix;
         float score = score_storage[matrix_row * N + column] * 0.08838834765f;
         local_scores[i] = valid ? score : -INFINITY;
@@ -253,7 +269,7 @@ inline void draft_attention_split_phase(
       bool empty = next_max == -INFINITY;
       float scale = empty ? 1.0f : fast::exp(row_max[matrix_row] - next_max);
       float tile_sum = 0.0f;
-      for (ushort i = 0; i < 4; ++i) {
+      for (ushort i = 0; i < N / 32; ++i) {
         local_scores[i] = empty ? 0.0f : fast::exp(local_scores[i] - next_max);
         tile_sum += local_scores[i];
       }
@@ -263,12 +279,12 @@ inline void draft_attention_split_phase(
         row_sum[matrix_row] = row_sum[matrix_row] * scale + tile_sum;
         row_max[matrix_row] = next_max;
       }
-      for (ushort i = 0; i < 4; ++i) {
+      for (ushort i = 0; i < N / 32; ++i) {
         uint column = lane + i * 32;
         score_storage[matrix_row * N + column] = local_scores[i];
       }
     }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
 
     auto vt = tensor(values + slot, dextents<int, 2>{N, D},
                      array<int, 2>{1, int(value_stride)});
@@ -293,35 +309,47 @@ inline void draft_attention_split_phase(
       auto index = running.get_multidimensional_index(i);
       running[i] = running[i] * previous_scale[index[1]] + partial_output[i];
     }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
   }
 
   if (split + 1 == Splits) {
     // Persistent query K/V contains exactly eight rows.  The K=16 padding
     // required by the MPP value product exists only in threadgroup memory.
-    constexpr ushort CurrentN = Rows;
+    constexpr ushort CurrentN = Rows < 8 ? 16 : Rows;
     constexpr ushort CurrentValueTile = 16;
     threadgroup float *current_raw_scores =
         score_storage + M * CurrentValueTile;
+#if SPLASH_DRAFT_QUERY_ROWS < 8
+    threadgroup bfloat *current_values = padded_values;
+    for (uint index = thread_index; index < D * CurrentN; index += 256) {
+      const uint token = index / D, dimension = index % D;
+      padded_keys[index] = token < Rows ? query_keys[token * D + dimension] : bfloat(0.0f);
+    }
+    threadgroup_barrier(ScratchFence);
+#else
     threadgroup bfloat *current_values =
         reinterpret_cast<threadgroup bfloat *>(
             score_storage + M * CurrentValueTile + M * CurrentN);
+#endif
     auto current_scores =
         tensor(current_raw_scores, dextents<int, 2>{CurrentN, M},
                array<int, 2>{1, CurrentN});
     constexpr auto current_qk_descriptor =
         matmul2d_descriptor(M, CurrentN, TileK, false, true, false);
     matmul2d<current_qk_descriptor, execution_simdgroups<8>> current_qk;
-    auto current_kt = tensor(query_keys, dextents<int, 2>{D, CurrentN},
-                             array<int, 2>{1, D});
-    auto current_k0 = current_kt.slice<TileK, CurrentN>(0, 0);
+#if SPLASH_DRAFT_QUERY_ROWS < 8
+    auto current_kt = tensor(padded_keys, dextents<int, 2>{D, CurrentN}, array<int, 2>{1, D});
+#else
+    auto current_kt = tensor(query_keys, dextents<int, 2>{D, CurrentN}, array<int, 2>{1, D});
+#endif
+    auto current_k0 = current_kt.template slice<TileK, CurrentN>(0, 0);
     auto current = current_qk.template get_destination_cooperative_tensor<
         decltype(q0), decltype(current_k0), float>();
     for (ushort i = 0; i < current.get_capacity(); ++i)
       current[i] = 0.0f;
     for (ushort chunk = 0; chunk < D / TileK; ++chunk) {
       auto qs = qt.slice<TileK, M>(chunk * TileK, 0);
-      auto ks = current_kt.slice<TileK, CurrentN>(chunk * TileK, 0);
+      auto ks = current_kt.template slice<TileK, CurrentN>(chunk * TileK, 0);
       auto partial_scores =
           current_qk.template get_destination_cooperative_tensor<
               decltype(qs), decltype(ks), float>();
@@ -331,11 +359,17 @@ inline void draft_attention_split_phase(
       }
     }
     current.store(current_scores.slice<CurrentN, M>(0, 0));
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
 
     for (ushort batch = 0; batch < M; batch += 8) {
       ushort matrix_row = batch + simd_group;
-      float score = lane < CurrentN
+      uint proposal_row = matrix_row % Rows;
+      uint query_position = cache_length + proposal_row;
+      uint row_start = sliding_window && query_position >= sliding_window - 1
+          ? query_position - (sliding_window - 1) : 0;
+      bool visible = lane < Rows &&
+          (!causal || (lane <= proposal_row && cache_length + lane >= row_start));
+      float score = visible
                         ? current_raw_scores[matrix_row * CurrentN + lane] *
                               0.08838834765f
                         : -INFINITY;
@@ -354,7 +388,7 @@ inline void draft_attention_split_phase(
             lane < CurrentN ? probability : 0.0f;
       }
     }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
 
     auto current_probabilities =
         tensor(score_storage, dextents<int, 2>{CurrentValueTile, M},
@@ -364,11 +398,11 @@ inline void draft_attention_split_phase(
          index += 256) {
       uint dimension = index / CurrentValueTile;
       uint token = index % CurrentValueTile;
-      current_values[index] = token < CurrentN
-                                  ? query_values[dimension * CurrentN + token]
+      current_values[index] = token < Rows
+                                  ? query_values[dimension * Rows + token]
                                   : bfloat(0.0f);
     }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
     auto current_vt =
         tensor(current_values, dextents<int, 2>{CurrentValueTile, D},
                array<int, 2>{1, int(CurrentValueTile)});
@@ -384,7 +418,7 @@ inline void draft_attention_split_phase(
       auto index = running.get_multidimensional_index(i);
       running[i] = running[i] * previous_scale[index[1]] + current_output[i];
     }
-    threadgroup_barrier(mem_flags::mem_threadgroup);
+    threadgroup_barrier(ScratchFence);
   }
 
   auto accumulator =
@@ -406,6 +440,9 @@ inline void draft_attention_reduce_phase(device const float *partials,
                  Stride = M * D + 2 * M,
                  Splits = SPLASH_DRAFT_ATTENTION_SPLITS;
   constexpr uint Chunk = D / 8;
+#if SPLASH_DRAFT_QUERY_ROWS != 8
+  if (thread_index >= M * 8) return;
+#endif
   uint row = thread_index / 8;
   uint dim = (thread_index % 8) * Chunk;
   float maximum = -INFINITY;
@@ -531,12 +568,12 @@ kernel void draft_attention_bf16_split(
     uint thread_index [[thread_index_in_threadgroup]],
     uint lane [[thread_index_in_simdgroup]],
     uint simd_group [[simdgroup_index_in_threadgroup]]) {
-  constexpr uint AttentionM = SPLASH_DRAFT_ATTENTION_ROWS, AttentionN = 128,
+  constexpr uint AttentionM = SPLASH_DRAFT_ATTENTION_ROWS, AttentionN = (SPLASH_DRAFT_QUERY_ROWS == 4 || SPLASH_DRAFT_QUERY_ROWS == 16) ? 64 : 128,
                  KVHeads = SPLASH_DRAFT_KV_HEADS;
   constexpr ulong Rows = SPLASH_DRAFT_QUERY_ROWS;
   constexpr ulong Attention = SPLASH_DRAFT_ATTENTION_WIDTH;
   constexpr ulong HeadDim = SPLASH_DRAFT_HEAD_DIMENSION;
-  constexpr ulong Window = SPLASH_DRAFT_SLIDING_WINDOW;
+  const ulong capacity = params.capacity;
   constexpr ulong PartialFloats = AttentionM * HeadDim + 2 * AttentionM;
   uint batch = group.y;
   device bfloat *keys = SPLASH_LANE_BINDING(batch, keys0, keys1, keys2, keys3);
@@ -546,18 +583,38 @@ kernel void draft_attention_bf16_split(
                                        params.lanes * Rows * Attention) +
       ((batch * KVHeads + group.x) * SPLASH_DRAFT_ATTENTION_SPLITS + group.z) *
           PartialFloats;
+#if SPLASH_DRAFT_QUERY_ROWS < 8
+  threadgroup bfloat padded_keys[SPLASH_DRAFT_HEAD_DIMENSION * 16];
+  threadgroup bfloat padded_values[SPLASH_DRAFT_HEAD_DIMENSION * 16];
+#endif
+#if SPLASH_DRAFT_QUERY_ROWS >= 8
+  // Keep the score tile in shared memory. Row statistics use the existing
+  // partial metadata; the output prefix holds scales until running.store.
+  threadgroup float workspace[AttentionM * AttentionN];
+#else
   threadgroup float workspace[AttentionM * AttentionN + 3 * AttentionM];
+#endif
   draft_attention_split_phase(
       queries + batch * Rows * Attention + group.x * AttentionM * HeadDim,
-      keys + group.x * Window * HeadDim, values + group.x * Window * HeadDim,
+      keys + group.x * capacity * HeadDim, values + group.x * capacity * HeadDim,
       query_keys + batch * KVHeads * Rows * HeadDim + group.x * Rows * HeadDim,
       query_values + batch * KVHeads * HeadDim * Rows +
           group.x * Rows * HeadDim,
-      partials, params.value_stride, params.cache_length[batch], group.z,
-      workspace, workspace + AttentionM * AttentionN,
+      partials, params.value_stride, params.cache_length[batch], params.capacity,
+      params.sliding_window, params.causal != 0, group.z,
+      workspace,
+#if SPLASH_DRAFT_QUERY_ROWS >= 8
+      partials + AttentionM * HeadDim,
+      partials + AttentionM * HeadDim + AttentionM, partials,
+#else
+      workspace + AttentionM * AttentionN,
       workspace + AttentionM * AttentionN + AttentionM,
-      workspace + AttentionM * AttentionN + 2 * AttentionM, thread_index,
-      lane, simd_group);
+      workspace + AttentionM * AttentionN + 2 * AttentionM,
+#endif
+#if SPLASH_DRAFT_QUERY_ROWS < 8
+      padded_keys, padded_values,
+#endif
+      thread_index, lane, simd_group);
 }
 
 kernel void draft_attention_bf16_reduce(
@@ -593,4 +650,16 @@ kernel void draft_attention_reorder(
   draft_attention_reorder_phase(grouped + batch * Rows * Attention,
                                 row_major + batch * Rows * Attention, group.x,
                                 thread_index);
+}
+
+// Standard Transformer projections round to BF16 before their residual sum.
+// The DFlash2 block epilogue keeps its existing FP32 fused residual path.
+kernel void draft_standard_residual_add(
+    device const bfloat *projected [[buffer(0)]],
+    device const bfloat *residual [[buffer(1)]],
+    device bfloat *output [[buffer(2)]],
+    constant uint &count [[buffer(3)]],
+    uint index [[thread_position_in_grid]]) {
+  if (index < count)
+    output[index] = bfloat(float(projected[index]) + float(residual[index]));
 }

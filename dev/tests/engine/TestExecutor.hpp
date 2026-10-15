@@ -220,6 +220,9 @@ public:
       uint32_t maximumLanes = model::ExecutionLimits::maximumBatchWidth)
       : maximumLanes(maximumLanes) {}
 
+  [[nodiscard]] uint32_t draftContextCapacity() const noexcept override { return contextCapacity; }
+  [[nodiscard]] bool capturesStatesInsidePrefill() const noexcept override { return captureInsidePrefill; }
+
   void checkHealth() override {
     if (healthCheck)
       healthCheck();
@@ -616,6 +619,8 @@ public:
   // there, and each later step requires the marks of the blocks before it.
   TestKvStorage *kv = nullptr;
   std::unordered_map<uint64_t, std::vector<uint32_t>> prompts;
+  uint32_t contextCapacity = model::ExecutionLimits::draftContextTokens;
+  bool captureInsidePrefill = true;
   std::unordered_map<uint64_t, DraftContextPlan> plans;
   std::shared_ptr<RestoreControl> restoreControl = std::make_shared<RestoreControl>();
   uint32_t diskReads = 0;

@@ -65,6 +65,13 @@ struct GgufPrefillLeadingParams {
 };
 static_assert(sizeof(GgufPrefillLeadingParams) == 20,
               "GGUF leading-input prefill parameters are 20 bytes on both sides");
+#define GGUF_Q4K_GROUP_ROWS 4u
+// Scalar Q4_K dispatches cover a bounded row range of the same logical chunk.
+struct GgufQ4KGroupParams {
+  GgufPrefillLeadingParams leading;
+  uint32_t row_offset;
+};
+static_assert(sizeof(GgufQ4KGroupParams) == 24, "Q4_K group parameters are 24 bytes on both sides");
 // The plain prefill kernels (gguf_prefill_<format>_a): up to three column segments of the kernel's format in one
 // dispatch, tiles in segment order, as a fused decode dispatch takes them; a single tensor is one segment.
 struct GgufPrefillSegmentsParams {
@@ -137,3 +144,11 @@ struct GgufFloatParams {
   uint32_t out_offset;  // first destination column
 };
 static_assert(sizeof(GgufFloatParams) == 20, "GGUF float parameters are 20 bytes on both sides");
+
+// Non-eight blocks reserve a legal staged matrix row tile in their input.
+struct GgufBlockPaddingParams {
+  uint32_t width;
+  uint32_t live_rows;
+  uint32_t storage_rows;
+};
+static_assert(sizeof(GgufBlockPaddingParams) == 12, "block padding parameters are three words");

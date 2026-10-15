@@ -1,0 +1,17 @@
+Startup effective state · snapshot at Ready; fallback is distinct from error
+  Context = 262144 tokens
+  Native concurrent capacity = 4 (queue limit is separate)
+  Vision = off
+  ANE = on; share=0.4117647059; minimum_rows=512; reason=at the given share 0.41 for chunks of 512 rows or more, 1.9% from the GPU alone on the Neural Engine's part (set up in 18.3 s)
+  ANE power reference = unavailable; watts=0; reason=background ANE load was not quiet
+  ANE recovery = unavailable; phase=running; reason=not sampling
+  KV = q4h
+  Build = src-ff42f55fe4243b9ecc441576a895944aae2c96842421c2af52512eede733957f
+  Metal budget = 26843545600 bytes
+  Drafter = unknown; kind=unknown; layers=unknown; block=unknown; tokens=unknown
+  Prefill block = unknown tokens (compiled)
+  Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+  FFN FP16 cache = unknown bytes
+  Prompt lookup = unknown; reason=none
+  Fast top-k = unknown; reason=none
+  Compact = unknown; capacity=unknown; maximum_error=unknown; coverage_fallbacks=unknown; request_fallbacks=unknown; reason=none

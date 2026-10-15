@@ -1,0 +1,697 @@
+{
+  "ffn": {
+    "root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash",
+    "head": "3f43aa2460f59330e658fdc89945d72ce92d538c",
+    "files": {
+      "INFERENCE_PARAMETERS.md": {
+        "bytes": 47546,
+        "sha256": "04422e5f3d54250f96656c3ac55faca05c4afc229d451bd62ae47196ab24663c"
+      },
+      "compact-rankings/qwen35-248320-dev-seed.json": {
+        "bytes": 1544,
+        "sha256": "d7c70effcd4b7d2b8fad923ca67a27859d1af00175419f90793ec49b26636582"
+      },
+      "compact-rankings/qwen35-248320-dev-seed.splash": {
+        "bytes": 993292,
+        "sha256": "3acde3857a833bb2a26373a15b0ce73dcc62e1d27731c5f1ce3655344b386111"
+      },
+      "dev/benchmarks/docs/optional-features.md": {
+        "bytes": 7363,
+        "sha256": "b2a918404cba0d2161224ef4a1cb197ee15f662d08e4fecaa042a971df8c502e"
+      },
+      "dev/benchmarks/qwen4b_matrix_native.mm": {
+        "bytes": 25942,
+        "sha256": "61fe15dd97417459d238cfa8dc9420d376281dfd4fb1b5aa03aff01103f6e949"
+      },
+      "dev/benchmarks/qwen_optional_features.py": {
+        "bytes": 10519,
+        "sha256": "1bd6cead421700130163d55a2deeaf160ca4b4cf0e5ea059485445a49e097193"
+      },
+      "dev/benchmarks/swift27b_kv.py": {
+        "bytes": 26893,
+        "sha256": "7ccac5a3d09f441be8696aabc371e92917633fd6c9b56209a9396ea966f26062"
+      },
+      "dev/requirements.txt": {
+        "bytes": 246,
+        "sha256": "64557913ab8dc081f56b37e632713f029738a7858c7508b279fb5636a9889eb9"
+      },
+      "dev/tests/engine/compact_projection_test.mm": {
+        "bytes": 15384,
+        "sha256": "b4510a1c30a38895980d2bb60d5abf3cf389268e0224ed9193ce509477386dc6"
+      },
+      "dev/tests/engine/gguf_planner_test.mm": {
+        "bytes": 18455,
+        "sha256": "3f0260959ba6016ce4efe9607328341b7044a7c3befdb5bdbc57c282700939e2"
+      },
+      "dev/tests/engine/gguf_preparation_test.mm": {
+        "bytes": 47633,
+        "sha256": "c248ef9f8210c7dc3d59d62cf66c4bee27a05209bb3ed23d6c08602ea1c11426"
+      },
+      "dev/tests/engine/optional_features_test.cpp": {
+        "bytes": 6195,
+        "sha256": "931a4be81c4a88e9a9a30d65e14fa8a440e189fdf130307c30da1b6322c59871"
+      },
+      "dev/tests/engine/runtime_status_test.cpp": {
+        "bytes": 36855,
+        "sha256": "4b2d115ce027c7a86ddc4678a7937661c6c42e2d63eaf8161ec68d5ff596990f"
+      },
+      "dev/tests/install/test_gguf_metadata.py": {
+        "bytes": 45983,
+        "sha256": "00f2adad83bbe7766d7f05001cfd8d6b36d0232876c45c4608c15dffe0b4348d"
+      },
+      "dev/tests/install/test_local_launchers.py": {
+        "bytes": 14752,
+        "sha256": "99dc0c68b257ea22d8aa39799fb7f3cc212d42cf4aa7eafc54c4070a7757c9d8"
+      },
+      "dev/tests/server/test_serve_options.py": {
+        "bytes": 19141,
+        "sha256": "29bda670102cf757feef4f5edb83d93e8ce011cbe27c3cf06ec5b48b9d0bf44a"
+      },
+      "dev/tests/server/test_server_main.py": {
+        "bytes": 13271,
+        "sha256": "ae36940002e0bbdc8c2f2ce37fa13c851a2246821a162f650cbd815a563ec9fe"
+      },
+      "dev/tests/server/test_startup_report.py": {
+        "bytes": 6512,
+        "sha256": "44160ec04411a80ec7118f189e7fa96ca807c339ccccaac53597fefb8bc8dc11"
+      },
+      "dev/tests/server/test_tokenizer_contract.py": {
+        "bytes": 8594,
+        "sha256": "e241c291cf9618e440b8e24c131cce05bdf3b24daaee4cc18432ae833efc433a"
+      },
+      "dev/tests/tools/test_compact_draft_ranking.py": {
+        "bytes": 6068,
+        "sha256": "561db7bd68dc666fe652c6d80136edf46c6b538b2d1d16951f1ab5f2a026d802"
+      },
+      "dev/tests/tools/test_dequantize_dflash2_gguf.py": {
+        "bytes": 8244,
+        "sha256": "d55a990b17aef1b4524f378c436d5d1fc7d8f01d2677ed8a7dc0746db97f210b"
+      },
+      "dev/tools/compact_draft_ranking.py": {
+        "bytes": 5644,
+        "sha256": "2ebc7ae7cae2f83d4b67622c292fc8312829165203aa2a61600bab911a6f2458"
+      },
+      "dev/tools/dequantize_dflash2_gguf.py": {
+        "bytes": 11359,
+        "sha256": "6c03dae1bebf9c8208a9b9aeda994771606babad4d8ded3f9a761f257e185002"
+      },
+      "docs/compact-public-ranking-2026-10-14.md": {
+        "bytes": 5548,
+        "sha256": "bdd324dc784d52bf6cabd84829dca0062fd3eb3441c10db26d91431791dedf4a"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/build-identity-check.log": {
+        "bytes": 973,
+        "sha256": "35445697132df7a26a6aca8904803db8b5c1abdf78610691c582d816dc878793"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/build-identity.json": {
+        "bytes": 186,
+        "sha256": "b926e8e9cf601eca386aa5bdbc779c9e0d3ee131e1ba73b5bbf0fba0d51b25da"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/compact-projection.log": {
+        "bytes": 919,
+        "sha256": "199bfa8796fb6ed244aa811e1033d86f73c5dd0413e209d9d1fb3cc513516651"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/dflash2-state.log": {
+        "bytes": 218,
+        "sha256": "1e20d3bc059c846f8dced4fa81e54040d821d541fedd0bda1d295e890a39f664"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/draft-acceptance.log": {
+        "bytes": 233,
+        "sha256": "fe30c6d1d492ef4ed29ea79d6af9820bdffe4e7407f9e6dca51f12cc58083cfc"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/final-source-check.log": {
+        "bytes": 76,
+        "sha256": "8b43841b9d7d289d75ba1a8a791ebee0a6521c048fa50c2d5be48f58875cc87c"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/install-tests.log": {
+        "bytes": 3210,
+        "sha256": "cfef0bebe70404a7deaea1a0615dc778408171629360e6dfbb1e3e9964042a1c"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/miniplus-head.json": {
+        "bytes": 413,
+        "sha256": "fcd763f9e8e3f8b9b7696b8db0c119dd9711b4dcae120e2670335db3e3a1ca62"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/miniplus-head.log": {
+        "bytes": 365,
+        "sha256": "8f7c8a34fdc61b8adcd15d1e4b354d474d9628b18a6e109434b5ee48a84f703b"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/native-cpu.log": {
+        "bytes": 41590,
+        "sha256": "9349cabf075005c3f595a0b1b10ee8e1caa306f057eead013bfe5e573e39f0e7"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/ranking-tool-tests.log": {
+        "bytes": 107,
+        "sha256": "c18cb6a6ac6389c261ffcbe0bfe05b7f801044514bb633492e1a855538f7df65"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/real-head-check.mm": {
+        "bytes": 3324,
+        "sha256": "d3a9edd57d60111df9ed1565be582c96995d88e1130b7575a153f40cc798dfe2"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/saluki-missing-weight.log": {
+        "bytes": 402,
+        "sha256": "60daed8bf37b35a0cac3f090f42679bd1bed479d6d9a8450dfcfbfdea20eef07"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/server-tests.log": {
+        "bytes": 45222,
+        "sha256": "9491226ea7a3b72efe76a9f0754512c6b76a62019b8331d2f894c4db32d01923"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/standard-dflash.log": {
+        "bytes": 2455,
+        "sha256": "1aaf174893d23315f249542a18618323c92264ba73918d66d60d3eba23acb7ab"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/target-sampling.log": {
+        "bytes": 203,
+        "sha256": "3b20d46c1a01c56579dc44c711450d0c64d0b8ee7456aa5fad4cd7a31dd6a881"
+      },
+      "docs/data/compact-public-ranking-2026-10-14/verification.json": {
+        "bytes": 6436,
+        "sha256": "99a831dc28dab56f74cc32cc4491b02ae0d0eb1ca40f0e509bc49cbf6037c004"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/before-efficientthink-launcher.sh": {
+        "bytes": 4859,
+        "sha256": "90d2e4d10835cf260c55d08a02130d015ccd3bed1f7fab5c46f5af2ae599244e"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/binding-smoke.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/binding-smoke.json": {
+        "bytes": 335,
+        "sha256": "3084c169fe705f5f666dce1fb4fb6d70649f35b903a4be179a94193f1ab63a19"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/binding-smoke.log": {
+        "bytes": 3286,
+        "sha256": "6afacde1a26acde855b844eec3d090bcd5f52f2528e01455d5c0cb65ceeb651e"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/help.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/help.log": {
+        "bytes": 8204,
+        "sha256": "c11f44f7a3f1b9d09008ec14f8b87bc762d1c635ffe8fa0b038b6dcd925da7e2"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/install-tests.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/install-tests.log": {
+        "bytes": 3210,
+        "sha256": "809ece1750993f6cdf72b730bd4babd925c296d97ba624fd08fdd26e847f4ca0"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/launcher-red.log": {
+        "bytes": 1442,
+        "sha256": "6b3c9c1b178e570e656776f21d7e53f80427663e60cb3c5b5848dd6cb0268e63"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/launcher-tests.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/launcher-tests.log": {
+        "bytes": 247,
+        "sha256": "5146f71ffd2d940f97f216eea3432ce46a809bf48a1d07cf2bf0d2b55287b433"
+      },
+      "docs/data/miniplus-canonical-launcher-2026-10-14/verification.json": {
+        "bytes": 1749,
+        "sha256": "2b28d1833ce54e997d55193082f3240b85b42becaa872612e323cdc5be6bcb62"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/config.json": {
+        "bytes": 995,
+        "sha256": "c06b6779119d8757062f61be830d2e024067b75838f3487388773c3d01cabdd0"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/conversion.json": {
+        "bytes": 14227,
+        "sha256": "d2f9280771ff4b1b50bd0813a1e9d44251178b80053c4e2a728c6da9d331e08c"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/conversion.log": {
+        "bytes": 2767,
+        "sha256": "e461b6b4d857698ba20a3d14685a02ee4aa32756ecc9252911754fa162363676"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/cpu-check.cpp": {
+        "bytes": 2789,
+        "sha256": "cb017000280136dd49c004978702c8cde5aa2134096853dcf7baf4eb3491acdd"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/cpu-verification.json": {
+        "bytes": 966,
+        "sha256": "ff774223a9564f40fdabb2701a83ce0f93e29fab87785b1100961378c766c4a6"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/install-skips.json": {
+        "bytes": 797,
+        "sha256": "c1c7731ceedd414c4bde706ffa3db76d593cb2e6adec1599f3223db850a91251"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/install-tests.log": {
+        "bytes": 3209,
+        "sha256": "cd94cded2a58d4a367141d2ef929a983cf2aa8776ca790cd1f87224e7b39327d"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/metal-preparation-initial-failure.log": {
+        "bytes": 39200,
+        "sha256": "ce344bad5405012be6c634eb014675e529e728fb49c436283d0fa245457fc7f2"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/metal-preparation-passed.log": {
+        "bytes": 40619,
+        "sha256": "61e6874be1c60bf19ea54c25313a08d7107135a92b692ff2b9f5fa48a2bc8d79"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/model-binding.json": {
+        "bytes": 3964,
+        "sha256": "923c341c5f83b0f531e212985693ef9cda74b67ef854540f6116825058577cc6"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/native-config-check.log": {
+        "bytes": 25,
+        "sha256": "ef34041fbcd48c0d2d0d4db6c2e5f7301974b57b78f6cc03083d74150efd9c8f"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/native-cpu-tests.log": {
+        "bytes": 30750,
+        "sha256": "df49df388ccd93196cb5041d8aac257b20f4d9652ad4836a901c5b7c9b4fdc40"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/tools-tests.log": {
+        "bytes": 114,
+        "sha256": "88da2c69c343ed69d9697419747419666a49ca0d984da7a08e306a83a49e4db1"
+      },
+      "docs/data/miniplus-v3-local-draft-2026-10-14/verification.json": {
+        "bytes": 3173,
+        "sha256": "974207dfe5e61e408dc656eba007459083b4a143536ba95d35151f0af463ba5f"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/install-tests.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/install-tests.log": {
+        "bytes": 3210,
+        "sha256": "83f91d33c3c604ce6a18cb82e69a385147d6bfbaab7e9d36d75d5b688a68089e"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/launcher-help.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/launcher-help.log": {
+        "bytes": 8527,
+        "sha256": "cb6c567bcc9afb018e58d8e1b9e663c04c92d63bebc9a5e3ae73cee53d4a1d93"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/launcher-red.log": {
+        "bytes": 2474,
+        "sha256": "ef2b4a772c80a5d358e920be576ff588e7fac38abb1dc5c5de32fb5cbb0deb37"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/launcher-tests.log": {
+        "bytes": 247,
+        "sha256": "876b63ed9e839b1b6a0cc947df4866b91c45ab2717911f639fa1ea06171092cf"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/model-binding.json": {
+        "bytes": 4356,
+        "sha256": "e0263838f2159336576072deed1619002afa99acebc8638638b2508eb59d5e44"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner-build-initial-error.log": {
+        "bytes": 224,
+        "sha256": "96542215b0b29ef88dc58030ee02edbd31d12a3f102bd514f34b2d68484d2f07"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner-build.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner-build.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner.json": {
+        "bytes": 514,
+        "sha256": "b0c08f4506ed623c7ba1805ae164131d5f5c491f2c3ccb51988440b8c4f9866f"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/planner.log": {
+        "bytes": 175,
+        "sha256": "17b7d90e4ee90c787bb96588dcc201420a8b8eed4cb99d0cba7cca8641fdb0e9"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/preparation-config-tool-error.log": {
+        "bytes": 483,
+        "sha256": "e4af18a5b1ada8a12a25ab86aeb1e1fe97046e74b570c00aa74dd6d90d1fc98f"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/preparation-tool-error.log": {
+        "bytes": 157,
+        "sha256": "35fd176bb52358aaf1e5131eaf0c71dae8d2afe601ee99aee5d9c0a0459fbd9a"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/preparation.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/preparation.log": {
+        "bytes": 1073,
+        "sha256": "7df0285ee9684a5c9ad9e90cfc395c0d8646476280f4225e456e370d2043996c"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/source-check.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/source-check.log": {
+        "bytes": 1058,
+        "sha256": "3d06a82c764ca4159d0dfd83e31356d043ef2d38f9ffe52713197e533ee45a0e"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/tokenizer-tool-error.log": {
+        "bytes": 274,
+        "sha256": "aa4ea7f9174d26b667937cdba90a1f3f8bfad3721ce1419ebd88b41684080d0f"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/tokenizer.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/tokenizer.log": {
+        "bytes": 369,
+        "sha256": "8123c5ef4eb1088a397bf5e1463e4fa8c40a9eeb675e5501e05f16ffe238c5b6"
+      },
+      "docs/data/miniplus-val-apex-launcher-2026-10-14/verification.json": {
+        "bytes": 4975,
+        "sha256": "27971840c9140bd7e63d1b430b55ea80d81cf10203f1cc10801f61ed58b9e4b9"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/archive-manifest.json": {
+        "bytes": 21217,
+        "sha256": "1eaa816b659aa866ec632d0c7813a37a3f388f917ab01bd46d7a30798f145331"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/controller-exit.json": {
+        "bytes": 90,
+        "sha256": "b82fcb102383c165aca58fdf2b2d9ac5f8cc631fe70b0b3cd13adc1e1104364b"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/final-verification.json": {
+        "bytes": 3756,
+        "sha256": "0d17c3cb029819a18b91461d2cff8faea41171665fac29a3f7c947a7c75d5d3a"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/plan.json": {
+        "bytes": 7308,
+        "sha256": "09c92e48bdc62ac1f58fa1c62b6c9f72b87bd043c64378907fbaa907d8911c90"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/raw-results.tar.gz": {
+        "bytes": 218771,
+        "sha256": "46fe62e2cd79464c0997a157f868e95eb6e27df47697380d07f144f8d502b81f"
+      },
+      "docs/data/saluki27b-ane-auto-2026-10-14/summary.json": {
+        "bytes": 38308,
+        "sha256": "62297c9a168ef2d17b2828ab605226a92ec088433e0e8318e88264791e5d227a"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/artifact-check.json": {
+        "bytes": 638,
+        "sha256": "8abc899a3dcaac40bb04cea8f0dd5a101677729718b7467a546de98d3444b4b4"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/corpus.tar.gz": {
+        "bytes": 956760,
+        "sha256": "ef27c7896fe1b3f52b6bf38e1cbea5e092b2237668065c2509278b981ee0045b"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/cpu-tests.log": {
+        "bytes": 260,
+        "sha256": "a5e94a3b78052e0dcbe5ac61edde903e890f71cb66e966782f2b887c59b71784"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/generation.stderr.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/head-ranked.splash": {
+        "bytes": 993356,
+        "sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/report.json": {
+        "bytes": 100023,
+        "sha256": "dad4d5880736ce174821307dc849c34fb1e9e1640c13360ad3857b553d5664e7"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/server-module-tests.log": {
+        "bytes": 45221,
+        "sha256": "be36dff790dcca233c1c73d1314de8c07b6f7a17f5bbceff7604fe65fdb039e1"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/source-check.log": {
+        "bytes": 76,
+        "sha256": "8b43841b9d7d289d75ba1a8a791ebee0a6521c048fa50c2d5be48f58875cc87c"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/tokenizer-contract-tests.log": {
+        "bytes": 624,
+        "sha256": "12fa02de7a6fc2e531a399d5d10dd56725818d07c88ccf24cf5c2c302cd0ae1b"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/tokenizer-loading-check.json": {
+        "bytes": 1529,
+        "sha256": "1c2518dd918b0fc4449692e0b8d11c5b4d345154e00f76b9a36a1212c0e799c3"
+      },
+      "docs/data/saluki27b-compact-seed-2026-10-14/verification.json": {
+        "bytes": 1811,
+        "sha256": "903eed442e6f68e372b3b03f23232afbb6ac2b91606346abdf0912d6bf739191"
+      },
+      "docs/data/startup-checklist-2026-10-14/error-fix.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/error-fix.log": {
+        "bytes": 4987,
+        "sha256": "6eb1d67e421b99b3f106a816d2402d1063458e609deeed195c45dc33a2b6fd98"
+      },
+      "docs/data/startup-checklist-2026-10-14/install-final.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/install-final.log": {
+        "bytes": 3210,
+        "sha256": "a8ffc6b9c894a0e89dd4d72286f2eff6d5dfb28aa679cf2ea9001af00f16037d"
+      },
+      "docs/data/startup-checklist-2026-10-14/install.exit": {
+        "bytes": 2,
+        "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+      },
+      "docs/data/startup-checklist-2026-10-14/install.log": {
+        "bytes": 5288,
+        "sha256": "b09cd18382539058c005644293e78617f9e8673621f0d0bd5eec16516a442099"
+      },
+      "docs/data/startup-checklist-2026-10-14/launcher-error.json": {
+        "bytes": 403,
+        "sha256": "31c0311ebae68bc0f1d8ffb31522bd73ce7f6201b6dc9abaaaae6ba57de0a08e"
+      },
+      "docs/data/startup-checklist-2026-10-14/launcher-error.log": {
+        "bytes": 3186,
+        "sha256": "66f41e72ff37bebc4bc10e8723648019488b6a9017080dc3fdf2f587119e74aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-build.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-build.log": {
+        "bytes": 36959,
+        "sha256": "eb1571faf16b442c500c53ac3d39ebf9f1a317f84aca19fe87558060b608e17a"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-cpu.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-cpu.log": {
+        "bytes": 99201,
+        "sha256": "a2d68326c50855a33d082704b6c97e8e5561fd4f2b4c16cbf698d29ba9c382cf"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-red.log": {
+        "bytes": 5631,
+        "sha256": "98689e2bbf1eed5f5ca53408c8afa65cd9ba2a9ea7fbe0030a92f775e851796f"
+      },
+      "docs/data/startup-checklist-2026-10-14/native-status.log": {
+        "bytes": 28,
+        "sha256": "501542022587854ef15650a24e317be415efa12d2d8d1342df68acfa586c590b"
+      },
+      "docs/data/startup-checklist-2026-10-14/python-red.log": {
+        "bytes": 1086,
+        "sha256": "9d3f409582c8d55dfc46b0cd74f7779e62399affb0a123220465fefd8372347b"
+      },
+      "docs/data/startup-checklist-2026-10-14/ruff.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/ruff.log": {
+        "bytes": 47,
+        "sha256": "4891b8075bac53b5f16d7ad811617a1d2d6baab375a14959cb1657e1af53d555"
+      },
+      "docs/data/startup-checklist-2026-10-14/saved-status-replay.log": {
+        "bytes": 1073,
+        "sha256": "1b0dd3573024a8181383ee7f3cb2e86cc92d2d8495a42a0b397ae94b0ab47de5"
+      },
+      "docs/data/startup-checklist-2026-10-14/server-final.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/server-final.log": {
+        "bytes": 51314,
+        "sha256": "39491fed702fd253fda8d600ab595eb673ae4b47c98143ab610a7c8762b2557b"
+      },
+      "docs/data/startup-checklist-2026-10-14/server.exit": {
+        "bytes": 2,
+        "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+      },
+      "docs/data/startup-checklist-2026-10-14/server.log": {
+        "bytes": 51948,
+        "sha256": "8cfb0d1e495f1261afa86f09dd21877ab3a5cfa0ce6ea8d7469804d96f05750f"
+      },
+      "docs/data/startup-checklist-2026-10-14/signal-fix.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/signal-fix.log": {
+        "bytes": 4986,
+        "sha256": "04501d3f9ea1072999ed3e7aca97ea05b9c643bab4f06e566ac2a07dd2734fef"
+      },
+      "docs/data/startup-checklist-2026-10-14/source-final.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/source-final.log": {
+        "bytes": 1058,
+        "sha256": "3d06a82c764ca4159d0dfd83e31356d043ef2d38f9ffe52713197e533ee45a0e"
+      },
+      "docs/data/startup-checklist-2026-10-14/static-final.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/static-final.log": {
+        "bytes": 47,
+        "sha256": "4891b8075bac53b5f16d7ad811617a1d2d6baab375a14959cb1657e1af53d555"
+      },
+      "docs/data/startup-checklist-2026-10-14/targeted-final.exit": {
+        "bytes": 2,
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "docs/data/startup-checklist-2026-10-14/targeted-final.log": {
+        "bytes": 5012,
+        "sha256": "873b51ce5d6807fcbd67ca62fd82f8127cdd24e661dba11fed520fa26e10e76b"
+      },
+      "docs/data/startup-checklist-2026-10-14/targeted.log": {
+        "bytes": 4985,
+        "sha256": "25fab472fdf1751cfb676f290d892d15ac3245c3e78e6e790b439d9a12eaf36b"
+      },
+      "docs/data/startup-checklist-2026-10-14/verification.json": {
+        "bytes": 9682,
+        "sha256": "a564f2fb66c478d18be50c73e90faa78dba6c9afb392d0bda631e5fcb2a297f1"
+      },
+      "docs/miniplus-v3-local-draft-2026-10-14.md": {
+        "bytes": 5434,
+        "sha256": "b8dedc1768993ae677f899e2b3ee9851af3fe45a653f6614c74355020186d228"
+      },
+      "docs/miniplus-val-apex-launcher-2026-10-14.md": {
+        "bytes": 3240,
+        "sha256": "fbe8d7c9af48fb178b89dfb82215bc95a6685270e3b27c1e17b4bae84cfd00c6"
+      },
+      "docs/saluki27b-ane-auto-2026-10-14.md": {
+        "bytes": 4582,
+        "sha256": "33bfb6d02cfd5cc638f191133d3ca9dcb550e07979352c0b2a4122f5cd6ff1fc"
+      },
+      "docs/saluki27b-compact-seed-2026-10-14.md": {
+        "bytes": 5720,
+        "sha256": "1009c1e095a8b17fb52594d065dc301c743ab88fedc7881bc57b305c7c09f79e"
+      },
+      "docs/startup-checklist-2026-10-14.md": {
+        "bytes": 4441,
+        "sha256": "27100709d33b7ad885c3a3616b7839ac19c662f32ebdb303931f4a37d77b381b"
+      },
+      "install/gguf.py": {
+        "bytes": 21993,
+        "sha256": "3035557601c6445830a5f4fba0ef21cc096fc54a372d754eae31db9cf13d78d3"
+      },
+      "qwen38miniplusv3splash.sh": {
+        "bytes": 5078,
+        "sha256": "1a4869ab7033699b53e63310ee7af656ab2bbe9ba673b32b5ebeca606caa562c"
+      },
+      "qwen38valapexminiplusv3splash.sh": {
+        "bytes": 4983,
+        "sha256": "7c10001bbdd3f104fd7dccf7365810897bd41831192b887ae7a97f04e429ccf4"
+      },
+      "runtime/engine/Bootstrap.mm": {
+        "bytes": 18215,
+        "sha256": "80e37996761547ce1f7333d8f949648e8de12b9a43c9612b597c015105b9caf0"
+      },
+      "runtime/engine/RuntimeResources.mm": {
+        "bytes": 37917,
+        "sha256": "442d3a9e104c58ebc3a257a5d58d9e21334ad22b8146d752e6f8f9f6e889621f"
+      },
+      "runtime/engine/Status.cpp": {
+        "bytes": 23066,
+        "sha256": "50dd16b87abeace29eee0f2d28fa34d798455444f4bb0ce10da3a83409cb5360"
+      },
+      "runtime/engine/Status.hpp": {
+        "bytes": 11576,
+        "sha256": "2f308792194e2a5929eaab7a714c13e1b5a55a1ae7e0f9fa87a8a29c3a489460"
+      },
+      "runtime/model/CompactDraftHead.cpp": {
+        "bytes": 6364,
+        "sha256": "20d695fef83fb09051044678fa543c1fcb8e9c74d7a92e557c3b6896b4d8f936"
+      },
+      "runtime/model/CompactDraftHead.hpp": {
+        "bytes": 2137,
+        "sha256": "99126ef7bde7f64afae6be4329ce676cd80b423f0a208391a2c142e84f57d9e3"
+      },
+      "runtime/model/GgufImage.cpp": {
+        "bytes": 24271,
+        "sha256": "db4c00580cd376f0e8b35c11293cbaaf7462462c0d05e34be1412cd6d26da465"
+      },
+      "runtime/model/GgufPreparation.cpp": {
+        "bytes": 31793,
+        "sha256": "f0bd30c265918534470136dc251ace574fa4424a9c17e80fd3788fbbc97a96f5"
+      },
+      "runtime/model/Model.hpp": {
+        "bytes": 25059,
+        "sha256": "7cbfc8ccf0aa2adc9d9b8c4ee600333f7ed0b766ef4288efa49390105f59b5cd"
+      },
+      "runtime/model/OptionalFeatures.hpp": {
+        "bytes": 2776,
+        "sha256": "5ca451bcf6cee1de1eaf36be58b8d7ef937a670b68c72ec7cb16a513650180ec"
+      },
+      "runtime/model/Runtime.cpp": {
+        "bytes": 135405,
+        "sha256": "cfb178e85a39d9dd1228c779682d5e1c8f4da4da577eee8159d9a049876343ff"
+      },
+      "runtime/model/Runtime.hpp": {
+        "bytes": 3594,
+        "sha256": "2becee3737528af192e2c9357c230089880a5acfd070be23b8252c758ddff1e9"
+      },
+      "runtime/ops/CompactProjection.cpp": {
+        "bytes": 8800,
+        "sha256": "7bdf6b8f495046f579bce37b3fca00618cb47d53ea0ea036fab651029d49e54f"
+      },
+      "runtime/ops/CompactProjection.hpp": {
+        "bytes": 1579,
+        "sha256": "e3cf77f345b7a489f0547b4b08d17e4c41691678158cffdef3ade2f9dc2ef2bf"
+      },
+      "server/serve_options.py": {
+        "bytes": 24150,
+        "sha256": "8b363e711e071120e1faf81a0ff51ebd0fa08a4b95b5127f6deba235d7c67aea"
+      },
+      "server/server.py": {
+        "bytes": 70372,
+        "sha256": "b9071a11432ad416b7a2374ebc211b1771c39bfff7efa9911cdfdb255bad684b"
+      },
+      "server/startup_report.py": {
+        "bytes": 6738,
+        "sha256": "bef9496a489097eccd4ee3870731bbb1fc290472a2de48452e943e89fbec2e33"
+      },
+      "swift1527biq3ssplash.sh": {
+        "bytes": 3757,
+        "sha256": "e87df7fbdf3c43b1ac1481cca58a068e5728aaf15cf4d103779ba32b77e40a6a"
+      }
+    }
+  },
+  "flash-next": {
+    "root": "/Users/ghost233/.codex/worktrees/qwen38-flash-next/GhostSplash",
+    "head": "073416759088602e6bd0e81bc246ee61f755867a",
+    "files": {
+      "dev/tests/fixtures/flash_next_30g_test_plan.json": {
+        "deleted": true
+      },
+      "dev/tests/fixtures/flash_next_35g_5g_test_plan.json": {
+        "bytes": 2584,
+        "sha256": "3ad19e400e5bad759bcbdd04155ee8cd7353665ba2a7d3e692efc77a9b6142d5"
+      },
+      "dev/tests/run_flash_next_checks.py": {
+        "bytes": 8782,
+        "sha256": "621f06bf7fd95778a1c1be32e2fe4e98d323922377c189f298fe84dfb1e3780e"
+      },
+      "runtime/engine/Bootstrap.mm": {
+        "bytes": 18422,
+        "sha256": "c4022a07ee096a62d35f8d3c55b7550c0070559d993cf46da2f429d8d2b04342"
+      },
+      "runtime/engine/RuntimeResources.mm": {
+        "bytes": 41844,
+        "sha256": "b1da7c8d783802665810d77b098fbb10c2e3d24dfc4284070c4d7c3258916b49"
+      },
+      "swift15flashnextsplash.sh": {
+        "bytes": 3747,
+        "sha256": "65603dc4a57bb4778d7a3a99f01ba560e057b6a25c512b54b1ab5e77eae9126c"
+      }
+    }
+  }
+}

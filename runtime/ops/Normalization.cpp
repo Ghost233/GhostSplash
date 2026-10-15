@@ -28,7 +28,10 @@ PreparedInput Normalization::addRms(metal::CommandGraph &graph,
               {input, weight.buffer, output, scratch.input, scratch.sums}, width, {rows, 1, 1});
     return {std::move(output), layout};
   }
-  if (rows <= SPLASH_STAGED_NORM_ROWS && width <= SPLASH_STAGED_NORM_WIDTH && width % 4 == 0)
+  if (width == 2560)
+    graph.add(normKernel("norm_rms_2560", weight, width), {std::move(input), weight.buffer, output},
+              width, {rows, 1, 1});
+  else if (rows <= SPLASH_STAGED_NORM_ROWS && width <= SPLASH_STAGED_NORM_WIDTH && width % 4 == 0)
     graph.add(normKernel("norm_rms_staged", weight, width), {std::move(input), weight.buffer, output},
               width, {rows, 1, 1}, {SPLASH_STAGED_NORM_THREADS, 1, 1});
   else

@@ -101,12 +101,24 @@ class FakeServer:
 
 class SmokeRealTests(unittest.TestCase):
     def test_status_checks_selected_kv_format(self):
-        for format in ("int8", "bf16"):
+        for format in ("int8", "bf16", "q4h", "q4_0", "q4_0_unrotated"):
             kv = {
                 "format": format,
-                "quantization": "symmetric_int8" if format == "int8" else "none",
-                "scale_type": "float32" if format == "int8" else "none",
+                "quantization": "symmetric_int8"
+                if format == "int8"
+                else "symmetric_int4_hadamard"
+                if format == "q4h"
+                else "ggml_q4_0"
+                if format in ("q4_0", "q4_0_unrotated")
+                else "none",
+                "scale_type": "float16_group32"
+                if format in ("q4_0", "q4_0_unrotated")
+                else "float32"
+                if format != "bf16"
+                else "none",
             }
+            if format in ("q4_0", "q4_0_unrotated"):
+                kv["rotation"] = "hadamard_qk256_v64_v1" if format == "q4_0" else "none"
             status = {
                 "ready": True,
                 "metal": {"healthy": True},

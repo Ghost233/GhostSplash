@@ -69,6 +69,17 @@ public:
     step(std::move(event), value, EventStep::Kind::Wait);
   }
 
+  // End the current Metal command buffer after the last appended dispatch.
+  void endCommandBuffer() { dispatches_.back().commandBufferBoundaryAfter = true; }
+
+  // Annotates the range appended by an operator; no shader binding is added.
+  void attributeFrom(size_t first, std::string_view scope, uint32_t rows) {
+    for (size_t i = first; i < dispatches_.size(); ++i) {
+      dispatches_[i].attribution = scope;
+      dispatches_[i].logicalRows = rows;
+    }
+  }
+
   [[nodiscard]] bool empty() const noexcept { return dispatches_.empty(); }
   // The dispatches alone; command() has the event steps too.
   [[nodiscard]] std::span<const ComputeDispatch> dispatches() const noexcept {

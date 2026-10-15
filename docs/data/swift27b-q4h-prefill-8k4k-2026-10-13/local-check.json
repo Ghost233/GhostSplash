@@ -1,0 +1,12 @@
+{
+  "command": [
+    "make",
+    "-j4",
+    "BUILD=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/default-check",
+    "BUILD_ID_PYTHON=/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "check-source",
+    "check-native-cpu",
+    "check-native-build"
+  ],
+  "exit_code": 0
+}

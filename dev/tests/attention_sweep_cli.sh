@@ -28,15 +28,21 @@ for value in -1 262144 4294967296 10x '' '0,'; do
     reject '--histories requires integers' --histories "$value"
 done
 for value in typo '' '27b,' '27b,typo' ',35b'; do
-    reject '--shapes takes 27b or 35b' --shapes "$value"
+    reject '--shapes takes 4b, 27b or 35b' --shapes "$value"
 done
 for value in 0 16384 -1 1x ''; do
     reject '--extent-pages requires integers' --extent-pages "$value"
 done
-for option in --histories --lanes --repeat --shapes --phases --compare-metallib --extent-pages; do
+for option in --histories --lanes --repeat --shapes --phases --compare-metallib --extent-pages --kv-format; do
     reject "$option requires a value" "$option"
 done
 reject '--phases takes both, verify or prefill' --phases typo
+for value in q2 q4 fp16 ''; do
+    reject '--kv-format takes int8, bf16, q4_0 or q4_0_unrotated' --kv-format "$value"
+done
+for format in int8 bf16 q4_0 q4_0_unrotated; do
+    reject 'unknown option --sentinel' --shapes 4b --kv-format "$format" --sentinel 1
+done
 reject 'unknown option --unknown' --unknown 1
 # The 27B's INT8 extents hold whole 128-page alignment units.
 reject 'does not hold whole alignment units' --shapes 27b --extent-pages 448

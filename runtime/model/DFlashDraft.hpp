@@ -23,6 +23,7 @@ struct DFlashDraftRingLayer final {
   metal::MetalBuffer keys;
   // V is [head][dimension][ring_position].
   metal::MetalBuffer values;
+  uint32_t capacity = SPLASH_DRAFT_SLIDING_WINDOW;
 };
 
 // A lane's draft rings: every draft layer's keys and values of the last
@@ -68,7 +69,9 @@ private:
   uint64_t actualAllocatedBytes_ = 0;
 };
 
-// The dimensions of a DFlash2 draft. Each target's draft is defined beside
+enum class DraftKind : uint8_t { DFlash2, Standard };
+
+// The dimensions of a DFlash draft. Each target's draft is defined beside
 // the target (Qwen3_8.hpp, Qwen3_6Moe.hpp).
 struct DFlashDraftLayout final {
   uint32_t layers = 0;
@@ -83,9 +86,28 @@ struct DFlashDraftLayout final {
   uint32_t targetHiddenSize = 0;
   uint32_t selectorRank = 0;
   uint32_t kvHeads = 0;
+  DraftKind kind = DraftKind::DFlash2;
+  uint32_t contextCapacity = 262144;
+
+  [[nodiscard]] constexpr uint32_t queryRows() const noexcept {
+    return layers ? ExecutionLimits::draftQueryRows : 0;
+  }
+  [[nodiscard]] constexpr uint32_t proposalTokens() const noexcept {
+    return layers ? ExecutionLimits::draftProposalTokens : 0;
+  }
+  [[nodiscard]] constexpr bool supportsExecutionBlock() const noexcept {
+    return !layers || kind == DraftKind::Standard || ExecutionLimits::draftQueryRows == 8;
+  }
 
   [[nodiscard]] constexpr DraftStateLayout stateLayout() const noexcept {
-    return {layers, kvHeads, attentionHeadDimension, hiddenSize};
+    DraftStateLayout result{layers, kvHeads, attentionHeadDimension};
+    result.contextWidth = hiddenSize;
+    if (kind == DraftKind::Standard) {
+      result.fullHistory = true;
+      for (uint32_t i = 0; i < layers; ++i)
+        result.layerContextTokens[i] = i + 1 == layers ? contextCapacity : 4096;
+    }
+    return result;
   }
   [[nodiscard]] constexpr ops::DraftAttentionShape attentionShape() const noexcept {
     return {hiddenSize, dynamicSize, qkvSize, attentionSize,
@@ -187,6 +209,8 @@ struct DFlashDraftLayerWeights final {
   ops::Projection gateProjection;
   ops::Projection upProjection;
   ops::Projection downProjection;
+  bool causal = false;
+  uint32_t slidingWindow = 0;
 };
 
 struct DFlashDraftWeights final {
@@ -239,7 +263,9 @@ public:
   void addSelection(metal::CommandGraph &graph,
                     const ops::DraftSelectorBuffers &buffers,
                     std::span<const uint32_t> anchors,
-                    std::span<const ops::SamplingPolicy> policies) const;
+                    std::span<const ops::SamplingPolicy> policies,
+                    uint32_t compactVocabulary = 0,
+                    metal::MetalBuffer compactMapping = {}, uint32_t compactValidRows = 0) const;
   void addContextCommit(metal::CommandGraph &graph,
                         DFlashContextBuffers buffers,
                         std::span<const uint32_t> startPositions) const;

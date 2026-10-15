@@ -1,0 +1,68 @@
+diff --git a/dev/native.mk b/dev/native.mk
+index 2350378..a0db822 100644
+--- a/dev/native.mk
++++ b/dev/native.mk
+@@ -57,6 +57,7 @@ TEST_MODEL_CONFIGURATION := $(ENGINE_TEST_BUILD)/model-configuration
+ TEST_DRAFT_BLOCK_CONTRACT := $(ENGINE_TEST_BUILD)/draft-block-contract
+ TEST_DRAFT_BLOCK_ACCEPTANCE := $(ENGINE_TEST_BUILD)/draft-block-acceptance
+ TEST_ANE_FFN_4B_REGISTRATION := $(ENGINE_TEST_BUILD)/ane-ffn-4b-registration
++TEST_ANE_FFN_PROGRAM_GRID := $(ENGINE_TEST_BUILD)/ane-ffn-program-grid
+ TEST_QWEN4B_MATRIX_NATIVE := $(ENGINE_TEST_BUILD)/qwen4b-matrix-native
+ MATRIX_ATTENTION_CPP := $(ENGINE_TEST_BUILD)/matrix-PagedAttention.cpp
+ MATRIX_ATTENTION_OBJECT := $(ENGINE_TEST_BUILD)/matrix-PagedAttention.o
+@@ -157,7 +158,7 @@ TEST_SLOT_FILE := $(ENGINE_TEST_BUILD)/slot-file
+ TEST_CACHE_DIRECTORY := $(ENGINE_TEST_BUILD)/cache-directory
+ TEST_PERSISTENT_CACHE := $(ENGINE_TEST_BUILD)/persistent-cache
+ 
+-TEST_CPU_TARGETS := $(TEST_OPTIONAL_FEATURES) $(TEST_FFN_POLICY) $(TEST_DRAFT_BLOCK_CONTRACT) $(TEST_ANE_FFN_4B_REGISTRATION) $(TEST_SLOT_FILE) $(TEST_CACHE_DIRECTORY) $(TEST_VISION_PREPARATION) $(TEST_SAFETENSORS_CHECKPOINT) $(TEST_WEIGHT_SOURCE) $(TEST_OPERATOR_WORKSPACE) \
++TEST_CPU_TARGETS := $(TEST_OPTIONAL_FEATURES) $(TEST_FFN_POLICY) $(TEST_DRAFT_BLOCK_CONTRACT) $(TEST_ANE_FFN_4B_REGISTRATION) $(TEST_ANE_FFN_PROGRAM_GRID) $(TEST_SLOT_FILE) $(TEST_CACHE_DIRECTORY) $(TEST_VISION_PREPARATION) $(TEST_SAFETENSORS_CHECKPOINT) $(TEST_WEIGHT_SOURCE) $(TEST_OPERATOR_WORKSPACE) \
+ 	$(TEST_MODEL_CONFIGURATION) $(TEST_STANDARD_DRAFT_CHECKPOINT) \
+ 	$(TEST_GGUF_FILE) \
+ 	$(TEST_GGUF_REFERENCE) $(TEST_GGUF_PLANNER) \
+@@ -301,6 +302,9 @@ $(TEST_DRAFT_BLOCK_CONTRACT): dev/tests/engine/draft_block_contract_test.cpp $(E
+ $(TEST_FFN_POLICY): dev/tests/engine/ffn_policy_test.cpp dev/benchmarks/FfnTrace.hpp $(ENGINE_LIBRARY) | $(ENGINE_TEST_BUILD)
+ 	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) $(TEST_INPUTS) $(ENGINE_LINKFLAGS) -o $@
+ 
++$(TEST_ANE_FFN_PROGRAM_GRID): dev/tests/engine/ane_ffn_program_grid_test.cpp runtime/ops/AneFfn.hpp | $(ENGINE_TEST_BUILD)
++	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) $< -o $@
++
+ $(TEST_ANE_FFN_4B_REGISTRATION): dev/tests/engine/ane_ffn_4b_registration_test.cpp $(ENGINE_LIBRARY) | $(ENGINE_TEST_BUILD)
+ 	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) $(TEST_INPUTS) $(ENGINE_LINKFLAGS) -o $@
+ 
+@@ -498,6 +502,7 @@ test-engine-cpu: $(TEST_CPU_TARGETS) $(TEST_ATTENTION_SWEEP)
+ 	$(TEST_FFN_POLICY)
+ 	$(TEST_DRAFT_BLOCK_CONTRACT)
+ 	$(TEST_ANE_FFN_4B_REGISTRATION)
++	$(TEST_ANE_FFN_PROGRAM_GRID)
+ 	$(TEST_SLOT_FILE)
+ 	$(TEST_CACHE_DIRECTORY)
+ 	$(BUILD_ID_PYTHON) dev/tests/engine/run_vision_preparation.py $(TEST_VISION_PREPARATION) $(WEIGHT_GOLDENS)
+diff --git a/runtime/ops/AneFfn.hpp b/runtime/ops/AneFfn.hpp
+index 6bbabcc..d64b6c9 100644
+--- a/runtime/ops/AneFfn.hpp
++++ b/runtime/ops/AneFfn.hpp
+@@ -7,7 +7,9 @@
+ #include "ops/AneFfnCalibration.hpp"
+ #include "ops/Linear.hpp"
+ 
++#include <algorithm>
+ #include <array>
++#include <bit>
+ #include <cstdint>
+ #include <functional>
+ #include <memory>
+@@ -40,7 +42,13 @@ public:
+   // A chunk runs on the smallest of the program's functions that holds it,
+   // one every kProgramStep rows from kMinimumRows to the prefill budget,
+   // since an evaluation costs the ANE its function's rows.
+-  static constexpr uint32_t kMinimumRows = 512, kProgramStep = 128, kMaximumRows = SPLASH_PREFILL_TOKEN_BUDGET;
++  static constexpr uint32_t kMinimumRows = 512, kMaximumRows = SPLASH_PREFILL_TOKEN_BUDGET;
++  // Large mixed-weight FFNs can fail ANE compilation when the program holds
++  // every 128-row function through 4096. Bound the grid's size; up to 2048
++  // rows the original 128-row step remains unchanged.
++  static constexpr uint32_t kMaximumFunctions = 16;
++  static constexpr uint32_t kProgramStep = std::bit_ceil(std::max(
++      128U, (kMaximumRows - kMinimumRows + kMaximumFunctions - 2) / (kMaximumFunctions - 1)));
+   static_assert(kMaximumRows >= kMinimumRows && (kMaximumRows - kMinimumRows) % kProgramStep == 0,
+                 "the functions cover the chunks the split takes");
+ 

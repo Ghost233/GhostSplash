@@ -5,6 +5,7 @@
 #include "metal/abi/AneFfn.h"
 #include "metal/abi/QuantFormat.h"
 #include "ops/BufferExtent.hpp"
+#include "ops/AneFfnMeasurement.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -80,7 +81,8 @@ const char *AneFfn::unsupported(std::span<const SwiGluProjections> layers) {
   if (layers.empty()) return "ANE FFN split has no layers";
   const uint32_t hidden = layers.front().gate->inputSize, intermediate = layers.front().gate->outputSize;
   if (hidden % kSegment) return "ANE FFN split needs a hidden size of whole 2560-channel segments";
-  if (hidden % kRotateGroup || hidden / kRotateGroup > ANE_FFN_ROTATE_BLOCKS)
+  if (hidden % ANE_FFN_INPUT_BLOCK ||
+      hidden / kRotateGroup + (hidden % kRotateGroup != 0) > ANE_FFN_ROTATE_BLOCKS)
     return "ANE FFN split needs a hidden size ane_ffn_rotate takes";
   if (intermediate % kChannelUnit || intermediate < 2 * kChannelUnit)
     return "ANE FFN split needs two or more whole rotation blocks of intermediate channels";
@@ -394,6 +396,14 @@ AneFfn::AneFfn(metal::MetalBackend &backend, std::span<const SwiGluProjections> 
                std::function<bool()> interrupted, std::span<const uint32_t> functionRows)
     : backend_(backend), linear_(backend.capabilities()), shape_(shapeOf(layers, aneUnits)),
       handoff_(backend, kHandoffBound) {
+  // The caller's Projection objects may expire; buffers remain shared, never duplicated.
+  recoveryProjections_.reserve(layers.size() * 3);
+  for (const auto &layer : layers)
+    for (const auto *projection : {layer.gate, layer.up, layer.down})
+      recoveryProjections_.push_back(*projection);
+  for (size_t i = 0; i < layers.size(); ++i)
+    recoveryLayers_.push_back({&recoveryProjections_[3 * i], &recoveryProjections_[3 * i + 1],
+                               &recoveryProjections_[3 * i + 2]});
   // What Metal allocates, which the memory audit compares with the plan.
   memory_ = allocate(
       shape_,
@@ -474,6 +484,7 @@ metal::MetalBuffer AneFfn::rowScales(uint32_t layer, Matrix matrix) const {
 
 // Layer `layer`'s int8 weights and row scales into staging set `set`.
 void AneFfn::addWeights(metal::CommandGraph &graph, uint32_t layer, uint32_t set) const {
+  const size_t firstDispatch = graph.dispatches().size();
   const Layer &source = layers_.at(layer);
   const Weights &target = memory_.sets[set];
   const auto add = [&](Matrix matrix, const ane::Surface &output, const ane::Surface &scale, uint32_t row,
@@ -499,6 +510,7 @@ void AneFfn::addWeights(metal::CommandGraph &graph, uint32_t layer, uint32_t set
         Rotation::Intermediate);
     begin += shape_.downSegments[i];
   }
+  if (layers_[layer].gate.ffn.trace) graph.attributeFrom(firstDispatch, "target_ffn/ane_weight_staging", 0);
 }
 
 bool AneFfn::begin() {
@@ -537,21 +549,31 @@ void AneFfn::encode(metal::CommandGraph &graph, uint32_t layer, const PrefillFfn
   const auto index = static_cast<uint32_t>(found - evaluations_.begin());
   // Each command stages layer 0's weights, then each layer the next one's.
   if (!layer) addWeights(graph, 0, 0);
+  const size_t packFirst = graph.dispatches().size();
   graph.add("ane_ffn_rotate", {ffn.normalized, memory_.signs, memory_.rotated, memory_.tokenScale.buffer},
             AneFfnRotateParams{shape_.hidden}, {rows, 1, 1}, {ANE_FFN_ROTATE_THREADS, 1, 1});
   for (uint32_t k = 0; k < memory_.inputs.size(); ++k)
     graph.add("ane_ffn_pack", {memory_.rotated, memory_.inputs[k].buffer},
               AneFfnPackParams{shape_.hidden, k * kSegment, memory_.inputs[k].strideBytes},
               {tiles, kSegment / ANE_FFN_TILE, 1}, {ANE_FFN_TILE, ANE_FFN_TILE_ROWS, 1});
+  if (current.gate.ffn.trace) graph.attributeFrom(packFirst, "target_ffn/ane_input_pack", rows);
   const uint64_t ready = ane ? handoff_.next() : 0;
   if (ane) graph.signal(handoff_.event(), ready);
   linear_.addPrefillSwiGlu(graph, {&current.gate, &current.up, &current.down}, ffn, residual, output, rows);
   if (layer + 1 < layers_.size()) addWeights(graph, layer + 1, set ^ 1);
   const uint64_t done = ane ? handoff_.next() : 0;
+  // A wait must not hold back GPU FFN/staging work in the same buffer.
+  if (ane && current.gate.ffn.variant == FfnPrefillVariant::Q4KGroupScale)
+    graph.endCommandBuffer();
   if (ane) graph.wait(handoff_.event(), done);
+  const size_t joinFirst = graph.dispatches().size();
   graph.add("ane_ffn_join", {output, memory_.partial.buffer, memory_.tokenScale.buffer, memory_.status},
             AneFfnJoinParams{shape_.hidden, memory_.partial.strideBytes / uint32_t{sizeof(_Float16)}, rows},
             {tiles, shape_.hidden / ANE_FFN_TILE, 1}, {ANE_FFN_TILE, ANE_FFN_TILE_ROWS, 1});
+  if (current.gate.ffn.trace) graph.attributeFrom(joinFirst, "target_ffn/ane_join", rows);
+  // Keep the ANE wait/join separate from the next layer's GPU attention.
+  if (current.gate.ffn.variant == FfnPrefillVariant::Q4KGroupScale && layer + 1 < layers_.size())
+    graph.endCommandBuffer();
   if (ane) jobs_.push_back({index, set, ready, done});
   ++nextLayer_;
 }
@@ -590,9 +612,12 @@ bool AneFfn::finish() {
   served_.evaluations += committedEvaluations_;
   served_.milliseconds += milliseconds;
   if (std::string losing = breaker_.add(committedRows_, committedEvaluations_, milliseconds); !losing.empty()) {
+    retryable_ = recoverySetting_.enabled;
     handoff_.retire(std::move(losing));
     warnStopped();
     if (lost_) std::exchange(lost_, {})();
+  } else if (recoveryRestored_ && ++recoveryStableCommands_ >= ane_ffn::Breaker::kWindow) {
+    recoveryGate_.stable();
   }
   return true;
 }
@@ -644,8 +669,83 @@ void AneFfn::restore() noexcept {
 
 void AneFfn::warnStopped() {
   if (std::exchange(warned_, true)) return;
+  if (retryable_) {
+    recoveryGate_.stopped(recoveryClock_());
+    if (powerMonitor_) powerMonitor_->active(true);
+  }
   logWarning("Neural Engine FFN split stopped (", handoff_.reason(),
-             "); the GPU runs the prefill FFN alone until the engine restarts.");
+             retryable_ ? "); GPU FFN active; recovery waits for cooldown and low ANE power." :
+                          "); the GPU runs the prefill FFN alone until the engine restarts.");
+}
+
+void AneFfn::setRecovery(ane_ffn::RecoverySetting setting,
+                         std::function<ane::PowerSample()> power, std::function<double()> clock) {
+  recoverySetting_ = setting;
+  recoveryGate_ = ane_ffn::RecoveryGate(setting);
+  if (!setting.enabled) return;
+  recoveryClock_ = clock ? std::move(clock) : [] {
+    return std::chrono::duration<double>(AwakeClock::now().time_since_epoch()).count();
+  };
+  if (power) powerSource_ = std::move(power);
+  else {
+    powerMonitor_ = std::make_unique<ane::PowerMonitor>(setting.powerThreshold().value_or(setting.maximumIdleWatts));
+    powerSource_ = [this] { return powerMonitor_->latest(); };
+  }
+}
+
+std::optional<ane_ffn::RecoveryReport> AneFfn::recoveryReport() const {
+  if (!recoverySetting_.enabled) return std::nullopt;
+  const auto sample = powerSource_();
+  const double now = recoveryClock_();
+  const bool valid = sample.watts && std::isfinite(*sample.watts) && *sample.watts >= 0 &&
+                     sample.measuredAtSeconds <= now && now - sample.measuredAtSeconds <= 2;
+  const std::string phase = !retired() ? "running" : !retryable_ ? "fault_stopped" :
+      !handoff_.idle() ? "waiting_old_jobs" : !recoverySetting_.powerThreshold() ? "reference_unavailable" : now < recoveryGate_.nextAttempt() ? "cooldown" :
+      !valid ? "unknown_power" : sample.quietSeconds.value_or(recoveryGate_.quietSeconds()) < recoverySetting_.quietSeconds
+          ? "waiting_low_power" : "waiting_prefill";
+  return ane_ffn::RecoveryReport{phase, powerMonitor_ && !valid ? powerMonitor_->reason() : recoveryReason_,
+      valid ? sample.watts : std::nullopt, std::max(0.0, recoveryGate_.nextAttempt() - now),
+      sample.quietSeconds.value_or(recoveryGate_.quietSeconds()), recoveryAttempts_, recoveryRestored_,
+      valid && powerReference_ && powerReference_->valid ?
+          ane::relativePowerPercent(*sample.watts, powerReference_->referenceWatts) : std::nullopt};
+}
+
+void AneFfn::tryRecover(const PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden) {
+  if (!retryable_ || !retired() || unfinished_ || !jobs_.empty() || !handoff_.idle() ||
+      !recoveryGate_.ready(recoveryClock_(), powerSource_())) return;
+  ++recoveryAttempts_;
+  if (powerMonitor_) powerMonitor_->active(false);
+  bool verified = false;
+  try {
+    if (released_) { program_->load({kReloadLimit, {}}); released_ = false; }
+    if (!handoff_.restart(backend_)) throw std::runtime_error("old ANE jobs have not settled");
+    warned_ = false;
+    // Original verifier, all programmed row counts, same numerical bounds.
+    static_cast<void>(verify(recoveryLayers_, ffn, hidden));
+    verified = true;
+    ane_ffn::Measurement measurement(backend_, recoveryLayers_, ffn, hidden, {});
+    const auto gpu = measurement.gpuBaseline();
+    const double split = measurement.probe(*this, gpu.back().milliseconds);
+    if (!(split <= 0.95 * gpu.back().milliseconds)) {
+      throw std::runtime_error("recovery probe did not beat the GPU by 5%");
+    }
+    breaker_ = ane_ffn::Breaker(gpu);
+    retryable_ = false;
+    recoveryStableCommands_ = 0;
+    ++recoveryRestored_;
+    recoveryReason_.clear();
+    logLine("Neural Engine FFN recovered at unchanged share ", share(), " after low-power probe");
+    return;
+  } catch (const std::exception &error) {
+    const bool fault = !verified || handoff_.retired();
+    handoff_.retire(std::string("recovery probe failed: ") + error.what());
+    recoveryReason_ = error.what();
+    if (!backend_.healthy()) throw;
+    if (fault) { retryable_ = false; warned_ = true; return; }
+  }
+  warned_ = true;
+  recoveryGate_.failed(recoveryClock_());
+  if (powerMonitor_) powerMonitor_->active(true);
 }
 
 void AneFfn::queue(const Job &job) {

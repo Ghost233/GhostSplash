@@ -1,0 +1,154 @@
+usage: qwen38miniplusv3splash.sh [-h] [--port PORT] [--binary BINARY]
+                                 [--host ADDRESS] [--allowed-host HOST]
+                                 [--allowed-origin ORIGIN] [--api-key KEY]
+                                 [--no-webui] [--max-memory SIZE]
+                                 [--max-context TOKENS]
+                                 [--kv-format {int8,bf16,q4h,q4_0,q4_0_unrotated}]
+                                 [--idle-release DURATION]
+                                 [--max-cache-disk SIZE] [--persistent-cache]
+                                 [--cache-dir DIRECTORY]
+                                 [--served-model-name NAME]
+                                 [--announce-served-name]
+                                 [--default-reasoning-effort EFFORT]
+                                 [--max-request-size SIZE]
+                                 [--max-image-pixels PIXELS]
+                                 [--request-timeout DURATION]
+                                 [--queue-size REQUESTS]
+                                 [--decode-share SHARE] [--disable-ane]
+                                 [--ane-ffn-share auto|SHARE]
+                                 [--ane-ffn-minimum-rows ROWS]
+                                 [--ane-power-recovery {on,off}]
+                                 [--ane-power-reference off|auto|WATTS]
+                                 [--ane-recovery-idle-watts WATTS]
+                                 [--ane-recovery-max-power-percent PERCENT]
+                                 [--prompt-lookup {on,off}]
+                                 [--prompt-lookup-min-match {2,3,4}]
+                                 [--compact-draft-head {on,off}]
+                                 [--compact-draft-capacity ROWS]
+                                 [--compact-draft-ranking FILE]
+                                 [--fast-topk {on,off}] [--allow-idle-sleep]
+
+Qwen3.8 27B VAL APEX I MiniPlus V3 with the converted Qwen3.8-27B DFlash2
+draft
+
+options:
+  -h, --help            show this help message and exit
+  --port PORT
+  --binary BINARY
+
+network and access:
+  --host ADDRESS        HTTP bind address (default: 127.0.0.1; 0.0.0.0 for all
+                        IPv4 interfaces); clients use an IP address, localhost
+                        or a name given with --allowed-host
+  --allowed-host HOST   additional HTTP Host name to accept, e.g. mymac.local;
+                        does not change the bind address (repeatable)
+  --allowed-origin ORIGIN
+                        origin whose pages may call the API from a browser or
+                        webview, e.g. tauri://localhost; '*' for any
+                        (repeatable)
+  --api-key KEY         require this key as a bearer token or x-api-key on
+                        every route but the chat page, /health and /ready
+                        (default: SPLASH_API_KEY)
+  --no-webui            disable the chat page
+
+memory and context:
+  --max-memory SIZE     Metal memory budget, e.g. 28G; it can only lower the
+                        automatic budget (default: auto)
+  --max-context TOKENS  context token limit, e.g. 100K (K = 1024 tokens); it
+                        can only lower the automatic limit, the model's native
+                        window when memory holds it (default: auto)
+  --kv-format {int8,bf16,q4h,q4_0,q4_0_unrotated}
+                        target KV cache storage (default: int8); q4_0 uses
+                        fixed rotation, q4_0_unrotated is its validation
+                        control, q4h is experimental
+  --idle-release DURATION
+                        time without a request before the engine unwires its
+                        memory and frees the weights: seconds, or with an s, m
+                        or h suffix, e.g. 30m (default: 10m); off keeps both
+
+SSD cache:
+  --max-cache-disk SIZE
+                        SSD quota for cached KV pages and states, e.g. 5G
+                        (default: 0, disabled)
+  --persistent-cache    keep the SSD cache across restarts (needs --max-cache-
+                        disk)
+  --cache-dir DIRECTORY
+                        where --persistent-cache keeps its files; needs
+                        --persistent-cache (default:
+                        ~/Library/Caches/Splash/prefix-cache)
+
+API:
+  --served-model-name NAME
+                        additional API model name (repeatable); responses
+                        report the loaded model ID unless --announce-served-
+                        name
+  --announce-served-name
+                        report the first --served-model-name in API responses
+                        and list it first in /v1/models; /status keeps the
+                        loaded model ID (needs --served-model-name)
+  --default-reasoning-effort EFFORT
+                        effort of Chat and Responses requests that set none:
+                        none, minimal, low, medium, high, xhigh or max
+                        (default: SPLASH_DEFAULT_REASONING_EFFORT, else the
+                        model template's)
+
+requests:
+  --max-request-size SIZE
+                        maximum HTTP request body size, e.g. 128M (default:
+                        128M); shared input budget is max(512M, twice this
+                        limit)
+  --max-image-pixels PIXELS
+                        maximum resized pixels per image, 65536–4194304
+                        (default: 4194304); bounds the vision scratch one
+                        image needs
+  --request-timeout DURATION
+                        time before a queued or in-flight request expires with
+                        504: seconds, or with an s, m or h suffix, e.g. 30m
+                        (default: none)
+  --queue-size REQUESTS
+                        requests admitted at once, running or waiting; more
+                        get 503 (default: 32)
+  --decode-share SHARE  decode time owed per unit of prefill time while other
+                        requests decode (default: 0.5; 0 alternates one
+                        command each)
+  --disable-ane         prefill on the GPU alone (default: a dense model's
+                        long prompts also use the Neural Engine when that is
+                        faster)
+  --ane-ffn-share auto|SHARE
+                        ANE channel share: auto calibrates, 0 disables,
+                        otherwise 0..1
+  --ane-ffn-minimum-rows ROWS
+                        minimum prefill rows for a fixed ANE share (default:
+                        512)
+  --ane-power-recovery {on,off}
+                        retry after a performance backoff when ANE power is
+                        quiet (default: off)
+  --ane-power-reference off|auto|WATTS
+                        ANE power reference: off, startup measurement or
+                        positive watts (default: off)
+  --ane-recovery-idle-watts WATTS
+                        absolute ANE recovery power threshold (default: 0.05
+                        W)
+  --ane-recovery-max-power-percent PERCENT
+                        recovery threshold relative to the power reference,
+                        0..100; overrides watts
+  --prompt-lookup {on,off}
+                        reuse matching prompt continuations (default: off)
+  --prompt-lookup-min-match {2,3,4}
+                        minimum lookup match length (default: 2)
+  --compact-draft-head {on,off}
+                        enable validated compact draft head with --compact-
+                        draft-ranking FILE (default: off)
+  --compact-draft-capacity ROWS
+                        compact vocabulary capacity (default: 98304)
+  --compact-draft-ranking FILE
+                        explicit public draft ranking file; does not enable
+                        compact by itself
+  --fast-topk {on,off}  use optional fast top-k sampling (default: off)
+  --allow-idle-sleep    let the Mac sleep automatically while requests run
+                        (default: it stays awake until they finish; the
+                        display may still sleep)
+
+MiniPlus V3 defaults: context=262144, KV=q4h, queue=1, memory=40G, lookup=on,
+compact=off (explicit public ranking required), fast-topk=off, ANE power
+recovery/reference=off.

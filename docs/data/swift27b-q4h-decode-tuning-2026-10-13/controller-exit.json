@@ -1,0 +1,5 @@
+{
+  "exit_code": 0,
+  "pid": 23946,
+  "source": "subprocess.Popen.wait real exit result"
+}

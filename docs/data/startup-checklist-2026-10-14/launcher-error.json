@@ -1,0 +1,16 @@
+{
+  "command": [
+    "sh",
+    "qwen38miniplusv3splash.sh",
+    "--port",
+    "0",
+    "--disable-ane",
+    "--compact-draft-head",
+    "on",
+    "--compact-draft-ranking",
+    "/private/tmp/startup-checklist-missing-c5e254c984134b4a82ec32c7c296988f.splash"
+  ],
+  "returncode": 1,
+  "expected_returncode": 1,
+  "mode": "negative startup; compact preflight precedes Metal creation and weight loading"
+}

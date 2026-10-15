@@ -29,7 +29,7 @@ namespace ops = splash::ops;
 using splash::metal::MetalBackend;
 
 // The draft fixture: two layers of width 256, two KV heads.
-model::DFlashDraftLayout tinyDraftLayout() {
+model::DFlashDraftLayout tinyDraftLayout(bool standard) {
   model::DFlashDraftLayout layout;
   layout.layers = 2;
   layout.hiddenSize = 256;
@@ -43,6 +43,12 @@ model::DFlashDraftLayout tinyDraftLayout() {
   layout.targetHiddenSize = 256;
   layout.selectorRank = 256;
   layout.kvHeads = 2;
+  if (standard) {
+    layout.kind = model::DraftKind::Standard;
+    layout.layers = 6; layout.dynamicSize = 0; layout.selectorRank = 0;
+    layout.qkvSize = 768; layout.attentionSize = 512;
+    layout.intermediateSize = 512; layout.targetHiddenSize = 2048;
+  }
   return layout;
 }
 
@@ -84,14 +90,15 @@ void checkImage(const std::vector<uint8_t> &image, const model::gguf::Image &pla
 
 int main(int argc, char **argv) {
   @autoreleasepool {
-    if (argc != 4) {
+    const bool standard = argc == 5 && std::string(argv[4]) == "--standard";
+    if (argc != 4 && !standard) {
       std::fprintf(stderr, "usage: draft-preparation METALLIB FIXTURE GOLDENS\n");
       return 2;
     }
     const std::filesystem::path root(argv[2]);
-    const Goldens hashes = goldens(argv[3], @"draft_images");
+    const Goldens hashes = goldens(argv[3], standard ? @"standard_draft_images" : @"draft_images");
     MetalBackend backend(argv[1]);
-    const model::DFlashDraftLayout layout = tinyDraftLayout();
+    const model::DFlashDraftLayout layout = tinyDraftLayout(standard);
     guarded("draft preparation", [&] {
       model::WeightImages images(backend, "fixture");
       model::DraftCheckpointLoader loader(backend, images, root, layout);
@@ -125,9 +132,11 @@ int main(int argc, char **argv) {
       };
       bool read = draft.layers.size() == layout.layers && draft.files.size() == layout.layers + 1 &&
                   projection(draft.contextProjection, layout.hiddenSize, layout.targetHiddenSize) &&
-                  projection(draft.selectorProjection, layout.selectorRank, layout.hiddenSize);
+                  (standard ? draft.selectorProjection.inputSize == 0
+                            : projection(draft.selectorProjection, layout.selectorRank, layout.hiddenSize));
       for (const auto &layer : draft.layers)
-        read = read && projection(layer.attentionDynamic, layout.dynamicSize, layout.hiddenSize) &&
+        read = read && (standard ? layer.attentionDynamic.inputSize == 0
+                              : projection(layer.attentionDynamic, layout.dynamicSize, layout.hiddenSize)) &&
                projection(layer.qkvProjection, layout.qkvSize, layout.hiddenSize) &&
                projection(layer.outputProjection, layout.hiddenSize, layout.attentionSize) &&
                projection(layer.downProjection, layout.hiddenSize, layout.intermediateSize);

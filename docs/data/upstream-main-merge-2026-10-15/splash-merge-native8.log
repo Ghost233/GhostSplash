@@ -1,0 +1,371 @@
+build/merge-upstream-20261015/engine-tests/optional-features
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/decode-profile' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/decode_profile.mm build/merge-upstream-20261015/engine/metal/MetalBackendInstrumented.o build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/decode-profile
+optional features CPU checks passed
+build/merge-upstream-20261015/engine-tests/ffn-policy
+FFN policy, leading-input stride and submission attribution passed
+build/merge-upstream-20261015/engine-tests/draft-block-contract
+draft-block-contract: PASS block=8
+build/merge-upstream-20261015/engine-tests/ane-ffn-4b-registration
+ANE FFN dense registration and 2560/5120 shape checks passed
+build/merge-upstream-20261015/engine-tests/ane-ffn-program-grid
+ANE4096 function grid: all qualifying chunks covered by 15 functions
+build/merge-upstream-20261015/engine-tests/slot-file
+12:45:37 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/gguf-projection-benchmark' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_projection_benchmark.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/gguf-projection-benchmark
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/gguf-moe-benchmark' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_moe_benchmark.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/gguf-moe-benchmark
+Slot file tests passed
+build/merge-upstream-20261015/engine-tests/cache-directory
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/qwen4b-operator-candidates' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/qwen4b_operator_candidates.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/qwen4b-operator-candidates
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/drafter-fc-precision-benchmark' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/drafter_fc_precision_benchmark.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/drafter-fc-precision-benchmark
+Cache directory tests passed
+build/merge-upstream-20261015/engine-tests/disk-space
+12:45:38 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+12:45:38 SSD cache: a second write found /Volumes/Share full, a volume whose free space it does not follow; the cache keeps within the 0.0 GiB it holds while this server runs.
+12:45:38 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-Cg3JG3/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+12:45:38 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-xHQTv8/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+12:45:38 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-ibINxg/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+Disk space tests passed
+build/merge-upstream-20261015/engine-tests/legacy-weight-cache
+legacy weight cache tests passed
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tests/engine/run_vision_preparation.py build/merge-upstream-20261015/engine-tests/vision-preparation dev/tests/fixtures/weight-goldens/goldens.json
+Vision layouts from MLX, transformers and GGUF, exact BF16 conversion, rejected sources and zero padding PASS
+build/merge-upstream-20261015/engine-tests/safetensors-checkpoint
+safetensors checkpoint: bounded reads, metadata, written and malformed sources PASS
+build/merge-upstream-20261015/engine-tests/model-configuration dev/tests/fixtures/model-configs
+model configuration: both families, sources, one rule per value, quantization, vision, the installer's check PASS
+build/merge-upstream-20261015/engine-tests/standard-draft-checkpoint
+standard DFlash: exact 69 BF16 tensors, seven AF4G64 block images, no fabricated sections, 357892096 prepared bytes PASS
+build/merge-upstream-20261015/engine-tests/weight-source
+weight source: reads, writes to the open file, replacement and naming PASS
+build/merge-upstream-20261015/engine-tests/gguf-file
+GGUF parser bounds tests passed
+build/merge-upstream-20261015/engine-tests/gguf-reference dev/tests/fixtures/weight-goldens/goldens.json dev/tests/fixtures/mlx-quantization/fixture.json
+CPU reference matches the GGML golden hash: q4k                  ok
+CPU reference matches the GGML golden hash: iq4xs                ok
+CPU reference matches the GGML golden hash: iq4nl                ok
+CPU reference matches the GGML golden hash: q5k                  ok
+CPU reference matches the GGML golden hash: q6k                  ok
+CPU reference matches the GGML golden hash: q3k                  ok
+CPU reference matches the GGML golden hash: q80                  ok
+CPU reference matches the GGML golden hash: iq3s                 ok
+CPU reference matches the GGML golden hash: q2k                  ok
+CPU reference matches the GGML golden hash: iq3xxs               ok
+CPU reference matches the GGML golden hash: iq2xxs               ok
+CPU reference matches the GGML golden hash: iq2xs                ok
+CPU reference matches the GGML golden hash: iq2s                 ok
+CPU reference matches the GGML golden hash: iq1s                 ok
+CPU reference matches the GGML golden hash: iq1m                 ok
+CPU reference matches the GGML golden hash: q40                  ok
+CPU reference matches the GGML golden hash: q41                  ok
+CPU reference matches the GGML golden hash: mxfp4                ok
+CPU reference matches the GGML golden hash: pq20                 ok
+CPU reference matches the GGML golden hash: q50                  ok
+CPU reference matches the GGML golden hash: q51                  ok
+CPU reference matches the GGML golden hash: bf16                 ok
+CPU reference matches the GGML golden hash: f16                  ok
+CPU reference matches the GGML golden hash: q20                  ok
+CPU reference matches the GGML golden hash: llama.cpp's NVFP4    ok
+MLX fixture holds every MLX affine format, mxfp4 and nvfp4       ok
+CPU reference reads MLX's codes: af2g32                          ok
+CPU reference matches MLX's values: af2g32                       ok
+CPU reference reads MLX's codes: af2g64                          ok
+CPU reference matches MLX's values: af2g64                       ok
+CPU reference reads MLX's codes: af2g128                         ok
+CPU reference matches MLX's values: af2g128                      ok
+CPU reference reads MLX's codes: af3g32                          ok
+CPU reference matches MLX's values: af3g32                       ok
+CPU reference reads MLX's codes: af3g64                          ok
+CPU reference matches MLX's values: af3g64                       ok
+CPU reference reads MLX's codes: af3g128                         ok
+CPU reference matches MLX's values: af3g128                      ok
+CPU reference reads MLX's codes: af4g32                          ok
+CPU reference matches MLX's values: af4g32                       ok
+CPU reference reads MLX's codes: af4g64                          ok
+CPU reference matches MLX's values: af4g64                       ok
+CPU reference reads MLX's codes: af4g128                         ok
+CPU reference matches MLX's values: af4g128                      ok
+CPU reference reads MLX's codes: af5g32                          ok
+CPU reference matches MLX's values: af5g32                       ok
+CPU reference reads MLX's codes: af5g64                          ok
+CPU reference matches MLX's values: af5g64                       ok
+CPU reference reads MLX's codes: af5g128                         ok
+CPU reference matches MLX's values: af5g128                      ok
+CPU reference reads MLX's codes: af6g32                          ok
+CPU reference matches MLX's values: af6g32                       ok
+CPU reference reads MLX's codes: af6g64                          ok
+CPU reference matches MLX's values: af6g64                       ok
+CPU reference reads MLX's codes: af6g128                         ok
+CPU reference matches MLX's values: af6g128                      ok
+CPU reference reads MLX's codes: af8g32                          ok
+CPU reference matches MLX's values: af8g32                       ok
+CPU reference reads MLX's codes: af8g64                          ok
+CPU reference matches MLX's values: af8g64                       ok
+CPU reference reads MLX's codes: af8g128                         ok
+CPU reference matches MLX's values: af8g128                      ok
+CPU reference matches MLX's values: mxfp4 (MLX mxfp4)            ok
+CPU reference matches MLX's values: nvfp4 (MLX nvfp4)            ok
+GGUF reference tests passed (0 failures)
+build/merge-upstream-20261015/engine-tests/gguf-planner
+planner accepts a shared embedding/output tensor                 ok
+shared output projection must read the actual embedding weights  ok
+an untied model must still reject a missing output projection    ok
+planner plans the dense target                                   ok
+planner keeps F32 values as stored: blk.0.attn_norm.weight       ok
+planner keeps F32 values as stored: blk.0.ssm_norm.weight        ok
+planner keeps F32 values as stored: blk.0.post_attention_norm.weight ok
+planner keeps F32 values as stored: blk.1.attn_norm.weight       ok
+planner keeps F32 values as stored: blk.1.attn_q_norm.weight     ok
+planner keeps F32 values as stored: blk.1.attn_k_norm.weight     ok
+planner keeps F32 values as stored: blk.1.post_attention_norm.weight ok
+planner keeps F32 values as stored: output_norm.weight           ok
+planner narrows the convolution to bf16 and groups its value heads ok
+planner keeps the decay F32 and groups its value heads           ok
+planner narrows the time bias to bf16 and groups its value heads ok
+planner copies a token table as stored: Q4_K                     ok
+planner copies a token table as stored: IQ4_XS                   ok
+planner copies a token table as stored: IQ4_NL                   ok
+planner copies a token table as stored: Q5_K                     ok
+planner copies a token table as stored: Q6_K                     ok
+planner copies a token table as stored: Q3_K                     ok
+planner copies a token table as stored: Q8_0                     ok
+planner copies a token table as stored: IQ3_S                    ok
+planner copies a token table as stored: Q2_K                     ok
+planner copies a token table as stored: IQ3_XXS                  ok
+planner copies a token table as stored: IQ2_XXS                  ok
+planner copies a token table as stored: IQ2_XS                   ok
+planner copies a token table as stored: IQ2_S                    ok
+planner copies a token table as stored: IQ1_S                    ok
+planner copies a token table as stored: IQ1_M                    ok
+planner copies a token table as stored: Q4_0                     ok
+planner copies a token table as stored: Q4_1                     ok
+planner copies a token table as stored: MXFP4                    ok
+planner copies a token table as stored: PQ2_0                    ok
+planner copies a token table as stored: Q5_0                     ok
+planner copies a token table as stored: Q5_1                     ok
+planner copies a token table as stored: BF16                     ok
+planner copies a token table as stored: F16                      ok
+planner copies a token table as stored: Q2_0                     ok
+planner refuses mismatched KV rows by name: blk.1.attn_k.weight rows=256 ok
+planner refuses mismatched KV rows by name: blk.1.attn_k.weight rows=768 ok
+planner refuses mismatched KV rows by name: blk.1.attn_v.weight rows=256 ok
+planner refuses mismatched KV rows by name: blk.1.attn_v.weight rows=768 ok
+planner names a metadata mismatch                                ok
+planner checks the architecture against the model's target       ok
+planner plans the MoE target                                     ok
+planner F32 alpha/beta tensor: beta then alpha rows in grouped order ok
+planner copies the F32 tensor as stored: blk.0.ffn_gate_inp.weight ok
+planner copies the F32 tensor as stored: blk.0.ffn_gate_inp_shexp.weight ok
+planner repacks blk.0.attn_qkv.weight as 1024 rows of 512        ok
+planner repacks blk.0.attn_gate.weight as 512 rows of 512        ok
+planner repacks blk.0.ssm_out.weight as 512 rows of 512          ok
+planner repacks blk.0.ffn_gate_exps.weight as 1024 rows of 512   ok
+planner repacks blk.0.ffn_up_exps.weight as 1024 rows of 512     ok
+planner repacks blk.0.ffn_down_exps.weight as 2048 rows of 256   ok
+planner repacks blk.0.ffn_gate_shexp.weight as 256 rows of 512   ok
+planner repacks blk.0.ffn_up_shexp.weight as 256 rows of 512     ok
+planner repacks blk.0.ffn_down_shexp.weight as 512 rows of 256   ok
+planner repacks only the layer's quantized tensors               ok
+planner splits llama.cpp's f/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/qwen4b-matrix-native' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -include build/merge-upstream-20261015/engine/BuildIdentity.hpp dev/benchmarks/qwen4b_matrix_native.mm \
+		build/merge-upstream-20261015/engine-tests/matrix-PagedAttention.o build/merge-upstream-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/qwen4b-matrix-native
+used gate/up experts into each expert's gate and up rows ok
+planner refuses a fused gate/up experts tensor of a type it does not read by name ok
+planner alpha/beta: one 256-row Q4_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ4_XS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ4_NL tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q5_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q6_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q3_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q8_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ3_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q2_K tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ3_XXS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_XXS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_XS tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ2_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ1_S tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row IQ1_M tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q4_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q4_1 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row MXFP4 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row PQ2_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row NVFP4 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q5_0 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q5_1 tensor of beta then alpha rows (qwen35) ok
+planner alpha/beta: one 256-row Q2_0 tensor of beta then alpha rows (qwen35) ok
+planner widens alpha/beta into one F32 tensor: IQ4_XS beta, Q8_0 alpha ok
+planner widens alpha/beta into one F32 tensor: Q4_K beta, F32 alpha ok
+planner widens alpha/beta into one F32 tensor: BF16 beta, NVFP4 alpha ok
+planner widens alpha/beta into one F32 tensor: F32 beta, BF16 alpha ok
+planner widens alpha/beta into one F32 tensor: F16 beta, Q8_0 alpha ok
+planner widens alpha/beta into one F32 tensor: BF16 beta, BF16 alpha ok
+planner widens alpha/beta into one F32 tensor: F16 beta, F16 alpha ok
+planner refuses an alpha of a type it does not read by its name alone ok
+planner alpha/beta: one 256-row Q4_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ4_XS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ4_NL tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q5_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q6_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q3_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q8_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ3_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q2_K tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ3_XXS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_XXS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_XS tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ2_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ1_S tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row IQ1_M tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q4_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q4_1 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row MXFP4 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row PQ2_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row NVFP4 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q5_0 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q5_1 tensor of beta then alpha rows (qwen35moe) ok
+planner alpha/beta: one 256-row Q2_0 tensor of beta then alpha rows (qwen35moe) ok
+planner widens alpha/beta into one F32 tensor: IQ4_XS beta, Q8_0 alpha ok
+planner widens alpha/beta into one F32 tensor: Q4_K beta, F32 alpha ok
+planner widens alpha/beta into one F32 tensor: BF16 beta, NVFP4 alpha ok
+planner widens alpha/beta into one F32 tensor: F32 beta, BF16 alpha ok
+planner widens alpha/beta into one F32 tensor: F16 beta, Q8_0 alpha ok
+planner widens alpha/beta into one F32 tensor: BF16 beta, BF16 alpha ok
+planner widens alpha/beta into one F32 tensor: F16 beta, F16 alpha ok
+planner refuses an alpha of a type it does not read by its name alone ok
+planner accepts a GGUF that declares no RoPE scaling             ok
+planner refuses RoPE scaling                                     ok
+planner names another rotated width, RoPE base and RMS epsilon   ok
+planner requires the rotary and norm metadata                    ok
+planner plans a rotation of F32 alpha/beta                       ok
+planner plans a rotation of BF16 alpha/beta                      ok
+planner plans a rotation of F16 alpha/beta                       ok
+planner plans a rotation that names Q8_0 alpha/beta              ok
+planner refuses a rotation that leaves out Q8_0 alpha/beta       ok
+planner plans a rotation that names IQ4_XS alpha/beta            ok
+planner refuses a rotation that leaves out IQ4_XS alpha/beta     ok
+GGUF planner tests passed (0 failures)
+build/merge-upstream-20261015/engine-tests/linear-plan --cpu
+dev/benchmarks/drafter_fc_precision_benchmark.mm:162:56: error: use of undeclared identifier 'queryHostAvailableMemory'
+  162 |   MemoryGovernor governor(backend, HardBudgetBytes, 1, queryHostAvailableMemory, 0);
+      |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/model-runtime-oracle' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -include build/merge-upstream-20261015/engine/BuildIdentity.hpp -fobjc-arc dev/tests/engine/model_runtime_oracle_test.mm build/merge-upstream-20261015/engine/metal/MetalBackendInstrumented.o build/merge-upstream-20261015/engine/ane/ProgramInstrumented.o build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/model-runtime-oracle
+dev/benchmarks/drafter_fc_precision_benchmark.mm:166:94: error: too few arguments to function call, single argument 'format' was not specified
+  166 |   model::QwenStateStorage states(backend, governor.allocationAdmission(), loaded.stateLayout(), nullptr);
+      |                                                                           ~~~~~~~~~~~~~~~~~~ ^
+runtime/model/ModelFactory.hpp:64:38: note: 'stateLayout' declared here
+   64 |   [[nodiscard]] CompositeStateLayout stateLayout(ops::GdnStateFormat format) const noexcept {
+      |                                      ^           ~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 errors generated.
+make: *** [build/merge-upstream-20261015/engine-tests/drafter-fc-precision-benchmark] Error 1
+make: *** Waiting for unfinished jobs....
+Linear CPU plans: PASS
+/bin/sh dev/tests/attention_sweep_cli.sh build/merge-upstream-20261015/engine-tests/attention-sweep
+attention-sweep CLI validation: PASS
+build/merge-upstream-20261015/engine-tests/operator-workspace
+operator workspace: PASS
+build/merge-upstream-20261015/engine-tests/ane-ffn-calibration
+ane ffn calibration tests passed
+build/merge-upstream-20261015/engine-tests/ane-ffn-startup
+ane ffn startup tests passed
+build/merge-upstream-20261015/engine-tests/ane-recovery
+ANE recovery cooldown, power validity, quiet window and backoff: PASS
+build/merge-upstream-20261015/engine-tests/execution-plans
+PASS execution plans: device policies, device MoE tiles, B1-B4 and prefill workspace bounds (CPU only)
+build/merge-upstream-20261015/engine-tests/model-execution-plans
+model execution plans: PASS (two paired geometries)
+build/merge-upstream-20261015/engine-tests/engine-memory-plan
+elastic memory plan tests passed
+build/merge-upstream-20261015/engine-tests/kv-page-cache
+KV image identity ok
+KV block identities pinned ok
+KV page cache tests passed
+build/merge-upstream-20261015/engine-tests/engine-cache
+engine cache tests passed
+build/merge-upstream-20261015/engine-tests/persistent-cache
+Persistent cache tests passed
+build/merge-upstream-20261015/engine-tests/draft-context-plan
+draft context plan tests passed
+build/merge-upstream-20261015/engine-tests/ragged-scheduler
+ragged scheduler tests passed
+build/merge-upstream-20261015/engine-tests/engine
+engine tests passed
+build/merge-upstream-20261015/engine-tests/elastic-kv-pool
+elastic KV pool tests passed
+build/merge-upstream-20261015/engine-tests/protocol dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+build/merge-upstream-20261015/engine-tests/native-engine-loop
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Memory: growth paused; waiting=1; suspended=0
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Weights wait for memory to be restored: host memory reserve protected
+12:45:39 Memory: growth available; waiting=1; suspended=0
+12:45:39 Weights restored in 0.40 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Weights wait for memory to be restored: host memory reserve protected
+12:45:39 Memory: growth available; waiting=2; suspended=0
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Weights wait for memory to be restored: host memory reserve protected
+12:45:39 Weights not restored, 2 waiting requests failed: memory did not become available within the resource wait limit: macOS is short of memory; close memory-heavy applications; the next request restores them
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Weights wait for memory to be restored: host memory reserve protected
+12:45:39 Memory: growth available; waiting=1; suspended=0
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released after 2 s without a request; the next request restores them
+12:45:39 Memory: growth available; resource wait cleared
+12:45:39 Memory: growth paused; waiting=0; suspended=0
+12:45:39 Weights wait for memory to be restored: host memory reserve protected
+12:45:39 Weights not restored: no request waits for them
+12:45:39 Weights released on request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released on request; the next request restores them
+12:45:39 Weights restored in 0.00 s
+12:45:39 Weights released on request; the next request restores them
+native engine loop tests passed
+build/merge-upstream-20261015/engine-tests/native-fd-transport
+native fd transport tests passed
+build/merge-upstream-20261015/engine-tests/runtime-bootstrap
+native bootstrap tests passed
+build/merge-upstream-20261015/engine-tests/native-arguments dev/tests/engine/native_command_golden.txt dev/tests/fixtures/model-configs
+native arguments tests passed
+build/merge-upstream-20261015/engine-tests/runtime-metrics
+runtime metrics tests passed
+build/merge-upstream-20261015/engine-tests/memory-audit
+elastic memory audit tests passed
+build/merge-upstream-20261015/engine-tests/memory-governor
+memory governor tests passed
+build/merge-upstream-20261015/engine-tests/runtime-status dev/tests/engine/status_golden.json
+runtime status tests passed
+build/merge-upstream-20261015/engine-tests/q8-paged-kv
+q8_paged_kv_test: ok

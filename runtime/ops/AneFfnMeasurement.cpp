@@ -1,8 +1,10 @@
 #include "ops/AneFfnMeasurement.hpp"
 
 #include "AwakeClock.hpp"
+#include "StderrLine.hpp"
 
 #include <algorithm>
+#include <thread>
 #include <cstring>
 #include <stdexcept>
 #include <string>
@@ -127,6 +129,62 @@ Timings Measurement::time() {
   timings.low = measure(kTimedShares[0]);
   timings.high = measure(kTimedShares[1]);
   return timings;
+}
+
+std::array<ChunkTimings::Gpu, 2> Measurement::gpuBaseline() {
+  const auto gpu = [&](uint32_t rows) {
+    const uint32_t count = static_cast<uint32_t>(std::clamp<size_t>(kCommandRows / rows, 1, layers_.size() - 1));
+    return ChunkTimings::Gpu{rows, layer(layers_, count, rows)};
+  };
+  return {gpu(AneFfn::kMinimumRows), gpu(AneFfn::kMaximumRows)};
+}
+
+double Measurement::probe(AneFfn &split, double gpuAlone) {
+  const uint32_t count = static_cast<uint32_t>(std::clamp<size_t>(kCommandRows / AneFfn::kMaximumRows, 1, layers_.size() - 1));
+  return layer(layers_, count, AneFfn::kMaximumRows, &split, gpuAlone);
+}
+
+ane::PowerReference Measurement::powerReference(AneFfn &split) {
+  const auto seconds = [] { return std::chrono::duration<double>(AwakeClock::now().time_since_epoch()).count(); };
+  ane::PowerMonitor monitor;
+  monitor.active(true);
+  // Allow the counter's first unknown sample and two one-second background intervals.
+  const auto warm = AwakeClock::now() + std::chrono::milliseconds(2200);
+  while (AwakeClock::now() < warm) {
+    if (interrupted_ && interrupted_()) throw ane::Interrupted("ANE power-reference startup interrupted");
+    std::this_thread::sleep_until(std::min(warm, AwakeClock::now() + std::chrono::milliseconds(100)));
+  }
+  double background = -1;
+  for (const auto &s : monitor.samples())
+    if (s.watts) background = std::max(background, *s.watts);
+  if (background < 0 || background > 0.05) {
+    ane::PowerReference unavailable;
+    unavailable.source = "auto_ffn";
+    unavailable.reason = background < 0 ? monitor.reason() : "background ANE load was not quiet";
+    if (background >= 0) unavailable.backgroundWatts = background;
+    return unavailable;
+  }
+  const double begin = seconds();
+  const uint32_t count = static_cast<uint32_t>(std::min<size_t>(8, layers_.size()));
+  while (seconds() - begin < 5.0) {
+    if (interrupted_ && interrupted_()) throw ane::Interrupted("ANE power-reference startup interrupted");
+    if (!split.begin()) throw std::runtime_error("ANE power-reference split stopped");
+    std::memset(hidden_[0].contents(), 0, hidden_[0].sizeBytes());
+    metal::CommandGraph graph;
+    for (uint32_t i = 0; i < count; ++i)
+      split.add(graph, i, ffn_, hidden_[i & 1], hidden_[(i & 1) ^ 1], AneFfn::kMaximumRows);
+    static_cast<void>(split.commit(graph, {}).wait());
+    if (!split.completed()) throw std::runtime_error("ANE power-reference work failed: " + split.reason());
+  }
+  const auto observations = monitor.samples();
+  const double end = seconds();
+  for (const auto &sample : observations)
+    if (sample.watts && sample.measuredAtSeconds >= begin)
+      logLine("Neural Engine loaded-power sample: ", *sample.watts, " W over ", sample.intervalSeconds,
+              " s; full load interval=", sample.measuredAtSeconds - sample.intervalSeconds >= begin && sample.measuredAtSeconds <= end);
+  auto report = ane::summarizePowerReference(observations, begin, end, background);
+  report.share = split.share(); report.rows = AneFfn::kMaximumRows;
+  return report;
 }
 
 ChunkTimings Measurement::chunks(AneFfn &split) {

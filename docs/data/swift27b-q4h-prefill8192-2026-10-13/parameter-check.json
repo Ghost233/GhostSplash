@@ -1,0 +1,10 @@
+{
+  "exit_code": 0,
+  "changed_requested_parameter": "prefill_token_budget:4096->8192",
+  "other_parameters_unchanged": true,
+  "input_ids_unchanged": true,
+  "ranking_sha256": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+  "actual_bulk_rows": 8160,
+  "tail_rows": 32,
+  "standalone_correctness_phase": false
+}

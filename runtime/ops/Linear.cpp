@@ -78,12 +78,15 @@ Projection Projection::leadingRows(const metal::MetalBackend &backend, uint32_t 
   const QuantizedSegment &segment = weights_.segments.front();
   const QuantFormat &format = segment.format();
   const uint64_t groups = inputSize / 32;
-  return Projection(rows, inputSize,
+  Projection result(rows, inputSize,
                     BlockWeights{{QuantizedSegment::planes(segment.formatId, rows, inputSize,
                                                            view(segment.plane0, groups * format.plane0_bytes),
                                                            view(segment.plane1, groups * format.plane1_bytes),
                                                            view(segment.meta,
                                                                 groups / format.meta_groups * format.meta_bytes))}});
+  result.ffn = ffn;
+  result.ffn.leadingView = true;
+  return result;
 }
 
 Projection Projection::leadingInputs(uint32_t inputs) const {
@@ -95,18 +98,20 @@ Projection Projection::leadingInputs(uint32_t inputs) const {
                     BlockWeights{{QuantizedSegment::planes(segment.formatId, outputSize, inputs, segment.plane0,
                                                            segment.plane1, segment.meta)}});
   result.planeInputs_ = inputSize;
+  result.ffn = ffn;
+  result.ffn.leadingView = true;
   return result;
 }
 
 // Table16 holds its sums per eight-row tile (metal/abi/Gguf.h), a lane's rows.
 uint64_t tableSumsBytes(LinearInput layout, uint32_t width, uint64_t rows) noexcept {
   return layout == LinearInput::Table16
-             ? rows / SPLASH_TARGET_VERIFY_ROWS * table16_sums_per_tile(width) * sizeof(float)
+             ? rows / 8 * table16_sums_per_tile(width) * sizeof(float)
              : 0;
 }
 
 void requireTableScratch(const LinearScratch &scratch, LinearInput layout, uint32_t width, uint32_t rows) {
-  if (layout == LinearInput::Plain || !rows || rows % SPLASH_TARGET_VERIFY_ROWS || width % 64)
+  if (layout == LinearInput::Plain || !rows || rows % 8 || width % 64)
     throw std::invalid_argument("invalid linear table geometry");
   requireBytes(scratch.input, tableBytes(width, rows), "linear table");
   requireBytes(scratch.sums, tableSumsBytes(layout, width, rows), "linear table sums");
@@ -132,8 +137,8 @@ LinearPlan::LinearPlan(LinearWorkload w, LinearConfig config, FloatOutput destin
     : workload_(w), config_(config), destination_(destination) {
   validate(w);
   if (destination == FloatOutput::Float32 &&
-      (w.phase != LinearPhase::Decode || w.epilogue != LinearEpilogue::None))
-    throw std::invalid_argument("an fp32 destination takes a plain decode projection");
+      w.epilogue != LinearEpilogue::None)
+    throw std::invalid_argument("an fp32 destination takes a plain projection");
   // Kernel names follow the segment formats (LinearGguf.cpp).
   requireConfiguration();
 }
@@ -217,8 +222,20 @@ PreparedInput Linear::add(metal::CommandGraph &graph, LinearBuffers b,
   requireBytes(b.scratch.sums, scratch.sums, "projection scratch sums");
   requireBytes(b.scratch.partials, scratch.partials, "projection partials");
   requireBytes(b.scratch.counters, scratch.counters, "projection counters");
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+  if (w.phase == LinearPhase::Decode && rows > w.rows) {
+    graph.add("decode_linear_block_padding", {b.input}, GgufBlockPaddingParams{k, w.rows, static_cast<uint32_t>(rows)},
+              {(uint64_t{rows - w.rows} * k + 255) / 256, 1, 1});
+  }
+#endif
   if (p.rotation) requireBytes(b.scratch.rotated, rotatedBytes(k, rows), "projection rotated input");
+  const size_t firstDispatch = graph.dispatches().size();
   addGguf(graph, b, p, selected, gate);
+  if (p.ffn.trace && p.ffn.role != FfnRole::None) {
+    const char *scope = w.phase == LinearPhase::Decode ? "target_ffn/decode" :
+        p.ffn.leadingView ? "target_ffn/prefill/ane_view" : "target_ffn/prefill/full";
+    graph.attributeFrom(firstDispatch, scope, w.rows);
+  }
   // A rotated projection's plan prepares its table, if any, from the rotated
   // rows, which no other plan reads.
   if (p.rotation) return {};
@@ -243,8 +260,10 @@ void Linear::addPrefillResidual(metal::CommandGraph &graph, metal::MetalBuffer i
 void Linear::addPrefillSwiGlu(metal::CommandGraph &graph, const SwiGluProjections &ffn,
                               const PrefillFfnBuffers &b, metal::MetalBuffer residual, metal::MetalBuffer output,
                               uint32_t rows) const {
-  addPrefill(graph, b.normalized, *ffn.gate, b.gateScratch, rows, b.scratch);
-  addPrefillUpWithGate(graph, b.normalized, *ffn.up, b.gateScratch, b.intermediate, rows, b.scratch);
+  if (!addFfnPrefillGateUp(graph, ffn, b, rows)) {
+    addPrefill(graph, b.normalized, *ffn.gate, b.gateScratch, rows, b.scratch);
+    addPrefillUpWithGate(graph, b.normalized, *ffn.up, b.gateScratch, b.intermediate, rows, b.scratch);
+  }
   addPrefillResidual(graph, b.intermediate, *ffn.down, residual, output, rows, b.scratch);
 }
 void Linear::addPrefillUpWithGate(metal::CommandGraph &graph, metal::MetalBuffer input, const Projection &up,

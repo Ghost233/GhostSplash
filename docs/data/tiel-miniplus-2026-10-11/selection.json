@@ -1,0 +1,373 @@
+{
+  "status": "selected",
+  "kv_candidates": [
+    {
+      "profile": "kv-q4h",
+      "normalized_objective": 0.9593149809635008,
+      "memory_peak_gib": 15.605759024620056
+    },
+    {
+      "profile": "baseline",
+      "normalized_objective": 1.0,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "kv-bf16",
+      "normalized_objective": 1.0364626156533268,
+      "memory_peak_gib": 16.034225821495056
+    },
+    {
+      "profile": "kv-q4_0",
+      "normalized_objective": 1.1866049660376286,
+      "memory_peak_gib": 15.649704337120056
+    },
+    {
+      "profile": "kv-q4_0_unrotated",
+      "normalized_objective": 1.2813006448897202,
+      "memory_peak_gib": 15.649704337120056
+    }
+  ],
+  "split_candidates": [
+    {
+      "profile": "splits-3",
+      "normalized_objective": 0.8552950185875382,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-6",
+      "normalized_objective": 0.8875149033556202,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-4",
+      "normalized_objective": 0.8971213356202207,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-2",
+      "normalized_objective": 0.9171380902065961,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-9",
+      "normalized_objective": 0.9425963832387905,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-5",
+      "normalized_objective": 0.9505506945050006,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-16",
+      "normalized_objective": 0.9547511918206146,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-12",
+      "normalized_objective": 0.9626320349484346,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-10",
+      "normalized_objective": 0.990156453806583,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-7",
+      "normalized_objective": 0.9918102727235818,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-11",
+      "normalized_objective": 0.996332064082916,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "baseline",
+      "normalized_objective": 1.0,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-14",
+      "normalized_objective": 1.016155268359177,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-1",
+      "normalized_objective": 1.0164960684106374,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-13",
+      "normalized_objective": 1.0191500413784105,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "splits-15",
+      "normalized_objective": 1.0379568913139567,
+      "memory_peak_gib": 15.760788321495056
+    }
+  ],
+  "feature_candidates": [
+    {
+      "profile": "lookup",
+      "normalized_objective": 0.9774688077847317,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "compact",
+      "normalized_objective": 0.9907808808643198,
+      "memory_peak_gib": 15.916427969932556
+    },
+    {
+      "profile": "baseline",
+      "normalized_objective": 1.0,
+      "memory_peak_gib": 15.760788321495056
+    },
+    {
+      "profile": "lookup-compact",
+      "normalized_objective": 1.014166643065549,
+      "memory_peak_gib": 15.916427969932556
+    }
+  ],
+  "combined_proposal": {
+    "kv_format": "q4h",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 3,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 512,
+    "context_tokens": 36864,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "combined_features": {
+    "lookup": true,
+    "compact": false,
+    "fast": false
+  },
+  "cross_configs": [
+    {
+      "name": "cross-k0-s0-f0",
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k0-s0-f1",
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k0-s1-f0",
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 3,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k0-s1-f1",
+      "parameters": {
+        "kv_format": "int8",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 3,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k1-s0-f0",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k1-s0-f1",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 8,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k1-s1-f0",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 3,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "cross-k1-s1-f1",
+      "parameters": {
+        "kv_format": "q4h",
+        "ane_requested": false,
+        "ane_share": 0,
+        "ane_minimum_rows": 0,
+        "auto_calibration": false,
+        "drafter_enabled": true,
+        "drafter_block_size": 8,
+        "tail_prefill_splits": 3,
+        "concurrency": 1,
+        "input_tokens": 32768,
+        "output_tokens": 512,
+        "context_tokens": 36864,
+        "memory_budget_bytes": 34359738368,
+        "temperature": 0,
+        "ignore_eos": true,
+        "cold_requests": true
+      },
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    }
+  ],
+  "cross_repeats": 3,
+  "cross_outputs": [
+    512,
+    2048
+  ],
+  "selection_rule": "joint short/long normalized geometric objective; total time for KV, prefill rate for splits, decode rate for feature flags; concurrency reported separately; crossing all subsets of the three winners with original baseline"
+}

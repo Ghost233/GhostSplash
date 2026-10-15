@@ -6,6 +6,7 @@
 #include "engine/Engine.hpp"
 #include "metal/abi/ExecutionGeometry.h"
 #include "model/WeightStore.hpp"
+#include "model/CompactDraftHead.hpp"
 #include "ops/AneFfnMeasurement.hpp"
 
 #import <Foundation/Foundation.h>
@@ -219,7 +220,8 @@ std::array<uint8_t, 32> parseSha256(std::string_view value) {
 
 void requireLoadedModel(const model::LoadedModel &loaded) {
   if (!loaded.targetActualAllocatedBytes() ||
-      !loaded.draft.actualAllocatedBytes ||
+      (loaded.descriptor.hasDraft() && !loaded.draft.actualAllocatedBytes) ||
+      (!loaded.descriptor.hasDraft() && loaded.draft.actualAllocatedBytes) ||
       (loaded.descriptor.hasVision() && !loaded.vision.actualAllocatedBytes) ||
       loaded.manifestFingerprintSha256.empty() ||
       loaded.targetManifestFingerprint().empty()) {
@@ -286,6 +288,14 @@ std::string persistentCacheNamespace(const RuntimeCacheIdentity &identity,
             << "draft " << draft.layers << ' ' << draft.kvHeads << ' ' << draft.headDimension << ' '
             << SPLASH_DRAFT_SLIDING_WINDOW << '\n'
             << "context " << draft.contextWidth << " q4 " << SPLASH_DRAFT_CONTEXT_GROUP << '\n';
+  if (draft.fullHistory) {
+    canonical << "draft-full-history";
+    for (uint32_t layer = 0; layer < draft.layers; ++layer)
+      canonical << ' ' << draft.contextTokens(layer);
+    canonical << '\n';
+  }
+  if (kv.format == kv::Format::Int4Hadamard || kv::isQ4_0(kv.format))
+    canonical << "rotation-quantizer " << kv::storageFormatName(kv.format) << '\n';
   // 128 bits name it.
   return model::weightDigest(canonical.str()).substr(0, CacheDirectory::kNamespaceDigits);
 }
@@ -321,8 +331,23 @@ RuntimeResources::RuntimeResources(
       aneFfnOutcome_(std::move(aneFfnOutcome)) {}
 
 std::unique_ptr<RuntimeResources>
-RuntimeResources::create(const RuntimeResourcesConfig &config,
+RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                          uint32_t requestedContextTokens) {
+  const auto startupStarted = AwakeClock::now();
+  RuntimeResourcesConfig config = inputConfig;
+  config.optionalFeatures.validate();
+  if (config.optionalFeatures.compactDraftHead)
+    static_cast<void>(model::readCompactRanking(config.optionalFeatures.compactRanking,
+                                                config.model.capabilities.vocabularySize));
+  if (config.aneFfn.recovery.enabled && config.aneFfn.recovery.maximumPowerPercent &&
+      config.aneFfn.powerReference.mode == ane::PowerReferenceSetting::Mode::Off)
+    throw std::invalid_argument("relative ANE recovery requires --ane-power-reference auto or watts");
+  RuntimeStartupTimings startupTimings;
+  if (config.model.draft.kind == model::DraftKind::Standard) {
+    const uint32_t maximum = requestedContextTokens ? requestedContextTokens : config.model.capabilities.maximumContextTokens;
+    config.model.draft.contextCapacity = (maximum + 127) / 128 * 128;
+    config.model.stateLayout.draft = config.model.draft.stateLayout();
+  }
   if (config.metallibPath.empty() || config.modelRoot.empty() ||
       !kv::validFormat(config.kvFormat) || !ops::validFormat(config.stateFormat) ||
       !config.model.valid() || !config.hostMemory || !config.diskVolume ||
@@ -348,6 +373,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
                                 error.what());
   }
 
+  backend->setSubmissionObserver(config.submissionObserver);
   const DeviceCapabilities &device = backend->capabilities();
   if (auto error = device.validationError()) {
     throw RuntimeResourcesError(RuntimeResourceStage::CapabilityValidation,
@@ -412,7 +438,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
     // the arenas.
     kv::Layout kvLayout = config.model.targetKvLayout;
     kvLayout.format = config.kvFormat;
-    const uint64_t weightBytes = model::modelWeightBytes(config.modelRoot, config.model);
+    const uint64_t weightBytes = model::modelWeightBytes(config.modelRoot, config.model, config.ffnLoading);
     const auto requiredFor = [&](uint64_t stagingBytes) {
       uint64_t fixedBytes = 0;
       for (const uint64_t bytes : {weightBytes, model::kPipelineReserveBytes,
@@ -454,7 +480,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
   model::LoadedModel loaded;
   try {
     const auto started = AwakeClock::now();
-    loaded = model::loadModel(*backend, config.modelRoot, config.model);
+    loaded = model::loadModel(*backend, config.modelRoot, config.model, config.ffnLoading);
     requireLoadedModel(loaded);
     const std::chrono::duration<double> loading = AwakeClock::now() - started;
     logLine("Weights loaded in ", std::fixed, std::setprecision(2),
@@ -473,8 +499,8 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
   ops::ExecutionPlans operators(device);
   model::ModelMemoryPlan modelMemoryPlan;
   try {
-    modelMemoryPlan = model::plannedRuntimeMemory(loaded, operators, config.kvFormat,
-                                                  config.stateFormat);
+    modelMemoryPlan = model::plannedRuntimeMemory(
+        loaded, operators, config.kvFormat, config.stateFormat, config.optionalFeatures);
   } catch (const std::exception &error) {
     throw RuntimeResourcesError(
         RuntimeResourceStage::MemoryPlanning,
@@ -568,6 +594,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
     memoryGovernor->setServing(true);
     logLine("Kernel policy for GPU family ", device.appleGpuFamily,
             " with ", device.gpuCoreCount, " cores.");
+    const auto aneStarted = AwakeClock::now();
     // The split leaves the context asked for, else a relaunch's.
     const RequestedContext splitContext =
         requestedContextTokens ? RequestedContext{.tokens = requestedContextTokens}
@@ -575,6 +602,8 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
                                                   .relaunch = config.relaunchContext != 0};
     AneFfnStart aneFfn =
         startAneFfn(splitModel, config.aneFfn, splitContext, planMemory, config.cancelled);
+    startupTimings.anePrepareSeconds = std::chrono::duration<double>(AwakeClock::now() - aneStarted).count();
+    const auto storageStarted = AwakeClock::now();
     if (aneFfn.plan)
       memoryPlan = std::move(*aneFfn.plan);
     const EngineMemoryBreakdown &budget = memoryPlan.breakdown();
@@ -726,7 +755,11 @@ RuntimeResources::create(const RuntimeResourcesConfig &config,
         std::move(memoryGovernor), std::move(kvPages), std::move(stateStorage),
         std::move(kvTier), std::move(diskSpace), std::move(kvPool), std::move(cache),
         std::move(aneFfn.split), std::move(aneFfn.outcome)));
+    result->optionalFeatures_ = config.optionalFeatures;
     result->adoptPersistentCache();
+    startupTimings.storageSeconds = std::chrono::duration<double>(AwakeClock::now() - storageStarted).count();
+    startupTimings.totalSeconds = std::chrono::duration<double>(AwakeClock::now() - startupStarted).count();
+    result->startupTimings_ = startupTimings;
     return result;
   } catch (const metal::MetalAllocationError &error) {
     throw RuntimeResourcesError(RuntimeResourceStage::StorageAllocation,
@@ -840,6 +873,7 @@ model::RuntimeContext RuntimeResources::modelContext() noexcept {
       *stateStorage_,
       operators_,
       aneFfn_.get(),
+      optionalFeatures_,
   };
 }
 
@@ -854,11 +888,11 @@ AneFfnSnapshot RuntimeResources::aneFfnSnapshot() const {
           aneFfn_->minimumRows(),
           served.commands,
           served.evaluations,
-          served.milliseconds};
+          served.milliseconds, aneFfn_->recoveryReport(), aneFfn_->powerReference()};
 }
 
 ActualMemoryReport RuntimeResources::actualMemoryReport(
-    const model::ModelMemoryActual &modelMemory) const {
+    const model::ModelMemoryActual &modelMemory, bool refresh) const {
   ActualMemoryReport report;
   report.targetWeightsBytes = model_.targetActualAllocatedBytes();
   report.draftWeightsBytes = model_.draft.actualAllocatedBytes;
@@ -874,7 +908,7 @@ ActualMemoryReport RuntimeResources::actualMemoryReport(
   report.aneFfnBytes = aneFfn_ ? aneFfn_->allocatedBytes() : 0;
   // Optional warmup may end with a rolled-back allocation and no subsequent
   // command. Refresh the current counts after that rollback; peaks stay intact.
-  metal::MetalMemoryStats memory = backend_->refreshMemoryStats();
+  metal::MetalMemoryStats memory = refresh ? backend_->refreshMemoryStats() : backend_->memoryStats();
   report.backendAllocatedBytes = memory.allocatedBytes;
   report.deviceCurrentAllocatedBytes = memory.deviceCurrentAllocatedBytes;
   report.devicePeakAllocatedBytes = memory.devicePeakAllocatedBytes;
@@ -907,6 +941,22 @@ AneFfnModel aneFfnModel(metal::MetalBackend &backend, const model::LoadedModel &
       timings = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).time();
     });
     return timings;
+  };
+  model.gpuBaseline = [&backend, layers, cancelled, onArena] {
+    std::array<ops::ane_ffn::ChunkTimings::Gpu, 2> gpu;
+    onArena([&](const ops::PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden) {
+      gpu = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).gpuBaseline();
+    });
+    return gpu;
+  };
+  model.powerReference = [&backend, layers, cancelled, onArena](ops::AneFfn *split) {
+    ane::PowerReference report;
+    report.source = "auto_ffn";
+    if (!split) { report.reason = "ANE split unavailable"; return report; }
+    onArena([&](const ops::PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden) {
+      report = ops::ane_ffn::Measurement(backend, *layers, ffn, hidden, cancelled).powerReference(*split);
+    });
+    return report;
   };
   model.prepare = [&backend, layers, cancelled, onArena](uint32_t aneUnits, bool timeChunks) {
     AneFfnPrepared prepared;

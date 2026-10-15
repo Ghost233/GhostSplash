@@ -27,7 +27,7 @@
 //   Every other field is a little-endian bit string of the 32 slots: IQ4 and
 //     MXFP4 indices (4 bits, so byte p of word c is pair p), BF16 and F16
 //     values (16, so word 4c + p is pair p), Q8_0 values (8), Q6_K high, Q3_K
-//     low, Q2_K and PQ2_0 bits (2), Q5_K, Q5_0 and Q5_1 fifth and Q3_K hmask
+//     low, Q2_K, Q2_0 and PQ2_0 bits (2), Q5_K, Q5_0 and Q5_1 fifth and Q3_K hmask
 //     bits (1).
 //   IQ3_S word c: bits 0..7 and 8..15 the low grid index bits of elements
 //     4c..4c+3 and 16+4c..16+4c+3, 16..23 the sign bits of slots 8c..8c+7,
@@ -120,7 +120,8 @@
 #define GGUF_FMT_Q51 40u
 #define GGUF_FMT_BF16 41u
 #define GGUF_FMT_F16 42u
-#define GGUF_FMT_COUNT 43u
+#define GGUF_FMT_Q20 43u
+#define GGUF_FMT_COUNT 44u
 
 // The tensor type an image descriptor names for an MLX affine format: no GGUF
 // type is of this form.
@@ -193,6 +194,7 @@ QUANT_CONSTANT QuantFormat kQuantFormats[GGUF_FMT_COUNT] = {
     // 16-bit floats in native blocks of 256 GGUF values; meta: g, which the repack writes.
     {30, 256, 512, 64, 0, 4, 8, "bf16"},
     {1, 256, 512, 64, 0, 4, 8, "f16"},
+    {42, 64, 18, 8, 0, 2, 2, "q20"},     // Q2_0: 64 elements, one half d; meta: d
 };
 
 // The format that stores a GGUF tensor type (or a loader's);

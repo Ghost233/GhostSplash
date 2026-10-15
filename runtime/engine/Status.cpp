@@ -36,7 +36,32 @@ void appendAneFfn(std::ostringstream &out, const AneFfnSnapshot &split, uint64_t
       << ",\"share\":" << split.share << ",\"minimum_rows\":" << split.minimumRows
       << ",\"reason\":" << json::quote(split.reason) << ",\"split_commands\":" << split.commands
       << ",\"reruns\":" << reruns << ",\"ane_ms\":" << split.aneMilliseconds
-      << ",\"evaluations\":" << split.evaluations << '}';
+      << ",\"evaluations\":" << split.evaluations;
+  if (split.recovery) {
+    const auto &r = *split.recovery;
+    out << ",\"recovery\":{\"enabled\":true,\"phase\":" << json::quote(r.phase)
+        << ",\"reason\":" << json::quote(r.reason) << ",\"power_watts\":";
+    if (r.watts) out << *r.watts; else out << "null";
+    out << ",\"cooldown_remaining_seconds\":" << r.cooldownRemaining
+        << ",\"quiet_seconds\":" << r.quietSeconds << ",\"attempts\":" << r.attempts
+        << ",\"restored\":" << r.restored << ",\"relative_power_percent\":";
+    if (r.relativePowerPercent) out << *r.relativePowerPercent; else out << "null";
+    out << '}';
+  }
+  if (split.powerReference) {
+    const auto &r = *split.powerReference;
+    out << ",\"power_reference\":{\"valid\":" << boolean(r.valid)
+        << ",\"source\":" << json::quote(r.source) << ",\"reason\":" << json::quote(r.reason)
+        << ",\"reference_watts\":" << r.referenceWatts << ",\"peak_watts\":";
+    if (r.peakWatts) out << *r.peakWatts; else out << "null";
+    out << ",\"steady_watts\":";
+    if (r.steadyWatts) out << *r.steadyWatts; else out << "null";
+    out << ",\"background_watts\":";
+    if (r.backgroundWatts) out << *r.backgroundWatts; else out << "null";
+    out << ",\"load_seconds\":" << r.loadSeconds << ",\"samples\":" << r.samples
+        << ",\"share\":" << r.share << ",\"rows\":" << r.rows << '}';
+  }
+  out << '}';
 }
 
 void appendBatch(std::ostringstream &out,
@@ -96,7 +121,8 @@ std::string runtimeStatusJson(
     const MemoryGovernorSnapshot &memoryGovernor, bool metalHealthy,
     std::string metalFailureReason, const ResourceWaitSnapshot &resourceWait,
     const NativeLoopTiming &loop, const WeightsSnapshot &weights,
-    const AneFfnSnapshot &aneFfn, ThermalState thermalState) {
+    const AneFfnSnapshot &aneFfn, ThermalState thermalState,
+    const std::optional<RuntimeFeatureSnapshot> &features) {
   const auto &resources = core.resources;
   const auto &scheduler = core.scheduler;
   const auto &pool = resources.pool;
@@ -148,10 +174,18 @@ std::string runtimeStatusJson(
       << json::quote(cacheIdentity.targetModelSha256)
       << ",\"format\":" << json::quote(kv::formatName(kvFormat))
       << ",\"quantization\":"
-      << json::quote(kvFormat == kv::Format::Int8 ? "symmetric_int8" : "none")
-      << ",\"scale_type\":" << json::quote(kvFormat == kv::Format::Int8 ? "float32" : "none")
+      << json::quote(kvFormat == kv::Format::Int8 ? "symmetric_int8"
+                           : kvFormat == kv::Format::Int4Hadamard ? "symmetric_int4_hadamard"
+                           : kv::isQ4_0(kvFormat) ? "ggml_q4_0" : "none")
+      << ",\"scale_type\":" << json::quote(kv::isQ4_0(kvFormat) ? "float16_group32"
+                           : kvFormat != kv::Format::BFloat16 ? "float32" : "none")
       << ",\"key_layout\":\"token_major\""
-      << ",\"value_layout\":\"dimension_major\"}},"
+      << ",\"value_layout\":"
+      << json::quote((kvFormat == kv::Format::Int4Hadamard || kv::isQ4_0(kvFormat)) ? "token_major" : "dimension_major")
+      << (kv::isQ4_0(kvFormat) ? (kv::usesHadamard(kvFormat)
+          ? ",\"rotation\":\"hadamard_qk256_v64_v1\""
+          : ",\"rotation\":\"none\"") : "")
+      << "}},"
       << "\"memory_plan\":" << plan.toStatusJson()
       << ",\"memory_actual\":{\"allocated_bytes\":" << metalMemory.allocatedBytes
       << ",\"current_bytes\":" << currentBytes
@@ -175,6 +209,29 @@ std::string runtimeStatusJson(
   appendWeights(out, weights);
   out << ",\"ane_ffn\":";
   appendAneFfn(out, aneFfn, executorTelemetry.aneFfnReruns);
+  if (features) {
+    const auto &f = *features;
+    const auto &o = f.optional;
+    out << ",\"startup_features\":{\"drafter\":" << json::quote(f.drafter)
+        << ",\"draft_layers\":" << f.draftLayers
+        << ",\"draft_block_size\":" << f.draftBlockSize
+        << ",\"draft_tokens\":" << f.draftTokens
+        << ",\"prefill_token_budget\":" << model::ExecutionLimits::prefillTokenBudget
+        << ",\"ffn_cache_bytes\":" << f.ffnCacheBytes
+        << ",\"optional\":{\"prompt_lookup\":" << boolean(o.configured.promptLookup)
+        << ",\"lookup_reason\":" << json::quote(o.lookupReason)
+        << ",\"compact_draft_head\":" << boolean(o.configured.compactDraftHead)
+        << ",\"compact_validated\":" << boolean(o.compactValidated)
+        << ",\"compact_capacity\":" << o.compactCapacity
+        << ",\"compact_validation_comparisons\":" << o.compactValidationComparisons
+        << ",\"compact_validation_maximum_error\":" << o.compactValidationMaximumError
+        << ",\"compact_coverage_fallbacks\":" << o.compactCoverageFallbacks
+        << ",\"compact_request_fallbacks\":" << o.compactRequestFallbacks
+        << ",\"compact_reason\":" << json::quote(o.compactReason)
+        << ",\"fast_topk\":" << boolean(o.configured.fastTopK)
+        << ",\"fast_topk_reason\":" << json::quote(o.fastTopKReason)
+        << ",\"extra_metal_bytes\":" << o.extraMetalBytes << "}}";
+  }
   out << ",\"kv\":{\"block_tokens\":" << kv::kPageTokens
       << ",\"pages_allocated\":" << pool.pagesAllocated
       << ",\"pages_active\":" << pool.pagesActive

@@ -1,0 +1,77 @@
+mkdir -p build/startup-checklist-20261014/engine-tests
+python3 dev/tools/build_config.py record --output 'build/startup-checklist-20261014/engine-tests/runtime-status' --config 6caa829141f6c16a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 runtime/metal/DeviceCapabilities.cpp runtime/engine/MemoryPlan.cpp runtime/engine/MemoryAudit.cpp runtime/engine/Status.cpp dev/tests/engine/runtime_status_test.cpp -o build/startup-checklist-20261014/engine-tests/runtime-status
+dev/tests/engine/runtime_status_test.cpp:70:3: error: unknown type name 'RuntimeFeatureSnapshot'; did you mean 'RuntimeMetricsSnapshot'?
+   70 |   RuntimeFeatureSnapshot features;
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+      |   RuntimeMetricsSnapshot
+runtime/engine/Status.hpp:54:8: note: 'RuntimeMetricsSnapshot' declared here
+   54 | struct RuntimeMetricsSnapshot {
+      |        ^
+dev/tests/engine/runtime_status_test.cpp:71:12: error: no member named 'drafter' in 'splash::engine::RuntimeMetricsSnapshot'
+   71 |   features.drafter = "dflash2";
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:72:12: error: no member named 'draftLayers' in 'splash::engine::RuntimeMetricsSnapshot'
+   72 |   features.draftLayers = 5;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:73:12: error: no member named 'draftBlockSize' in 'splash::engine::RuntimeMetricsSnapshot'
+   73 |   features.draftBlockSize = 8;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:74:12: error: no member named 'draftTokens' in 'splash::engine::RuntimeMetricsSnapshot'
+   74 |   features.draftTokens = 7;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:75:12: error: no member named 'ffnCacheBytes' in 'splash::engine::RuntimeMetricsSnapshot'
+   75 |   features.ffnCacheBytes = 1234;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:76:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   76 |   features.optional.configured.promptLookup = true;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:77:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   77 |   features.optional.configured.compactDraftHead = true;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:78:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   78 |   features.optional.compactValidated = true;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:79:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   79 |   features.optional.compactCapacity = 98304;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:80:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   80 |   features.optional.compactValidationComparisons = 786432;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:81:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   81 |   features.optional.compactValidationMaximumError = 0;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:82:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   82 |   features.optional.compactCoverageFallbacks = 2;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:83:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   83 |   features.optional.compactRequestFallbacks = 1;
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:84:12: error: no member named 'optional' in 'splash::engine::RuntimeMetricsSnapshot'
+   84 |   features.optional.compactReason = "history coverage insufficient";
+      |   ~~~~~~~~ ^
+dev/tests/engine/runtime_status_test.cpp:85:21: error: no matching function for call to 'runtimeStatusJson'
+   85 |   const auto json = runtimeStatusJson(plan(), {}, {}, {}, {}, {}, {}, {}, {},
+      |                     ^~~~~~~~~~~~~~~~~
+runtime/engine/Status.hpp:283:27: note: candidate function not viable: requires 16 arguments, but 17 were provided
+  283 | [[nodiscard]] std::string runtimeStatusJson(
+      |                           ^
+  284 |     const EngineMemoryPlan &plan, const EngineSnapshot &core,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  285 |     const metal::MetalMemoryStats &metalMemory, const WarmupReport &warmup,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  286 |     const MemoryAuditResult &memoryAudit, const RuntimeMetricsSnapshot &metrics,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  287 |     const model::ModelTelemetry &executorTelemetry,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  288 |     const RuntimeCacheIdentity &cacheIdentity,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  289 |     const MemoryGovernorSnapshot &memoryGovernor, bool metalHealthy,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  290 |     std::string metalFailureReason, const ResourceWaitSnapshot &resourceWait,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  291 |     const NativeLoopTiming &loop, const WeightsSnapshot &weights,
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  292 |     const AneFfnSnapshot &aneFfn, ThermalState thermalState);
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+16 errors generated.
+make: *** [build/startup-checklist-20261014/engine-tests/runtime-status] Error 1

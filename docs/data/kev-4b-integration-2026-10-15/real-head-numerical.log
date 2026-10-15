@@ -1,0 +1,2 @@
+2026-10-15 03:18:12.286 gguf-single-token[26579:24690860] Metal GPU Validation Enabled
+Kev real-head numerical check: 4096 FP64 comparisons PASS; max absolute error 0.000248704

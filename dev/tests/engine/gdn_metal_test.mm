@@ -192,8 +192,9 @@ void submitPrefill(MetalBackend &backend, const GdnPrefillBuffers &buffers,
                    GdnStateFormat state = GdnStateFormat::Float32) {
   CommandGraph graph;
   GDN::addPrefill(graph, backend, buffers, shape, tokens, state, order);
-  require(graph.dispatches().size() == 3,
-          label + "prefill is not three dispatches");
+  const uint32_t dispatches = tokens == 1 && shape.valueHeads == 32 && state == GdnStateFormat::Float32 ? 1 : 3;
+  require(graph.dispatches().size() == dispatches,
+          label + "prefill dispatch count differs from the selected GDN path");
   (void)backend.submitCommandAsync(graph.dispatches()).wait();
 }
 
@@ -760,7 +761,7 @@ void bufferExtents(MetalBackend &backend, const GdnShape &shape, bool float32,
 void run(const std::string &metallib) {
   MetalBackend backend(metallib);
   for (const GdnShape &shape :
-       {GdnShape{16, 48, 128, 10240, 16640}, GdnShape{16, 32, 128, 8192, 12544}}) {
+       {GdnShape{16, 48, 128, 10240, 16640}, GdnShape{16, 32, 128, 8192, 12544}, GdnShape{16, 16, 128, 6144, 8448}}) {
     for (bool float32 : {false, true})
       bufferExtents(backend, shape, float32, GdnStateFormat::Float32);
     bufferExtents(backend, shape, false, GdnStateFormat::BFloat16);

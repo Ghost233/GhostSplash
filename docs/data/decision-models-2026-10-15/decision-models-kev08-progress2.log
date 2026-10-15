@@ -1,0 +1,16 @@
+splash pid 5661 starting
+splash ready
+splash billing PASS {'input_tokens': 39, 'output_tokens': 0}
+splash sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+splash noul PASS {'input_tokens': 24, 'output_tokens': 0}
+splash rating PASS {'input_tokens': 33, 'output_tokens': 0}
+splash multi_question PASS {'input_tokens': 59, 'output_tokens': 0}
+splash escaped_markers PASS {'input_tokens': 38, 'output_tokens': 0}
+splash exit 0
+billing max probability error 0.004381955577616739
+sentiment max probability error 0.0002203153475024422
+noul noul error 5.96965579251485e-05
+rating max probability error 0.001370847183936763
+multi_question max probability error 0.0001410052861288147
+multi_question noul error 0.001386155527180577
+escaped_markers max probability error 0.006443044238587992

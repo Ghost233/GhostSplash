@@ -1,0 +1,174 @@
+{
+  "model_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/6442017f6a9ee7af6ca2d67401b3a0d705d667a0ca7766e6922119f519bc9511",
+  "model_id": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S-mtp",
+  "base_parameters": {
+    "ane_requested": true,
+    "ane_share": 0.5,
+    "ane_minimum_rows": 512,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 16,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 16384,
+    "context_tokens": 131072,
+    "memory_budget_bytes": 42949672960,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true,
+    "kv_format": "q4h"
+  },
+  "kv_formats": [
+    "bf16",
+    "int8",
+    "q4_0",
+    "q4_0_unrotated",
+    "q4h"
+  ],
+  "rounds": 3,
+  "planned": 15,
+  "features": {
+    "lookup": true,
+    "compact": true,
+    "fast": false
+  },
+  "weights": {
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.8-27B-DFlash2/snapshots/015e795645c74b1a0eeef3b570031fb62e769bc5/model.safetensors",
+      "sha256": "67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c"
+    },
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "sha256": "9aecf1cd41b2cb2f32a74e0d889e33855ebef43b26f43b43feb5720239e677e5"
+    }
+  },
+  "runtime_code_sha256": "775870d1d9081944f9b1ebbf4eb2651f6fec8ef9750b60e1d5cf6fe2429d2302",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/swift27b-kv-native": "8d726b8c3aa66b0fd9a813c05996153d6077b1c75eced85a5b7343c8c7d079f7",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/cold-graph-oracle": "671f00ef0f808cd827ff4e52d483da7cd48a840af6a5a8e4d4736a356e8776b7",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/SwiftPagedAttention.cpp": "2a66f627b5c2d90294f7b64a3fc451cf7c393c18146b744b3866f351b73815ed",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/ColdGraphOracle.mm": "3cb8c2fd307ff1f25fc05ca2e64ac192172d3f98e71df245feeea283fc4facd9",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/libsplash.a": "c5d18d46f172465c0fcc34b9c5564f6c1b5735c5e36d5c374d0f9dce59669752",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/benchmarks/qwen4b_matrix_native.mm": "a61256170c6dfb4fca93d042b8cc273407f8c8fd926f22769884378d4f604c61",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/benchmarks/swift27b_kv.py": "d56936e62d4ee180e9b8b153f7bd1379ec51ed62879f0c36ee05487bc403964e",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/controller.py": "1d0316e6ee1804619e49396d2761847de38bf59685c5bf3a7426801088a49800",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/finish.py": "6cf7c3ac48f4304abf7c986ed298166390d9a39c1f3c31874369c1f1ba001589",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/correctness-gate.json": "b1ecffa8d8ad469be46e0c67e48f2c99f49041c96f2fc4404062ef401ac24f72",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/inputs.json": "551eaecaa528060d6cb33361d58f9ca9e0b3acc17bef41feec3b569561e8dc75",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/input-frequency-ranking.splash": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/controller.py": "6174136151567b4f7a0121bd51468a205a7ccb26b07b908f7f77e6fe4fae8a21",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/finish.py": "e0b2377e7579dd8d1326b53841d42d44acb46a01dd9e438a11e2848b5aea35d7",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/inputs.json": "551eaecaa528060d6cb33361d58f9ca9e0b3acc17bef41feec3b569561e8dc75",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/input-frequency-ranking.splash": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/report.json": "c965a9009ff3ea64d04367934aaf6a984567202ae0fbd65620fbf8c516d2aab8",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/09-q4h-on-16384/result.json": "02d274479237507851c3889169dd1e936a7a32231a1043e5fd025ef4256c48a3",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/numeric-q4h/evidence.json": "cd0c9625b4482bfa5b72bad2fdc8d5ba43d50bee7bd51850be738e4896a708a2",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/numeric-q4h/stdout.log": "c22eaccd1e9e32f0f7d33cd09dc5ca2ea37140f5901b5bced691157957c3b0cf",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/numeric-q4h-ane/evidence.json": "077804dbc7c4cc94c01d584f3cfe92ac199005911ec0a6e5d7301c068b2e9d93",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/numeric-q4h-ane/stdout.log": "34278f3e5f38478b8f99681197683e8f61a2987e936a551b881c67cdf2cef3d8",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/correctness-0-B-512-attempt1/raw-result.json": "711fac2caf1e34be137afde285d1a65531ad2e8fce6a7a74b9bf7761d10ebc95",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/correctness-0-B-512-attempt1/evidence.json": "350061264d04aeb603c5985d46367ac1b78d85db599e68e76ee10070d60b0d9d",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/correctness-0-B-512-attempt1/token-comparison.json": "f21e12ee54f1b2a9b25cf38c254319d64686b1fbad963dfa657790350af39df9",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v2/controller.py": "8bc9497586915dd139feee303b7e1ef3c564c8b18a034bbe99a487a06086d85d",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v2/finish.py": "e0b2377e7579dd8d1326b53841d42d44acb46a01dd9e438a11e2848b5aea35d7",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v2/inputs.json": "551eaecaa528060d6cb33361d58f9ca9e0b3acc17bef41feec3b569561e8dc75",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v2/input-frequency-ranking.splash": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v2/validation-design-review.json": "7ee726437fa134100fa865080ab274aa5514f73a33b0e158eeb5a481daa3ad79"
+  },
+  "compiled_source_sha256": "39d18faf2656ca607c89aefb06368ba8fdc0d24f368223419c67f1d66646d6be",
+  "native_sha256": "8d726b8c3aa66b0fd9a813c05996153d6077b1c75eced85a5b7343c8c7d079f7",
+  "original_numeric_thresholds_preserved": true,
+  "scope": "C1 only; B4 not certified; same-path repeated full-token equality",
+  "known_b4_failure": "build/swift27b-kv16k-v1/numeric-bf16-diagnostic/evidence.json",
+  "numeric_reuse_reason": "only validator identity roles changed; numeric commands, native sources, artifacts and model files unchanged",
+  "measurement_directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3",
+  "fresh_performance_samples": true,
+  "correctness_gate": {
+    "report": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/report.json",
+    "files": {
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/report.json": "c965a9009ff3ea64d04367934aaf6a984567202ae0fbd65620fbf8c516d2aab8",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1.controller-exit.json": "183e456af8f6c9839e8b225b86d5ac26f09fafde27cd65cf90017969dc30efe8",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/benchmarks/swift27b_correctness.py": "8c49b6c9154906b0a479db7b8ec4d6d1fbeffb80bde12dc310ec230fee91da32",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/inputs.json": "551eaecaa528060d6cb33361d58f9ca9e0b3acc17bef41feec3b569561e8dc75",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/input-frequency-ranking.splash": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/00-bf16-off-512/evidence.json": "ddc4da1399b3f0a66a8a5e85e8821dd80016a5c3a72904c4d156f33e268c54e6",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/01-int8-off-512/evidence.json": "f51f0518d799634b5eed8d80f01b0a3bea6f4762984b2889fb4b7e3aed679eb9",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/02-q4_0-off-512/evidence.json": "a729fcdcb71907ed08397988fb8c361b5f0aafb354342ed1bda074b0493e352b",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/03-q4_0_unrotated-off-512/evidence.json": "3d9106c515556e961f26fe4f8b308e25e404120a3902de9f5fcc35f54eb289ba",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/04-q4h-off-512/evidence.json": "b9fa05b8226933fde3fa52a1fdebf053c28633587f0da7e84e419aa8c12f69f8",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/05-bf16-on-16384/evidence.json": "9cf598f8fd83b28595a12d9f7785b8528c63c110f5d4dcdebd5360a55866cf48",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/05-bf16-on-16384/result.json": "ce3ebd7eb87449f9f12419a703673dde123aef115b56d37d88bbaad629ed893f",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/06-int8-on-16384/evidence.json": "8fc6ebdd94fe907b6c3ce1ae73811ded564404a99619257bcbf1963a5d077cd3",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/06-int8-on-16384/result.json": "b082ec25107dd29e43b0e4e40d619a5b5800ef58bcd57caa2b3fa18489156dd9",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/07-q4_0-on-16384/evidence.json": "6b6e5d5384fa8de513df3f01ccc81fb501c1814c02cd2877912e1e7f4bf0dd7e",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/07-q4_0-on-16384/result.json": "d58421d88efbbb26293991b5bac5786be198e3d81425d5678962bcbfb66464ab",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/08-q4_0_unrotated-on-16384/evidence.json": "f219f05210399eab955f6eeeb34b69a90524f3b697cfd0b3264c2251b5b9e7b7",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/08-q4_0_unrotated-on-16384/result.json": "eae7b845b854721a7b2a7db14e0cb502c6ebbe984a4964c51eeae125ee1b3356",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/09-q4h-on-16384/evidence.json": "6dec817ffad9a7e7157be6d6da510df401c600b939a5f3aed0ac40301d841134",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/09-q4h-on-16384/result.json": "02d274479237507851c3889169dd1e936a7a32231a1043e5fd025ef4256c48a3",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/10-q4h-repeat-16384/evidence.json": "f48492ee5e7f8239b819383b881317081d5c3f7f52da0788fe6a00bd3502b6e4"
+    },
+    "scope": "C1 only; prior B4 failure retained",
+    "native_requests_passed": 11
+  },
+  "performance_controller_source": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/controller.py",
+  "derived_from": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/benchmarks/swift27b_kv.py",
+  "configurations": {
+    "A": {
+      "ane": true,
+      "lookup": true,
+      "compact": true
+    },
+    "B": {
+      "ane": false,
+      "lookup": true,
+      "compact": true
+    },
+    "C": {
+      "ane": true,
+      "lookup": true,
+      "compact": false
+    },
+    "D": {
+      "ane": true,
+      "lookup": false,
+      "compact": true
+    },
+    "E": {
+      "ane": true,
+      "lookup": false,
+      "compact": false
+    }
+  },
+  "orders": [
+    "ABCDE",
+    "EDCBA",
+    "CDEAB"
+  ],
+  "planned_correctness_requests": 7,
+  "planned_performance_requests": 15,
+  "prior_correctness_report": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/report.json",
+  "prior_q4h_golden": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/09-q4h-on-16384/result.json",
+  "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/swift27b-kv-native",
+  "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib",
+  "runtime_defaults_changed": false,
+  "ane_off_short_golden": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-features-v1/correctness-0-B-512-attempt1/raw-result.json",
+  "cross_ane_validation_note": {
+    "prior_difference": {
+      "zero_based_index": 39,
+      "ANE_on_token": 98151,
+      "ANE_off_token": 16
+    },
+    "source_evidence": "runtime/ops/AneFfn.hpp:28 W8A8; runtime/ops/AneFfn.cpp:183 kMaximumAneError=0.10; verify:681-741",
+    "measured_startup_ffn_error_fraction_of_ane_contribution": 0.014,
+    "unchanged_numeric_bounds": {
+      "ANE_contribution_RMS": 0.1,
+      "same_path_score_relative_error": 0.001,
+      "state_partition_cosine_minimum": 0.999
+    },
+    "interpretation": "ANE changes target prefill numerics through W8A8; exact token identity is required within each numeric path, not between ANE on and off. Cross-mode first divergence remains recorded. Prior validator erroneously required exact cross-mode token identity; original failure retained.",
+    "limits": "FFN startup verifies initial two layers and all compiled ANE row shapes; not a bound on 64-layer accumulated logits or output quality."
+  }
+}

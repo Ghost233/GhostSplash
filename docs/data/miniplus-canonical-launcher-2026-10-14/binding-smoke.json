@@ -1,0 +1,16 @@
+{
+  "command": [
+    "sh",
+    "qwen38miniplusv3splash.sh",
+    "--port",
+    "0",
+    "--disable-ane",
+    "--compact-draft-head",
+    "on",
+    "--compact-draft-ranking",
+    "/private/tmp/miniplus-canonical-missing-01828ed0e7ea4194adf2314947ff77ac.splash"
+  ],
+  "exit_code": 1,
+  "expected_exit_code": 1,
+  "model_loaded": false
+}

@@ -6,6 +6,7 @@
 #include "metal/MetalBackend.hpp"
 #include "metal/abi/KvExtent.h"
 #include "ops/PagedAttention.hpp"
+#include "Q4KvReference.hpp"
 
 #include <array>
 #include <cstddef>
@@ -240,6 +241,19 @@ public:
             for (uint32_t d = 0; d < dimensions; ++d) {
               keys[d] = key(d);
               values[d * kv::kPageTokens] = value(d);
+            }
+          } else if (kv::isQ4_0(plan_.shape.format)) {
+            auto *keys = slab<SplashQ4Block>(lane, SPLASH_KV_KEYS, token);
+            auto *values = slab<SplashQ4Block>(lane, SPLASH_KV_VALUES, token);
+            const uint64_t first = splash_kv_key_element(head, token % kv::kPageTokens, 0) / 32;
+            for (uint32_t d = 0; d < dimensions; d += 32) {
+              std::array<float, 32> k{}, v{};
+              for (uint32_t j = 0; j < 32; ++j) {
+                k[j] = bf16ToFloat(floatToBf16(key(d + j) * 0.006f));
+                v[j] = bf16ToFloat(floatToBf16(value(d + j) * 0.007f));
+              }
+              keys[first + d / 32] = q4KvReference(k);
+              values[first + d / 32] = q4KvReference(v);
             }
           } else {
             auto *keys = keyRow<uint16_t>(lane, head, token);

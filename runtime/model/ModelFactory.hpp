@@ -8,6 +8,7 @@
 #include "QwenVision.hpp"
 #include "ops/PageStorage.hpp"
 #include "ops/ExecutionPlans.hpp"
+#include "model/OptionalFeatures.hpp"
 
 #include <array>
 #include <filesystem>
@@ -26,9 +27,24 @@ namespace splash::model {
 class QwenStateStorage;
 class VisionLoader;
 
-using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights>;
+using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen3_5_4BWeights, Qwen3_5_4BDFlashWeights, Qwen3_5_0_8BWeights>;
+
+// Qwen3.5-4B FFN prefill only; decode and source quantization stay unchanged.
+enum class FfnWeightMode { FullFp16, Quantized, LimitedFp16 };
+struct FfnLoadOptions final {
+  FfnWeightMode mode = FfnWeightMode::FullFp16;
+  uint64_t budgetBytes = 0;
+  ops::FfnPrefillVariant variant = ops::FfnPrefillVariant::Baseline;
+  bool trace = false;
+};
+struct ModelLoadTimings final {
+  double sourceSeconds = 0;
+  double ffnCacheSeconds = 0;
+};
 
 struct LoadedModel final {
+  FfnLoadOptions ffnOptions;
+  ModelLoadTimings loadTimings;
   ModelDescriptor descriptor;
   // The memory of every image the weights below are views of.
   std::shared_ptr<WeightImages> images;
@@ -58,6 +74,9 @@ struct LoadedModel final {
       return weights.actualAllocatedBytes;
     }, target);
   }
+  [[nodiscard]] uint64_t targetFfnCacheAllocatedBytes() const noexcept {
+    return std::visit([](const auto &weights) { return weights.ffnCacheAllocatedBytes; }, target);
+  }
   [[nodiscard]] const std::string &targetManifestFingerprint() const noexcept {
     return std::visit([](const auto &weights) -> const std::string & {
       return weights.manifestFingerprintSha256;
@@ -81,6 +100,7 @@ struct RuntimeContext final {
   const ops::ExecutionPlans &operators;
   // The prefill FFN's Neural Engine split (engine::startAneFfn), if any.
   ops::AneFfn *aneFfn = nullptr;
+  OptionalFeatures optionalFeatures{};
 };
 
 // Validates only the interface between independently defined target and draft
@@ -88,7 +108,8 @@ struct RuntimeContext final {
 void requireCompatibleModel(const LoadedModel &model);
 
 // The bytes of every image the model's weights load into.
-[[nodiscard]] uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor);
+[[nodiscard]] uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor,
+                                       FfnLoadOptions ffn = {});
 
 // The vision role's source, planned; null for a model without vision.
 [[nodiscard]] std::unique_ptr<VisionLoader> planVisionLoader(const std::filesystem::path &root,
@@ -103,7 +124,8 @@ void requireCompatibleModel(const LoadedModel &model);
 [[nodiscard]] LoadedModel
 loadModel(metal::MetalBackend &backend,
                  const std::filesystem::path &root,
-                 const ModelDescriptor &descriptor);
+                 const ModelDescriptor &descriptor,
+                 FfnLoadOptions ffn = {});
 
 // The FFN layers of a dense target, which the prefill FFN's Neural Engine
 // split (ops::AneFfn) may take; none for another target.
@@ -116,7 +138,9 @@ void withPrefillArena(
 [[nodiscard]] ModelMemoryPlan
 plannedRuntimeMemory(const LoadedModel &model,
                      const ops::ExecutionPlans &operators,
-                     kv::Format kvFormat, ops::GdnStateFormat stateFormat);
+                     kv::Format kvFormat,
+                     ops::GdnStateFormat stateFormat = ops::GdnStateFormat::Float32,
+                     const OptionalFeatures &features = {});
 [[nodiscard]] std::unique_ptr<RuntimeModel>
 createRuntime(RuntimeContext context);
 

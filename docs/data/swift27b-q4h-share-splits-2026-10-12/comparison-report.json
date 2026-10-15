@@ -1,0 +1,189 @@
+{
+  "status": "complete",
+  "rows": [
+    {
+      "config": "A",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.5,
+        "actual_share": 0.5,
+        "splits": 16
+      },
+      "samples": 3,
+      "prefill_tok_s": 519.6260505266368,
+      "decode_tok_s": 92.34297857876939,
+      "ttft_seconds": 63.060830125,
+      "total_seconds": 240.486242958,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        514.6296748878333,
+        523.0761966981761
+      ],
+      "decode_range": [
+        90.65309448851825,
+        92.99854060220945
+      ],
+      "total_change_vs_A_percent": 0.0
+    },
+    {
+      "config": "H25",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.25,
+        "actual_share": 0.2647058823529412,
+        "splits": 16
+      },
+      "samples": 3,
+      "prefill_tok_s": 512.6165311828103,
+      "decode_tok_s": 92.54396533841187,
+      "ttft_seconds": 63.923105625,
+      "total_seconds": 240.96320325,
+      "device_peak_gib": 15.6776123046875,
+      "prefill_range": [
+        506.3381006570299,
+        519.1842015898984
+      ],
+      "decode_range": [
+        89.80429180186259,
+        93.02671739627064
+      ],
+      "total_change_vs_A_percent": 0.19833163266778087
+    },
+    {
+      "config": "H75",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.75,
+        "actual_share": 0.7647058823529411,
+        "splits": 16
+      },
+      "samples": 3,
+      "prefill_tok_s": 411.5620239924779,
+      "decode_tok_s": 83.62695831510014,
+      "ttft_seconds": 79.619043541,
+      "total_seconds": 277.111426083,
+      "device_peak_gib": 15.9307861328125,
+      "prefill_range": [
+        400.84088571774265,
+        416.1471521119884
+      ],
+      "decode_range": [
+        82.59311381448178,
+        88.74213697218848
+      ],
+      "total_change_vs_A_percent": 15.22963753539801
+    },
+    {
+      "config": "S1",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.5,
+        "actual_share": 0.5,
+        "splits": 1
+      },
+      "samples": 3,
+      "prefill_tok_s": 501.7750655324403,
+      "decode_tok_s": 86.81816368063113,
+      "ttft_seconds": 65.308148792,
+      "total_seconds": 254.020431459,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        478.34133157738603,
+        519.7490605600763
+      ],
+      "decode_range": [
+        78.86031628282609,
+        92.45281973410845
+      ],
+      "total_change_vs_A_percent": 5.627843129207077
+    },
+    {
+      "config": "S2",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.5,
+        "actual_share": 0.5,
+        "splits": 2
+      },
+      "samples": 3,
+      "prefill_tok_s": 488.53082339513185,
+      "decode_tok_s": 83.0626308522458,
+      "ttft_seconds": 67.074932208,
+      "total_seconds": 264.916434333,
+      "device_peak_gib": 15.7322998046875,
+      "prefill_range": [
+        484.24886557511843,
+        518.6449082816367
+      ],
+      "decode_range": [
+        80.49516247422729,
+        91.88731139563592
+      ],
+      "total_change_vs_A_percent": 10.158664826106767
+    },
+    {
+      "config": "S4",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.5,
+        "actual_share": 0.5,
+        "splits": 4
+      },
+      "samples": 3,
+      "prefill_tok_s": 496.22255914935084,
+      "decode_tok_s": 88.20830645521457,
+      "ttft_seconds": 66.035239958,
+      "total_seconds": 251.777030208,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        491.82809894995086,
+        522.19233805149
+      ],
+      "decode_range": [
+        82.39966510188239,
+        93.92972955030831
+      ],
+      "total_change_vs_A_percent": 4.69498259489709
+    },
+    {
+      "config": "S8",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "nominal_share": 0.5,
+        "actual_share": 0.5,
+        "splits": 8
+      },
+      "samples": 3,
+      "prefill_tok_s": 494.90491796149195,
+      "decode_tok_s": 86.46901086660321,
+      "ttft_seconds": 66.210843334,
+      "total_seconds": 255.688984209,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        494.2334519318873,
+        525.526876714421
+      ],
+      "decode_range": [
+        85.42433726262567,
+        93.5042651490585
+      ],
+      "total_change_vs_A_percent": 6.321667744485127
+    }
+  ],
+  "baseline_automatically_changed": false,
+  "next_step": "retain A unless paired confirmation supports a change; cross the promising share and splits later"
+}

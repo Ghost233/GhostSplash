@@ -1,0 +1,14 @@
+11:56:08 ModernBERT: quantized weights=175034628; workspace=3680288; KV=0; FP16 cache=0; selected option queries=on; numerical check passed
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/decision_control_real.py", line 133, in <module>
+    main()
+    ~~~~^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/decision_control_real.py", line 129, in main
+    run(parser.parse_args())
+    ~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/decision_control_real.py", line 93, in run
+    assert status.json["ready"]
+           ~~~~~~~~~~~^^^^^^^^^
+TypeError: byte indices must be integers or slices, not str

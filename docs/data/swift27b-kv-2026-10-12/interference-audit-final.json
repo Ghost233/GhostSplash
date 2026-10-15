@@ -1,0 +1,202 @@
+{
+  "status": "complete",
+  "accepted_requests": [
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-0-bf16-attempt1",
+      "kv": "bf16",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 162
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-0-int8-attempt1",
+      "kv": "int8",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 154
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-0-q4_0-attempt1",
+      "kv": "q4_0",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 143
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-0-q4_0_unrotated-attempt1",
+      "kv": "q4_0_unrotated",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 152
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-0-q4h-attempt1",
+      "kv": "q4h",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 140
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-q4h-attempt2",
+      "kv": "q4h",
+      "repeat": 1,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 142
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-q4_0_unrotated-attempt1",
+      "kv": "q4_0_unrotated",
+      "repeat": 1,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 201
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-q4_0-attempt2",
+      "kv": "q4_0",
+      "repeat": 1,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 150
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-int8-attempt1",
+      "kv": "int8",
+      "repeat": 1,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 147
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-bf16-attempt1",
+      "kv": "bf16",
+      "repeat": 1,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 153
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-q4_0-attempt1",
+      "kv": "q4_0",
+      "repeat": 2,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 147
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-q4_0_unrotated-attempt1",
+      "kv": "q4_0_unrotated",
+      "repeat": 2,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 170
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-q4h-attempt1",
+      "kv": "q4h",
+      "repeat": 2,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 132
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-bf16-attempt2",
+      "kv": "bf16",
+      "repeat": 2,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 154
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-int8-attempt1",
+      "kv": "int8",
+      "repeat": 2,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 148
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-recheck-v1/perf-0-q4_0_unrotated-attempt2",
+      "kv": "q4_0_unrotated",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 168
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-bf16-recheck-v1/perf-0-bf16-attempt1",
+      "kv": "bf16",
+      "repeat": 0,
+      "native_exit_code": 0,
+      "known_overlap_pids": [],
+      "background_samples": 160
+    }
+  ],
+  "rejected_attempts": [
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-q4_0-attempt1",
+      "status": "failed",
+      "native_exit_code": null,
+      "reason": "GPU not idle enough for an isolated experiment",
+      "included_in_statistics": false
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-1-q4h-attempt1",
+      "status": "failed",
+      "native_exit_code": null,
+      "reason": "GPU not idle enough for an isolated experiment",
+      "included_in_statistics": false
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-perf-v3/perf-2-bf16-attempt1",
+      "status": "failed",
+      "native_exit_code": -15,
+      "reason": "background-interference: [61885]",
+      "included_in_statistics": false
+    },
+    {
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-recheck-v1/perf-0-q4_0_unrotated-attempt1",
+      "status": "failed",
+      "native_exit_code": null,
+      "reason": "GPU not idle enough for an isolated experiment",
+      "included_in_statistics": false
+    }
+  ],
+  "no_known_overlap_in_accepted_samples": true,
+  "attribution_limit": "global GPU includes this model; monitor cannot exclude every desktop GPU activity",
+  "suspect_slow_unrotated_preserved_in_original_three_round_statistics": true,
+  "supplemental_rechecks": [
+    {
+      "kv": "q4_0_unrotated",
+      "prefill_tok_s": 409.33593057062893,
+      "decode_tok_s": 63.82594378411964,
+      "timings": {
+        "decode_wall_seconds": 256.6981235,
+        "total_wall_seconds": 336.749732833,
+        "prefill_wall_seconds": 80.051609333,
+        "ttft_seconds": 80.051859208
+      },
+      "native_exit_code": 0,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-recheck-v1/perf-0-q4_0_unrotated-attempt2"
+    },
+    {
+      "kv": "bf16",
+      "prefill_tok_s": 475.5171666850617,
+      "decode_tok_s": 65.31997869810802,
+      "timings": {
+        "decode_wall_seconds": 250.826781125,
+        "total_wall_seconds": 319.73701675,
+        "prefill_wall_seconds": 68.910235625,
+        "ttft_seconds": 68.910495416
+      },
+      "native_exit_code": 0,
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-bf16-recheck-v1/perf-0-bf16-attempt1"
+    }
+  ]
+}

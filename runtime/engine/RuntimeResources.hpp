@@ -81,6 +81,10 @@ struct PersistentCacheFiles final {
 // every category the model has must report its allocation and identity.
 void requireLoadedModel(const model::LoadedModel &loaded);
 
+struct RuntimeStartupTimings final {
+  double totalSeconds = 0, anePrepareSeconds = 0, storageSeconds = 0;
+};
+
 // The disk quota cached KV pages and states share (--max-cache-disk):
 // automatic, the tier sized by its volume up to kAutomaticCacheDiskBytes,
 // its staging set aside only where the memory plan has room for it and its
@@ -91,7 +95,10 @@ struct CacheDiskQuota final {
 };
 
 struct RuntimeResourcesConfig {
+  model::OptionalFeatures optionalFeatures{};
   kv::Format kvFormat = kv::Format::Int8;
+  model::FfnLoadOptions ffnLoading;
+  std::function<void(const metal::Command &)> submissionObserver;
   ops::GdnStateFormat stateFormat = ops::GdnStateFormat::Float32;
   std::filesystem::path metallibPath;
   std::filesystem::path modelRoot;
@@ -253,7 +260,8 @@ public:
   // weight images, and the Neural Engine split's program if it runs one.
   [[nodiscard]] ReleasableMemory &releasableMemory() noexcept { return releasableMemory_; }
   [[nodiscard]] ActualMemoryReport
-  actualMemoryReport(const model::ModelMemoryActual &modelMemory) const;
+  actualMemoryReport(const model::ModelMemoryActual &modelMemory, bool refresh = true) const;
+  [[nodiscard]] RuntimeStartupTimings startupTimings() const noexcept { return startupTimings_; }
 
 private:
 
@@ -275,6 +283,8 @@ private:
   void adoptPersistentCache();
   void stopProbation() noexcept;
 
+  model::OptionalFeatures optionalFeatures_;
+  RuntimeStartupTimings startupTimings_;
   PersistentCacheFiles persistentCache_;
   std::unique_ptr<metal::MetalBackend> backend_;
   model::LoadedModel model_;

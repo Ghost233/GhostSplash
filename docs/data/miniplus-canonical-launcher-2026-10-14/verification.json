@@ -1,0 +1,58 @@
+{
+  "created_at": "2026-10-14T13:35:23.646465+08:00",
+  "workspace": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash",
+  "base_commit": "3f43aa2460f59330e658fdc89945d72ce92d538c",
+  "launcher": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/qwen38miniplusv3splash.sh",
+  "launcher_sha256": "1a4869ab7033699b53e63310ee7af656ab2bbe9ba673b32b5ebeca606caa562c",
+  "test_source_sha256": "99dc0c68b257ea22d8aa39799fb7f3cc212d42cf4aa7eafc54c4070a7757c9d8",
+  "main_gguf": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
+  "default_port": 8008,
+  "unchanged_parameters": {
+    "context": 262144,
+    "kv": "q4h",
+    "memory": "40G",
+    "queue": 1,
+    "disk": "50G",
+    "draft_block": 8,
+    "ane": "auto",
+    "lookup": "on",
+    "compact": "off",
+    "fast_topk": "off"
+  },
+  "checks": {
+    "launcher-tests": 0,
+    "install-tests": 0,
+    "binding-smoke": 0,
+    "help": 0
+  },
+  "install_tests": {
+    "total": 232,
+    "skipped": 4,
+    "exit_code": 0
+  },
+  "binding_smoke": {
+    "command": [
+      "sh",
+      "qwen38miniplusv3splash.sh",
+      "--port",
+      "0",
+      "--disable-ane",
+      "--compact-draft-head",
+      "on",
+      "--compact-draft-ranking",
+      "/private/tmp/miniplus-canonical-missing-01828ed0e7ea4194adf2314947ff77ac.splash"
+    ],
+    "exit_code": 1,
+    "expected_exit_code": 1,
+    "model_loaded": false
+  },
+  "original_script_saved": "before-efficientthink-launcher.sh",
+  "release_status": {
+    "port_8008_listeners": [],
+    "old_engine_processes": [],
+    "already_stopped_when_checked": true
+  },
+  "service_restarted": false,
+  "performance_tests_run": false,
+  "weights_changed": false
+}

@@ -23,7 +23,7 @@ from urllib.parse import unquote
 from transformers import AutoTokenizer
 
 from . import images as image_input
-from . import json_codec, judgments, serve_options
+from . import json_codec, judgments, serve_options, startup_report
 from . import protocol as wire
 from . import runtime as engine_runtime
 from .api_shapes import (
@@ -806,6 +806,12 @@ class FrontendHandler(BaseHTTPRequestHandler):
 
     def _post_memory_release(self, body, deadline):
         weights = self.app.backend.release_weights().get("weights") or {}
+        if weights.get("release_supported") is False:
+            raise APIError(
+                409,
+                "this encoder does not support releasing model weights",
+                "unsupported_operation",
+            )
         # A restore leaves the weights released until its last image is back.
         if weights.get("released") is True and weights.get("restoring") is False:
             self._json(200, {"released": True, "weights": weights})
@@ -837,8 +843,15 @@ class FrontendHandler(BaseHTTPRequestHandler):
             self._submit(job)
             result = self._await_done(job)
             input_tokens += result.prompt_tokens
-            answers[qid] = judgments.systemone_answer(
-                spec, judgments.softmax(list(result.option_logits))
+            probabilities = (
+                self.app.decision_scorer.probabilities(spec, result.option_logits)
+                if self.app.decision_scorer is not None
+                else judgments.softmax(list(result.option_logits))
+            )
+            answers[qid] = (
+                self.app.decision_scorer.answer(spec, probabilities)
+                if self.app.decision_scorer is not None
+                else judgments.systemone_answer(spec, probabilities)
             )
         self._json(
             200,
@@ -1654,6 +1667,29 @@ def _native_command(args, relaunch_context=None):
     """The engine's command line, a relaunch's with `relaunch_context`, the
     context the first engine served: without --max-context the relaunch keeps
     it, where its own would follow a Neural Engine split calibrated anew."""
+    if getattr(args, "decision_type", None) == "laya":
+        if any(
+            getattr(args, key) == "on"
+            for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
+        ):
+            raise ValueError("encoder decision models have no decode features")
+        if args.ane_ffn_share is not None or args.ane_power_recovery == "on":
+            raise ValueError(
+                "ModernBERT ANE programs are not implemented; use the GPU encoder"
+            )
+        return [
+            args.binary,
+            "serve-encoder-native",
+            args.model_root,
+            str(args.max_context if args.max_context is not None else relaunch_context)
+            if args.max_context is not None or relaunch_context is not None
+            else "auto",
+            "auto" if args.max_memory is None else str(args.max_memory),
+            "--encoder-option-queries",
+            getattr(args, "encoder_option_queries", "on"),
+            "--encoder-submit-batch-size",
+            str(getattr(args, "encoder_submit_batch_size", 4)),
+        ]
     command = [
         args.binary,
         "serve-native",
@@ -1679,6 +1715,23 @@ def _native_command(args, relaunch_context=None):
         )
     if args.disable_ane:
         command.extend(("--ane", "off"))
+    for flag, default in (
+        ("ane-ffn-share", None),
+        ("ane-ffn-minimum-rows", None),
+        ("ane-power-recovery", "off"),
+        ("ane-power-reference", "off"),
+        ("ane-recovery-idle-watts", 0.05),
+        ("ane-recovery-max-power-percent", None),
+        ("prompt-lookup", "off"),
+        ("prompt-lookup-min-match", 2),
+        ("compact-draft-head", "off"),
+        ("compact-draft-capacity", 98304),
+        ("compact-draft-ranking", None),
+        ("fast-topk", "off"),
+    ):
+        value = getattr(args, flag.replace("-", "_"))
+        if value != default:
+            command.extend(("--" + flag, str(value)))
     if args.decode_share is not None:
         command.extend(("--decode-share", str(args.decode_share)))
     if args.max_image_pixels != image_input.MAX_PIXELS:
@@ -1709,6 +1762,7 @@ def _interrupt(_signum, _frame):
 
 def main():
     args = parse_args()
+    stage = "HTTP bind"
     server = None
     runtime = None
     backend = None
@@ -1721,6 +1775,8 @@ def main():
         # The launcher blocks both across its exec: one sent while this module
         # imported arrives here and ends the startup cleanly.
         signal.pthread_sigmask(signal.SIG_UNBLOCK, (signal.SIGINT, signal.SIGTERM))
+        for line in startup_report.configuration_lines(args):
+            print_status(line)
         _raise_descriptor_limit()
         # Bind before loading the tokenizer or model so duplicates fail early.
         # Activate only after the runtime is ready, keeping a partially started
@@ -1743,15 +1799,51 @@ def main():
                 "page open in a browser that reaches this server use it",
                 error=True,
             )
+        stage = "thinking key"
         thinking_codec = ThinkingCodec(load_thinking_key())
         print_status(f"Loading · {args.model}")
+        stage = "tokenizer"
+        tokenizer_options = {}
+        decision_config = None
+        tokenizer_config = Path(args.tokenizer) / "config.json"
+        if tokenizer_config.is_file():
+            model_config = json.loads(tokenizer_config.read_text(encoding="utf-8"))
+            model_type = model_config.get("model_type")
+            decision_config = model_config.get("decision_config")
+            if model_type in (
+                "qwen3_5",
+                "qwen3_5_text",
+                "qwen3_5_moe",
+                "qwen3_5_moe_text",
+            ):
+                # GGUF-derived Qwen configs omit transformers_version, which
+                # triggers Transformers' local Mistral heuristic. Keep Qwen's regex.
+                tokenizer_options["fix_mistral_regex"] = False
+        args.decision_type = decision_config.get("type") if decision_config else None
+        if args.decision_type == "laya":
+            tokenizer_options["fix_mistral_regex"] = False
         tokenizer = AutoTokenizer.from_pretrained(
-            args.tokenizer, local_files_only=True, trust_remote_code=False
+            args.tokenizer,
+            local_files_only=True,
+            trust_remote_code=False,
+            **tokenizer_options,
         )
-        validate_tokenizer(tokenizer)
+        if args.decision_type == "laya":
+            vocabulary = model_config["text_config"]["vocab_size"]
+            ids = tokenizer.get_vocab().values()
+            if not ids or any(
+                type(token) is not int or not 0 <= token < vocabulary for token in ids
+            ):
+                raise ValueError(
+                    "encoder tokenizer vocabulary does not match its model"
+                )
+        else:
+            validate_tokenizer(tokenizer)
+        stage = "chat template"
         thinking_end = thinking_end_tokens(tokenizer, args.thinking_end_text)
         chat_templates = ChatTemplates(tokenizer)
         print_status(f"Chat template · {chat_templates.describe()}")
+        stage = "native engine (weights, ANE, compact validation, warmup)"
         runtime = engine_runtime.MultiplexedRuntime(
             _native_command(args),
             relaunch_command=lambda first: _native_command(
@@ -1781,7 +1873,10 @@ def main():
                 "native runtime reported an invalid context window"
             )
         effective_context = readiness.max_context_tokens
-        constraint_factory = ConstraintFactory(tokenizer)
+        stage = "frontend"
+        constraint_factory = (
+            None if decision_config is not None else ConstraintFactory(tokenizer)
+        )
         app = Frontend(
             tokenizer,
             backend,
@@ -1800,6 +1895,7 @@ def main():
             default_reasoning_effort=args.default_reasoning_effort,
             default_thinking_token_budget=args.thinking_token_budget,
             vision=readiness.vision,
+            decision_config=decision_config,
         )
         server.app = app
         server.server_activate()
@@ -1811,6 +1907,16 @@ def main():
         )
         mode = "" if readiness.vision else " · language only"
         print_status(f"Ready · {args.model} · context {context}{mode} · {address}")
+        try:
+            snapshot = backend.status(timeout=2.0)
+        except Exception as error:
+            snapshot = None
+            print_status(
+                f"Startup status = unknown; {type(error).__name__}", error=True
+            )
+        for line in startup_report.effective_lines(snapshot, readiness, args):
+            print_status(line)
+        stage = "serving"
         server.serve_forever()
     except (
         engine_runtime.EngineRuntimeError,
@@ -1818,13 +1924,21 @@ def main():
         ChatTemplateError,
         ThinkingEndError,
     ) as error:
-        print_status(f"Error · {error}", error=True)
+        print_status(startup_report.failure_line(stage, error, args), error=True)
         raise SystemExit(1) from None
     except OSError as error:
-        print_status(f"Error · unable to start HTTP server: {error}", error=True)
+        print_status(
+            startup_report.failure_line(
+                stage, f"unable to start HTTP server: {error}", args
+            ),
+            error=True,
+        )
         raise SystemExit(1) from None
     except KeyboardInterrupt:
         pass
+    except Exception as error:
+        print_status(startup_report.failure_line(stage, error, args), error=True)
+        raise
     finally:
         # main owns this process. Keep stop signals idempotent through child
         # cleanup and interpreter teardown, including after this function

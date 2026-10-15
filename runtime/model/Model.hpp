@@ -3,6 +3,7 @@
 #include "ops/PagedKv.hpp"
 #include "ops/Vision.hpp"
 #include "model/StateTransfer.hpp"
+#include "model/OptionalFeatures.hpp"
 
 #include <algorithm>
 #include <array>
@@ -44,9 +45,14 @@ enum RequestFlag : uint32_t {
   // Never select the model's stop tokens, so generation runs to its output
   // limit. Only unconstrained generation can carry it.
   RequestIgnoreEndOfSequence = 1U << 0,
+  // scoreTokens are ordered option-end prompt positions, not vocabulary ids.
+  // The last prompt position supplies Kev's query; no tokens are generated.
+  RequestDecisionScoring = 1U << 2,
+  RequestDecisionScoreType = 1U << 3,
+  RequestDecisionNoulType = 1U << 4,
 };
 
-inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence;
+inline constexpr uint32_t kRequestFlagBits = RequestIgnoreEndOfSequence | RequestDecisionScoring | RequestDecisionScoreType | RequestDecisionNoulType;
 
 // A request's token selection, its fields in the native request frame's
 // order. The defaults are greedy selection with nothing changing the logits.
@@ -283,7 +289,8 @@ struct DispatchDraftCapturePlan final {
 // there.
 [[nodiscard]] DraftContextPlan
 planDraftContext(uint32_t replayBegin, uint32_t replayEnd,
-                 std::span<const uint32_t> materializationBoundaries);
+                 std::span<const uint32_t> materializationBoundaries,
+                 uint32_t contextCapacity = 2048);
 
 [[nodiscard]] DispatchDraftCapturePlan
 draftCaptureSpansForDispatch(const DraftContextPlan &plan,
@@ -448,9 +455,9 @@ struct ExecutionLimits final {
   // pool allocates when it is built.
   static constexpr uint32_t warmupKvPages =
       (prefillTokenBudget + kv::kPageTokens - 1) / kv::kPageTokens;
-  static constexpr uint32_t draftQueryRows = 8;
-  static constexpr uint32_t draftProposalTokens = 7;
-  static constexpr uint32_t targetVerifyRows = 8;
+  static constexpr uint32_t draftQueryRows = SPLASH_DRAFT_QUERY_ROWS;
+  static constexpr uint32_t draftProposalTokens = SPLASH_DRAFT_PROPOSAL_TOKENS;
+  static constexpr uint32_t targetVerifyRows = SPLASH_TARGET_VERIFY_ROWS;
   static constexpr uint32_t draftContextTokens = 2048;
   static constexpr uint32_t speculativeScratchTokens = targetVerifyRows - 1;
   // One step emits at most its retained verify rows plus a terminal anchor
@@ -472,6 +479,8 @@ static_assert(ExecutionLimits::targetVerifyRows ==
 // observes one byte total through ModelMemoryActual::stateActualAllocatedBytes.
 struct StateAllocationTracker final {
   std::atomic<uint64_t> bytes{0};
+  // Subset of bytes: draft rings and captured context windows.
+  std::atomic<uint64_t> draftBytes{0};
 };
 
 // Startup sizing and observability are part of the concrete model runtime,
@@ -587,6 +596,9 @@ public:
   beginRestore(uint64_t requestId, uint32_t boundary,
                std::shared_ptr<const CompositeState> state, bool restoreDraft,
                std::function<void()> completion) = 0;
+  [[nodiscard]] virtual uint32_t draftContextCapacity() const noexcept {
+    return model::ExecutionLimits::draftContextTokens;
+  }
   virtual void setDraftContextPlan(uint64_t requestId,
                                    DraftContextPlan plan) = 0;
   // Optional async wake hook; an immediately ready ticket need not call it.
@@ -600,6 +612,9 @@ public:
   // release a cached state and retry.
   [[nodiscard]] virtual std::shared_ptr<StateReservation>
   reserveState(uint64_t requestId, uint32_t tokens) = 0;
+  // A runtime whose cached state holds full draft rings still takes its
+  // snapshots at command boundaries, before later rows overwrite the rings.
+  [[nodiscard]] virtual bool capturesStatesInsidePrefill() const noexcept { return true; }
   // Copies the request's committed state at its current page-aligned
   // boundary into the buffers of a cached state, taken as reserveState()
   // takes them: the state of a boundary its prefill command ended at without
@@ -651,6 +666,7 @@ public:
   virtual WarmupStepResult warmupCompositeStateRestore() = 0;
   [[nodiscard]] virtual ModelMemoryActual actualRuntimeMemory() const = 0;
   [[nodiscard]] virtual ModelTelemetry telemetry() const noexcept = 0;
+  [[nodiscard]] virtual OptionalFeatureReport optionalFeatureReport() const { return {}; }
 };
 
 } // namespace model

@@ -1,6 +1,8 @@
 // GGUF projections: plan policy and dispatch (kernels/shared/gguf_linear.metal,
 // kernels/decode/linear_gguf_sgmatrix.metal).
 #include "Linear.hpp"
+#include "GgufPrefillCache.hpp"
+#include "SingleTokenLinear.hpp"
 
 #include "metal/abi/ExecutionGeometry.h"
 #include "metal/abi/Gguf.h"
@@ -22,7 +24,7 @@ constexpr size_t kFusedSegments = std::extent_v<decltype(GgufDecodeFusedParams::
 // The staged decode tile that holds `rows` rows: MPP computes 16-row
 // fragments, so the tile holds 8, 16 or 32 rows and a three-lane step runs
 // the 32-row tile over four lanes of storage.
-constexpr uint32_t stagedTileRows(uint32_t rows) noexcept { return rows <= 8 ? 8 : rows <= 16 ? 16 : 32; }
+constexpr uint32_t stagedTileRows(uint32_t rows) noexcept { return rows <= 8 ? 8 : rows <= 16 ? 16 : rows <= 32 ? 32 : 64; }
 
 std::string decodeKernel(const char *format, uint32_t rows, char epilogue) {
   return std::string("gguf_decode_") + format + "_m" + std::to_string(rows) + "_" + epilogue;
@@ -104,7 +106,8 @@ LinearConfig oneGateUpPassDecode(uint32_t n, uint32_t k, uint32_t cores, GpuFami
 bool oneFormat(std::span<const Projection *const> projections) {
   if (projections.size() != 2 || !projections[0] || !projections[1]) return false;
   const std::vector<QuantizedSegment> &up = projections[0]->blocks().segments, &gate = projections[1]->blocks().segments;
-  return up.size() == 1 && gate.size() == 1 && !up.front().isFloat() && up.front().formatId == gate.front().formatId;
+  return up.size() == 1 && gate.size() == 1 && !up.front().isFloat() && up.front().formatId == gate.front().formatId &&
+         up.front().formatId != GGUF_FMT_IQ1S;
 }
 
 // Whether Apple9 decodes a plan's projections (a gate/up plan's two) on the
@@ -222,7 +225,7 @@ void LinearPlan::requireConfiguration() const {
     throw std::invalid_argument("only a staged block gate/up decode runs gate and up in one pass");
   if (c.tile == LinearTile::GgufRegister) {
     // Split boundaries fall on 256-input coefficient units.
-    if (!decode || !c.validSplits() || k / 256 < c.splits)
+    if (SPLASH_TARGET_VERIFY_ROWS != 8 || !decode || !c.validSplits() || k / 256 < c.splits)
       throw std::invalid_argument("the register block decode tile takes a K unit per split");
     return;
   }
@@ -287,7 +290,7 @@ LinearConfig Linear::ggufBaseline(LinearWorkload w, std::span<const Projection *
         : LinearConfig{.tile = LinearTile::GgufPrefill};
   // Apple9 runs matrix operations on the FP32 pipe, so the exact register
   // kernel beats staging but for the projections apple9Stages names.
-  if (family_ == GpuFamilyClass::Apple9 && registerFormats && !apple9Stages(w, projections))
+  if (SPLASH_TARGET_VERIFY_ROWS == 8 && family_ == GpuFamilyClass::Apple9 && registerFormats && !apple9Stages(w, projections))
     return registerDecode(n, k, gpuCores_);
   // Decode tiles walking K in lockstep all fetch the same slice of the input
   // at each step, just written by the operator before and in no cache yet,
@@ -311,7 +314,7 @@ LinearConfig Linear::ggufBaseline(LinearWorkload w, std::span<const Projection *
   // one pass took 2-11% more.
   LinearConfig config = stagedDecode(n, k, gpuCores_, family_);
   config.spread = spreadsStagedDecode(family_, gpuCores_);
-  if (config.spread && w.epilogue == LinearEpilogue::GateUp && oneFormat(projections))
+  if (SPLASH_TARGET_VERIFY_ROWS == 8 && config.spread && w.epilogue == LinearEpilogue::GateUp && oneFormat(projections))
     return oneGateUpPassDecode(n, k, gpuCores_, family_);
   return config;
 }
@@ -320,7 +323,8 @@ LinearScratchSize Linear::ggufDecodeScratchSize(LinearWorkload w) const {
   const auto [n, k] = w.matrix;
   LinearScratchSize size = LinearPlan(w, ggufBaseline(w)).scratchSize();
   if (family_ == GpuFamilyClass::Apple9) size.include(LinearPlan(w, stagedDecode(n, k, gpuCores_, family_)).scratchSize());
-  if (w.epilogue == LinearEpilogue::GateUp && spreadsStagedDecode(family_, gpuCores_))
+  if (SPLASH_TARGET_VERIFY_ROWS == 8 && w.epilogue == LinearEpilogue::GateUp &&
+      spreadsStagedDecode(family_, gpuCores_))
     size.include(LinearPlan(w, oneGateUpPassDecode(n, k, gpuCores_, family_)).scratchSize());
   return size;
 }
@@ -346,6 +350,17 @@ void Linear::addGguf(metal::CommandGraph &graph, const LinearBuffers &b,
       quantized.rotation = p.rotation;
       addGguf(graph, b, quantized, plan, gate);
     }
+    return;
+  }
+  // The 4B's ordinary path supplies one row. Keep verify's eight-row
+  // plans intact and use the scalar projection only for its dense shapes.
+  if (w.phase == LinearPhase::Prefill && w.rows == 1 && !p.rotation && !p.planeInputs() &&
+      (k == 2560 || w.matrix.outputSize == 2560)) {
+    Projection single = p;
+    single.destination = plan.destination();
+    addSingleTokenLinear(graph, b.input, single, b.output,
+                         w.epilogue == LinearEpilogue::None ? metal::MetalBuffer{} : epilogueInput(b, w.epilogue),
+                         w.epilogue);
     return;
   }
   if (p.rotation) {
@@ -406,6 +421,14 @@ void Linear::addGgufStaged(metal::CommandGraph &graph, const LinearBuffers &b,
     if (segments.size() != 1 || gates.size() != 1 || gates.front().formatId != segments.front().formatId)
       throw std::invalid_argument("a one-pass block gate/up takes single tensors of one format");
     const QuantizedSegment &g = gates.front(), &u = segments.front();
+    if (u.formatId == GGUF_FMT_IQ1S) {
+      // The fused IQ1S cooperative-tensor path can leave live outputs
+      // unwritten. Each up element consumes only its own gate value, so
+      // the output can hold the intermediate gate without extra scratch.
+      tensor(g, epilogueSuffix(LinearEpilogue::None), b.output, b.output);
+      tensor(u, epilogueSuffix(LinearEpilogue::UpWithGate), b.output, b.output);
+      return;
+    }
     graph.add(std::string("gguf_decode_") + u.name() + "_m" + std::to_string(rows) + "_gate_up",
               {b.input, g.plane0, g.plane1Slot(), g.meta, u.plane0, u.plane1Slot(), u.meta, b.output, partials,
                counters},
@@ -435,6 +458,50 @@ void Linear::addGgufStaged(metal::CommandGraph &graph, const LinearBuffers &b,
             {segmentColumns(p) / GGUF_TILE_COLUMNS, splits, 1}, {GGUF_STAGED_THREADS, 1, 1});
 }
 
+namespace {
+bool ffnCandidateFormat(uint32_t format) noexcept {
+  return format == GGUF_FMT_Q4K || format == GGUF_FMT_Q5K || format == GGUF_FMT_Q6K || format == GGUF_FMT_IQ4XS;
+}
+}
+FfnPrefillKernel ffnPrefillKernel(const Projection &p, const LinearPlan &plan) noexcept {
+  if (p.ffn.role == FfnRole::None || p.ffn.variant == FfnPrefillVariant::Baseline || p.rotation ||
+      p.destination != FloatOutput::BFloat16 || p.blocks().segments.size() != 1 ||
+      plan.workload().phase != LinearPhase::Prefill || plan.workload().rows < 64) return FfnPrefillKernel::Baseline;
+  const auto &segment = p.blocks().segments.front();
+  if (segment.isFloat() || segment.prefillHalf || !ffnCandidateFormat(segment.formatId)) return FfnPrefillKernel::Baseline;
+  if (p.ffn.variant == FfnPrefillVariant::Q4KGroupScale)
+    return segment.formatId == GGUF_FMT_Q4K ? FfnPrefillKernel::Q4KGroupScale : FfnPrefillKernel::Baseline;
+  return FfnPrefillKernel::M64N32;
+}
+bool ffnPrefillGateUpEligible(const SwiGluProjections &ffn, uint32_t rows) noexcept {
+  if (!ffn.gate || !ffn.up || rows < 64 || rows > SPLASH_PREFILL_TOKEN_BUDGET) return false;
+  const auto &g = *ffn.gate, &u = *ffn.up;
+  if (g.ffn.role != FfnRole::Gate || u.ffn.role != FfnRole::Up ||
+      g.ffn.variant != FfnPrefillVariant::FusedM64N32 || u.ffn.variant != FfnPrefillVariant::FusedM64N32 ||
+      g.rotation || u.rotation || g.planeInputs() || u.planeInputs() || g.shape() != u.shape() ||
+      g.blocks().segments.size() != 1 || u.blocks().segments.size() != 1) return false;
+  const auto &gs = g.blocks().segments.front(), &us = u.blocks().segments.front();
+  return !gs.prefillHalf && !us.prefillHalf && !gs.isFloat() && !us.isFloat() &&
+      gs.formatId == us.formatId && ffnCandidateFormat(gs.formatId);
+}
+bool Linear::addFfnPrefillGateUp(metal::CommandGraph &graph, const SwiGluProjections &ffn,
+                                 const PrefillFfnBuffers &b, uint32_t rows) const {
+  if (!ffnPrefillGateUpEligible(ffn, rows)) return false;
+  const auto &gate = *ffn.gate, &up = *ffn.up;
+  const auto &g = gate.blocks().segments.front(), &u = up.blocks().segments.front();
+  const auto plan = prefillPlan(up, rows, LinearEpilogue::UpWithGate);
+  requireSegmentPlanes(g, "fused prefill gate"); requireSegmentPlanes(u, "fused prefill up");
+  requireBytes(b.normalized, uint64_t{plan.storageRows()} * up.inputSize * 2, "fused FFN input");
+  requireBytes(b.intermediate, uint64_t{plan.storageRows()} * up.outputSize * 2, "fused FFN intermediate");
+  const size_t first = graph.dispatches().size();
+  graph.add(std::string("ffn_quant_fused_m64n32_") + u.name(),
+      {b.normalized, g.plane0, g.plane1Slot(), g.meta, u.plane0, u.plane1Slot(), u.meta, b.intermediate},
+      GgufPrefillParams{up.inputSize, rows, up.outputSize, 0},
+      {(rows + 255) / 256, up.outputSize / 32, 1}, {128, 1, 1});
+  if (up.ffn.trace) graph.attributeFrom(first, up.ffn.leadingView ? "target_ffn/prefill/ane_view" : "target_ffn/prefill/full", rows);
+  return true;
+}
+
 // The prefill tile, which runs prefill chunks of more than
 // kMaximumDecodeTileRows rows over 128-row tiles: a plain projection in one
 // dispatch per format, over the column tiles of its segments of that format
@@ -447,16 +514,48 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
   const LinearWorkload w = plan.workload();
   const auto [n, k] = w.matrix;
   const char epilogue = epilogueSuffix(w.epilogue);
+  if (plan.destination() == FloatOutput::Float32 && std::ranges::any_of(p.blocks().segments, [](const auto &s) {
+        return s.formatId != GGUF_FMT_Q80 || bool(s.prefillHalf);
+      })) throw std::invalid_argument("FP32 quantized prefill requires uncached Q8_0");
+  const auto candidate = ffnPrefillKernel(p, plan);
+  if (candidate != FfnPrefillKernel::Baseline) {
+    const auto &segment = p.blocks().segments.front();
+    std::vector<metal::MetalBuffer> bindings{b.input, segment.plane0, segment.plane1Slot(), segment.meta, b.output};
+    if (w.epilogue != LinearEpilogue::None) bindings.push_back(epilogueInput(b, w.epilogue));
+    const GgufPrefillParams params{k, w.rows, n, segment.columnOffset};
+    if (candidate == FfnPrefillKernel::Q4KGroupScale) {
+      // Keep this scalar candidate below the driver's per-buffer watchdog.
+      constexpr uint32_t sliceRows = 256;
+      for (uint32_t row = 0; row < w.rows; row += sliceRows) {
+        graph.add(std::string("ffn_q4k_group_scale_") + epilogue, bindings,
+            GgufQ4KGroupParams{{params, p.planeInputs() ? p.planeInputs() : k}, row},
+            {segment.outputSize, (std::min(sliceRows, w.rows - row) + GGUF_Q4K_GROUP_ROWS - 1) / GGUF_Q4K_GROUP_ROWS, 1}, {32, 1, 1});
+        if (row + sliceRows < w.rows) graph.endCommandBuffer();
+      }
+    } else {
+      std::string name = std::string("ffn_quant_m64n32_") + segment.name() + "_" + epilogue;
+      if (p.planeInputs())
+        graph.add(leadingInputsInstance(name), std::move(bindings), GgufPrefillLeadingParams{params, p.planeInputs()},
+            {(w.rows + 255) / 256, segment.outputSize / 32, 1}, {128, 1, 1});
+      else graph.add(name, std::move(bindings), params,
+            {(w.rows + 255) / 256, segment.outputSize / 32, 1}, {128, 1, 1});
+    }
+    return;
+  }
   const uint32_t rowTiles = plan.storageRows() / GGUF_PREFILL_ROWS;
   if (w.epilogue == LinearEpilogue::None && !p.planeInputs()) {
     const std::vector<QuantizedSegment> &segments = p.blocks().segments;
     std::vector<uint32_t> formats;
-    for (const QuantizedSegment &s : segments)
-      if (std::find(formats.begin(), formats.end(), s.formatId) == formats.end()) formats.push_back(s.formatId);
+    for (const QuantizedSegment &s : segments) {
+      if (s.prefillHalf) {
+        addGgufHalfPrefill(graph, b.input, s, b.output, GgufPrefillParams{k, w.rows, n, s.columnOffset}, 'a', {},
+                          GGUF_PREFILL_STEP, w.rows >= 64 ? GgufHalfPrefillTile::M64N32 : GgufHalfPrefillTile::M32N64);
+      } else if (std::find(formats.begin(), formats.end(), s.formatId) == formats.end()) formats.push_back(s.formatId);
+    }
     for (const uint32_t format : formats) {
       std::vector<const QuantizedSegment *> group;
       for (const QuantizedSegment &s : segments)
-        if (s.formatId == format) group.push_back(&s);
+        if (s.formatId == format && !s.prefillHalf) group.push_back(&s);
       if (group.size() > kFusedSegments) throw std::invalid_argument("a block prefill takes at most three segments");
       GgufPrefillSegmentsParams params{k, w.rows, n, {0, 0, 0}, {0, 0, 0}};
       std::vector<metal::MetalBuffer> bindings{b.input};
@@ -472,7 +571,7 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
         bindings.insert(bindings.end(), {s.plane0, s.plane1Slot(), s.meta});
       }
       bindings.push_back(b.output);
-      graph.add(prefillKernel(group.front()->name(), epilogue), std::move(bindings), params,
+      graph.add(kernelInstance(prefillKernel(group.front()->name(), epilogue), plan.destination()), std::move(bindings), params,
                 {rowTiles, columns / GGUF_TILE_COLUMNS, 1}, {GGUF_PREFILL_THREADS, 1, 1});
     }
     return;
@@ -481,6 +580,12 @@ void Linear::addGgufPrefill(metal::CommandGraph &graph, const LinearBuffers &b,
     std::vector<metal::MetalBuffer> bindings{b.input, s.plane0, s.plane1Slot(), s.meta, b.output};
     if (w.epilogue != LinearEpilogue::None) bindings.push_back(epilogueInput(b, w.epilogue));
     const GgufPrefillParams params{k, w.rows, n, s.columnOffset};
+    if (s.prefillHalf && !p.planeInputs()) {
+      addGgufHalfPrefill(graph, b.input, s, b.output, params, epilogue,
+                        w.epilogue == LinearEpilogue::None ? metal::MetalBuffer{} : epilogueInput(b, w.epilogue),
+                        GGUF_PREFILL_STEP, w.rows >= 64 ? GgufHalfPrefillTile::M64N32 : GgufHalfPrefillTile::M32N64);
+      continue;
+    }
     const metal::DispatchSize groups{rowTiles, s.outputSize / GGUF_TILE_COLUMNS, 1};
     if (p.planeInputs())
       graph.add(leadingInputsInstance(prefillKernel(s.name(), epilogue)), std::move(bindings),

@@ -35,6 +35,7 @@ public:
       uint64_t requestId, uint32_t boundary,
       std::shared_ptr<const CompositeState> state, bool restoreDraft,
       std::function<void()> completion) override;
+  [[nodiscard]] uint32_t draftContextCapacity() const noexcept override;
   void setDraftContextPlan(uint64_t requestId, DraftContextPlan plan) override;
   [[nodiscard]] std::vector<ModelStepResult>
   prefill(const BatchPlan &plan, std::span<const ModelBatchItem> items);
@@ -43,6 +44,7 @@ public:
               std::function<void()> completion) override;
   [[nodiscard]] std::vector<ModelStepResult>
   decode(const BatchPlan &plan, std::span<const ModelBatchItem> items);
+  [[nodiscard]] bool capturesStatesInsidePrefill() const noexcept override;
   [[nodiscard]] std::shared_ptr<StateReservation>
   reserveState(uint64_t requestId, uint32_t tokens) override;
   [[nodiscard]] std::shared_ptr<const CompositeState>
@@ -67,6 +69,7 @@ public:
 
   [[nodiscard]] ModelTelemetry
   telemetry() const noexcept override;
+  [[nodiscard]] OptionalFeatureReport optionalFeatureReport() const override;
 
 private:
   // The state lane of a resident request; the storage checks that its

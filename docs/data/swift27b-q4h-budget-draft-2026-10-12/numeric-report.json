@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "completed": 9,
+  "records": [
+    {
+      "name": "attention-2048",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-attention-2048",
+      "exit_code": 0
+    },
+    {
+      "name": "core-2048-on",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-2048-on",
+      "exit_code": 0
+    },
+    {
+      "name": "core-2048-off",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-2048-off",
+      "exit_code": 0
+    },
+    {
+      "name": "attention-1024",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-attention-1024",
+      "exit_code": 0
+    },
+    {
+      "name": "core-1024-on",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-1024-on",
+      "exit_code": 0
+    },
+    {
+      "name": "core-1024-off",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-1024-off",
+      "exit_code": 0
+    },
+    {
+      "name": "attention-512",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-attention-512",
+      "exit_code": 0
+    },
+    {
+      "name": "core-512-on",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-512-on",
+      "exit_code": 0
+    },
+    {
+      "name": "core-512-off",
+      "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/numeric-core-512-off",
+      "exit_code": 0
+    }
+  ],
+  "thresholds_unchanged": true
+}

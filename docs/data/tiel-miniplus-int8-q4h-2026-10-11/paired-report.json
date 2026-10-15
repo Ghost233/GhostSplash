@@ -1,0 +1,420 @@
+{
+  "outputs": {
+    "512": {
+      "arms": {
+        "A": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1807.1976292127206,
+            "decode_tok_s": 122.8478783517783,
+            "ttft_seconds": 18.132044583499997,
+            "total_seconds": 22.2742407295,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1754.538511305192,
+              2351.959834976682
+            ],
+            "decode_tok_s": [
+              118.3717959376301,
+              143.86730658837143
+            ],
+            "ttft_seconds": [
+              13.93221275,
+              18.676138
+            ],
+            "total_seconds": [
+              17.491045667,
+              22.922183167
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_peak_gib": 15.767318725585938,
+          "draft_acceptance": 0.48645320197044334,
+          "drafted_tokens": [
+            812
+          ],
+          "accepted_tokens": [
+            395
+          ],
+          "output_sha256": [
+            "0988c8a7595b2c050da71f26452c85600da83286db4892b51723dda46974c211"
+          ]
+        },
+        "B": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1848.646358559336,
+            "decode_tok_s": 126.3609525537438,
+            "ttft_seconds": 17.725627916500002,
+            "total_seconds": 21.765627833499998,
+            "memory_peak_gib": 15.605759024620056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1773.2086533372346,
+              2346.9828269049785
+            ],
+            "decode_tok_s": [
+              118.77541503177693,
+              144.79176833345346
+            ],
+            "ttft_seconds": [
+              13.961760208,
+              18.479501125
+            ],
+            "total_seconds": [
+              17.497867958,
+              22.790151125
+            ],
+            "memory_peak_gib": [
+              15.605759024620056,
+              15.605759024620056
+            ]
+          },
+          "device_peak_gib": 15.612289428710938,
+          "draft_acceptance": 0.493167701863354,
+          "drafted_tokens": [
+            805
+          ],
+          "accepted_tokens": [
+            397
+          ],
+          "output_sha256": [
+            "fd040febc6a591aef9546647ee05fe136c907d318f109bca363a6bc6e59a75e4"
+          ]
+        }
+      },
+      "pairs": [
+        {
+          "pair": 0,
+          "order": "AB",
+          "A": "kv-pair-0-01-512-A",
+          "B": "kv-pair-0-02-512-B",
+          "prefill_gain_percent": -0.21161109971730152,
+          "decode_gain_percent": 0.6425794483850833,
+          "total_reduction_percent": -0.03900447766178594,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 1,
+          "order": "BA",
+          "A": "kv-pair-1-08-512-A",
+          "B": "kv-pair-1-07-512-B",
+          "prefill_gain_percent": 3.284544377965548,
+          "decode_gain_percent": 5.4957487542036665,
+          "total_reduction_percent": 3.566806191041394,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 2,
+          "order": "AB",
+          "A": "kv-pair-2-09-512-A",
+          "B": "kv-pair-2-10-512-B",
+          "prefill_gain_percent": 2.4148227045830195,
+          "decode_gain_percent": 5.332114505101537,
+          "total_reduction_percent": 2.8609950345897084,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 3,
+          "order": "BA",
+          "A": "kv-pair-3-16-512-A",
+          "B": "kv-pair-3-15-512-B",
+          "prefill_gain_percent": -0.6438456116339641,
+          "decode_gain_percent": -2.8968268202542613,
+          "total_reduction_percent": -1.0815595989197346,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 4,
+          "order": "AB",
+          "A": "kv-pair-4-17-512-A",
+          "B": "kv-pair-4-18-512-B",
+          "prefill_gain_percent": 1.0129468383781814,
+          "decode_gain_percent": -1.2894900267822695,
+          "total_reduction_percent": 0.5735527264656648,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 5,
+          "order": "BA",
+          "A": "kv-pair-5-24-512-A",
+          "B": "kv-pair-5-23-512-B",
+          "prefill_gain_percent": 0.9212151946361935,
+          "decode_gain_percent": 5.017378804519246,
+          "total_reduction_percent": 1.6487129130824396,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 6,
+          "order": "AB",
+          "A": "kv-pair-6-25-512-A",
+          "B": "kv-pair-6-26-512-B",
+          "prefill_gain_percent": 2.313599583188508,
+          "decode_gain_percent": 1.3047121826005537,
+          "total_reduction_percent": 2.080977250398741,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 7,
+          "order": "BA",
+          "A": "kv-pair-7-32-512-A",
+          "B": "kv-pair-7-31-512-B",
+          "prefill_gain_percent": 2.4389898149583145,
+          "decode_gain_percent": 2.32462913646716,
+          "total_reduction_percent": 2.3601817630430566,
+          "memory_saved_mib": 158.75
+        }
+      ],
+      "paired_median": {
+        "prefill_gain_percent": 1.6632732107833448,
+        "decode_gain_percent": 1.8146706595338569,
+        "total_reduction_percent": 1.8648450817405904
+      },
+      "Q4H_wins": {
+        "prefill_gain_percent": 6,
+        "decode_gain_percent": 6,
+        "total_reduction_percent": 6
+      },
+      "same_kv_outputs_repeat_exactly": true,
+      "cross_kv_first_differences": [
+        {
+          "full_fp16": 101761,
+          "index": 7,
+          "quantized": 95744
+        }
+      ],
+      "order_group_medians": {
+        "AB": {
+          "prefill_gain_percent": 1.6632732107833448,
+          "decode_gain_percent": 0.9736458154928185,
+          "total_reduction_percent": 1.327264988432203
+        },
+        "BA": {
+          "prefill_gain_percent": 1.680102504797254,
+          "decode_gain_percent": 3.671003970493203,
+          "total_reduction_percent": 2.0044473380627483
+        }
+      }
+    },
+    "2048": {
+      "arms": {
+        "A": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1843.9180363070627,
+            "decode_tok_s": 169.20698024214195,
+            "ttft_seconds": 17.7760453745,
+            "total_seconds": 29.8794349995,
+            "memory_peak_gib": 15.760788321495056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1756.6612849899684,
+              2103.944070067861
+            ],
+            "decode_tok_s": [
+              159.40265567120431,
+              191.2420026051901
+            ],
+            "ttft_seconds": [
+              15.574560084,
+              18.653569666
+            ],
+            "total_seconds": [
+              26.283503042,
+              30.939235291
+            ],
+            "memory_peak_gib": [
+              15.760788321495056,
+              15.760788321495056
+            ]
+          },
+          "device_peak_gib": 15.767318725585938,
+          "draft_acceptance": 0.7383820998278829,
+          "drafted_tokens": [
+            2324
+          ],
+          "accepted_tokens": [
+            1716
+          ],
+          "output_sha256": [
+            "c7de4b56ea78e6a129d4e3d2103548932a7f6d5cf30f5054c6ae484c533641c0"
+          ]
+        },
+        "B": {
+          "samples": 8,
+          "median": {
+            "prefill_tok_s": 1863.7926559350485,
+            "decode_tok_s": 115.876884179748,
+            "ttft_seconds": 17.581503563,
+            "total_seconds": 35.3304862915,
+            "memory_peak_gib": 15.605759024620056
+          },
+          "range": {
+            "prefill_tok_s": [
+              1706.2563615997776,
+              2113.9395437055546
+            ],
+            "decode_tok_s": [
+              106.19653933269866,
+              121.14600781466471
+            ],
+            "ttft_seconds": [
+              15.500922125,
+              19.204629584
+            ],
+            "total_seconds": [
+              32.406137041,
+              37.7912835
+            ],
+            "memory_peak_gib": [
+              15.605759024620056,
+              15.605759024620056
+            ]
+          },
+          "device_peak_gib": 15.612289428710938,
+          "draft_acceptance": 0.44581776372520837,
+          "drafted_tokens": [
+            3479
+          ],
+          "accepted_tokens": [
+            1551
+          ],
+          "output_sha256": [
+            "0a2e884996b143d15e67e6ff1fcca72509bb4042289ac690bc243767f9ff9815"
+          ]
+        }
+      },
+      "pairs": [
+        {
+          "pair": 0,
+          "order": "AB",
+          "A": "kv-pair-0-03-2048-A",
+          "B": "kv-pair-0-04-2048-B",
+          "prefill_gain_percent": 0.47508266877889227,
+          "decode_gain_percent": -36.65303324355747,
+          "total_reduction_percent": -23.294588964097642,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 1,
+          "order": "BA",
+          "A": "kv-pair-1-06-2048-A",
+          "B": "kv-pair-1-05-2048-B",
+          "prefill_gain_percent": 8.053428270377761,
+          "decode_gain_percent": -30.661610996462542,
+          "total_reduction_percent": -13.876933283958447,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 2,
+          "order": "AB",
+          "A": "kv-pair-2-11-2048-A",
+          "B": "kv-pair-2-12-2048-B",
+          "prefill_gain_percent": -12.222784520339191,
+          "decode_gain_percent": -29.435110818106057,
+          "total_reduction_percent": -25.94383680308312,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 3,
+          "order": "BA",
+          "A": "kv-pair-3-14-2048-A",
+          "B": "kv-pair-3-13-2048-B",
+          "prefill_gain_percent": -1.805615090777024,
+          "decode_gain_percent": -36.89592877833512,
+          "total_reduction_percent": -24.552079881938926,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 4,
+          "order": "AB",
+          "A": "kv-pair-4-19-2048-A",
+          "B": "kv-pair-4-20-2048-B",
+          "prefill_gain_percent": 6.398075264736702,
+          "decode_gain_percent": -30.44235336888108,
+          "total_reduction_percent": -13.75340998566248,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 5,
+          "order": "BA",
+          "A": "kv-pair-5-22-2048-A",
+          "B": "kv-pair-5-21-2048-B",
+          "prefill_gain_percent": 0.6294778764505793,
+          "decode_gain_percent": -31.577392086576438,
+          "total_reduction_percent": -18.01084585499566,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 6,
+          "order": "AB",
+          "A": "kv-pair-6-27-2048-A",
+          "B": "kv-pair-6-28-2048-B",
+          "prefill_gain_percent": 3.476210783468603,
+          "decode_gain_percent": -32.61875919255539,
+          "total_reduction_percent": -17.319319880704676,
+          "memory_saved_mib": 158.75
+        },
+        {
+          "pair": 7,
+          "order": "BA",
+          "A": "kv-pair-7-30-2048-A",
+          "B": "kv-pair-7-29-2048-B",
+          "prefill_gain_percent": 6.1539826571143985,
+          "decode_gain_percent": -33.16562890426077,
+          "total_reduction_percent": -16.565951517502487,
+          "memory_saved_mib": 158.75
+        }
+      ],
+      "paired_median": {
+        "prefill_gain_percent": 2.052844329959591,
+        "decode_gain_percent": -32.09807563956591,
+        "total_reduction_percent": -17.665082867850167
+      },
+      "Q4H_wins": {
+        "prefill_gain_percent": 6,
+        "decode_gain_percent": 0,
+        "total_reduction_percent": 0
+      },
+      "same_kv_outputs_repeat_exactly": true,
+      "cross_kv_first_differences": [
+        {
+          "full_fp16": 101761,
+          "index": 7,
+          "quantized": 95744
+        }
+      ],
+      "order_group_medians": {
+        "AB": {
+          "prefill_gain_percent": 1.9756467261237476,
+          "decode_gain_percent": -31.530556280718233,
+          "total_reduction_percent": -20.30695442240116
+        },
+        "BA": {
+          "prefill_gain_percent": 3.391730266782489,
+          "decode_gain_percent": -32.371510495418605,
+          "total_reduction_percent": -17.288398686249074
+        }
+      }
+    }
+  },
+  "elapsed_seconds": 1180.8537583351135,
+  "labels": {
+    "A": "INT8",
+    "B": "Q4H"
+  },
+  "pairs_per_output": 8,
+  "metric_definition": {
+    "throughput_gain_percent": "100*(Q4H/INT8-1)",
+    "total_reduction_percent": "100*(1-Q4H/INT8)",
+    "acceptance": "accepted draft tokens / drafted tokens",
+    "metal_peak": "native backend peak; device ledger listed separately"
+  }
+}

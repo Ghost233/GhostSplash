@@ -1,0 +1,6 @@
+{
+  "fastest_median_config": "A",
+  "baseline_still_A": true,
+  "requires_paired_confirmation": false,
+  "purpose": "Select later share/split cross-check candidates; no automatic baseline update."
+}

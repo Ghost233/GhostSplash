@@ -18,6 +18,9 @@ persistent_auto | --persistent-cache | auto auto --persistent-cache on
 persistent | --max-cache-disk 5G --persistent-cache | auto auto 5368709120 --persistent-cache on
 persistent_dir | --max-cache-disk 5G --persistent-cache --cache-dir /srv/cache | auto auto 5368709120 --persistent-cache on --cache-dir /srv/cache
 bf16 | --kv-format bf16 | auto auto --kv-format bf16
+q4h | --kv-format q4h | auto auto --kv-format q4h
+q4_0 | --kv-format q4_0 | auto auto --kv-format q4_0
+q4_0_unrotated | --kv-format q4_0_unrotated | auto auto --kv-format q4_0_unrotated
 disk_bf16 | --max-cache-disk 5G --kv-format bf16 | auto auto 5368709120 --kv-format bf16
 state_bf16 | --state-format bf16 | auto auto --state-format bf16
 idle_release | --idle-release 30m | auto auto --idle-release 1800.0
@@ -28,5 +31,14 @@ image_patches_rounded | --max-image-pixels 1000000 | auto auto --max-image-patch
 image_patches_default | --max-image-pixels 4194304 | auto auto
 idle_sleep | --allow-idle-sleep | auto auto --idle-sleep allow
 disable_ane | --disable-ane | auto auto --ane off
+ane_fixed | --ane-ffn-share 0.5 --ane-ffn-minimum-rows 512 | auto auto --ane-ffn-share 0.5 --ane-ffn-minimum-rows 512
+ane_gpu | --ane-ffn-share 0 | auto auto --ane-ffn-share 0.0
+ane_recovery | --ane-power-recovery on --ane-recovery-idle-watts 0.02 | auto auto --ane-power-recovery on --ane-recovery-idle-watts 0.02
+ane_reference_auto | --ane-power-reference auto | auto auto --ane-power-reference auto
+ane_reference_manual | --ane-power-recovery on --ane-power-reference 6 --ane-recovery-max-power-percent 50 | auto auto --ane-power-recovery on --ane-power-reference 6.0 --ane-recovery-max-power-percent 50.0
+lookup | --prompt-lookup on --prompt-lookup-min-match 3 | auto auto --prompt-lookup on --prompt-lookup-min-match 3
+compact | --compact-draft-head on --compact-draft-capacity 65536 --compact-draft-ranking /tmp/ranking | auto auto --compact-draft-head on --compact-draft-capacity 65536 --compact-draft-ranking /tmp/ranking
+fast_topk | --fast-topk on | auto auto --fast-topk on
+features_off | --prompt-lookup off --compact-draft-head off --fast-topk off --ane-power-recovery off --ane-power-reference off | auto auto
 relaunch |  | auto auto --relaunch-context 61433
 relaunch_limits | --max-context 100K --max-memory 32G | 102400 34359738368

@@ -32,6 +32,15 @@ void RoPE::addTables(
   requireBytes(targetSine, targetTable, "target RoPE sine");
   requireBytes(draftCosine, draftTable, "draft RoPE cosine");
   requireBytes(draftSine, draftTable, "draft RoPE sine");
+  // The dispatch contract requires nonempty bindings even when a role has
+  // zero rows. Reuse target buffers for the unused draft arguments; the
+  // kernel's zero-length draft loop never reads or writes them.
+  if (!rows.draft_rows) {
+    draftPositions = targetPositions;
+    draftInverseFrequencies = targetInverseFrequencies;
+    draftCosine = targetCosine;
+    draftSine = targetSine;
+  }
   const uint64_t elements =
       std::max<uint64_t>(uint64_t{rows.target_rows} * SPLASH_TARGET_ROPE_PAIRS,
                          uint64_t{rows.draft_rows} * SPLASH_DRAFT_ROPE_PAIRS);

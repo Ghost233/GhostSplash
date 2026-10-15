@@ -1,0 +1,101 @@
+Julia-1: context=8192, KV=none, queue=4, memory=4294967296
+Decision head=ModernBERT typed option scores; drafter=off; compact=off; lookup=off; fast-topk=off; ANE=off
+System One: http://127.0.0.1:18135/v1/systemone
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+12:07:02 Startup configuration · on/off are configured flags; effective state follows Ready
+12:07:02   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1
+12:07:02   --model = ggml-org/Julia-1-GGUF:Q8_0
+12:07:02   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1/tokenizer
+12:07:02   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash
+12:07:02   --port = 18135
+12:07:02   --host = 127.0.0.1
+12:07:02   --allowed-host = none
+12:07:02   --allowed-origin = none
+12:07:02   --api-key = off
+12:07:02   --no-webui = on
+12:07:02   --max-memory = 4294967296
+12:07:02   --max-context = 8192
+12:07:02   --kv-format = bf16
+12:07:02   --idle-release = auto (default 600 s)
+12:07:02   --max-cache-disk = 0
+12:07:02   --persistent-cache = off
+12:07:02   --cache-dir = off / unset
+12:07:02   --served-model-name = none
+12:07:02   --announce-served-name = off
+12:07:02   --default-reasoning-effort = auto
+12:07:02   --max-request-size = 134217728
+12:07:02   --max-image-pixels = 4194304
+12:07:02   --request-timeout = off / unset
+12:07:02   --queue-size = 4
+12:07:02   --decode-share = default (0.5)
+12:07:02   --disable-ane = on
+12:07:02   --ane-ffn-share = auto
+12:07:02   --ane-ffn-minimum-rows = auto
+12:07:02   --ane-power-recovery = off
+12:07:02   --ane-power-reference = off
+12:07:02   --ane-recovery-idle-watts = 0.05
+12:07:02   --ane-recovery-max-power-percent = off / unset
+12:07:02   --prompt-lookup = off
+12:07:02   --prompt-lookup-min-match = 2
+12:07:02   --compact-draft-head = off
+12:07:02   --compact-draft-capacity = 98304
+12:07:02   --compact-draft-ranking = off / unset
+12:07:02   --encoder-submit-batch-size = 4
+12:07:02   --encoder-option-queries = off
+12:07:02   --fast-topk = off
+12:07:02   --allow-idle-sleep = off
+12:07:02 Loading · ggml-org/Julia-1-GGUF:Q8_0
+12:07:03 Chat template · renders later system messages in place, generation prompt 3 tokens
+2026-10-15 12:07:03.704 splash[27640:31968929] Metal GPU Validation Enabled
+12:07:03 ModernBERT: quantized weights=175034628; workspace=3680288; KV=0; FP16 cache=0; selected option queries=off; numerical check passed
+12:07:03 Ready · ggml-org/Julia-1-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18135
+12:07:03 Startup effective state · snapshot at Ready; fallback is distinct from error
+12:07:03   Context = 8192 tokens
+12:07:03   Native concurrent capacity = 4 (queue limit is separate)
+12:07:03   Vision = off
+12:07:03   ANE = off; share=0; minimum_rows=0; reason=GPU encoder
+12:07:03   ANE power reference = off / unreported; watts=unknown; reason=none
+12:07:03   ANE recovery = off / unreported; phase=unknown; reason=none
+12:07:03   KV = none
+12:07:03   Build = src-12dc3a813f59c5080161e5dd47d6941ad3c77b7e208002ba2bf8c42edd2f2d08
+12:07:03   Metal budget = 4294967296 bytes
+12:07:03   Encoder option queries = off
+12:07:03   Encoder state = full bidirectional sequence; causal prefix cache off
+12:07:03   Drafter = off; kind=none; layers=0; block=0; tokens=0
+12:07:03   Prefill block = 2048 tokens (compiled)
+12:07:03   Prefill warmup geometry = typed encoder full/selected-head numerical check
+12:07:03   FFN FP16 cache = 0 bytes
+12:07:03   Prompt lookup = off; reason=none
+12:07:03   Fast top-k = off; reason=none
+12:07:03   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+12:07:04 Started · input 37 · cached 0
+12:07:04 Done · input 37 · cached 0 · output 0
+12:07:04 Started · input 29 · cached 0
+12:07:04 Done · input 29 · cached 0 · output 0
+12:07:04 Started · input 27 · cached 0
+12:07:04 Done · input 27 · cached 0 · output 0
+12:07:04 Started · input 34 · cached 0
+12:07:04 Done · input 34 · cached 0 · output 0
+12:07:04 Started · input 34 · cached 0
+12:07:04 Done · input 34 · cached 0 · output 0
+12:07:04 Started · input 36 · cached 0
+12:07:04 Done · input 36 · cached 0 · output 0
+12:07:04 Started · input 128 · cached 0
+12:07:04 Done · input 128 · cached 0 · output 0
+12:07:04 Started · input 512 · cached 0
+12:07:04 Done · input 512 · cached 0 · output 0
+12:07:04 Started · input 1,049 · cached 0
+12:07:04 Done · input 1,049 · cached 0 · output 0
+12:07:04 Started · input 2,048 · cached 0
+12:07:04 Done · input 2,048 · cached 0 · output 0
+12:07:04 Started · input 4,096 · cached 0
+12:07:04 Done · input 4,096 · cached 0 · output 0
+12:07:04 Started · input 8,192 · cached 0
+12:07:05 Done · input 8,192 · cached 0 · output 0
+12:07:05 Started · input 28 · cached 0
+12:07:05 Done · input 28 · cached 0 · output 0
+12:07:05 Started · input 30 · cached 0
+12:07:05 Done · input 30 · cached 0 · output 0
+12:07:05 Started · input 31 · cached 0
+12:07:05 Done · input 31 · cached 0 · output 0
+12:07:05 Stopping · releasing engine resources

@@ -1,0 +1,103 @@
+{
+  "status": "requires_isolated_recheck",
+  "suspect_samples": [
+    "perf-1-q4_0_unrotated-attempt1"
+  ],
+  "reason": "large same-KV slowdown; known workload monitor did not establish external interference",
+  "original_samples_preserved": true,
+  "comparisons": [
+    {
+      "name": "perf-0-q4_0_unrotated-attempt1",
+      "prefill_tok_s": 451.74836373997124,
+      "decode_tok_s": 71.26122282038153,
+      "timings": {
+        "decode_wall_seconds": 229.914662583,
+        "total_wall_seconds": 302.450619833,
+        "prefill_wall_seconds": 72.53595725,
+        "ttft_seconds": 72.536043375
+      },
+      "draft_acceptance": 0.7437229437229437,
+      "features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "compact_rows": 98117,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 13144,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "extra_metal_bytes": 283508736,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 2373,
+        "compact_cycles": 268,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 2641,
+        "fast_topk_fallback_reason": ""
+      },
+      "ane_actual": {
+        "fallback_reason": "at the given share 0.50 for chunks of 512 rows or more, 1.4% from the GPU alone on the Neural Engine's part (set up in 1.1 s)",
+        "enabled": true,
+        "auto_calibration": false,
+        "minimum_rows": 512,
+        "share": 0.5,
+        "evaluations": 1024
+      },
+      "gpu_percent_median": 98.0,
+      "gpu_percent_range": [
+        0,
+        100
+      ],
+      "samples": 152,
+      "known_busy_pids": []
+    },
+    {
+      "name": "perf-1-q4_0_unrotated-attempt1",
+      "prefill_tok_s": 379.1172444186811,
+      "decode_tok_s": 51.6781640151973,
+      "timings": {
+        "decode_wall_seconds": 317.039126916,
+        "total_wall_seconds": 403.471491791,
+        "prefill_wall_seconds": 86.432364875,
+        "ttft_seconds": 86.432688458
+      },
+      "draft_acceptance": 0.7437229437229437,
+      "features": {
+        "configured": {
+          "compact_draft_head": true,
+          "fast_topk": false,
+          "prompt_lookup": true
+        },
+        "compact_rows": 98117,
+        "compact_fallbacks": 0,
+        "lookup_accepted_tokens": 13144,
+        "fast_topk_fallbacks": 0,
+        "compact_fallback_reason": "lookup supplied proposals; draft head skipped",
+        "extra_metal_bytes": 283508736,
+        "lookup_fallback_reason": "",
+        "lookup_hits": 2373,
+        "compact_cycles": 268,
+        "fast_topk_selections": 0,
+        "lookup_attempts": 2641,
+        "fast_topk_fallback_reason": ""
+      },
+      "ane_actual": {
+        "fallback_reason": "at the given share 0.50 for chunks of 512 rows or more, 1.4% from the GPU alone on the Neural Engine's part (set up in 1.4 s)",
+        "enabled": true,
+        "auto_calibration": false,
+        "minimum_rows": 512,
+        "share": 0.5,
+        "evaluations": 1024
+      },
+      "gpu_percent_median": 99,
+      "gpu_percent_range": [
+        0,
+        100
+      ],
+      "samples": 201,
+      "known_busy_pids": []
+    }
+  ],
+  "final_parameter_change_blocked_until_recheck": true
+}

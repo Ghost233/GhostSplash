@@ -49,6 +49,7 @@ GGML = {
     "TQ2_0": 35,
     "MXFP4": 39,
     "NVFP4": 40,
+    "Q2_0": 42,
     "PQ2_0": 142,
 }
 
@@ -346,6 +347,30 @@ class GgufMetadataTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(models.ModelError, "input rotation"):
             gguf.require_loadable(gguf.Metadata(path, tensors=True))
+
+    def test_screening_accepts_only_4b_shared_output_weights(self):
+        values = fixture()
+        tensors = loadable_tensors(values, self.root)
+        tensors.pop("output.weight")
+        path = write_gguf(self.root / "untied.gguf", values, tensors.items())
+        with self.assertRaisesRegex(models.ModelError, "output.weight missing"):
+            gguf.require_loadable(gguf.Metadata(path, tensors=True))
+        values.update(
+            {
+                "general.architecture": "qwen35",
+                "qwen35.embedding_length": 2560,
+                "qwen35.block_count": 32,
+                "qwen35.full_attention_interval": 4,
+            }
+        )
+        path = write_gguf(self.root / "4b-header.gguf", values)
+        header = gguf.Metadata(path)
+        tensors = {
+            name: GGML[next(kind for kind in ("Q4_K", "F32") if kind in types)]
+            for name, types in gguf.loaded_tensors(header).items()
+        }
+        path = write_gguf(self.root / "tied.gguf", values, tensors.items())
+        gguf.require_loadable(gguf.Metadata(path, tensors=True))
 
     def test_screening_accepts_each_tensor_as_the_native_loader_reads_it(self):
         values = fixture()

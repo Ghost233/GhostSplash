@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "native_exit_code": 0,
+  "scope": "cold_greedy_matching_command_rows",
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "weight_sha256": {
+    "target": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+    "draft": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+  },
+  "score_relative_tolerance": 0.001,
+  "state_cosine_minimum": 0.999,
+  "observed_state_cosines": [
+    1.0,
+    1.0
+  ],
+  "observed_score_relative_max": 0.0,
+  "same_graph_four_lane_tokens_identical": true,
+  "controlled_fixed_prefill_prefixes_identical": true,
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/model-runtime-oracle": "c3e96702d67f894372eaa2f7439312af021129792f5453dbc1e5da30b1094b23",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/ColdGraphOracle.mm": "143ee44fb625a0b4bb872224ab498b847926ed91c78878ab8adb88c12974fe96",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/libsplash.a": "c5d18d46f172465c0fcc34b9c5564f6c1b5735c5e36d5c374d0f9dce59669752",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/metal/MetalBackendInstrumented.o": "7f04d069a4aafc87bfb443ebce154bdc4cfee7c161c05d2ddfe77c9157b06de4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/ane/ProgramInstrumented.o": "2ab6b49a4b66492222a24756d6afa2eb5502649afb4b1615b4fe86f3668e7654",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/report.json": "dcc082e6a2fe7dfcb1eab9a6a7947277ca0575c3022dd112875acb0510c8bb22",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/stdout.log": "24ac19a5cbdb400f9eba4e50573641c040f1ad84601bd37a5d9510194e87c348",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-concurrency-prefix-fixed-v1/fixed-comparison.json": "f73d82de8212c250c04aaf9bc63fc0417bdfe517a32590cd508263eff282d3f8",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-concurrency-prefix-fixed-v1/summary.json": "74e68235f29ae5fa87930e727b5519e72e7db6419abaf9899d082193ba9592c3"
+  },
+  "full_oracle_passed": false,
+  "separate_unresolved_case": "sampled cached one-token restore replay; not exercised by this cold greedy performance workload",
+  "basis": {
+    "numeric_source": "dev/tests/engine/model_runtime_oracle_test.mm",
+    "adaptive_partition_source": "runtime/engine/Scheduler.cpp",
+    "original_same_graph_requirements_unchanged": true
+  }
+}

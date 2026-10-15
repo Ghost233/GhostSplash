@@ -1,0 +1,17 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+E
+======================================================================
+ERROR: test_kev_08_accepts_its_actual_pointer_head_width (dev.tests.install.test_kev_metadata.KevMetadataTests.test_kev_08_accepts_its_actual_pointer_head_width)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_kev_metadata.py", line 94, in test_kev_08_accepts_its_actual_pointer_head_width
+    gguf.require_loadable(header)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/gguf.py", line 609, in require_loadable
+    raise ModelError("unexpected Kev tensor shape: " + name)
+install.models.ModelError: unexpected Kev tensor shape: cls.output.weight
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)

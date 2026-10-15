@@ -1,0 +1,11 @@
+01:08:28 Weights loaded in 0.16 s.
+01:08:28 Kernel policy for GPU family 10 with 20 cores.
+01:08:28 Weights loaded in 0.15 s.
+01:08:28 Kernel policy for GPU family 10 with 20 cores.
+01:08:29 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-A3Bwta/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+01:08:29 Weights loaded in 0.15 s.
+01:08:29 Kernel policy for GPU family 10 with 20 cores.
+01:08:29 Weights loaded in 0.15 s.
+01:08:29 Kernel policy for GPU family 10 with 20 cores.
+01:08:29 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-A3Bwta/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+optional feature memory plan tests passed

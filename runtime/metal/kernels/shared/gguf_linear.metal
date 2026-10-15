@@ -33,27 +33,6 @@ inline void gguf_store_sums(thread Acc &acc, uint splits, uint split, device coh
 // a multiple of the tile) skip their matmuls and stores, so a chunk costs its rows rounded up to RowsPerSG rather than
 // to the tile (a 33-row Q4_K 17408 x 5120 chunk: 1.7x faster on M5 and M3 than a 128-row tile). Full tiles run this
 // loop too; a branch-free copy for them is no faster (M3 Max, M5 Max).
-template <class F, ushort RowsPerSG, ushort Simdgroups, ushort TileN, ushort KS, GgufEpilogue Ep = EpNone>
-inline void gguf_prefill_tile(device bfloat *input, device uchar *w0, device uchar *w1, device uchar *meta, device bfloat *output,
-                    uint input_size, uint output_origin, uint rows, threadgroup half *stage, threadgroup half2 *tl,
-                    uint simd_lane, uint simd_group, uint out_stride, uint out_offset, device bfloat *aux = nullptr) {
-  const bool owns_rows = simd_group * RowsPerSG < rows;   // uniform per simdgroup
-  device bfloat *rows_input = input + ulong(simd_group) * RowsPerSG * input_size;
-  auto acc = staged_accumulator<RowsPerSG, TileN, KS>(rows_input, input_size, stage);
-  gguf_zero(acc);
-  gguf_staged_steps<F, RowsPerSG, TileN, KS, Simdgroups * 32>(rows_input, w0, w1, meta, input_size, output_origin, stage, tl,
-                                                              simd_group * 32 + simd_lane, 0, input_size / KS, 0, owns_rows,
-                                                              acc);
-  if (!owns_rows) return;
-#pragma unroll
-  for (ushort i = 0; i < acc.get_capacity(); ++i) {
-    if (!acc.is_valid_element(i)) continue;
-    auto index = acc.get_multidimensional_index(i);
-    const ulong o = (ulong(simd_group) * RowsPerSG + index[1]) * out_stride + out_offset + output_origin + index[0];
-    output[o] = gguf_epilogue<Ep>(acc[i], aux, o);
-  }
-}
-
 // The two stages of a prefill tile.
 constant constexpr uint kPrefillStages = 2 * GGUF_TILE_COLUMNS * GGUF_PREFILL_STEP;
 
@@ -108,7 +87,8 @@ using GgufDecodeKernel = void(device bfloat *, device uchar *, device uchar *, d
 #define GGUF_DECODE(F, f, R, ep, Ep, Out) \
   template [[host_name("gguf_decode_" #f "_m" #R "_" #ep)]] kernel GgufDecodeKernel<Out> gguf_decode<F, R, Ep, Out>;
 #define GGUF_DECODE_ROWS(F, f, ep, Ep, Out) \
-  GGUF_DECODE(F, f, 8, ep, Ep, Out) GGUF_DECODE(F, f, 16, ep, Ep, Out) GGUF_DECODE(F, f, 32, ep, Ep, Out)
+  GGUF_DECODE(F, f, 8, ep, Ep, Out) GGUF_DECODE(F, f, 16, ep, Ep, Out) GGUF_DECODE(F, f, 32, ep, Ep, Out) \
+  GGUF_DECODE(F, f, 64, ep, Ep, Out)
 #define GGUF_DECODE_FORMAT(F, f)                                                                                  \
   GGUF_DECODE_ROWS(F, f, a, EpNone, bfloat) GGUF_DECODE_ROWS(F, f, a_f32, EpNone, float)                          \
   GGUF_DECODE_ROWS(F, f, r, EpResidual, bfloat) GGUF_DECODE_ROWS(F, f, g, EpUpWithGate, bfloat)
@@ -227,7 +207,7 @@ QUANT_FORMATS(GGUF_DECODE_GATE_UP_FORMAT)
                        p.out_stride, column0, simd_group * 32 + simd_lane, &arrival,                              \
                        [&](uint row, uint column, float v) { output[ulong(row) * p.out_stride + column0 + column] = bfloat(v); }); \
   }
-GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32)
+GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32) GGUF_DECODE_FUSED(64)
 #undef GGUF_DECODE_FUSED
 
 // The prefill kernels: grid (GGUF_PREFILL_ROWS-row tiles of the chunk, column tiles), four simdgroups; the residual
@@ -256,6 +236,19 @@ GGUF_DECODE_FUSED(8) GGUF_DECODE_FUSED(16) GGUF_DECODE_FUSED(32)
                                          local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group,        \
                                          p.out_stride, p.offset[s]);                                               \
   }
+// Decision encoders keep projection outputs and residual additions in FP32.
+kernel void gguf_prefill_q80_a_f32(device bfloat *input [[buffer(0)]], GGUF_SEGMENTS,
+                                 device float *output [[buffer(10)]],
+                                 constant GgufPrefillSegmentsParams &p [[buffer(11)]], GGUF_PREFILL_THREAD) {
+  GGUF_PREFILL_TABLES(FmtQ80);
+  GGUF_SEGMENT_OF(group.y, p.cols);
+  const uint first = group.x * GGUF_PREFILL_ROWS, rows = p.rows > first ? p.rows - first : 0;
+  gguf_prefill_tile<FmtQ80, GGUF_PREFILL_SIMDGROUP_ROWS, GGUF_PREFILL_SIMDGROUPS,
+                   GGUF_TILE_COLUMNS, GGUF_PREFILL_STEP, EpNone, float>(
+      input + ulong(first) * p.input_size, w0, w1, meta, output + ulong(first) * p.out_stride,
+      p.input_size, local * GGUF_TILE_COLUMNS, rows, stage, tl, simd_lane, simd_group, p.out_stride, p.offset[s]);
+}
+
 #define GGUF_PREFILL_EPILOGUE(F, f, ep, Ep)                                                                        \
   kernel void gguf_prefill_##f##_##ep(GGUF_PREFILL_BUFFERS, device bfloat *aux [[buffer(5)]],                    \
                                       constant GgufPrefillParams &p [[buffer(6)]], GGUF_PREFILL_THREAD) {          \
@@ -302,3 +295,15 @@ QUANT_FORMATS(GGUF_PREFILL_LEADING_INPUTS)
 #undef GGUF_SEGMENT_OF
 #undef GGUF_SEGMENTS
 #undef GGUF_SEGMENT
+
+#if SPLASH_TARGET_VERIFY_ROWS != 8
+// Independent padding rows never become logical proposals or outputs.
+kernel void decode_linear_block_padding(
+    device bfloat *input [[buffer(0)]],
+    constant GgufBlockPaddingParams &params [[buffer(1)]],
+    uint index [[thread_position_in_grid]]) {
+  const uint count = (params.storage_rows - params.live_rows) * params.width;
+  if (index < count)
+    input[ulong(params.live_rows) * params.width + index] = bfloat(0.0f);
+}
+#endif

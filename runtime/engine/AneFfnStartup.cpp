@@ -94,6 +94,9 @@ void logOutcome(const AneFfnOutcome &outcome, const AneFfnModel &model, const An
 AneFfnStart decide(const AneFfnModel &model, const AneFfnSetting &setting, RequestedContext requested,
                    const std::function<EngineMemoryPlanResult(uint64_t)> &planMemory,
                    const std::function<bool()> &cancelled) {
+  if (setting.powerReference.mode == ane::PowerReferenceSetting::Mode::Manual &&
+      (!std::isfinite(setting.powerReference.manualWatts) || setting.powerReference.manualWatts <= 0))
+    throw std::invalid_argument("ANE power reference must be finite positive watts");
   const uint32_t without = contextOf(planMemory(0));
   const auto gpuAlone = [&](Kind kind, std::string reason, uint32_t context) {
     return AneFfnStart{{}, {}, {kind, std::move(reason), context, without}};
@@ -171,18 +174,46 @@ AneFfnStart decide(const AneFfnModel &model, const AneFfnSetting &setting, Reque
                          const char *how) {
     EngineMemoryPlanResult plan = planWith(aneUnits);
     if (!plan.plan) throw std::logic_error("the memory plan does not hold the split it chose");
+    const std::string preparedIn = seconds();
+    std::optional<ane::PowerReference> reference;
+    if (setting.powerReference.mode == ane::PowerReferenceSetting::Mode::Manual) {
+      reference.emplace(); reference->valid = true; reference->source = "manual";
+      reference->referenceWatts = setting.powerReference.manualWatts;
+    } else if (setting.powerReference.mode == ane::PowerReferenceSetting::Mode::Automatic) {
+      reference = model.powerReference(prepared.split.get());
+    }
+    if (prepared.split) {
+      if (reference) prepared.split->setPowerReference(*reference);
+      if (setting.recovery.enabled) {
+        auto recovery = setting.recovery;
+        if (reference && reference->valid) recovery.referenceWatts = reference->referenceWatts;
+        prepared.split->setRecovery(recovery);
+      }
+    }
+    if (reference) {
+      if (reference->valid)
+        logLine("Neural Engine power reference ", reference->referenceWatts, " W (", reference->source,
+                ", workload reference; not hardware maximum)");
+      else logWarning("Neural Engine power reference unavailable: ", reference->reason);
+    }
     std::ostringstream reason;
     reason << std::fixed << std::setprecision(2) << "at " << (given ? "the given share " : "share ")
            << static_cast<double>(aneUnits) / model.units << " for chunks of " << minimumRows << " rows or more"
            << timed << ", " << fixed(100.0 * prepared.error) << "% from the GPU alone on the Neural Engine's part ("
-           << how << " in " << seconds() << ")";
+           << how << " in " << preparedIn << ")";
     return AneFfnStart{std::move(prepared.split), std::move(plan.plan),
-                       {Kind::Split, reason.str(), automaticWith(aneUnits), without}};
+                       {Kind::Split, reason.str(), automaticWith(aneUnits), without, reference}};
   };
   try {
     if (given) {
       AneFfnPrepared prepared = model.prepare(*given, false);
       if (prepared.split) prepared.split->setMinimumRows(setting.given->minimumRows);
+      if (setting.recovery.enabled) {
+        const auto gpu = model.gpuBaseline();
+        if (prepared.split) {
+          prepared.split->setBreaker(ane_ffn::Breaker(gpu), {});
+        }
+      }
       return serve(std::move(prepared), *given, setting.given->minimumRows, "", "set up");
     }
     // The split takes the calibration's least chunk, and judges itself

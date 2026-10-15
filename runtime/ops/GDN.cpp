@@ -17,7 +17,7 @@ namespace {
 
 static_assert(offsetof(GDNDecodeBatchParams, conv_layer_bytes) == 8);
 
-enum class KernelLayout : uint8_t { Value48, Value32 };
+enum class KernelLayout : uint8_t { Value48, Value32, Value16 };
 
 [[nodiscard]] KernelLayout kernelShape(const GdnShape &shape) {
   if (!shape.valid())
@@ -26,13 +26,20 @@ enum class KernelLayout : uint8_t { Value48, Value32 };
     return KernelLayout::Value48;
   if (shape == GdnShape{16, 32, 128, 8192, 12544})
     return KernelLayout::Value32;
+  if (shape == GdnShape{16, 16, 128, 6144, 8448}) return KernelLayout::Value16;
   throw std::invalid_argument("unsupported compiled GDN shape");
 }
 
-[[nodiscard]] const char *kernelName(KernelLayout shape,
+[[nodiscard]] std::string kernelName(KernelLayout shape,
                                      const char *value48,
                                      const char *value32) noexcept {
-  return shape == KernelLayout::Value48 ? value48 : value32;
+  if (shape == KernelLayout::Value48) return value48;
+  std::string name = value32;
+  if (shape == KernelLayout::Value16) {
+    const auto at = name.find("vh32");
+    if (at != std::string::npos) name.replace(at, 4, "vh16");
+  }
+  return name;
 }
 
 uint64_t valueWidth(const GdnShape &shape) { return uint64_t{shape.valueHeads} * shape.headDimension; }
@@ -120,6 +127,15 @@ void GDN::addPrefill(metal::CommandGraph &graph, const metal::MetalBackend &back
   requireBytes(buffers.recurrentOut, recurrentBytes(shape, state), "GDN next recurrent state");
   requireBytes(buffers.recurrentRows, valueRows, "GDN recurrent row");
   requireBytes(buffers.hidden, valueRows, "GDN hidden");
+  if (tokens == 1 && kernel == KernelLayout::Value32 && state == GdnStateFormat::Float32 && captures.empty()) {
+    graph.add(normKernel("gdn_single_vh32", buffers.mixerNorm, shape.headDimension),
+              {buffers.packed, buffers.convolutionWeights, buffers.convolutionIn, buffers.convolutionOut,
+               buffers.queries, buffers.keys, buffers.values, buffers.decayWeights, buffers.timeBias,
+               buffers.decay, buffers.beta, buffers.recurrentIn, buffers.recurrentOut, buffers.recurrentRows,
+               buffers.mixerNorm.buffer, buffers.hidden},
+              GDNGatePrefillParams{order == GdnHeadOrder::Tiled}, {shape.valueHeads, 1, 1}, {128, 1, 1});
+    return;
+  }
   uint32_t previous = 0;
   for (const GdnPrefillCapture &capture : captures) {
     if (capture.tokens <= previous || capture.tokens >= tokens)

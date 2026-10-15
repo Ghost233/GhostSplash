@@ -1,0 +1,1804 @@
+{
+  "Kev-0.8B": {
+    "command": [
+      "sh",
+      "kev08bsplash.sh",
+      "--port",
+      "18210"
+    ],
+    "answers": [
+      {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.04986752032090256,
+              "billing": 0.9501324796790975
+            },
+            "confidence": 0.9002649593581951
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      },
+      {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.04986752032090256,
+              "billing": 0.9501324796790975
+            },
+            "confidence": 0.9002649593581951
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      }
+    ],
+    "status": {
+      "schema_version": 6,
+      "ready": true,
+      "maximum_context_tokens": 8192,
+      "memory_pressure": "normal",
+      "thermal_state": "nominal",
+      "admission": {
+        "waiting": 0,
+        "waiting_memory": 0,
+        "waiting_concurrency": 0,
+        "held_behind_refusal": 0,
+        "restoring": 0,
+        "suspended": 0,
+        "draining": false,
+        "oldest_wait_ms": 0
+      },
+      "loop": {
+        "max_tick_ms": 5.732541
+      },
+      "identity": {
+        "cache": {
+          "loaded_model_layout_sha256": "0145bd820abcd17e0c1aa866952921f655a8a1bbb3201fa08d99b253971af7ea",
+          "build_id": "src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704",
+          "dtype": "bf16_k_token_major_v_dimension_major",
+          "block_tokens": 32
+        },
+        "kv": {
+          "target_model_sha256": "0145bd820abcd17e0c1aa866952921f655a8a1bbb3201fa08d99b253971af7ea",
+          "format": "bf16",
+          "quantization": "none",
+          "scale_type": "none",
+          "key_layout": "token_major",
+          "value_layout": "dimension_major"
+        }
+      },
+      "memory_plan": {
+        "valid": true,
+        "maximum_context_tokens": 147449,
+        "device": {
+          "device_name": "Apple M5 Pro",
+          "macos_version": "27.0.1",
+          "apple_gpu_family": 10,
+          "gpu_core_count": 20,
+          "physical_memory_bytes": 68719476736,
+          "recommended_max_working_set_bytes": 55662788608,
+          "max_buffer_length_bytes": 41747087360,
+          "max_threadgroup_memory_bytes": 32768,
+          "max_threadgroup_width": 1024,
+          "has_unified_memory": true
+        },
+        "model": {
+          "model_name": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "maximum_context_tokens": 262144,
+          "attention_layers": 6,
+          "kv_heads": 2,
+          "head_dimension": 256,
+          "kv_page_tokens": 32,
+          "kv_format": "bf16",
+          "kv_elements_per_scale": 0,
+          "kv_page_bytes": 393216,
+          "state_format": "fp32",
+          "memory": {
+            "target_weights_bytes": 1338310656,
+            "draft_weights_bytes": 0,
+            "vision_weights_bytes": 0,
+            "lane_state_bytes": 39518208,
+            "shared_prefill_bytes": 197525504,
+            "shared_decode_bytes": 101581248,
+            "pipeline_reserve_bytes": 268435456,
+            "runtime_overhead_reserve_bytes": 536870912,
+            "ane_ffn_bytes": 0,
+            "state_staging_bytes": 0
+          }
+        },
+        "budget": {
+          "physical_memory_bytes": 68719476736,
+          "recommended_working_set_bytes": 55662788608,
+          "configured_memory_limit_bytes": 4294967296,
+          "working_set_margin_bytes": 1113255772,
+          "hard_budget_bytes": 4294967296,
+          "target_weights_bytes": 1338310656,
+          "draft_weights_bytes": 0,
+          "vision_weights_bytes": 0,
+          "maximum_batch_width": 4,
+          "lane_state_bytes": 39518208,
+          "shared_prefill_bytes": 197525504,
+          "shared_decode_bytes": 101581248,
+          "pipeline_reserve_bytes": 268435456,
+          "runtime_overhead_reserve_bytes": 536870912,
+          "ane_ffn_bytes": 0,
+          "state_staging_bytes": 0,
+          "fixed_runtime_bytes": 2442723776,
+          "dynamic_budget_bytes": 1852243520,
+          "kv_page_tokens": 32,
+          "kv_page_bytes": 393216,
+          "kv_extent_pages": 384,
+          "kv_extent_bytes": 150994944,
+          "kv_capacity_pages": 4608,
+          "kv_capacity_bytes": 1811939328,
+          "kv_capacity_tokens": 147456,
+          "minimum_dynamic_bytes": 107151360,
+          "minimum_required_bytes": 2549875136,
+          "deficit_bytes": 0
+        }
+      },
+      "memory_actual": {
+        "allocated_bytes": 1827930560,
+        "current_bytes": 1829699584,
+        "peak_bytes": 1948254208
+      },
+      "memory_governor": {
+        "limit_bytes": 4294967296,
+        "charged_bytes": 2633236928,
+        "headroom_bytes": 1661730368,
+        "growth_allowed": true,
+        "denied_reservations": 0,
+        "system_pressure": "normal",
+        "host_measurement_valid": true,
+        "host_available_bytes": 28394815488,
+        "host_reserve_bytes": 2147483648,
+        "host_spare_bytes": 21897314304,
+        "host_spare_reserve_bytes": 4810363369,
+        "host_headroom_bytes": 17086950935
+      },
+      "memory_audit": {
+        "scope": "startup_warmup",
+        "valid": true,
+        "error": "none",
+        "categorized_bytes": 1946485184,
+        "backend_unclassified_bytes": 0,
+        "device_untracked_bytes": 1769024,
+        "device_peak_deviation_basis_points": 0,
+        "actual_headroom_bytes": 2346713088,
+        "backend_allocated_bytes": 1946485184,
+        "device_current_allocated_bytes": 1948254208,
+        "device_peak_allocated_bytes": 1948254208,
+        "backend_peak_allocated_bytes": 1946485184
+      },
+      "weights": {
+        "idle_release_seconds": 600,
+        "released": false,
+        "restoring": false,
+        "restores": 0,
+        "restore_failures": 0
+      },
+      "ane_ffn": {
+        "state": "off",
+        "share": 0,
+        "minimum_rows": 0,
+        "reason": "as given",
+        "split_commands": 0,
+        "reruns": 0,
+        "ane_ms": 0,
+        "evaluations": 0
+      },
+      "startup_features": {
+        "drafter": "none",
+        "draft_layers": 0,
+        "draft_block_size": 0,
+        "draft_tokens": 0,
+        "prefill_token_budget": 2048,
+        "ffn_cache_bytes": 528482304,
+        "optional": {
+          "prompt_lookup": false,
+          "lookup_reason": "",
+          "compact_draft_head": false,
+          "compact_validated": false,
+          "compact_capacity": 0,
+          "compact_validation_comparisons": 0,
+          "compact_validation_maximum_error": 0,
+          "compact_coverage_fallbacks": 0,
+          "compact_request_fallbacks": 0,
+          "compact_reason": "",
+          "fast_topk": false,
+          "fast_topk_reason": "",
+          "extra_metal_bytes": 0
+        }
+      },
+      "kv": {
+        "block_tokens": 32,
+        "pages_allocated": 384,
+        "pages_active": 0,
+        "pages_cache": 1,
+        "pages_free": 383,
+        "allocated_bytes": 150994944,
+        "reclaimable_bytes": 0,
+        "extent_allocations": 1,
+        "extent_releases": 0,
+        "extent_allocate_max_ms": 6.643958,
+        "extent_release_max_ms": 0,
+        "extent_compactions": 0,
+        "pages_moved": 0,
+        "extent_compact_max_ms": 0
+      },
+      "state": {
+        "entries": 0,
+        "pinned": 0,
+        "in_use": 0,
+        "in_use_evictions": 0,
+        "bytes": 0,
+        "allocated_bytes": 39518208,
+        "active_lanes": 0,
+        "idle_gdn_cells": 2,
+        "idle_draft_rings": 3,
+        "idle_context_windows": 0,
+        "publications": 0,
+        "evictions": 0,
+        "checkpoint_entries": 0,
+        "checkpoint_bytes": 0,
+        "checkpoint_evictions": 0,
+        "checkpoint_retirements": 0,
+        "disk_hits": 0,
+        "disk_promotions": 0,
+        "disk_promotions_skipped": 0,
+        "disk_bytes": 0,
+        "offloads": 0,
+        "offload_failures": 0,
+        "invalidations": 0
+      },
+      "disk": {
+        "capacity_bytes": 0,
+        "limit_bytes": 0,
+        "used_bytes": 0,
+        "file_bytes": 0,
+        "volume_available_bytes": 0,
+        "writes_gated": "no",
+        "write_budget_bytes": 0,
+        "read_bytes": 0,
+        "written_bytes": 0,
+        "kv_blocks": 0,
+        "kv_bytes": 0,
+        "kv_demotions": 0,
+        "kv_demotion_failures": 0,
+        "kv_demotions_refused": 0,
+        "kv_restores": 0,
+        "kv_restore_failures": 0,
+        "kv_pending_pages": 0,
+        "persistent": false,
+        "kv_copies": 0,
+        "kv_copy_failures": 0,
+        "taken_back": {
+          "states": 0,
+          "kv_blocks": 0,
+          "bytes": 0,
+          "left_behind": 0
+        },
+        "write_behind": {
+          "waiting": 0,
+          "durable": 0,
+          "unneeded": 0,
+          "refused": 0
+        }
+      },
+      "cache": {
+        "probe_hashed_blocks": 0,
+        "hits": 0,
+        "cold_misses": 2,
+        "hit_rate": 0,
+        "kv_hit_tokens": 0,
+        "kv_disk_hit_tokens": 0,
+        "lost_state_misses": 0,
+        "reused_tokens": 0,
+        "deduplicated_kv_tokens": 0,
+        "replay_state_publications": 0,
+        "deduplicated_state_publications": 0,
+        "recycled_state_publications": 0,
+        "disk_state_publications": 0,
+        "state_captures": 0,
+        "capture_cuts": 0,
+        "replay_state_publication_failures": 0,
+        "lazy_junctions": 0,
+        "junction_materializations": 0,
+        "junction_materialization_failures": 0,
+        "checkpoint_publications": 0,
+        "checkpoint_publication_failures": 0,
+        "resource_suspensions": 0,
+        "priority_suspensions": 0,
+        "resource_resumptions": 0,
+        "resource_replay_tokens": 0
+      },
+      "draft_context": {
+        "target_prefill_rows": 2238,
+        "prompt_end_rows": 0,
+        "materialization_rows": 0,
+        "avoided_rows": 2238,
+        "restore_skipped": 0,
+        "resets": 0
+      },
+      "model_timing": {
+        "scope": "model_lifetime",
+        "prefill": {
+          "last_gpu_ms": 11.88412501,
+          "last_wall_ms": 12.422125,
+          "total_gpu_ms": 202.5443749,
+          "total_wall_ms": 208.670333
+        },
+        "decode": {
+          "last_gpu_ms": 0,
+          "last_wall_ms": 0,
+          "total_gpu_ms": 0,
+          "total_wall_ms": 0
+        }
+      },
+      "constraint_masks": {
+        "overlap_batches": 0,
+        "overlap_requests": 0,
+        "last_target_forward_gpu_ms": 0,
+        "total_target_forward_gpu_ms": 0,
+        "last_residual_wait_ms": 0,
+        "total_residual_wait_ms": 0
+      },
+      "images": {
+        "encodes": 0,
+        "embedding_reuses": 0,
+        "arena_bytes": 0,
+        "cached_bytes": 0,
+        "state_held_bytes": 0,
+        "rows_bytes": 0
+      },
+      "scheduler": {
+        "queued": 0,
+        "waiting_resources": 0,
+        "waiting_prefix": 0,
+        "prefilling": 0,
+        "decoding": 0,
+        "waiting_mask": 0,
+        "terminal": 0,
+        "prefill_batches": 2,
+        "prefill_rows": 78,
+        "decode_batches": 0,
+        "decode_batches_by_width": {
+          "b1": 0,
+          "b2": 0,
+          "b3": 0,
+          "b4": 0
+        }
+      },
+      "active_requests": [],
+      "requests": {
+        "submitted": 2,
+        "completed": 2,
+        "cancelled": 0,
+        "failed": 0
+      },
+      "metrics": {
+        "ttft_ms": {
+          "p50": 0,
+          "p95": 0,
+          "samples": 0
+        },
+        "itl_ms": {
+          "p50": 0,
+          "p95": 0,
+          "samples": 0
+        },
+        "prefill_input_tokens": 78,
+        "prefill_wall_ms": 24.6825,
+        "prefill_tokens_per_second": 3160.133698,
+        "decode_output_tokens": 0,
+        "decode_wall_ms": 0,
+        "decode_cycle_ms": 0,
+        "decode_tokens_per_second": 0,
+        "drafted_tokens": 0,
+        "accepted_draft_tokens": 0,
+        "draft_acceptance_rate": 0,
+        "capacity_failures": 0,
+        "metal_failures": 0,
+        "current_prefill_batch": {
+          "valid": true,
+          "width": 1,
+          "input_tokens": 39,
+          "output_tokens": 0,
+          "drafted_tokens": 0,
+          "accepted_draft_tokens": 0,
+          "wall_ms": 12.422125,
+          "tokens_per_second": 3139.559455
+        },
+        "current_decode_batch": {
+          "valid": false,
+          "width": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "drafted_tokens": 0,
+          "accepted_draft_tokens": 0,
+          "wall_ms": 0,
+          "tokens_per_second": 0
+        }
+      },
+      "warmup": {
+        "prefill_2048": true,
+        "decode_b1": true,
+        "decode_b2": true,
+        "decode_b3": true,
+        "decode_b4": true,
+        "composite_state_restore": true,
+        "memory_limited_steps": [],
+        "detail": "real 2048-row KV target+draft prefill [M32]"
+      },
+      "metal": {
+        "healthy": true,
+        "failure_reason": ""
+      },
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 1,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "vision": false,
+      "decision_model": {
+        "type": "kev",
+        "head_size": 512,
+        "generation": false,
+        "readout": "option-end keys against final-position query",
+        "temperatures": {
+          "choice": 2.3510959148406982,
+          "noul": 2.3510959148406982,
+          "score": 2.3510959148406982
+        }
+      },
+      "input_modalities": [
+        "text"
+      ],
+      "chat_template": {
+        "later_system": "patched"
+      },
+      "frontend": {
+        "preparation_capacity": 4,
+        "active": 0,
+        "waiting": 0
+      },
+      "grammar_cache": {
+        "enabled": false
+      },
+      "response_store": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 67108864,
+        "evictions": 0,
+        "hits": 0,
+        "misses": 0
+      },
+      "image_cache": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 268435456,
+        "request_bytes": 0,
+        "request_budget_bytes": 268435456
+      },
+      "tokenizer_cache": {
+        "enabled": true,
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 8388608,
+        "capacity": 4,
+        "hits": 0,
+        "reused_tokens": 0
+      },
+      "latency": {
+        "http_request": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.03466137600480579
+        },
+        "upload": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 7.212499622255564e-05
+        },
+        "preparation_queue": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 7.124996045604348e-06
+        },
+        "preparation": {
+          "buckets": {
+            "0.001": 1,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.0012545410136226565
+        },
+        "template": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "tokenization": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "grammar": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "images": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "native_queue": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "http_ttft": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "output_interval": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        }
+      },
+      "instance": {
+        "id": "50fe89c0181653ad4b43e3f0",
+        "pid": 62570,
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "host": "127.0.0.1",
+        "port": 18210,
+        "started_at": 1792043047.798896
+      },
+      "http": {
+        "requests": {
+          "active": 0,
+          "capacity": 1
+        },
+        "request_body_bytes": {
+          "active": 0,
+          "capacity": 536870912
+        },
+        "max_request_bytes": 134217728,
+        "token_counts": {
+          "active": 0,
+          "capacity": 1
+        },
+        "connections": {
+          "active": 1,
+          "capacity": 65
+        }
+      }
+    },
+    "passed": true,
+    "exit": 0
+  },
+  "Julia-1": {
+    "command": [
+      "sh",
+      "julia1splash.sh",
+      "--port",
+      "18210"
+    ],
+    "answers": [
+      {
+        "model": "ggml-org/Julia-1-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 8.564691915765168e-06,
+              "billing": 0.9999914353080842
+            },
+            "confidence": 0.9999828706161684
+          }
+        },
+        "usage": {
+          "input_tokens": 37,
+          "output_tokens": 0
+        }
+      },
+      {
+        "model": "ggml-org/Julia-1-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 8.564691915765168e-06,
+              "billing": 0.9999914353080842
+            },
+            "confidence": 0.9999828706161684
+          }
+        },
+        "usage": {
+          "input_tokens": 37,
+          "output_tokens": 0
+        }
+      }
+    ],
+    "status": {
+      "schema_version": 6,
+      "healthy": true,
+      "ready": true,
+      "active_requests": 0,
+      "model_kind": "modern-bert",
+      "weights": {
+        "release_supported": false,
+        "released": false,
+        "restoring": false
+      },
+      "memory": {
+        "loaded_weight_bytes": 175034628,
+        "quantized_weight_bytes": 174915584,
+        "auxiliary_weight_bytes": 119044,
+        "fp16_weight_cache_bytes": 0,
+        "workspace_bytes": 3680288,
+        "kv_bytes": 0,
+        "state_bytes": 0,
+        "allocated_bytes": 178714916,
+        "peak_allocated_bytes": 178714916,
+        "max_memory_bytes": 4294967296
+      },
+      "telemetry": {
+        "completed_requests": 2,
+        "submission_batches": 2,
+        "maximum_submission_batch": 1,
+        "total_prefill_gpu_seconds": 0.012967
+      },
+      "features": {
+        "drafter": "none",
+        "ane": "off",
+        "compact_draft_head": "off",
+        "fast_topk": "off",
+        "prompt_lookup": "off",
+        "encoder_option_queries": true,
+        "encoder_submit_batch_limit": 4,
+        "causal_prefix_cache": false
+      },
+      "ane_ffn": {
+        "state": "off",
+        "share": 0,
+        "minimum_rows": 0,
+        "reason": "GPU encoder"
+      },
+      "identity": {
+        "kv": {
+          "format": "none"
+        },
+        "cache": {
+          "build_id": "src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704"
+        }
+      },
+      "memory_governor": {
+        "limit_bytes": 4294967296
+      },
+      "warmup": {
+        "detail": "typed encoder full/selected-head numerical check"
+      },
+      "startup_features": {
+        "drafter": "none",
+        "draft_layers": 0,
+        "draft_block_size": 0,
+        "draft_tokens": 0,
+        "prefill_token_budget": 2048,
+        "ffn_cache_bytes": 0,
+        "optional": {
+          "prompt_lookup": false,
+          "fast_topk": false,
+          "compact_draft_head": false,
+          "compact_capacity": 0,
+          "compact_validation_maximum_error": 0,
+          "compact_coverage_fallbacks": 0,
+          "compact_request_fallbacks": 0
+        }
+      },
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 1,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "vision": false,
+      "decision_model": {
+        "type": "laya",
+        "architecture": "modern-bert",
+        "head_size": 1,
+        "generation": false,
+        "readout": "typed option-marker scores",
+        "max_head_tokens": 256,
+        "temperatures": {}
+      },
+      "input_modalities": [
+        "text"
+      ],
+      "chat_template": {
+        "later_system": "native"
+      },
+      "frontend": {
+        "preparation_capacity": 4,
+        "active": 0,
+        "waiting": 0
+      },
+      "grammar_cache": {
+        "enabled": false
+      },
+      "response_store": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 67108864,
+        "evictions": 0,
+        "hits": 0,
+        "misses": 0
+      },
+      "image_cache": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 268435456,
+        "request_bytes": 0,
+        "request_budget_bytes": 268435456
+      },
+      "tokenizer_cache": {
+        "enabled": false,
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 8388608,
+        "capacity": 4,
+        "hits": 0,
+        "reused_tokens": 0
+      },
+      "latency": {
+        "http_request": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 1,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.018766958004562184
+        },
+        "upload": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.00012583300122059882
+        },
+        "preparation_queue": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 8.45699105411768e-06
+        },
+        "preparation": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.001018875016598031
+        },
+        "template": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "tokenization": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "grammar": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "images": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "native_queue": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "http_ttft": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "output_interval": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        }
+      },
+      "instance": {
+        "id": "dd7e7a89d46a9fad5a6baf07",
+        "pid": 62792,
+        "model": "ggml-org/Julia-1-GGUF:Q8_0",
+        "host": "127.0.0.1",
+        "port": 18210,
+        "started_at": 1792043052.457054
+      },
+      "http": {
+        "requests": {
+          "active": 0,
+          "capacity": 1
+        },
+        "request_body_bytes": {
+          "active": 0,
+          "capacity": 536870912
+        },
+        "max_request_bytes": 134217728,
+        "token_counts": {
+          "active": 0,
+          "capacity": 1
+        },
+        "connections": {
+          "active": 1,
+          "capacity": 65
+        }
+      }
+    },
+    "passed": true,
+    "exit": 0
+  },
+  "Laya": {
+    "command": [
+      "sh",
+      "layasplash.sh",
+      "--port",
+      "18210"
+    ],
+    "answers": [
+      {
+        "model": "ggml-org/Laya-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.03166422726410005,
+              "billing": 0.9683357727358999
+            },
+            "confidence": 0.9366715454717998
+          }
+        },
+        "usage": {
+          "input_tokens": 41,
+          "output_tokens": 0
+        }
+      },
+      {
+        "model": "ggml-org/Laya-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.03166422726410005,
+              "billing": 0.9683357727358999
+            },
+            "confidence": 0.9366715454717998
+          }
+        },
+        "usage": {
+          "input_tokens": 41,
+          "output_tokens": 0
+        }
+      }
+    ],
+    "status": {
+      "schema_version": 6,
+      "healthy": true,
+      "ready": true,
+      "active_requests": 0,
+      "model_kind": "modern-bert",
+      "weights": {
+        "release_supported": false,
+        "released": false,
+        "restoring": false
+      },
+      "memory": {
+        "loaded_weight_bytes": 457365508,
+        "quantized_weight_bytes": 456998912,
+        "auxiliary_weight_bytes": 366596,
+        "fp16_weight_cache_bytes": 0,
+        "workspace_bytes": 9120080,
+        "kv_bytes": 0,
+        "state_bytes": 0,
+        "allocated_bytes": 466485588,
+        "peak_allocated_bytes": 466485588,
+        "max_memory_bytes": 4294967296
+      },
+      "telemetry": {
+        "completed_requests": 2,
+        "submission_batches": 2,
+        "maximum_submission_batch": 1,
+        "total_prefill_gpu_seconds": 0.016414
+      },
+      "features": {
+        "drafter": "none",
+        "ane": "off",
+        "compact_draft_head": "off",
+        "fast_topk": "off",
+        "prompt_lookup": "off",
+        "encoder_option_queries": true,
+        "encoder_submit_batch_limit": 4,
+        "causal_prefix_cache": false
+      },
+      "ane_ffn": {
+        "state": "off",
+        "share": 0,
+        "minimum_rows": 0,
+        "reason": "GPU encoder"
+      },
+      "identity": {
+        "kv": {
+          "format": "none"
+        },
+        "cache": {
+          "build_id": "src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704"
+        }
+      },
+      "memory_governor": {
+        "limit_bytes": 4294967296
+      },
+      "warmup": {
+        "detail": "typed encoder full/selected-head numerical check"
+      },
+      "startup_features": {
+        "drafter": "none",
+        "draft_layers": 0,
+        "draft_block_size": 0,
+        "draft_tokens": 0,
+        "prefill_token_budget": 2048,
+        "ffn_cache_bytes": 0,
+        "optional": {
+          "prompt_lookup": false,
+          "fast_topk": false,
+          "compact_draft_head": false,
+          "compact_capacity": 0,
+          "compact_validation_maximum_error": 0,
+          "compact_coverage_fallbacks": 0,
+          "compact_request_fallbacks": 0
+        }
+      },
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 1,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "vision": false,
+      "decision_model": {
+        "type": "laya",
+        "architecture": "modern-bert",
+        "head_size": 1,
+        "generation": false,
+        "readout": "typed option-marker scores",
+        "max_head_tokens": 192,
+        "temperatures": {
+          "choice": 1.6369030475616455,
+          "choice.11": 0.10058280825614929,
+          "choice.2": 1.9063563346862793,
+          "choice.3_5": 1.7601518630981445,
+          "choice.6_10": 1.0000158548355103,
+          "noul": 1.983399510383606,
+          "noul.2": 1.983399510383606,
+          "score": 1.2514300346374512,
+          "score.3_5": 1.2514300346374512
+        }
+      },
+      "input_modalities": [
+        "text"
+      ],
+      "chat_template": {
+        "later_system": "native"
+      },
+      "frontend": {
+        "preparation_capacity": 4,
+        "active": 0,
+        "waiting": 0
+      },
+      "grammar_cache": {
+        "enabled": false
+      },
+      "response_store": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 67108864,
+        "evictions": 0,
+        "hits": 0,
+        "misses": 0
+      },
+      "image_cache": {
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 268435456,
+        "request_bytes": 0,
+        "request_budget_bytes": 268435456
+      },
+      "tokenizer_cache": {
+        "enabled": false,
+        "entries": 0,
+        "bytes": 0,
+        "budget_bytes": 8388608,
+        "capacity": 4,
+        "hits": 0,
+        "reused_tokens": 0
+      },
+      "latency": {
+        "http_request": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 1,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.019752708001760766
+        },
+        "upload": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 5.7375000324100256e-05
+        },
+        "preparation_queue": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 5.0000089686363935e-06
+        },
+        "preparation": {
+          "buckets": {
+            "0.001": 2,
+            "0.005": 2,
+            "0.01": 2,
+            "0.025": 2,
+            "0.05": 2,
+            "0.1": 2,
+            "0.25": 2,
+            "0.5": 2,
+            "1": 2,
+            "2.5": 2,
+            "5": 2,
+            "10": 2,
+            "30": 2,
+            "60": 2,
+            "120": 2,
+            "300": 2,
+            "900": 2,
+            "1800": 2,
+            "+Inf": 2
+          },
+          "count": 2,
+          "sum": 0.0005719579930882901
+        },
+        "template": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "tokenization": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "grammar": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "images": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "native_queue": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "http_ttft": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        },
+        "output_interval": {
+          "buckets": {
+            "0.001": 0,
+            "0.005": 0,
+            "0.01": 0,
+            "0.025": 0,
+            "0.05": 0,
+            "0.1": 0,
+            "0.25": 0,
+            "0.5": 0,
+            "1": 0,
+            "2.5": 0,
+            "5": 0,
+            "10": 0,
+            "30": 0,
+            "60": 0,
+            "120": 0,
+            "300": 0,
+            "900": 0,
+            "1800": 0,
+            "+Inf": 0
+          },
+          "count": 0,
+          "sum": 0.0
+        }
+      },
+      "instance": {
+        "id": "de1e577ca5cbc30174b4aede",
+        "pid": 62956,
+        "model": "ggml-org/Laya-GGUF:Q8_0",
+        "host": "127.0.0.1",
+        "port": 18210,
+        "started_at": 1792043056.412402
+      },
+      "http": {
+        "requests": {
+          "active": 0,
+          "capacity": 1
+        },
+        "request_body_bytes": {
+          "active": 0,
+          "capacity": 536870912
+        },
+        "max_request_bytes": 134217728,
+        "token_counts": {
+          "active": 0,
+          "capacity": 1
+        },
+        "connections": {
+          "active": 1,
+          "capacity": 65
+        }
+      }
+    },
+    "passed": true,
+    "exit": 0
+  }
+}

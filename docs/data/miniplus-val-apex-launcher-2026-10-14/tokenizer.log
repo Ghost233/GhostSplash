@@ -1,0 +1,2 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+{"vocabulary": 248320, "eos_token_id": 248046, "iphone_tokens": [43252], "chat_template": "patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens", "inference_run": false}

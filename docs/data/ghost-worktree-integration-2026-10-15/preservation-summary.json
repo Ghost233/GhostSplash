@@ -1,0 +1,141 @@
+{
+  "created_at": "2026-10-15T13:39:21+0800",
+  "root": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration",
+  "copies": [
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/splash"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/sanitizers",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/sanitizers"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/merge-upstream-20261015-check.log",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/merge-upstream-20261015-check.log"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/.DS_Store",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/.DS_Store"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/engine-tests",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/engine-tests"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/metal",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/metal"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-gguf-cleanup-20261015-build.log",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/upstream-gguf-cleanup-20261015-build.log"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/merge-upstream-20261015-gguf-moe-progress.sample.txt",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/merge-upstream-20261015-gguf-moe-progress.sample.txt"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/merge-upstream-20261015-metal-compiler.sample.txt",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/merge-upstream-20261015-metal-compiler.sample.txt"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/merge-upstream-20261015-gguf-moe.sample.txt",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/merge-upstream-20261015-gguf-moe.sample.txt"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-gguf-cleanup-20261015-projection.log",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/upstream-gguf-cleanup-20261015-projection.log"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/splash.metallib",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/splash.metallib"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/splash.metallib.config",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/splash.metallib.config"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/splash.config",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/splash.config"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-gguf-cleanup-20261015-preparation.log",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/upstream-gguf-cleanup-20261015-preparation.log"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/launcher-audit.json",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/launcher-audit.json"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/launcher-validation-summary.json",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/launcher-validation-summary.json"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/engine",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/engine"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/tokenizer-overrides",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/tokenizer-overrides"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/validation",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/validation"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/build/merge-validation",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/build/merge-validation"
+    },
+    {
+      "source": "/Users/ghost233/Ghost233Code/GhostSplash/install/models-local",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/ghost-before-integration/models-local"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/build",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/build"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/install/models-local",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/install/models-local"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/.venv",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/.venv"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/dev/tests/tools/test_qwen4b_baseline.py",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/untracked/dev/tests/tools/test_qwen4b_baseline.py"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/dev/tools/qwen4b_baseline.py",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/untracked/dev/tools/qwen4b_baseline.py"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/qwen4b-baseline.sh",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen35-4b-optimization/untracked/qwen4b-baseline.sh"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen4b-quantized-ffn/build"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen4b-quantized-ffn/install/models-local"
+    },
+    {
+      "source": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv",
+      "destination": "/Users/ghost233/Ghost233Code/GhostSplash/build/worktree-preserved/20261015-ghost-integration/qwen4b-quantized-ffn/.venv"
+    }
+  ],
+  "untracked": {
+    "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/dev/tests/tools/test_qwen4b_baseline.py": "4646700f6a8f18c3187205ba6ca0ca38cd482e0fa7e92e9e5cb2548683af00b3",
+    "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/dev/tools/qwen4b_baseline.py": "595b7800a61a811c08016a6146ba9576f1a79a3ccb3dd1919d1343c5e4220985",
+    "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash/qwen4b-baseline.sh": "ad76533a806d113be7d22012d9fcb5be59ef223fd14a2260101ff456002ac963"
+  },
+  "source_heads": {
+    "qwen35-4b-optimization": "04a95e8c05d6674eacfc20a2a06bb05d1f6f0ce2",
+    "qwen4b-quantized-ffn": "b20accfc5df6f72ed03425f8c388f24f092703ef"
+  },
+  "verified_regular_files": 59843,
+  "verified_bytes": 16416252446
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "test": "dev.tests.install.test_clients.InstalledCodexTests.test_config_overrides_keep_requests_on_the_local_provider",
+    "reason": "set SPLASH_CODEX_BINARY for CLI routing test"
+  },
+  {
+    "test": "dev.tests.install.test_clients.InstalledCodexTests.test_truncated_response_has_a_bounded_client_outcome",
+    "reason": "set SPLASH_CODEX_BINARY for CLI routing test"
+  },
+  {
+    "test": "dev.tests.install.test_clients.InstalledOpenCodeTests.test_private_server_configuration_is_isolated_from_the_existing_service",
+    "reason": "set SPLASH_OPENCODE_BINARY for private-server configuration test"
+  },
+  {
+    "test": "dev.tests.install.test_clients.InstalledPiTests.test_text_tools_and_session_resume_against_splash_http",
+    "reason": "set SPLASH_PI_BINARY for Pi HTTP test"
+  }
+]

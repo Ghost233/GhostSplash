@@ -84,9 +84,12 @@ struct QwenLaneMetadata final {
 
 class QwenStateStorage;
 
-// One GDN cell plus one context window: the buffers a cached state occupies.
+// One GDN cell and the selected draft cache representation.
 struct QwenCachedBuffers final {
   std::shared_ptr<QwenGdnCell> gdn;
+  // Standard DFlash caches its complete per-layer rings; DFlash2 caches
+  // the compressed context window from which its rings are rebuilt.
+  std::shared_ptr<DFlashDraftRing> draft;
   std::shared_ptr<DFlashContextWindow> window;
 };
 
@@ -104,8 +107,9 @@ struct QwenBufferPool final {
   void give(QwenCachedBuffers buffers) {
     if (!open)
       return;
-    cells.push_back(std::move(buffers.gdn));
-    windows.push_back(std::move(buffers.window));
+    if (buffers.gdn) cells.push_back(std::move(buffers.gdn));
+    if (buffers.draft) rings.push_back(std::move(buffers.draft));
+    if (buffers.window) windows.push_back(std::move(buffers.window));
   }
 };
 
@@ -318,6 +322,9 @@ public:
 
   [[nodiscard]] uint64_t actualAllocatedBytes() const noexcept {
     return allocations_->bytes.load(std::memory_order_relaxed);
+  }
+  [[nodiscard]] uint64_t draftAllocatedBytes() const noexcept {
+    return allocations_->draftBytes.load(std::memory_order_relaxed);
   }
   // The buffer a state's write to the disk tier stages through; zero without
   // a tier.

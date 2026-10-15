@@ -1,0 +1,235 @@
+{
+  "base_head": "1fe29260f8a5c08115b2a402e1f9bf740bfb6a4a",
+  "branch": "codex/qwen4b-quantized-ffn",
+  "uncommitted": true,
+  "native_identity": {
+    "build_id": "src-2c7fa8d7b59e0fd7c030eb51fb7944afe4f298469041c6532ce8b756d26166ca",
+    "schema_version": 1,
+    "source_sha256": "2c7fa8d7b59e0fd7c030eb51fb7944afe4f298469041c6532ce8b756d26166ca"
+  },
+  "source_sha256": {
+    "dev/tests/engine/compact_projection_test.mm": "babb67b1d1674acd8995e4cc57fcadab54c4460d00cae29c167a0556563d4d90",
+    "dev/tests/engine/gguf_single_token_test.mm": "778cbed0e66858f4c5ddd1c4f7c3c39b2e066deddccc1ecc6db3d65d89b48e0b",
+    "dev/tests/engine/model_configuration_test.cpp": "60ce2eb13e11b04c73460bbcd489ed82678caf1eae0b34e87a6022cd283fc449",
+    "dev/tests/engine/model_execution_plan_test.cpp": "4dda882878a0f202b6e71ed7411522f2dd203a469d16701068e0661371d93e12",
+    "dev/tests/engine/protocol_test.cpp": "59da69180f1d24664a9d3e00fbb617e89baa67a8a3309ed93a16db35ce13d6b1",
+    "dev/tests/engine/runtime_resources_test.mm": "52e243a124c1b365323b6fade44b3ec00d6dafc40f26e77959f54af942b86921",
+    "dev/tests/install/test_kev_metadata.py": "f47471bd8232f28b88da4b9affee09fec08a41342d7ba303da7943ed91636c58",
+    "dev/tests/install/test_local_launchers.py": "17602227d2e7c39d969da6dd2d6bee0d47e218e6a80a133ecbc79c7871be9458",
+    "dev/tests/server/test_kev.py": "6bd08f03ade3bf5f32ec286e6134d28aeb5bf1f4e92f6bfba3c716a6c92b0ae3",
+    "dev/tests/server/test_protocol_python.py": "329bcb39ef6b97f661e43c69f67b0dc9eeaa7f015f0f695c64d3ec089f131fe3",
+    "dev/tools/package.py": "e826d3650ae56227ebdf65eb83cc2d8134fd485ee5e1d403406bc5ae4e7a4cdb",
+    "install/assembly.py": "071b3f93873c2f50cfa7bd1998a42838776d084f25b96de34b048eca53806878",
+    "install/families.py": "02fe67bea27b7f4481501b3d5282cc6db88446945ca593e49d86388b00ee5142",
+    "install/gguf.py": "72766feb4f4785f3cf358e7d40a3a3445d15b733ec572c69c35177a6b4f15542",
+    "kev4bsplash.sh": "83954bf61bb34a2f24f34eb85eb1cc78f8ce5aa5f11602ecda5dc7f17458a745",
+    "runtime/engine/Bootstrap.mm": "dc5b6bc973e9eb64f4414d3c6d70a2201c8fb2e190e5090a51e19ff0b28e8e41",
+    "runtime/engine/Engine.cpp": "e01ffcfa7f0cd6e72fb91076a13793b7c3b32453cceaac96c25104754ce6ec75",
+    "runtime/engine/Engine.hpp": "10c07ff697b7d4490e85de3e2b81715e436c9c5a64651ae492c6f39874dc4bf1",
+    "runtime/engine/Protocol.cpp": "ad661c55bec76cfe7eaddbe68f320a06c82ca4170197985e45eef98d3866858f",
+    "runtime/engine/RuntimeResources.mm": "71c294fc178bf212e6a3f49d8d8a8cd70f61d53b43ab5a5eabf1bb56bee8e674",
+    "runtime/model/CompactDraftHead.cpp": "00d0ec3a4cbb3bddec4f422b4757dfe5512d342002f79547e697857a68bf309b",
+    "runtime/model/CompactDraftHead.hpp": "79dffdf8af56c8a0dfeefa1e3c1cd3e479366552af08223f35cbae1e247cb281",
+    "runtime/model/GgufImage.cpp": "21bc3f77e938085e53f76b8ddfe9e45b2d72684b927f6209db20c15ca0562563",
+    "runtime/model/KevHead.hpp": "70b414e155dac078d08bb5d45c3527a8f10eb8a07cd6aee5921aa6971ef6eb8a",
+    "runtime/model/Model.hpp": "83eb5712de24b83d800a45cb9db1ad95c7f72bb51f4d64bdafd0139237561e40",
+    "runtime/model/ModelDescriptor.hpp": "60dd3b05b471f2baa690aef98e7e50355f2fc78d27966e092ff3becdfccbcec3",
+    "runtime/model/ModelDescriptor.mm": "954ac7b1f1033cbc3d3c39f9619125f9e2d8a2976c437e7cfc7d84d848b11b68",
+    "runtime/model/ModelFactory.hpp": "a74bae8e804ec3d4ae2f3780c02913c4700f2d6b0af61832df3ef50d09fac296",
+    "runtime/model/QwenHybridLayout.hpp": "cb0ef26a287291c594b18c0cabc5da1cff50af81b3546ec881837ad07e46ffa4",
+    "runtime/model/QwenTarget.hpp": "b144408895ca34346a5b6aa0652efb809365b886d0403b2c9ed097b7a62b931a",
+    "runtime/model/QwenTargetLoader.hpp": "c2d634c3a019b8fec06f687f74851bcb73c1ad4f19fe85f0422071289432d6a4",
+    "runtime/model/Runtime.cpp": "aed2d28f007b0feec333bfa3809830ec23bef3425fccf82a3f940e1fef456152",
+    "server/frontend.py": "9ae6ab05f44eacd83e0102d150aa89cbf8862a40071e574e299d873cfffd739f",
+    "server/kev.py": "a99541af5c9fdbb15e06855ba0c081d1caeb9d50f4925f96d147e4145ddc7da0",
+    "server/protocol.py": "5d0578b5f1800a3016b8fd8d5670499596435911ac1f59a56525f4aeb560d908",
+    "server/server.py": "4747f0056810509000d3be166e5ab60a157ce9f860ecf176232c6a89cf621a0f"
+  },
+  "checks": [
+    {
+      "name": "native",
+      "command": "make -j4 BUILD=build/kev-integration-20261015 BUILD_ID_PYTHON=.venv/bin/python check-native-cpu check-native-build",
+      "exit_code": 0,
+      "log": "native-final.log"
+    },
+    {
+      "name": "metal",
+      "command": "make BUILD=build/kev-integration-20261015 BUILD_ID_PYTHON=.venv/bin/python check-native-metal",
+      "exit_code": 0,
+      "log": "metal-final.log"
+    },
+    {
+      "name": "python",
+      "command": ".venv/bin/python -B -m unittest discover -s dev/tests -t .",
+      "exit_code": 0,
+      "log": "python-final.log"
+    },
+    {
+      "name": "installer",
+      "command": ".venv/bin/python -B -m unittest discover -s dev/tests/install -t .",
+      "exit_code": 0,
+      "log": "install-final.log"
+    },
+    {
+      "name": "scoring",
+      "command": ".venv/bin/python -B -m unittest dev.tests.server.test_kev dev.tests.server.test_judgments",
+      "exit_code": 0,
+      "log": "confidence-green.log"
+    },
+    {
+      "name": "head_numerical",
+      "command": "MTL_SHADER_VALIDATION=1 build/kev-integration-20261015/engine-tests/gguf-single-token build/kev-integration-20261015/splash.metallib /Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf",
+      "exit_code": 0,
+      "log": "real-head-numerical.log"
+    },
+    {
+      "name": "sanitizers",
+      "command": "make BUILD=build/kev-integration-20261015 BUILD_ID_PYTHON=.venv/bin/python test-sanitizers",
+      "exit_code": 0,
+      "log": "sanitizers.log"
+    },
+    {
+      "name": "source",
+      "command": "make BUILD=build/kev-integration-20261015 BUILD_ID_PYTHON=.venv/bin/python check-source verify-build-identity",
+      "exit_code": 0,
+      "log": "source-final.log"
+    },
+    {
+      "name": "real_model",
+      "command": ".venv/bin/python -u /private/tmp/kev-correctness-final.py",
+      "exit_code": 0,
+      "log": "correctness-final-progress.log"
+    }
+  ],
+  "python_tests": 1343,
+  "python_skips": 4,
+  "installer_tests": 237,
+  "head_comparisons": 4096,
+  "head_max_absolute_error": 0.000248704,
+  "head_error_bound": "existing unrounded FP64 projection bounds, unchanged",
+  "cases_per_kv": 9,
+  "kv_formats": [
+    "bf16",
+    "q4h"
+  ],
+  "context_tokens": 8192,
+  "reference_context_extra_position": true,
+  "ane_real_model_tests": false,
+  "performance_tests": false,
+  "test_engines_released": true,
+  "released_ports": [
+    18112,
+    18113
+  ],
+  "original_weights_and_builds_preserved": true,
+  "cross_engine_probability_differences": [
+    {
+      "mode": "splash_bf16",
+      "case": "billing",
+      "max_probability_difference": 0.006641041092658506,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "sentiment",
+      "max_probability_difference": 0.00012375044922145013,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "noul",
+      "max_probability_difference": 5.781424397166557e-05,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "rating",
+      "max_probability_difference": 0.0004121619792872844,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "multi_question",
+      "max_probability_difference": 0.0013715958072346712,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "escaped_markers",
+      "max_probability_difference": 0.0005094031096022356,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "cross_chunk",
+      "max_probability_difference": 0.0007971703447229722,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "many_options",
+      "max_probability_difference": 0.0014072540630213626,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_bf16",
+      "case": "exact_context_8192",
+      "max_probability_difference": 0.0011984951424148793,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "billing",
+      "max_probability_difference": 0.0070587072494476995,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "sentiment",
+      "max_probability_difference": 0.0004993476593749108,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "noul",
+      "max_probability_difference": 0.00023934854153662144,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "rating",
+      "max_probability_difference": 0.016226869264222343,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "multi_question",
+      "max_probability_difference": 0.0049010565999707545,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "escaped_markers",
+      "max_probability_difference": 0.011280950219923813,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "cross_chunk",
+      "max_probability_difference": 0.0026106676716858394,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "many_options",
+      "max_probability_difference": 0.010132076759990921,
+      "same_choices": true
+    },
+    {
+      "mode": "splash_q4h",
+      "case": "exact_context_8192",
+      "max_probability_difference": 0.0029171305492062885,
+      "same_choices": true
+    }
+  ]
+}

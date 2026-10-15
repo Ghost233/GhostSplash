@@ -306,6 +306,12 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
                    "absolute and remaining deadlines must be non-zero");
   }
   const bool scoring = !request.scoreTokens.empty();
+  const bool decision = request.flags & RequestDecisionScoring;
+  const uint32_t encoderType = request.flags & (RequestDecisionScoreType | RequestDecisionNoulType);
+  if (encoderType && (!decision || encoderType == (RequestDecisionScoreType | RequestDecisionNoulType)))
+    return invalid(IssueCode::InvalidEnumValue, "encoder question-type flags require a single decision type");
+  if (decision && !scoring)
+    return invalid(IssueCode::InvalidCount, "decision requests need option positions");
   if (scoring) {
     if (request.logicalMaxOutputTokens != 0) {
       return invalid(IssueCode::InvalidCount,
@@ -344,6 +350,9 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
       return invalid(IssueCode::InvalidCount,
                      "score option count must be in [2, 255]");
     }
+    if (decision && (request.scoreTokens.back() >= request.promptTokens.size() - 1 ||
+                     !std::is_sorted(request.scoreTokens.begin(), request.scoreTokens.end())))
+      return invalid(IssueCode::InvalidCount, "decision positions must be ordered before the query");
     std::vector<uint32_t> distinct(request.scoreTokens.begin(),
                                    request.scoreTokens.end());
     std::sort(distinct.begin(), distinct.end());

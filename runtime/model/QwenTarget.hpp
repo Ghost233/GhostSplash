@@ -26,6 +26,9 @@ class AneFfn;
 
 namespace splash::model {
 
+struct Qwen3_5_4BLayout;
+struct Qwen3_5_0_8BLayout;
+struct Qwen3_5_4BDFlashLayout;
 struct Qwen3_8Layout;
 struct Qwen3_8LayerWeights;
 struct Qwen3_6MoeLayout;
@@ -59,9 +62,12 @@ using QwenMixerWeights = std::variant<QwenGdnWeights, QwenAttentionWeights>;
 struct QwenTargetWeightsBase {
   ops::NormWeights finalNorm;
   ops::Projection logitsProjection;
+  metal::MetalBuffer decisionBias;
   ops::EmbeddingWeights tokenEmbedding;
   std::vector<WeightFileRecord> files;
   uint64_t actualAllocatedBytes = 0;
+  // Subset of actualAllocatedBytes: derived resident FFN prefill weights.
+  uint64_t ffnCacheAllocatedBytes = 0;
   std::string manifestFingerprintSha256;
 };
 
@@ -130,7 +136,7 @@ struct QwenTargetGeometry final : QwenTargetDimensions {
         return shape.outputSize && shape.inputSize;
       });
     };
-    return captureLayerCount && captureLayerCount <= maximumCaptureLayers &&
+    return captureLayerCount <= maximumCaptureLayers &&
            stateLayout.layers + kvLayout.attentionLayers == layers &&
            gdnShape().valid() &&
            kvLayout.kvHeads == attentionKvHeads &&
@@ -283,6 +289,9 @@ public:
   void addHeadBatch(metal::CommandGraph &graph, metal::MetalBuffer hidden,
                     metal::MetalBuffer finalHidden, metal::MetalBuffer logits,
                     uint32_t lanes, ops::LinearScratch scratch) const;
+  // Final norm and vocabulary projection of an ordinary single token.
+  void addHeadOne(metal::CommandGraph &graph, metal::MetalBuffer hidden,
+                  metal::MetalBuffer finalHidden, metal::MetalBuffer logits) const;
   // The verify input tokens addEmbedding then gathers: each lane's anchor,
   // row 0 of its draft input, and the draft's proposals.
   void addVerifyInput(metal::CommandGraph &graph, metal::MetalBuffer draftInput,
@@ -294,7 +303,10 @@ public:
 private:
   using WeightView =
       std::variant<const QwenTargetWeights<Qwen3_8Layout, Qwen3_8LayerWeights> *,
-                   const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *>;
+                   const QwenTargetWeights<Qwen3_6MoeLayout, Qwen3_6MoeLayerWeights> *,
+                   const QwenTargetWeights<Qwen3_5_4BLayout, Qwen3_8LayerWeights> *,
+                   const QwenTargetWeights<Qwen3_5_4BDFlashLayout, Qwen3_8LayerWeights> *,
+                   const QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights> *>;
   struct PrefillStep;
   struct VerifyStep;
 

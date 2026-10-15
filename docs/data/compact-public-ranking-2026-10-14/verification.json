@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "scope": "compact ranking management, defaults, structural/numerical correctness; no performance measurements",
+  "git_head": "3f43aa2460f59330e658fdc89945d72ce92d538c",
+  "compiled_source_sha256": "dbfe66e2053328c0a6c51ca42422918120671d06ee2447e6204187639e88bd47",
+  "binary_sha256": "90e427fa260f41bb46a4bc7ada575dbe184e44abec8422b882239737eade4d9f",
+  "source_sha256": {
+    "runtime/model/CompactDraftHead.cpp": "20d695fef83fb09051044678fa543c1fcb8e9c74d7a92e557c3b6896b4d8f936",
+    "runtime/model/CompactDraftHead.hpp": "99126ef7bde7f64afae6be4329ce676cd80b423f0a208391a2c142e84f57d9e3",
+    "runtime/model/OptionalFeatures.hpp": "5ca451bcf6cee1de1eaf36be58b8d7ef937a670b68c72ec7cb16a513650180ec",
+    "runtime/model/Runtime.cpp": "cfb178e85a39d9dd1228c779682d5e1c8f4da4da577eee8159d9a049876343ff",
+    "runtime/engine/RuntimeResources.mm": "442d3a9e104c58ebc3a257a5d58d9e21334ad22b8146d752e6f8f9f6e889621f",
+    "runtime/ops/CompactProjection.cpp": "7bdf6b8f495046f579bce37b3fca00618cb47d53ea0ea036fab651029d49e54f",
+    "runtime/ops/CompactProjection.hpp": "e3cf77f345b7a489f0547b4b08d17e4c41691678158cffdef3ade2f9dc2ef2bf",
+    "server/serve_options.py": "8b363e711e071120e1faf81a0ff51ebd0fa08a4b95b5127f6deba235d7c67aea",
+    "dev/tools/compact_draft_ranking.py": "2ebc7ae7cae2f83d4b67622c292fc8312829165203aa2a61600bab911a6f2458",
+    "dev/tests/engine/compact_projection_test.mm": "b4510a1c30a38895980d2bb60d5abf3cf389268e0224ed9193ce509477386dc6",
+    "dev/tests/engine/optional_features_test.cpp": "931a4be81c4a88e9a9a30d65e14fa8a440e189fdf130307c30da1b6322c59871",
+    "dev/tests/server/test_serve_options.py": "29bda670102cf757feef4f5edb83d93e8ce011cbe27c3cf06ec5b48b9d0bf44a",
+    "dev/tests/tools/test_compact_draft_ranking.py": "561db7bd68dc666fe652c6d80136edf46c6b538b2d1d16951f1ab5f2a026d802",
+    "dev/tests/install/test_local_launchers.py": "55e1f6a3dbae5cac052b49a1e2b90f08c7c668106bfa1f6057af1cc202ca6eaf",
+    "dev/benchmarks/qwen4b_matrix_native.mm": "61fe15dd97417459d238cfa8dc9420d376281dfd4fb1b5aa03aff01103f6e949",
+    "dev/benchmarks/qwen_optional_features.py": "1bd6cead421700130163d55a2deeaf160ca4b4cf0e5ea059485445a49e097193",
+    "dev/benchmarks/swift27b_kv.py": "7ccac5a3d09f441be8696aabc371e92917633fd6c9b56209a9396ea966f26062",
+    "saluki27biq2mixsplash.sh": "dcf015db62cec2445164d1cdccaac80946731b938977f915d65bef08ba07fe33",
+    "swift1527biq3ssplash.sh": "d633ded9275f6a5900f180d059b3332b9f5abc107eed5338177589050539b2b3",
+    "qwen38miniplusv3splash.sh": "b278a909c4a811a7fdef132bbf075976a2d978ab79c44a8c46643ebdd2234a4f"
+  },
+  "public_ranking": {
+    "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/compact-rankings/qwen35-248320-dev-seed.splash",
+    "format_version": 2,
+    "bytes": 993292,
+    "sha256": "3acde3857a833bb2a26373a15b0ce73dcc62e1d27731c5f1ce3655344b386111",
+    "vocabulary": 248320,
+    "model_fingerprint_binding": false
+  },
+  "legacy_ranking": {
+    "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/docs/data/saluki27b-compact-seed-2026-10-14/head-ranked.splash",
+    "preserved": true,
+    "sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba",
+    "token_order_unchanged": true
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest dev.tests.tools.test_compact_draft_ranking",
+      "tests": 9,
+      "exit_code": 0,
+      "log": "ranking-tool-tests.log"
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s dev/tests/server -t . -p 'test_*.py'",
+      "tests": 853,
+      "exit_code": 0,
+      "log": "server-tests.log"
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s dev/tests/install -t . -p 'test_*.py'",
+      "tests": 232,
+      "skipped": 4,
+      "exit_code": 0,
+      "log": "install-tests.log"
+    },
+    {
+      "command": "make -j4 BUILD=build/compact-public-20261014 DRAFT_BLOCK_SIZE=8 check-source check-native-cpu",
+      "exit_code": 0,
+      "log": "native-cpu.log"
+    },
+    {
+      "command": "MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 build/compact-public-20261014/engine-tests/compact-projection build/compact-public-20261014/engine-tests/production-and-test.metallib",
+      "exit_code": 0,
+      "log": "compact-projection.log"
+    },
+    {
+      "command": "MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 build/compact-public-20261014/engine-tests/draft-block-acceptance build/compact-public-20261014/splash.metallib",
+      "exit_code": 0,
+      "log": "draft-acceptance.log"
+    },
+    {
+      "command": "MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 build/compact-public-20261014/engine-tests/dflash-batch-control build/compact-public-20261014/splash.metallib",
+      "exit_code": 0,
+      "log": "dflash2-state.log"
+    },
+    {
+      "command": "MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 build/compact-public-20261014/engine-tests/dflash-standard build/compact-public-20261014/splash.metallib",
+      "exit_code": 0,
+      "log": "standard-dflash.log"
+    },
+    {
+      "command": "MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 build/compact-public-20261014/engine-tests/target-sampling build/compact-public-20261014/splash.metallib --correctness-only",
+      "exit_code": 0,
+      "log": "target-sampling.log"
+    },
+    {
+      "command": "real-head-check METALLIB MINIPLUS_MODEL_ROOT compact-rankings/qwen35-248320-dev-seed.splash",
+      "exit_code": 0,
+      "result": "miniplus-head.json",
+      "source": "real-head-check.mm"
+    },
+    {
+      "command": "make BUILD=build/compact-public-20261014 DRAFT_BLOCK_SIZE=8 verify-build-identity",
+      "exit_code": 0,
+      "log": "build-identity-check.log"
+    },
+    {
+      "command": "compileall; Ruff check/format; sh -n for Saluki, Swift, MiniPlus launchers",
+      "exit_code": 0
+    }
+  ],
+  "saluki_actual_head": {
+    "status": "cancelled_by_user",
+    "reason": "user deleted the GGUF and explicitly asked not to test it",
+    "initial_attempt_exit_code": 1,
+    "log": "saluki-missing-weight.log"
+  },
+  "shared_ranking_heads": {
+    "synthetic_iq3_s_and_q6_k": "same path, independently passed numerical validation",
+    "miniplus_real": "passed",
+    "saluki_real": "not tested per user instruction"
+  },
+  "actual_defaults": {
+    "native_compact": "off",
+    "saluki_compact": "off",
+    "swift_compact": "off",
+    "miniplus_compact": "off",
+    "ranking_default": null,
+    "rank_path_alone_enables": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "command": [
+    "xcrun",
+    "-sdk",
+    "macosx",
+    "clang++",
+    "-std=c++20",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Iruntime",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/engine/ane_ffn_program_grid_test.cpp",
+    "-o",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-ane4096-fix-v1/grid-regression"
+  ],
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "FAIL expanded ANE grid has 29 functions\n"
+}

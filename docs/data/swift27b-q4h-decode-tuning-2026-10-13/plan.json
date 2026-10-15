@@ -1,0 +1,219 @@
+{
+  "model_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/6442017f6a9ee7af6ca2d67401b3a0d705d667a0ca7766e6922119f519bc9511",
+  "model_id": "ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S-mtp",
+  "base_parameters": {
+    "ane_requested": true,
+    "ane_share": 0.5,
+    "ane_minimum_rows": 512,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 16,
+    "concurrency": 1,
+    "input_tokens": 8192,
+    "output_tokens": 4096,
+    "context_tokens": 131072,
+    "memory_budget_bytes": 42949672960,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true,
+    "kv_format": "q4h"
+  },
+  "weights": {
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.8-27B-DFlash2/snapshots/015e795645c74b1a0eeef3b570031fb62e769bc5/model.safetensors",
+      "sha256": "67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c"
+    },
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/ukisai/Swift-1.5-Qwen3.8-27B-GSQ-RCO-GGUF/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+      "sha256": "9aecf1cd41b2cb2f32a74e0d889e33855ebef43b26f43b43feb5720239e677e5"
+    }
+  },
+  "runtime_code_sha256": "f2ecbaa89381b7415a89e604cbe23362fb72db9dac90de900db1ccc890ce0b01",
+  "variants": {
+    "2048": {
+      "command": [
+        "make",
+        "-j4",
+        "BUILD=build",
+        "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+        "build/engine/libsplash.a",
+        "build/splash.metallib",
+        "build/engine/BuildIdentity.hpp"
+      ],
+      "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048",
+      "exit_code": 0,
+      "runtime_code_sha256": "6139ba1f813572e39306de64babf9f9972cfc6df94427c3d0c3a531e167c385f",
+      "compiled_source_sha256": "583b74c6c1cd1024e66f4b9d5314803185de8e45cf147cac3eb2bf2e60b85881",
+      "library_sha256": "661554381955867388ee9472568cb75a00924675f03cfa97e5e1b99c92f63b6a",
+      "metallib_sha256": "53028cf47d1547157b10dbc0e4f421f9332f1837e78cdc8e866484a94cf3838a",
+      "budget": 2048,
+      "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/engine-tests/production-and-test.metallib",
+      "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/swift27b-kv-native",
+      "production_metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/splash.metallib",
+      "production_metallib_sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917"
+    }
+  },
+  "configurations": {
+    "A": {
+      "ane": true,
+      "lookup": true,
+      "compact": true,
+      "budget": 2048,
+      "draft": true,
+      "minimum": 2,
+      "capacity": 98304
+    },
+    "L3": {
+      "ane": true,
+      "lookup": true,
+      "compact": true,
+      "budget": 2048,
+      "draft": true,
+      "minimum": 3,
+      "capacity": 98304
+    },
+    "L4": {
+      "ane": true,
+      "lookup": true,
+      "compact": true,
+      "budget": 2048,
+      "draft": true,
+      "minimum": 4,
+      "capacity": 98304
+    },
+    "C64": {
+      "ane": true,
+      "lookup": true,
+      "compact": true,
+      "budget": 2048,
+      "draft": true,
+      "minimum": 2,
+      "capacity": 65536
+    },
+    "C32": {
+      "ane": true,
+      "lookup": true,
+      "compact": true,
+      "budget": 2048,
+      "draft": true,
+      "minimum": 2,
+      "capacity": 32768
+    }
+  },
+  "orders": [
+    [
+      "A",
+      "L3",
+      "L4",
+      "C64",
+      "C32"
+    ],
+    [
+      "C32",
+      "C64",
+      "L4",
+      "L3",
+      "A"
+    ],
+    [
+      "L4",
+      "C64",
+      "C32",
+      "A",
+      "L3"
+    ]
+  ],
+  "planned_correctness_requests": 0,
+  "planned_numeric_requests": 0,
+  "planned_performance_requests": 15,
+  "planned": 15,
+  "rounds": 3,
+  "prior_correctness_report": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv-correctness-v1/report.json",
+  "known_b4_failure": "build/swift27b-kv16k-v1/numeric-bf16-diagnostic/evidence.json",
+  "runtime_defaults_changed": false,
+  "baseline_retained": "A2048, lookup2,compact98304",
+  "original_numeric_thresholds_preserved": true,
+  "scope": "Five decoder tuning groups;8K/4K;2048 budget;integrated validation",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-kv16k-c1-v2/SwiftPagedAttention.cpp": "2a66f627b5c2d90294f7b64a3fc451cf7c393c18146b744b3866f351b73815ed",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/engine/compact_projection_test.mm": "6c75993a63c00afc71149aebd62cfe1adb79bb570aa0d8d2cc1036c193b0b064",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/engine/libsplash.a": "661554381955867388ee9472568cb75a00924675f03cfa97e5e1b99c92f63b6a",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/splash.metallib": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/engine/BuildIdentity.hpp": "f3b9507c15aec7f3a048102f0bb3f97bc5d77f4b1f6617da2f6d921314e68a9c",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/engine/build-identity.json": "bb3b7b8ed19ca6d9e283ecf4aafac24422a3afa811294aef11a9d323a1f53545",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-8k4k-prefill-v1/golden-A.json": "42705949e709956ac12988976b7959e97041177c1a7ca535b28355386b975528",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/6442017f6a9ee7af6ca2d67401b3a0d705d667a0ca7766e6922119f519bc9511/model.json": "6442017f6a9ee7af6ca2d67401b3a0d705d667a0ca7766e6922119f519bc9511",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/engine-tests/production-and-test.metallib": "53028cf47d1547157b10dbc0e4f421f9332f1837e78cdc8e866484a94cf3838a",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/ane_ffn.air": "1ed456b81cc172a96e9443c55a56bf50f8e93a738881565f8da233dc4e455cc2",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/paged_attention_store.air": "1d983180da28e99c75a7d23bab92defc9efd8474a62862a6412cc77656b24006",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/paged_attention.air": "24de5c2e1af8a993efae46ad62e1244646d2302f603d5675a02d589a5a9663b4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/draft_context.air": "b227060a30a252329fd98cd85bc061e382b09b9a035c9ce0c4aa489038f98c14",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/gdn.air": "cf314dc857461e5b31159281a7333e9a8d153328de29efe15bcbffed12ef7d97",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/prefill/attention_qkv.air": "9b786abdcae95303e3993bf4a2f54a60c91bcb63a36ef36440ff60379762554d",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/gguf_rotation.air": "093c32ec07716cddddcdac7575cd24482daa5c39e137793ceb4279edcd97a086",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/optional_features.air": "c20560ef70d97e5d62d1fb1232c037152e4f3d407748ebcad6a0167aec728e37",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/vision.air": "336328692d152b779289e75c3c6eeddb6a7324b5633933b0816be69dabd412f2",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/gguf_linear.air": "c5f39fafc473d8099619baf8ad5c92bae24b014ec87e108458b9a4816eea1147",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/moe.air": "f4ce0bf16b39ba8895c3df905cd5f1b4b2f431fdc09fcf15c62cff4247c1f9bd",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/gguf_prefill_cache.air": "695e5625d4ea137aa4b47d779a66590b8de0b9f8391792dde372e712f7e11757",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/residency.air": "9831c385b8c48a0b95acb9a7505f963f92c25b576b9aa20761d1871ea853f437",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/gguf_repack.air": "a4ef6d416a8ea029a1616226d21cb401a061da58d90d40b4ceb4e391fe877e6d",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/ffn_prefill.air": "61c755b3868c31c43cfa64dcdfd5f35d231812a28223d4b07a0546e0a62f09d5",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/embedding.air": "0bb7d02635eac2687a5f17dbdaa6e50c71f56fcd7fe84b5fd1412190bf83482b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/rope.air": "7553ab4884578a86492c0051ec68737c94334331883c681495eff8435ebbf3e2",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/normalization.air": "a356bc93ab55c2a6c3dc4bb585c9ce6ed967af32822414471bec1b9394862e09",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/row_copy.air": "5d42133a18f0e6d3427cc72512acb00e8d30444e15cf6dc50aba9819128b5167",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/gguf_float.air": "ba4c4ef017ef3e36ac30d70dc6ace81df69743382f05409de95b2035f4a3edfb",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/shared/moe_gguf.air": "1de7b8771474cc174ff3ea94afb5274ce0b26f95e90543de1ffd446f00fe74d9",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/sampling.air": "4d194190d5b4ccf5856ee3f00d312581407dde9722335b3087aa6702bc47031c",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/gguf_single.air": "8c143361c5620ad1d86e5417885d866b959949fbe8ad92b78862cb4d0233acc4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/gdn_single.air": "a2bf1e620453d5978cbc92561aadae2bf4fbb7b23402c6e8d1fe93430579dbcc",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/paged_attention_store.air": "f83dbeaa6981160af160d2502a72b2ac19e16af699698c5ec12a3b6cb553501e",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/paged_attention.air": "97ed40e4f7fb1af636dd02747216917a307f0ced47097343cd9c342e42f930dd",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/draft.air": "95719b24fdaffcbd54ab6557077e0845be7d2bdd522d2ebee6a4487aafc007a0",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/linear_gguf_sgmatrix.air": "b76bed7fb7227299b56d94e438cfbd117c7ab32076df7720afbd564d865e240b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/gdn.air": "1fecc517fc13a5b218c60a559c71954f9219360c26691fbae23b68395f0e507b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-decode-tuning-build-v1/sources-2048/build/metal/decode/attention_qkv.air": "ae49b0ff11e383610d5993337f0c41b3c81001a391ffdfe84cb517113b5884be",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/BudgetNative.mm": "56bacb7b0baa7512cde05be477c5595f4feb9d1e5b7aafec9e3bd09f13acaf64",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/entry-check.json": "b4b1a6b7926a68a6bac9065e14527c64660ab0d779dc20ba127b7c477ca7321c",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/IntegratedCompact.mm": "5574e48291f58f8b11846ac6996ab9d385008e63baf67fb7c9e2f85bef8e2a9b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/controller.py": "e56efaef57194c008df32a5fd916ab672136bc56fa911e91fb22a3e699a583a7",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/parameter-check.json": "6193024cf83ba7c2d357e0cf65988d076bf3328dedd8e9a4197f64f550d068ce",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/native-build.json": "76d16ab26c3e36d371cb136f6aeefa8049292d4702e4478e93a834ebf10a2a34",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/inputs.json": "34a7ef887843d7423e8c29a49fb9338dc27bb73cde3569ac3eed6fb4d29ce116",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/check-library-build.json": "6b6292e443296c7523ae39de42d8f4006ac6993fb9db2c62633ec72404aa1699",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/BudgetValidator.py": "6def9fb2bf6b2dc72b58a4093e3887ac59b6bf35b6b75c7a41bc776b42b81192",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/swift27b-kv-native": "2e77f35ef92d8831cb32a3a2d5f18d4794a5bfd0efd8a6b4f0154f67bb51141c",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/IntegratedAttention.mm": "41c54a61ace04667c28873d6880882c1e82680e21518b63d33ecc88336000093",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/input-frequency-ranking.splash": "d7b066a4c28172731afef9c5b9b392d77c1c8dfe372ad686dca332309377801b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v3/finish.py": "ae2bae418de501765534fc920bbb8ccb1c3b2ac2fd8c2312fa10a771dd062584"
+  },
+  "output_policy": {
+    "selected_date": "2026-10-13",
+    "input_tokens": 8192,
+    "fixed_actual_output_tokens": 4096,
+    "ignore_eos": true,
+    "historical_32k_16k_results_not_used_as_token_golden": true,
+    "old_matrix_cancelled_by_user": true
+  },
+  "supersedes_directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-decode-tuning-v2",
+  "standalone_correctness_phase": false,
+  "integrated_checks": [
+    "Q4H CPU scalar attention oracle, bulk and tail; max_absolute_error<0.02 and cosine>0.9995",
+    "existing ANE startup numerical verification, thresholds unchanged",
+    "actual input/output lengths, facts, cold state, memory ledger and actual execution settings",
+    "first accepted performance run per configuration establishes its 8K/4K golden; next two runs compare all4096 tokens"
+  ],
+  "input_ranking_policy": "Reuse frozen original input-frequency ranking in every arm; no output-trained ranking",
+  "original_planned": 15,
+  "previous_completed": 0,
+  "prior_completed_directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-8k4k-prefill-resume-v2",
+  "baseline_golden": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-8k4k-prefill-v1/golden-A.json",
+  "ane_compile_fix": {
+    "global_prefill_budget": 2048,
+    "function_step": 128,
+    "compiled_function_count": 13
+  },
+  "metallib_note": "Unchanged production AIRs plus test-only copy kernel for integrated byte checks; actual inference dispatches use original production kernels"
+}

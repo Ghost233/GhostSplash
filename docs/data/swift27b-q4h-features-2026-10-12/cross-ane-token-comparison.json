@@ -1,0 +1,25 @@
+{
+  "compared_tokens": 16384,
+  "first_difference": {
+    "index": 39,
+    "reference": 98151,
+    "actual": 16
+  },
+  "same_numeric_path": false,
+  "cause_evidence": {
+    "prior_difference": {
+      "zero_based_index": 39,
+      "ANE_on_token": 98151,
+      "ANE_off_token": 16
+    },
+    "source_evidence": "runtime/ops/AneFfn.hpp:28 W8A8; runtime/ops/AneFfn.cpp:183 kMaximumAneError=0.10; verify:681-741",
+    "measured_startup_ffn_error_fraction_of_ane_contribution": 0.014,
+    "unchanged_numeric_bounds": {
+      "ANE_contribution_RMS": 0.1,
+      "same_path_score_relative_error": 0.001,
+      "state_partition_cosine_minimum": 0.999
+    },
+    "interpretation": "ANE changes target prefill numerics through W8A8; exact token identity is required within each numeric path, not between ANE on and off. Cross-mode first divergence remains recorded. Prior validator erroneously required exact cross-mode token identity; original failure retained.",
+    "limits": "FFN startup verifies initial two layers and all compiled ANE row shapes; not a bound on 64-layer accumulated logits or output quality."
+  }
+}

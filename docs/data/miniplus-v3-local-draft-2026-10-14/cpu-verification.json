@@ -1,0 +1,21 @@
+{
+  "source_tensors_checked": 81,
+  "sample_blocks": 243,
+  "sample_elements": 40704,
+  "bf16_bits_match_independent_cpp_reference_rne": true,
+  "max_sample_bf16_rounding_absolute_error": 0.007110595703125,
+  "native_cpu_plan": {
+    "target_images": 66,
+    "draft_images": 6,
+    "draft_tensors": 81,
+    "target_image_bytes": 14402961408,
+    "draft_image_bytes": 1266647040,
+    "widened_gdn_tensors": 48,
+    "widened_gdn_bytes": 47185920
+  },
+  "native_cpu_plan_exit_code": 0,
+  "source_gguf": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V2.1-GGUF/dflash2-qwen38-27b-Q4_K_M.gguf",
+  "model_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/923c341c5f83b0f531e212985693ef9cda74b67ef854540f6116825058577cc6",
+  "scope": "CPU conversion numerical checks and real target/draft image planning; no inference",
+  "final_native_plan_and_copy_sizes_verified": true
+}

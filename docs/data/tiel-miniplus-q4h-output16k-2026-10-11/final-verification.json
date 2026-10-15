@@ -1,0 +1,55 @@
+{
+  "status": "passed",
+  "checked_at": "2026-10-11T21:05:41.323755+00:00",
+  "commit": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "controller_exit_code": 0,
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "compiled_source_sha256": "39d18faf2656ca607c89aefb06368ba8fdc0d24f368223419c67f1d66646d6be",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/qwen4b-matrix-native": "37c85acd93a4e727513b6686976cfc93338960b3f694e93d422ed3820992f167",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/splash.metallib": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/libsplash.a": "c5d18d46f172465c0fcc34b9c5564f6c1b5735c5e36d5c374d0f9dce59669752",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/TielMatrix.mm": "70e5f9c1d97751bf413c4de2237af6604e46a7686e7fa44af1cbf09bc5f3a2b9",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielPagedAttention.cpp": "9e4f9ea31ba4dc333e8c49fce38fed8052abe11905f8e7ea31881b06a2de357b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/TielPagedAttention.o": "8b94fae0f5c44d4f4fea925f477ef3914e55e91e9437d3a8ad118e36dcafb8d4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/runner.py": "697d1a834c82235ff652e932eea232d292eddb2eb2aaaf54fb6bf7c7e57da9d5",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/plan.json": "43d184469af30e17056351faafe04613a84d1d1d5ad174c07f4b8e2fcde00fa0",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/model-runtime-oracle": "c3e96702d67f894372eaa2f7439312af021129792f5453dbc1e5da30b1094b23",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/ColdGraphOracle.mm": "143ee44fb625a0b4bb872224ab498b847926ed91c78878ab8adb88c12974fe96",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/metal/MetalBackendInstrumented.o": "7f04d069a4aafc87bfb443ebce154bdc4cfee7c161c05d2ddfe77c9157b06de4",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ghost-merge-validation/block-8/engine/ane/ProgramInstrumented.o": "2ab6b49a4b66492222a24756d6afa2eb5502649afb4b1615b4fe86f3668e7654",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/report.json": "dcc082e6a2fe7dfcb1eab9a6a7947277ca0575c3022dd112875acb0510c8bb22",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/stdout.log": "24ac19a5cbdb400f9eba4e50573641c040f1ad84601bd37a5d9510194e87c348",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-q4h-cold-graph-oracle-v1/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-concurrency-prefix-fixed-v1/fixed-comparison.json": "f73d82de8212c250c04aaf9bc63fc0417bdfe517a32590cd508263eff282d3f8",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/diagnostics/tiel-concurrency-prefix-fixed-v1/summary.json": "74e68235f29ae5fa87930e727b5519e72e7db6419abaf9899d082193ba9592c3",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/runner.py": "61ad3b8d2b3358177bb2415cc9bd27f6d84717649bc0a3e272fd41a1ed901678",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/tiel_graph_validation.py": "9752e6babefab9bae573447494b0bb53dbf5d093e7a60150016a1fdc33cf8acd",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/numeric-certificate.json": "27a8824fecc5094f674774d06fabb2f5e2376c9772a7b0ed84e9831f5962da8b",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/resume-records.json": "05b32d03d5f0b6023f76856db2c7509504bb87bec990cc21e3ec7eaa4c2fe577",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v4/peer-benchmark-finished.json": "c9cd55ae58b35e9faf91ce208baa168281763284b9be51da91fd2219db405414",
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/input-frequency-ranking.splash": "cbd6322d33086720087286261fabd357ee9e177553e930cb19979aabb33eac5b"
+  },
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "actual_sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037",
+      "match": true
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "actual_sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d",
+      "match": true
+    }
+  },
+  "owned_test_processes_remaining": [],
+  "native_batches": 63,
+  "requests": 75,
+  "all_native_exit_codes_zero": true,
+  "all_facts_pass": true,
+  "all_applicable_exact_and_numeric_checks_pass": true,
+  "all_required_frozen_q4h_token_checks_pass": true,
+  "observed_busy_samples": 0
+}

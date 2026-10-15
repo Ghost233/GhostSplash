@@ -1,0 +1,5 @@
+Selected Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf from /Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF.
+Installing IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3 as Qwen3.8-27B (gguf); draft /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16; vision disabled.
+Traceback (most recent call last):
+  File "<stdin>", line 18, in <module>
+KeyError: 'max_position_embeddings'

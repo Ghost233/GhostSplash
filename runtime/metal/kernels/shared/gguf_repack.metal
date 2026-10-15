@@ -118,6 +118,7 @@ kernel void gguf_repack(device const uchar *src [[buffer(0)]], device uchar *dst
       if (j == 0) { for (uint i = 0; i < 4; ++i) meta[i] = blk[80 + i]; for (uint i = 0; i < 16; ++i) meta[4 + i] = blk[i]; }
       break;
     }
+    case GGUF_FMT_Q20:   // block_q2_0: d and 16 code bytes, two groups
     case GGUF_FMT_PQ20: {   // block_pq2_0 {d, qs[32]}: element e of group j is bits 2 (e % 4) of qs[8 j + e / 4]
       for (uint e = 0; e < 32; ++e) lo[quant_slot(e)] = (blk[2 + 8 * j + e / 4] >> (2 * (e % 4))) & 3;
       gguf_store_bits(lo, 2, out0);

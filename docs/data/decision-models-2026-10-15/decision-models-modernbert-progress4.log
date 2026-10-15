@@ -1,0 +1,40 @@
+Julia-1-splash 6213 starting
+Julia-1-splash billing {'input_tokens': 37, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'shipping', 'probabilities': {'shipping': 0.579227794016904, 'billing': 0.42077220598309606}, 'confidence': 0.1584555880338081}}
+Julia-1-splash sentiment {'input_tokens': 29, 'output_tokens': 0} {'mood': {'type': 'choice', 'choice': 'negative', 'probabilities': {'negative': 0.5758524195776575, 'positive': 0.4241475804223424}, 'confidence': 0.15170483915531507}}
+Julia-1-splash noul {'input_tokens': 27, 'output_tokens': 0} {'refund': {'type': 'noul', 'noul': 0.6338210574169764}}
+Julia-1-splash rating {'input_tokens': 34, 'output_tokens': 0} {'urgency': {'type': 'score', 'score': 1.027120383991332, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.29708275536501366, '1': 0.3787141052786407, '2': 0.3242031393563457}, 'confidence': 0.06807115791796103}}
+Julia-1-splash json {'input_tokens': 33, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'shipping', 'probabilities': {'billing': 0.3367701295224837, 'shipping': 0.6632298704775162}, 'confidence': 0.3264597409550325}}
+Julia-1-splash escaped_marker {'input_tokens': 36, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'shipping', 'probabilities': {'billing': 0.38977462195846213, 'shipping': 0.6102253780415379}, 'confidence': 0.22045075608307574}}
+Julia-1-splash exit 0
+Traceback (most recent call last):
+  File "/private/tmp/decision-models-modernbert-check4.py", line 40, in <module>
+    if engine=='splash':results['runs'][label+'-status']=call(port,'/status');save()
+                                                         ~~~~^^^^^^^^^^^^^^^^
+  File "/private/tmp/decision-models-modernbert-check4.py", line 17, in call
+    with urllib.request.urlopen(req,timeout=120) as r:return json.load(r)
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 487, in open
+    response = self._open(req, data)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 504, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 464, in _call_chain
+    result = func(*args)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 1349, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py", line 1324, in do_open
+    r = h.getresponse()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 1478, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 312, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response

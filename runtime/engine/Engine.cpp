@@ -80,7 +80,20 @@ void Engine::submit(EngineRequest value) {
   if (std::any_of(value.prompt.begin(), value.prompt.end(), outOfVocabulary)) {
     throw std::invalid_argument("prompt token is out of vocabulary");
   }
-  if (std::any_of(value.scoreTokens.begin(), value.scoreTokens.end(),
+  if (value.flags & (RequestDecisionScoreType | RequestDecisionNoulType))
+    throw std::invalid_argument("encoder question-type flags require an encoder model");
+  const bool decision = value.flags & RequestDecisionScoring;
+  if (decision != config_.decisionScoring)
+    throw std::invalid_argument("request scoring mode does not match the model");
+  if (decision && (value.prompt.empty() || value.scoreTokens.size() < 2 ||
+      value.scoreTokens.size() > 255 || value.maxNewTokens ||
+      !std::is_sorted(value.scoreTokens.begin(), value.scoreTokens.end()) ||
+      std::adjacent_find(value.scoreTokens.begin(), value.scoreTokens.end()) != value.scoreTokens.end() ||
+      std::ranges::any_of(value.scoreTokens, [&](uint32_t position) {
+        return position >= value.prompt.size() - 1 || value.prompt[position] != 248050;
+      }) || value.prompt.back() != 248062))
+    throw std::invalid_argument("invalid Kev option or query positions");
+  if (!decision && std::any_of(value.scoreTokens.begin(), value.scoreTokens.end(),
                   outOfVocabulary)) {
     throw std::invalid_argument("score token is out of vocabulary");
   }
@@ -482,10 +495,13 @@ bool Engine::admitQueued(double now) {
   const auto cachedTokens = [&](Request &active) -> uint32_t {
     if (active.skipCache)
       return 0;
+    auto cachePrompt = std::span<const uint32_t>(active.exactTokens);
+    if (active.request.flags & RequestDecisionScoring)
+      cachePrompt = cachePrompt.first(active.request.scoreTokens.front());
     if (active.admissionProbe)
-      cache_.refresh(*active.admissionProbe, active.exactTokens, promptIdentity(active.request));
+      cache_.refresh(*active.admissionProbe, cachePrompt, promptIdentity(active.request));
     else
-      active.admissionProbe = cache_.probe(active.exactTokens, promptIdentity(active.request));
+      active.admissionProbe = cache_.probe(cachePrompt, promptIdentity(active.request));
     return active.admissionProbe->cachedTokens();
   };
   // A request starts only in a free lane. While every lane is resident,
@@ -624,7 +640,10 @@ uint32_t Engine::replayStateBoundary(const Request &active) noexcept {
 
 uint32_t Engine::promptReplayBoundary(const Request &active) noexcept {
   const uint32_t tail = std::max(active.request.generationPromptTokens, uint32_t{1});
-  return (active.promptTokens - tail) / KvCache::pageTokens * KvCache::pageTokens;
+  uint32_t boundary = active.promptTokens - tail;
+  if (active.request.flags & RequestDecisionScoring)
+    boundary = std::min(boundary, active.request.scoreTokens.front());
+  return boundary / KvCache::pageTokens * KvCache::pageTokens;
 }
 
 uint32_t Engine::sharedPrefillBoundary(const Request &left,
@@ -717,10 +736,13 @@ bool Engine::admit(Request &active, double now) {
   const bool resuming = scheduler_.suspended(active.request.id);
   ModelRequest modelRequest = active.request.modelView();
   modelRequest.prompt = active.exactTokens;
+  auto cachePrompt = modelRequest.prompt;
+  if (active.request.flags & RequestDecisionScoring)
+    cachePrompt = cachePrompt.first(active.request.scoreTokens.front());
   CacheLookup lookup =
       active.skipCache
           ? CacheLookup{}
-          : cache_.lookup(modelRequest.prompt, promptIdentity(active.request),
+          : cache_.lookup(cachePrompt, promptIdentity(active.request),
                           active.admissionProbe ? &*active.admissionProbe
                                                 : nullptr);
   // Only unstarted requests wait for a resident producer. Recheck planned
@@ -1073,7 +1095,7 @@ DraftContextPlan Engine::pendingDraftStatePlan(const Request &active,
   boundaries.reserve(active.stateBoundaries.size() - active.stateBoundaryCursor);
   for (size_t i = active.stateBoundaryCursor; i < active.stateBoundaries.size(); ++i)
     boundaries.push_back(active.stateBoundaries[i].tokens);
-  return planDraftContext(stateBoundary, active.replayTokens, boundaries);
+  return planDraftContext(stateBoundary, active.replayTokens, boundaries, model_.draftContextCapacity());
 }
 
 void Engine::discardPendingStateBoundaries(Request &active) noexcept {
@@ -1401,6 +1423,15 @@ uint32_t Engine::reserveCaptures(Request &active, const BatchItem &item, Reclaim
   // state has ended.
   const uint32_t end = awaitedBoundary(active, start + item.tokenCount);
   const std::vector<Request::StateBoundary> &boundaries = active.stateBoundaries;
+  if (!model_.capturesStatesInsidePrefill()) {
+    if (active.stateBoundaryCursor < boundaries.size() &&
+        boundaries[active.stateBoundaryCursor].tokens <= end) {
+      const uint32_t tokens = boundaries[active.stateBoundaryCursor].tokens;
+      captures.push_back({tokens, false, true});
+      return tokens - start;
+    }
+    return end - start;
+  }
   const auto stateClass = [&](size_t index) {
     return boundaries[index].disposable                               ? StateClass::Checkpoint
            : boundaries[index].tokens == promptReplayBoundary(active) ? StateClass::InUse

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "CPU corpus generation, binary and archive verification, launcher argument forwarding; no inference or performance measurement",
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest dev.tests.install.test_local_launchers dev.tests.tools.test_compact_draft_ranking dev.tests.server.test_serve_options",
+      "tests": 25,
+      "exit_code": 0,
+      "log": "cpu-tests.log"
+    },
+    {
+      "command": "make check-source BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+      "exit_code": 0,
+      "log": "source-check.log"
+    },
+    {
+      "command": "sh -n saluki27biq2mixsplash.sh",
+      "exit_code": 0
+    },
+    {
+      "command": "sh saluki27biq2mixsplash.sh --help; verify compact switches, queue=2, memory=30G",
+      "exit_code": 0
+    },
+    {
+      "command": ".venv/bin/python -m ruff check --config dev/ruff.toml dev/tools/compact_draft_ranking.py dev/tests/tools/test_compact_draft_ranking.py dev/tests/install/test_local_launchers.py",
+      "exit_code": 0
+    },
+    {
+      "command": ".venv/bin/python -m ruff format --check --config dev/ruff.toml dev/tools/compact_draft_ranking.py dev/tests/tools/test_compact_draft_ranking.py dev/tests/install/test_local_launchers.py",
+      "exit_code": 0
+    }
+  ],
+  "verified_source_sha256": {
+    "dev/tools/compact_draft_ranking.py": "19f037aa0f06081f18aab5211b3e74db3689bfe4a44d9c4b474ab1641af5c74d",
+    "dev/tests/tools/test_compact_draft_ranking.py": "ea25d9da42d766a751d263ab1e0664505a4158853ef2a64051e32609d9ed1b60",
+    "dev/tests/install/test_local_launchers.py": "80ad5bf457d501997fc199defb191808944e77d44540f15483d9a94fde76bc94",
+    "saluki27biq2mixsplash.sh": "15b8d02f67203ab8d25c86e7ee976b07cc66e9d72043a795aaa27abc7c0ca4c0"
+  }
+}

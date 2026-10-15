@@ -1,0 +1,64 @@
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/gdn.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/gdn.metal -o build/merge-upstream-20261015/metal/decode/gdn.air
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/gdn_single.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/gdn_single.metal -o build/merge-upstream-20261015/metal/decode/gdn_single.air
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/gguf_single.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/gguf_single.metal -o build/merge-upstream-20261015/metal/decode/gguf_single.air
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/linear_gguf_sgmatrix.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/linear_gguf_sgmatrix.metal -o build/merge-upstream-20261015/metal/decode/linear_gguf_sgmatrix.air
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/paged_attention.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/paged_attention.metal -o build/merge-upstream-20261015/metal/decode/paged_attention.air
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/paged_attention_store.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/paged_attention_store.metal -o build/merge-upstream-20261015/metal/decode/paged_attention_store.air
+runtime/metal/kernels/decode/gguf_single.metal:37:27: error: no member named 'grid' in 'FmtFloat16<41, bfloat>'
+    const uint2 grid = F::grid(q); const uint signs = F::signs(q);
+                       ~~~^
+runtime/metal/kernels/decode/gguf_single.metal:71:14: note: in instantiation of function template specialization 'single_chunk_dot<FmtFloat16<41, bfloat>>' requested here
+      sum += single_chunk_dot<F>(F::chunk(payload, chunk), coefficients, table, input + group * 32, chunk);
+             ^
+runtime/metal/kernels/decode/gguf_single.metal:99:7: note: in instantiation of function template specialization 'single_quant_sum<FmtFloat16<41, bfloat>, 4U>' requested here
+      single_quant_sum<F, Partitions>(input, w0, w1, meta, p, column, group.y, partition, table) : 0.0f;
+      ^
+runtime/metal/kernels/decode/gguf_single.metal:37:58: error: no member named 'signs' in 'FmtFloat16<41, bfloat>'
+    const uint2 grid = F::grid(q); const uint signs = F::signs(q);
+                                                      ~~~^
+runtime/metal/kernels/decode/gguf_single.metal:40:38: error: passing '<dependent type>' to parameter of incompatible type 'bool'
+    lo = select(lo, -lo, bool4(signs & 1, signs & 2, signs & 4, signs & 8));
+                               ~~~~~~^~~
+runtime/metal/kernels/decode/gguf_single.metal:41:38: error: passing '<dependent type>' to parameter of incompatible type 'bool'
+    hi = select(hi, -hi, bool4(signs & 16, signs & 32, signs & 64, signs & 128));
+                               ~~~~~~^~~~
+runtime/metal/kernels/decode/gguf_single.metal:37:27: error: no member named 'grid' in 'FmtFloat16<42, half>'
+    const uint2 grid = F::grid(q); const uint signs = F::signs(q);
+                       ~~~^
+runtime/metal/kernels/decode/gguf_single.metal:71:14: note: in instantiation of function template specialization 'single_chunk_dot<FmtFloat16<42, half>>' requested here
+      sum += single_chunk_dot<F>(F::chunk(payload, chunk), coefficients, table, input + group * 32, chunk);
+             ^
+runtime/metal/kernels/decode/gguf_single.metal:99:7: note: in instantiation of function template specialization 'single_quant_sum<FmtFloat16<42, half>, 4U>' requested here
+      single_quant_sum<F, Partitions>(input, w0, w1, meta, p, column, group.y, partition, table) : 0.0f;
+      ^
+runtime/metal/kernels/decode/gguf_single.metal:37:58: error: no member named 'signs' in 'FmtFloat16<42, half>'
+    const uint2 grid = F::grid(q); const uint signs = F::signs(q);
+                                                      ~~~^
+runtime/metal/kernels/decode/gguf_single.metal:40:38: error: passing '<dependent type>' to parameter of incompatible type 'bool'
+    lo = select(lo, -lo, bool4(signs & 1, signs & 2, signs & 4, signs & 8));
+                               ~~~~~~^~~
+runtime/metal/kernels/decode/gguf_single.metal:41:38: error: passing '<dependent type>' to parameter of incompatible type 'bool'
+    hi = select(hi, -hi, bool4(signs & 16, signs & 32, signs & 64, signs & 128));
+                               ~~~~~~^~~~
+runtime/metal/kernels/decode/gguf_single.metal:71:14: error: no matching function for call to 'single_chunk_dot'
+      sum += single_chunk_dot<F>(F::chunk(payload, chunk), coefficients, table, input + group * 32, chunk);
+             ^~~~~~~~~~~~~~~~~~~
+runtime/metal/kernels/decode/gguf_single.metal:99:7: note: in instantiation of function template specialization 'single_quant_sum<FmtFloat16<41, bfloat>, 2U>' requested here
+      single_quant_sum<F, Partitions>(input, w0, w1, meta, p, column, group.y, partition, table) : 0.0f;
+      ^
+runtime/metal/kernels/decode/gguf_single.metal:15:15: note: candidate template ignored: substitution failure [with F = FmtFloat16<41, bfloat>]
+inline float4 single_chunk_dot(typename F::Chunk q, QuantCoef k, threadgroup half2 *table,
+              ^
+runtime/metal/kernels/decode/gguf_single.metal:71:14: error: no matching function for call to 'single_chunk_dot'
+      sum += single_chunk_dot<F>(F::chunk(payload, chunk), coefficients, table, input + group * 32, chunk);
+             ^~~~~~~~~~~~~~~~~~~
+runtime/metal/kernels/decode/gguf_single.metal:99:7: note: in instantiation of function template specialization 'single_quant_sum<FmtFloat16<42, half>, 2U>' requested here
+      single_quant_sum<F, Partitions>(input, w0, w1, meta, p, column, group.y, partition, table) : 0.0f;
+      ^
+runtime/metal/kernels/decode/gguf_single.metal:15:15: note: candidate template ignored: substitution failure [with F = FmtFloat16<42, half>]
+inline float4 single_chunk_dot(typename F::Chunk q, QuantCoef k, threadgroup half2 *table,
+              ^
+10 errors generated.
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/metal/decode/sampling.air' --config 1fe4816c7c094ab7-7fc36398fa0ef9b6 -- xcrun -sdk macosx metal -std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -c runtime/metal/kernels/decode/sampling.metal -o build/merge-upstream-20261015/metal/decode/sampling.air
+make: *** [build/merge-upstream-20261015/metal/decode/gguf_single.air] Error 1
+make: *** Waiting for unfinished jobs....

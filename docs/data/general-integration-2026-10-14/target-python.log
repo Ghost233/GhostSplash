@@ -1,0 +1,996 @@
+Requirement already satisfied: annotated-types==0.8.0 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 2)) (0.8.0)
+Requirement already satisfied: distro==1.9.0 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 3)) (1.9.0)
+Requirement already satisfied: jiter==0.16.0 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 4)) (0.16.0)
+Requirement already satisfied: openai==2.54.0 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 5)) (2.54.0)
+Requirement already satisfied: pydantic==2.13.4 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 6)) (2.13.4)
+Requirement already satisfied: pydantic_core==2.46.4 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 7)) (2.46.4)
+Requirement already satisfied: ruff==0.16.4 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 8)) (0.16.4)
+Requirement already satisfied: sniffio==1.3.1 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 9)) (1.3.1)
+Requirement already satisfied: typing-inspection==0.4.4 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 10)) (0.4.4)
+Requirement already satisfied: gguf==0.19.0 in ./.venv/lib/python3.14/site-packages (from -r dev/requirements.txt (line 11)) (0.19.0)
+Requirement already satisfied: anyio<5,>=3.5.0 in ./.venv/lib/python3.14/site-packages (from openai==2.54.0->-r dev/requirements.txt (line 5)) (4.14.2)
+Requirement already satisfied: httpx<1,>=0.23.0 in ./.venv/lib/python3.14/site-packages (from openai==2.54.0->-r dev/requirements.txt (line 5)) (0.28.1)
+Requirement already satisfied: tqdm>4 in ./.venv/lib/python3.14/site-packages (from openai==2.54.0->-r dev/requirements.txt (line 5)) (4.70.0)
+Requirement already satisfied: typing-extensions<5,>=4.14 in ./.venv/lib/python3.14/site-packages (from openai==2.54.0->-r dev/requirements.txt (line 5)) (4.16.0)
+Requirement already satisfied: numpy>=1.17 in ./.venv/lib/python3.14/site-packages (from gguf==0.19.0->-r dev/requirements.txt (line 11)) (2.5.2)
+Requirement already satisfied: pyyaml>=5.1 in ./.venv/lib/python3.14/site-packages (from gguf==0.19.0->-r dev/requirements.txt (line 11)) (6.0.3)
+Requirement already satisfied: requests>=2.25 in ./.venv/lib/python3.14/site-packages (from gguf==0.19.0->-r dev/requirements.txt (line 11)) (2.34.2)
+Requirement already satisfied: idna>=2.8 in ./.venv/lib/python3.14/site-packages (from anyio<5,>=3.5.0->openai==2.54.0->-r dev/requirements.txt (line 5)) (3.19)
+Requirement already satisfied: certifi in ./.venv/lib/python3.14/site-packages (from httpx<1,>=0.23.0->openai==2.54.0->-r dev/requirements.txt (line 5)) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in ./.venv/lib/python3.14/site-packages (from httpx<1,>=0.23.0->openai==2.54.0->-r dev/requirements.txt (line 5)) (1.0.9)
+Requirement already satisfied: h11>=0.16 in ./.venv/lib/python3.14/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->openai==2.54.0->-r dev/requirements.txt (line 5)) (0.16.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./.venv/lib/python3.14/site-packages (from requests>=2.25->gguf==0.19.0->-r dev/requirements.txt (line 11)) (3.5.2)
+Requirement already satisfied: urllib3<3,>=1.26 in ./.venv/lib/python3.14/site-packages (from requests>=2.25->gguf==0.19.0->-r dev/requirements.txt (line 11)) (2.8.0)
+.venv/bin/python -m unittest discover -s dev/tests -t . -p 'test_*.py'
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+.............................................................ssss.................................................../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpdcb600na/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpaa16m1x4/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpcme9um6o/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.........../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpq8lq1pt6/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpd93abqfb/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpzdpyyrcq/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.......................................Fetching 2 file(s), 0.00 GB, from z-lab/Qwen3.5-4B-DFlash@9a1996ccf887; cached files are reused.
+...Fetching 1 file(s), 0.00 GB, from mlx-community/Qwen3.8-27B-4bit@aaaaaaaaaaaa; cached files are reused.
+..............................Fetching 1 file(s), 0.00 GB, from mlx-community/Qwen3.8-27B-4bit@aaaaaaaaaaaa; cached files are reused.
+...........................................17:27:00 Error · invalid_request_error · POST /v1/messages
+17:27:00 Error · invalid_request_error · POST /v1/messages
+17:27:00 Error · invalid_request_error · POST /v1/messages
+17:27:00 Error · invalid_request_error · POST /v1/messages
+17:27:00 Error · invalid_request_error · POST /v1/messages
+....17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · model_not_found · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:03 Error · request_timeout · POST /v1/messages/count_tokens
+.17:27:04 Error · invalid_request_error · POST /v1/messages
+.17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:04 Error · invalid_request_error · POST /v1/messages
+17:27:04 Error · invalid_request_error · POST /v1/messages/count_tokens
+.17:27:05 Error · invalid_request_error · POST /v1/messages
+17:27:05 Error · invalid_request_error · POST /v1/messages
+.17:27:05 Error · invalid_request_error · POST /v1/messages
+17:27:05 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:05 Error · invalid_request_error · POST /v1/messages
+17:27:05 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:05 Error · invalid_request_error · POST /v1/messages
+17:27:05 Error · invalid_request_error · POST /v1/messages/count_tokens
+.....17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+17:27:08 Error · invalid_request_error · POST /v1/responses
+..17:27:09 Error · invalid_model_output · POST /v1/messages
+17:27:09 Error · invalid_model_output · POST /v1/messages
+17:27:09 Error · invalid_model_output · POST /v1/messages
+..17:27:10 Error · invalid_request_error · POST /v1/messages
+17:27:10 Error · invalid_request_error · POST /v1/messages
+.17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+.17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:27:11 Error · invalid_request_error · POST /v1/messages
+17:27:11 Error · invalid_request_error · POST /v1/messages/count_tokens
+.17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+17:27:12 Error · invalid_request_error · POST /v1/messages
+............................17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+17:27:21 Error · invalid_request_error · POST /v1/chat/completions
+.17:27:22 Template error · TemplateError · <template>:49
+.......17:27:24 Error · invalid_request_error · POST /v1/chat/completions
+17:27:24 Error · invalid_request_error · POST /apply-template
+17:27:24 Error · invalid_request_error · POST /v1/responses
+17:27:24 Error · invalid_request_error · POST /v1/messages/count_tokens
+............................................/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmp8ddxeydd/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpr4u6p09w/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmp0g_ktd6d/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/chat/completions
+17:27:45 Error · invalid_request_error · POST /v1/responses
+17:27:45 Error · invalid_request_error · POST /v1/responses
+17:27:45 Error · invalid_request_error · POST /v1/responses
+17:27:45 Error · invalid_request_error · POST /v1/responses
+17:27:45 Error · invalid_request_error · POST /v1/responses
+17:27:45 Error · invalid_request_error · POST /v1/responses
+.......................................17:27:55 Error · frontend_overloaded · POST /v1/chat/completions
+17:27:55 Error · invalid_request_error · POST /v1/chat/completions
+17:27:55 Error · invalid_request_error · POST /v1/chat/completions
+.17:27:55 Error · request_too_large · POST /v1/chat/completions
+..17:28:00 Error · request_timeout · POST /tokenize
+..17:28:00 Error · request_too_large · POST /v1/chat/completions
+17:28:00 Error · request_too_large · POST /v1/messages
+17:28:00 Error · request_too_large · POST /v1/responses
+17:28:00 Error · request_too_large · POST /tokenize
+17:28:00 Error · request_too_large · POST /apply-template
+17:28:00 Error · request_too_large · POST /v1/messages/count_tokens
+.17:28:01 Error · frontend_overloaded · POST /tokenize
+17:28:02 Error · request_timeout · POST /tokenize
+17:28:02 Error · request_timeout · POST /tokenize
+..17:28:03 Error · frontend_overloaded · POST /v1/responses
+.17:28:03 Error · invalid_request_error · POST /v1/responses
+...17:28:04 Error · frontend_overloaded · POST /v1/chat/completions
+.17:28:05 Error · request_timeout · POST /v1/chat/completions
+17:28:05 Error · invalid_request_error · POST /v1/chat/completions
+17:28:05 Error · invalid_request_error · POST /v1/chat/completions
+17:28:05 Error · invalid_request_error · POST /v1/chat/completions
+17:28:05 Error · invalid_request_error · POST /v1/chat/completions
+17:28:05 Error · invalid_request_error · POST /v1/chat/completions
+17:28:05 Error · frontend_overloaded · POST /v1/chat/completions
+.17:28:05 Error · request_too_large · POST /v1/chat/completions
+17:28:05 Error · not_found · POST /v1/unknown
+...17:28:06 Error · frontend_overloaded · POST /v1/chat/completions
+17:28:06 Error · frontend_overloaded · POST /v1/messages
+17:28:06 Error · frontend_overloaded · POST /v1/responses
+17:28:06 Error · frontend_overloaded · POST /tokenize
+17:28:06 Error · frontend_overloaded · POST /apply-template
+17:28:06 Error · frontend_overloaded · POST /v1/messages/count_tokens
+17:28:06 Error · invalid_request_error · POST /v1/chat/completions
+17:28:06 Error · invalid_request_error · POST /v1/chat/completions
+...........17:28:09 Error · model_not_found · GET /v1/models/
+17:28:09 Error · model_not_found · GET /v1/models/community/other-model
+17:28:09 Error · model_not_found · GET /v1/models/community/example-model/extra
+..17:28:10 Error · model_not_found · GET /v1/models/unknown
+17:28:10 Error · model_not_found · GET /v1/models/
+......17:28:11 Error · frontend_overloaded · POST /v1/chat/completions
+17:28:11 Error · invalid_request_error · POST /v1/chat/completions
+............17:28:16 Error · invalid_request_error · POST /v1/chat/completions
+17:28:16 Error · invalid_request_error · POST /v1/chat/completions
+17:28:16 Error · invalid_request_error · POST /v1/chat/completions
+17:28:16 Error · request_timeout · POST /v1/chat/completions
+17:28:16 Error · request_timeout · POST /v1/chat/completions
+.17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+17:28:17 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:18 Error · frontend_overloaded · POST /v1/chat/completions
+17:28:18 Error · frontend_overloaded · POST /v1/responses
+17:28:18 Error · frontend_overloaded · POST /v1/messages
+17:28:18 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:18 Error · invalid_request_error · POST /v1/chat/completions
+17:28:18 Error · frontend_overloaded · POST /v1/chat/completions
+.17:28:19 Error · frontend_overloaded · POST /v1/chat/completions
+..17:28:20 Error · invalid_request_error · POST /v1/chat/completions
+17:28:20 Error · invalid_request_error · POST /v1/chat/completions
+17:28:20 Error · request_too_large · POST /v1/chat/completions
+17:28:20 Error · invalid_request_error · POST /v1/chat/completions
+17:28:20 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:21 Error · invalid_request_error · POST /v1/chat/completions
+17:28:21 Error · invalid_request_error · POST /v1/chat/completions
+17:28:21 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:22 Error · invalid_request_error · POST /v1/chat/completions
+.......17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+.17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/chat/completions
+17:28:24 Error · invalid_request_error · POST /v1/completions
+17:28:24 Error · invalid_request_error · POST /v1/completions
+17:28:24 Error · invalid_request_error · POST /v1/completions
+17:28:24 Error · invalid_request_error · POST /v1/completions
+..........17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+17:28:26 Error · invalid_request_error · POST /v1/chat/completions
+........17:28:31 Error · invalid_request_error · POST /v1/chat/completions
+17:28:31 Error · invalid_request_error · POST /v1/chat/completions
+17:28:31 Error · invalid_request_error · POST /apply-template
+17:28:31 Error · invalid_request_error · POST /apply-template
+17:28:31 Error · invalid_request_error · POST /v1/chat/completions
+17:28:31 Error · invalid_request_error · POST /v1/chat/completions
+17:28:31 Error · invalid_request_error · POST /apply-template
+17:28:31 Error · invalid_request_error · POST /apply-template
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/messages
+17:28:31 Error · invalid_request_error · POST /v1/messages
+17:28:31 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:28:31 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:28:31 Error · invalid_request_error · POST /v1/messages
+17:28:31 Error · invalid_request_error · POST /v1/messages
+17:28:31 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:28:31 Error · invalid_request_error · POST /v1/messages/count_tokens
+.17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+17:28:31 Error · invalid_request_error · POST /v1/responses
+.......................17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+17:28:33 Error · invalid_request_error · POST /v1/chat/completions
+....17:28:35 Error · invalid_request_error · POST /v1/chat/completions
+17:28:35 Error · invalid_request_error · POST /v1/chat/completions
+17:28:35 Error · invalid_request_error · POST /v1/chat/completions
+17:28:35 Error · invalid_request_error · POST /v1/chat/completions
+17:28:35 Error · invalid_request_error · POST /v1/chat/completions
+17:28:35 Error · invalid_request_error · POST /v1/responses
+17:28:35 Error · invalid_request_error · POST /v1/responses
+17:28:35 Error · invalid_request_error · POST /v1/responses
+17:28:35 Error · invalid_request_error · POST /v1/responses
+17:28:35 Error · invalid_request_error · POST /v1/responses
+17:28:35 Error · invalid_request_error · POST /v1/messages
+17:28:35 Error · invalid_request_error · POST /v1/messages
+17:28:35 Error · invalid_request_error · POST /v1/messages
+17:28:35 Error · invalid_request_error · POST /v1/messages
+17:28:35 Error · invalid_request_error · POST /v1/messages
+.17:28:36 Error · not_found_error · GET /v1/responses/resp_bd0e224d9cb9408ec2a11acd8f4f6285
+..17:28:36 Error · model_not_found · POST /v1/chat/completions
+17:28:36 Error · model_not_found · POST /v1/chat/completions
+17:28:36 Error · model_not_found · POST /v1/chat/completions
+17:28:36 Error · model_not_found · POST /v1/responses
+17:28:36 Error · model_not_found · POST /v1/responses
+17:28:36 Error · model_not_found · POST /v1/responses
+17:28:36 Error · model_not_found · POST /v1/messages
+17:28:36 Error · model_not_found · POST /v1/messages
+17:28:36 Error · model_not_found · POST /v1/messages
+........17:28:43 Error · request_timeout · POST /v1/judgments
+.17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · model_not_found · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+17:28:44 Error · invalid_request_error · POST /v1/judgments
+.17:28:44 Error · invalid_request_error · POST /v1/judgments
+...17:28:46 Error · unprocessable_entity · POST /v1/systemone
+.17:28:46 Error · invalid_request_error · POST /v1/systemone
+.17:28:48 Error · request_timeout · POST /v1/systemone
+..17:28:49 Error · unprocessable_entity · POST /v1/systemone
+.17:28:49 Error · unprocessable_entity · POST /v1/systemone
+17:28:49 Error · unprocessable_entity · POST /v1/systemone
+17:28:49 Error · unprocessable_entity · POST /v1/systemone
+17:28:49 Error · unprocessable_entity · POST /v1/systemone
+.........................................................17:28:51 Error · context_length_exceeded · POST /v1/chat/completions
+17:28:51 Error · context_length_exceeded · POST /v1/chat/completions
+17:28:51 Error · context_length_exceeded · POST /v1/responses
+...17:28:52 Error · invalid_request_error · POST /v1/chat/completions
+17:28:52 Error · invalid_request_error · POST /v1/chat/completions
+17:28:52 Error · invalid_request_error · POST /v1/responses
+...17:28:53 Error · output_validation_failed · POST /v1/chat/completions
+17:28:53 Error · output_validation_failed · POST /v1/chat/completions
+17:28:54 Error · output_validation_failed · POST /v1/responses
+17:28:55 Error · output_validation_failed · POST /v1/responses
+17:28:55 Error · output_validation_failed · POST /v1/messages
+17:28:56 Error · output_validation_failed · POST /v1/messages
+..........................................17:29:39 Error · invalid_request_error · POST /v1/chat/completions
+17:29:39 Error · invalid_request_error · POST /v1/responses
+.....17:29:39 Error · request_timeout · POST /v1/chat/completions
+17:29:39 Error · request_timeout · POST /v1/responses
+17:29:40 Error · request_timeout · POST /v1/messages
+17:29:40 Error · request_timeout · POST /v1/messages/count_tokens
+....17:29:48 Error · invalid_request_error · POST /v1/chat/completions
+17:29:48 Error · invalid_request_error · POST /v1/chat/completions
+17:29:48 Error · invalid_request_error · POST /v1/chat/completions
+17:29:48 Error · invalid_request_error · POST /v1/chat/completions
+17:29:48 Error · invalid_request_error · POST /v1/completions
+17:29:48 Error · invalid_request_error · POST /v1/completions
+17:29:48 Error · invalid_request_error · POST /v1/completions
+17:29:48 Error · invalid_request_error · POST /v1/completions
+17:29:48 Error · invalid_request_error · POST /v1/responses
+17:29:48 Error · invalid_request_error · POST /v1/responses
+17:29:48 Error · invalid_request_error · POST /v1/responses
+17:29:48 Error · invalid_request_error · POST /v1/responses
+17:29:48 Error · invalid_request_error · POST /v1/messages
+17:29:48 Error · invalid_request_error · POST /v1/messages
+17:29:48 Error · invalid_request_error · POST /v1/messages
+17:29:48 Error · invalid_request_error · POST /v1/messages
+..............17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /tokenize
+17:29:50 Error · invalid_request_error · POST /apply-template
+17:29:50 Error · invalid_request_error · POST /apply-template
+17:29:50 Error · invalid_request_error · POST /apply-template
+17:29:50 Error · model_not_found · POST /apply-template
+17:29:50 Template error · ValueError · mock.py:1241
+17:29:50 Error · invalid_request_error · POST /apply-template
+..17:29:51 Error · request_timeout · POST /tokenize
+.....17:29:54 Error · frontend_overloaded · POST /tokenize
+17:29:54 Error · request_timeout · POST /tokenize
+17:29:54 Error · frontend_overloaded · POST /apply-template
+17:29:54 Error · request_timeout · POST /apply-template
+.............................17:29:54 Error · context_length_exceeded · POST /v1/messages
+17:29:54 Error · context_length_exceeded · POST /v1/messages
+17:29:54 Error · context_length_exceeded · POST /v1/chat/completions
+...17:29:57 Error · invalid_request_error · POST /v1/messages
+17:29:57 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:29:57 Error · invalid_request_error · POST /v1/messages
+17:29:57 Error · invalid_request_error · POST /v1/messages/count_tokens
+17:29:57 Error · invalid_request_error · POST /v1/messages
+17:29:57 Error · invalid_request_error · POST /v1/messages/count_tokens
+.................17:30:08 Template error · TemplateError · <template>:1
+17:30:08 Template error · ValueError · mock.py:1241
+.....17:30:08 Error · not_found · GET /v1/messages
+17:30:08 Error · not_found · DELETE /v1/messages/count_tokens
+17:30:08 Error · not_found · POST /v1/messages/batches
+17:30:08 Error · not_found · POST /v1/messagesX
+17:30:08 Error · not_found · GET /v1/messages_batches
+17:30:08 Error · not_found · GET /v1/systemone
+17:30:08 Error · not_found · POST /v1/unknown
+..17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+17:30:09 Error · invalid_request_error · POST /v1/chat/completions
+.17:30:10 Error · invalid_request_error · POST /v1/chat/completions
+17:30:10 Error · invalid_request_error · POST /v1/chat/completions
+17:30:10 Error · invalid_request_error · POST /v1/chat/completions
+17:30:10 Error · invalid_request_error · POST /v1/responses
+....17:30:10 Error · not_found · GET /v1/unknown
+.....17:30:12 Error · invalid_request_error · POST /v1/chat/completions
+.17:30:12 Error · resource_timeout · POST /v1/chat/completions
+17:30:12 Error · resource_timeout · POST /v1/completions
+17:30:12 Error · resource_timeout · POST /v1/responses
+17:30:12 Error · resource_timeout · POST /v1/messages
+.......17:30:14 Error · request_timeout · POST /v1/chat/completions
+....17:30:16 Error · frontend_overloaded · POST /v1/chat/completions
+....17:30:18 Error · runtime_error · POST /v1/chat/completions
+.17:30:18 Template error · TypeError · test_request_failures.py:47
+17:30:18 Error · invalid_request_error · POST /v1/chat/completions
+...17:30:20 Error · runtime_error · POST /v1/chat/completions
+....17:30:24 Engine failed · native failed
+..............................17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+.17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+17:30:43 Error · invalid_request_error · POST /v1/responses
+..17:30:44 Error · previous_response_not_found · POST /v1/responses
+17:30:44 Error · not_found_error · GET /v1/responses/resp_6ea72be2f0e05d444c2a47e1ff4ca24c
+17:30:44 Error · not_found_error · DELETE /v1/responses/resp_6ea72be2f0e05d444c2a47e1ff4ca24c
+17:30:44 Error · previous_response_not_found · POST /v1/responses
+17:30:44 Error · not_found_error · GET /v1/responses/resp_0897da3500e585777c82ee49da7597e8
+.....17:30:46 Error · invalid_request_error · POST /v1/responses
+17:30:46 Error · invalid_request_error · POST /v1/responses
+............................................................17:30:53 Error · invalid_request_error · POST /v1/responses
+..17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/chat/completions
+17:30:54 Error · invalid_request_error · POST /v1/messages
+.17:30:55 Error · invalid_request_error · POST /v1/chat/completions
+17:30:55 Error · invalid_request_error · POST /v1/chat/completions
+17:30:55 Error · invalid_request_error · POST /v1/chat/completions
+17:30:55 Error · invalid_request_error · POST /v1/chat/completions
+...17:30:55 Error · invalid_model_output · POST /v1/chat/completions
+17:30:56 Error · invalid_model_output · POST /v1/chat/completions
+17:30:57 Error · invalid_model_output · POST /v1/responses
+17:30:58 Error · invalid_model_output · POST /v1/responses
+17:31:00 Error · invalid_model_output · POST /v1/messages
+17:31:00 Error · invalid_model_output · POST /v1/messages
+.......17:31:02 Error · invalid_request_error · POST /v1/chat/completions
+17:31:02 Error · invalid_request_error · POST /v1/chat/completions
+..............................17:31:03 Error · model_not_found · GET /v1/models/missing
+......./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpjkouj4e8/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpa92ql3rq/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/launcher.py:475: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpkcc4owrt/models/.resolved/assembly/model.json'>
+  return serve(args) if args.command == "serve" else coding_client(args)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+........17:31:13 Error · model_not_found · POST /v1/chat/completions
+17:31:13 Error · model_not_found · POST /v1/chat/completions
+17:31:13 Error · model_not_found · POST /v1/chat/completions
+17:31:13 Error · model_not_found · POST /v1/chat/completions
+17:31:13 Error · model_not_found · POST /v1/chat/completions
+17:31:13 Error · model_not_found · POST /v1/responses
+17:31:13 Error · model_not_found · POST /v1/responses
+17:31:13 Error · model_not_found · POST /v1/responses
+17:31:13 Error · model_not_found · POST /v1/responses
+17:31:13 Error · model_not_found · POST /v1/responses
+17:31:13 Error · model_not_found · POST /v1/messages
+17:31:13 Error · model_not_found · POST /v1/messages
+17:31:13 Error · invalid_request_error · POST /v1/messages
+17:31:13 Error · invalid_request_error · POST /v1/messages
+17:31:13 Error · invalid_request_error · POST /v1/messages
+.....17:31:17 Error · not_found · GET /server.py
+17:31:17 Error · not_found · GET /chat-assets/missing.js
+....../opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 401: 'Unauthorized'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+..17:31:20 Error · not_found · GET /
+17:31:20 Error · not_found · GET /index.html
+17:31:20 Error · not_found · GET /favicon.ico
+17:31:20 Error · not_found · GET /chat-assets/markdown-it-15.0.2.min.js
+17:31:20 Error · not_found · GET /chat-assets/highlight-11.12.0.min.js
+17:31:20 Error · not_found · GET /chat-assets/github-11.12.0.min.css
+17:31:20 Error · not_found · GET /chat-assets/github-dark-11.12.0.min.css
+17:31:20 Error · not_found · HEAD /
+17:31:20 Error · not_found · HEAD /index.html
+17:31:20 Error · not_found · HEAD /favicon.ico
+17:31:20 Error · not_found · HEAD /chat-assets/markdown-it-15.0.2.min.js
+17:31:20 Error · not_found · HEAD /chat-assets/highlight-11.12.0.min.js
+17:31:20 Error · not_found · HEAD /chat-assets/github-11.12.0.min.css
+17:31:20 Error · not_found · HEAD /chat-assets/github-dark-11.12.0.min.css
+.....17:31:24 Startup configuration · on/off are configured flags; effective state follows Ready
+17:31:24   MODEL_DIRECTORY = model
+17:31:24   --model = test-model
+17:31:24   --tokenizer = tokenizer
+17:31:24   --binary = splash
+17:31:24   --port = 0
+17:31:24   --host = 127.0.0.1
+17:31:24   --allowed-host = none
+17:31:24   --allowed-origin = none
+17:31:24   --api-key = off
+17:31:24   --no-webui = off
+17:31:24   --max-memory = 34359738368
+17:31:24   --max-context = 128
+17:31:24   --kv-format = int8
+17:31:24   --idle-release = auto (default 600 s)
+17:31:24   --max-cache-disk = 0
+17:31:24   --persistent-cache = off
+17:31:24   --cache-dir = off / unset
+17:31:24   --served-model-name = none
+17:31:24   --announce-served-name = off
+17:31:24   --default-reasoning-effort = auto
+17:31:24   --max-request-size = 134217728
+17:31:24   --max-image-pixels = 4194304
+17:31:24   --request-timeout = off / unset
+17:31:24   --queue-size = 1
+17:31:24   --decode-share = default (0.5)
+17:31:24   --disable-ane = off
+17:31:24   --ane-ffn-share = auto
+17:31:24   --ane-ffn-minimum-rows = auto
+17:31:24   --ane-power-recovery = off
+17:31:24   --ane-power-reference = off
+17:31:24   --ane-recovery-idle-watts = 0.05
+17:31:24   --ane-recovery-max-power-percent = off / unset
+17:31:24   --prompt-lookup = off
+17:31:24   --prompt-lookup-min-match = 2
+17:31:24   --compact-draft-head = off
+17:31:24   --compact-draft-capacity = 98304
+17:31:24   --compact-draft-ranking = off / unset
+17:31:24   --fast-topk = off
+17:31:24   --allow-idle-sleep = off
+17:31:24 Loading · test-model
+17:31:24 Chat template · <MagicMock name='ChatTemplates().describe()' id='4578360496'>
+17:31:24 Stopping · releasing engine resources
+.17:31:24 Startup configuration · on/off are configured flags; effective state follows Ready
+17:31:24   MODEL_DIRECTORY = model
+17:31:24   --model = test-model
+17:31:24   --tokenizer = tokenizer
+17:31:24   --binary = splash
+17:31:24   --port = 0
+17:31:24   --host = 127.0.0.1
+17:31:24   --allowed-host = none
+17:31:24   --allowed-origin = none
+17:31:24   --api-key = off
+17:31:24   --no-webui = off
+17:31:24   --max-memory = auto
+17:31:24   --max-context = auto
+17:31:24   --kv-format = int8
+17:31:24   --idle-release = auto (default 600 s)
+17:31:24   --max-cache-disk = 0
+17:31:24   --persistent-cache = off
+17:31:24   --cache-dir = off / unset
+17:31:24   --served-model-name = none
+17:31:24   --announce-served-name = off
+17:31:24   --default-reasoning-effort = auto
+17:31:24   --max-request-size = 134217728
+17:31:24   --max-image-pixels = 4194304
+17:31:24   --request-timeout = off / unset
+17:31:24   --queue-size = 1
+17:31:24   --decode-share = default (0.5)
+17:31:24   --disable-ane = off
+17:31:24   --ane-ffn-share = auto
+17:31:24   --ane-ffn-minimum-rows = auto
+17:31:24   --ane-power-recovery = off
+17:31:24   --ane-power-reference = off
+17:31:24   --ane-recovery-idle-watts = 0.05
+17:31:24   --ane-recovery-max-power-percent = off / unset
+17:31:24   --prompt-lookup = off
+17:31:24   --prompt-lookup-min-match = 2
+17:31:24   --compact-draft-head = off
+17:31:24   --compact-draft-capacity = 98304
+17:31:24   --compact-draft-ranking = off / unset
+17:31:24   --fast-topk = off
+17:31:24   --allow-idle-sleep = off
+17:31:24 Loading · test-model
+.17:31:24 Startup configuration · on/off are configured flags; effective state follows Ready
+17:31:24   MODEL_DIRECTORY = model
+17:31:24   --model = test-model
+17:31:24   --tokenizer = tokenizer
+17:31:24   --binary = splash
+17:31:24   --port = 8000
+17:31:24   --host = 127.0.0.1
+17:31:24   --allowed-host = none
+17:31:24   --allowed-origin = none
+17:31:24   --api-key = off
+17:31:24   --no-webui = off
+17:31:24   --max-memory = auto
+17:31:24   --max-context = auto
+17:31:24   --kv-format = int8
+17:31:24   --idle-release = auto (default 600 s)
+17:31:24   --max-cache-disk = 0
+17:31:24   --persistent-cache = off
+17:31:24   --cache-dir = off / unset
+17:31:24   --served-model-name = none
+17:31:24   --announce-served-name = off
+17:31:24   --default-reasoning-effort = auto
+17:31:24   --max-request-size = 134217728
+17:31:24   --max-image-pixels = 4194304
+17:31:24   --request-timeout = off / unset
+17:31:24   --queue-size = 1
+17:31:24   --decode-share = default (0.5)
+17:31:24   --disable-ane = off
+17:31:24   --ane-ffn-share = auto
+17:31:24   --ane-ffn-minimum-rows = auto
+17:31:24   --ane-power-recovery = off
+17:31:24   --ane-power-reference = off
+17:31:24   --ane-recovery-idle-watts = 0.05
+17:31:24   --ane-recovery-max-power-percent = off / unset
+17:31:24   --prompt-lookup = off
+17:31:24   --prompt-lookup-min-match = 2
+17:31:24   --compact-draft-head = off
+17:31:24   --compact-draft-capacity = 98304
+17:31:24   --compact-draft-ranking = off / unset
+17:31:24   --fast-topk = off
+17:31:24   --allow-idle-sleep = off
+...............17:31:24 Engine failed · native protocol reached EOF
+.17:31:25 Engine failed · native protocol reached EOF
+..17:31:25 Engine failed · native protocol reached EOF
+17:31:25 Engine restarted
+17:31:25 Engine failed · native protocol reached EOF
+17:31:25 Engine restarted
+......17:31:27 Error · frontend_overloaded · POST /v1/systemone
+.17:31:27 Error · frontend_overloaded · POST /v1/messages/count_tokens
+17:31:27 Error · invalid_request_error · POST /v1/messages/count_tokens
+.......................................................17:31:38 Error · invalid_model_output · POST /v1/chat/completions
+..17:31:39 Error · invalid_model_output · POST /v1/chat/completions
+.17:31:40 Error · request_timeout · POST /v1/chat/completions
+17:31:40 Error · request_timeout · POST /v1/chat/completions
+17:31:41 Error · request_timeout · POST /v1/completions
+17:31:41 Error · request_timeout · POST /v1/completions
+...17:31:45 Error · runtime_error · POST /v1/chat/completions
+17:31:45 Error · runtime_error · POST /v1/chat/completions
+17:31:45 Error · runtime_error · POST /v1/completions
+17:31:45 Error · runtime_error · POST /v1/completions
+.....17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · context_length_exceeded · POST /v1/completions
+17:31:49 Error · model_not_found · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+.17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+17:31:49 Error · invalid_request_error · POST /v1/completions
+...17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+.17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+17:31:51 Error · invalid_request_error · POST /v1/completions
+.......17:31:53 Startup configuration · on/off are configured flags; effective state follows Ready
+17:31:53   MODEL_DIRECTORY = model
+17:31:53   --model = test-model
+17:31:53   --tokenizer = tokenizer
+17:31:53   --binary = splash
+17:31:53   --port = 0
+17:31:53   --host = 127.0.0.1
+17:31:53   --allowed-host = none
+17:31:53   --allowed-origin = none
+17:31:53   --api-key = off
+17:31:53   --no-webui = off
+17:31:53   --max-memory = auto
+17:31:53   --max-context = auto
+17:31:53   --kv-format = int8
+17:31:53   --idle-release = auto (default 600 s)
+17:31:53   --max-cache-disk = 0
+17:31:53   --persistent-cache = off
+17:31:53   --cache-dir = off / unset
+17:31:53   --served-model-name = none
+17:31:53   --announce-served-name = off
+17:31:53   --default-reasoning-effort = auto
+17:31:53   --max-request-size = 134217728
+17:31:53   --max-image-pixels = 4194304
+17:31:53   --request-timeout = off / unset
+17:31:53   --queue-size = 1
+17:31:53   --decode-share = default (0.5)
+17:31:53   --disable-ane = off
+17:31:53   --ane-ffn-share = auto
+17:31:53   --ane-ffn-minimum-rows = auto
+17:31:53   --ane-power-recovery = off
+17:31:53   --ane-power-reference = off
+17:31:53   --ane-recovery-idle-watts = 0.05
+17:31:53   --ane-recovery-max-power-percent = off / unset
+17:31:53   --prompt-lookup = off
+17:31:53   --prompt-lookup-min-match = 2
+17:31:53   --compact-draft-head = off
+17:31:53   --compact-draft-capacity = 98304
+17:31:53   --compact-draft-ranking = off / unset
+17:31:53   --fast-topk = off
+17:31:53   --allow-idle-sleep = off
+............[transformers] You are using a model of type `custom` to instantiate a model of type ``. This may be expected if you are loading a checkpoint that shares a subset of the architecture (e.g., loading a `sam2_video` checkpoint into `Sam2Model`), but is otherwise not supported and can yield errors. Please verify that the checkpoint is compatible with the model you are instantiating.
+.....17:31:54 Error · invalid_request_error · POST /v1/messages
+......................17:32:02 Error · invalid_request_error · POST /v1/chat/completions
+17:32:02 Error · invalid_request_error · POST /v1/chat/completions
+17:32:02 Error · invalid_request_error · POST /v1/chat/completions
+17:32:02 Error · invalid_request_error · POST /v1/chat/completions
+17:32:02 Error · invalid_request_error · POST /v1/chat/completions
+.17:32:03 Error · invalid_request_error · POST /v1/chat/completions
+17:32:03 Error · invalid_request_error · POST /v1/chat/completions
+.........................................opencode/test: completed (0.0s)
+..............opencode/test: completed (0.0s)
+..........pi/test: completed (0.0s)
+.......{
+  "claude": {
+    "path": "/test/claude",
+    "version": "version"
+  }
+}
+{
+  "opencode": {
+    "path": "/test/opencode",
+    "version": "opencode v2.0.18",
+    "major_version": 2
+  }
+}
+{
+  "opencode": {
+    "path": "/test/opencode",
+    "version": "1.18.32",
+    "major_version": 1
+  }
+}
+{
+  "claude": {
+    "path": "/test/claude",
+    "version": "version"
+  },
+  "codex": {
+    "path": "/test/codex",
+    "version": "version"
+  },
+  "pi": {
+    "path": "/test/pi",
+    "version": "version"
+  }
+}
+Waiting for fresh native status: {'status_stale': True, 'error': 'refresh pending'}
+.............../opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/traceback.py:270: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpy0900tzs/models/.resolved/assembly/model.json'>
+  tb.tb_frame.clear()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.../Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/tools/test_backend_regression.py:642: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpjsfzqbgg/models/.resolved/assembly/model.json'>
+  with self.assertRaisesRegex(
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/tools/test_backend_regression.py:603: ResourceWarning: unclosed file <_io.BufferedReader name='/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpf6g_b48k/models/.resolved/assembly/model.json'>
+  with self.assertRaisesRegex(
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..............................................................................FF..usage: ffn [-h] [--prepare | --run-correctness | --run-long-correctness |
+           --run-performance | --run-stage-profile] [--output OUTPUT]
+           [--profile {cache,m64n32,fused_gate_up,q4k_group_scale,limited_cache}]
+           [--cache-budget-bytes CACHE_BUDGET_BYTES] [--resume]
+           [--model-root MODEL_ROOT] [--off-model-root OFF_MODEL_ROOT]
+           [--allow-inference-pid ALLOW_INFERENCE_PID]
+           [--allow-concurrent-inference]
+ffn: error: --allow-concurrent-inference requires a correctness action
+...........usage: ffn [-h] [--prepare | --run-correctness | --run-long-correctness |
+           --run-performance | --run-stage-profile] [--output OUTPUT]
+           [--profile {cache,m64n32,fused_gate_up,q4k_group_scale,limited_cache}]
+           [--cache-budget-bytes CACHE_BUDGET_BYTES] [--resume]
+           [--model-root MODEL_ROOT] [--off-model-root OFF_MODEL_ROOT]
+           [--allow-inference-pid ALLOW_INFERENCE_PID]
+           [--allow-concurrent-inference]
+ffn: error: --allow-inference-pid requires a positive PID and a correctness action
+...START long-correctness-512-A profile=q4k_group_scale
+END long-correctness-512-A output_tokens=512
+START long-correctness-512-B profile=q4k_group_scale
+END long-correctness-512-B output_tokens=512
+START long-correctness-2048-A profile=q4k_group_scale
+END long-correctness-2048-A output_tokens=2048
+START long-correctness-2048-B profile=q4k_group_scale
+END long-correctness-2048-B output_tokens=2048
+.START long-correctness-512-A profile=q4k_group_scale
+END long-correctness-512-A output_tokens=512
+START long-correctness-512-B profile=q4k_group_scale
+END long-correctness-512-B output_tokens=512
+.START 1/24 out-512-prompt-0-position-0-747ae91d20e7 arm=A
+END 1/24 valid, output gate passed
+START 2/24 out-512-prompt-0-position-1-747ae91d20e7 arm=B
+.START 1/24 out-512-prompt-0-position-0-e763e3fad632 arm=A
+END 1/24 valid, output gate passed
+START 2/24 out-512-prompt-0-position-1-e763e3fad632 arm=B
+END 2/24 valid, output gate passed
+START 3/24 out-512-prompt-0-position-2-e763e3fad632 arm=B
+......START 1/24 out-512-prompt-0-position-0-75309d3d5d3a arm=A
+END 1/24 valid, output gate passed
+START 2/24 out-512-prompt-0-position-1-75309d3d5d3a arm=B
+START 1/24 out-512-prompt-0-position-0-33ea4411aa77 arm=A
+END 1/24 valid, output gate passed
+START 2/24 out-512-prompt-0-position-1-33ea4411aa77 arm=B
+END 2/24 valid, output gate passed
+START 3/24 out-512-prompt-0-position-2-33ea4411aa77 arm=B
+END 3/24 valid, output gate passed
+START 4/24 out-512-prompt-0-position-3-33ea4411aa77 arm=A
+END 4/24 valid, output gate passed
+START 5/24 out-512-prompt-1-position-0-43c5de5ca82d arm=A
+...................................................................
+======================================================================
+FAIL: test_staged_server_imports_and_renders_without_the_source_checkout (dev.tests.tools.test_packaged_server.PackagedServerTests.test_staged_server_imports_and_renders_without_the_source_checkout)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/tools/test_packaged_server.py", line 60, in test_staged_server_imports_and_renders_without_the_source_checkout
+    self.assertEqual(result.returncode, 0, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import math, os, sys; sys.path.insert(0, os.getcwd()); from server import server, documents; file = {'file_data': sys.stdin.read()}; budget = documents.DocumentBudget(deadline=math.inf); print(documents.file_content(file, budget=budget)[0]['text'])
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpd6p45ore/stage/server/server.py", line 26, in <module>
+    from . import json_codec, judgments, serve_options, startup_report
+ImportError: cannot import name 'startup_report' from 'server' (/private/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpd6p45ore/stage/server/__init__.py)
+
+
+======================================================================
+FAIL: test_staged_server_starts_as_the_launcher_starts_it (dev.tests.tools.test_packaged_server.PackagedServerTests.test_staged_server_starts_as_the_launcher_starts_it)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/tools/test_packaged_server.py", line 79, in test_staged_server_starts_as_the_launcher_starts_it
+    self.assertEqual(result.returncode, 0, result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpmara67f9/stage/server/server.py", line 26, in <module>
+    from . import json_codec, judgments, serve_options, startup_report
+ImportError: cannot import name 'startup_report' from 'server' (/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/tmpmara67f9/stage/server/__init__.py)
+
+
+----------------------------------------------------------------------
+Ran 1332 tests in 535.201s
+
+FAILED (failures=2, skipped=4)
+{"mode": "correctness", "status": "incorrect"}
+make: *** [test-python] Error 1

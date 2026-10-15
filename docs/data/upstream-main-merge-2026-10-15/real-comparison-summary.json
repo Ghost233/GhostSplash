@@ -1,0 +1,20 @@
+{
+  "Kev-0.8B": {
+    "primary_cases": 13,
+    "maximum_old_new_probability_delta": 0.0005699382929547758,
+    "bound": "1e-3 * max(1, abs(x))",
+    "status": "passed"
+  },
+  "Julia-1": {
+    "primary_cases": 13,
+    "maximum_old_new_probability_delta": 0.0,
+    "bound": "1e-3 * max(1, abs(x))",
+    "status": "passed"
+  },
+  "Laya": {
+    "primary_cases": 13,
+    "maximum_old_new_probability_delta": 0.0,
+    "bound": "1e-3 * max(1, abs(x))",
+    "status": "passed"
+  }
+}

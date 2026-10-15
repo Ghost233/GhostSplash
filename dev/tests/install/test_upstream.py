@@ -36,7 +36,7 @@ from install import assembly, families, hub, models, paths, upstream
 # tells it apart.
 UNSUPPORTED = (
     "no supported model has this architecture [(]{}[)]; "
-    "supported: Qwen3.8-27B, Qwen3.6-35B-A3B"
+    "supported: Qwen3.8-27B, Qwen3.6-35B-A3B, Qwen3.5-4B"
 )
 
 
@@ -58,7 +58,7 @@ class UpstreamTest(unittest.TestCase):
         return output.getvalue(), warnings.getvalue()
 
     def test_every_family_names_its_own_draft_repository(self):
-        repos = [family.draft_repo for family in families.FAMILIES]
+        repos = [family.draft_repo for family in families.FAMILIES if family.draft_repo]
         for repo in repos:
             with self.subTest(repo=repo):
                 self.assertEqual(models.validate_repo_id(repo), repo)
@@ -68,6 +68,8 @@ class UpstreamTest(unittest.TestCase):
         # The engine's check (its model-check command), with and without the
         # draft.
         for family in families.FAMILIES:
+            if family.draft_repo is None:
+                continue
             config = mlx_target(self.root / family.name, family) / "config.json"
             draft = draft_dir(self.root / family.name / "draft", family)
             for arguments in ({}, {"draft": draft / "config.json"}):

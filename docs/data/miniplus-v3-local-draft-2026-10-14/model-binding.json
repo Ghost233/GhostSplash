@@ -1,0 +1,76 @@
+{
+  "family": "Qwen3.8-27B",
+  "files": {
+    "config.json": {
+      "bytes": 288,
+      "ctime_ns": 1791943991981330335,
+      "digest": "db7d36a53e2797e27fd4e3614b9a234c7f3a10f0859e1b855c5f031e7cf3712c",
+      "mtime_ns": 1791943991981330335,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687/config.json"
+    },
+    "draft/config.json": {
+      "bytes": 995,
+      "ctime_ns": 1791943249491381468,
+      "digest": "c06b6779119d8757062f61be830d2e024067b75838f3487388773c3d01cabdd0",
+      "mtime_ns": 1791943249491381468,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16/config.json"
+    },
+    "draft/model.safetensors": {
+      "bytes": 3848817872,
+      "ctime_ns": 1791943093513121347,
+      "digest": "db45fb5626822cdcad6190a944221b62d805aab7b175892a89b2936031d0d5c5",
+      "mtime_ns": 1791943093508343958,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16/model.safetensors"
+    },
+    "target/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V3.gguf": {
+      "bytes": 14161708672,
+      "ctime_ns": 1791880995660451899,
+      "digest": "9dc43a222b23ec46dbf9984e0eef98fafd422291ec58641e12fc68358198090b",
+      "mtime_ns": 1791880984600728438,
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V2.1-GGUF/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V3.gguf"
+    },
+    "tokenizer/chat_template.jinja": {
+      "bytes": 8952,
+      "ctime_ns": 1791943991983469966,
+      "digest": "c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041",
+      "mtime_ns": 1791943991983469966,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687/tokenizer/chat_template.jinja"
+    },
+    "tokenizer/config.json": {
+      "bytes": 288,
+      "ctime_ns": 1791943991981330335,
+      "digest": "db7d36a53e2797e27fd4e3614b9a234c7f3a10f0859e1b855c5f031e7cf3712c",
+      "mtime_ns": 1791943991981330335,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687/config.json"
+    },
+    "tokenizer/tokenizer.json": {
+      "bytes": 10085571,
+      "ctime_ns": 1791943991982688672,
+      "digest": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+      "mtime_ns": 1791943991982688672,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687/tokenizer/tokenizer.json"
+    },
+    "tokenizer/tokenizer_config.json": {
+      "bytes": 6197,
+      "ctime_ns": 1791943991983277299,
+      "digest": "c0398d4e3a44b70c94a4f14c7b5a8d2fa653c6e6d2ed327a0138ba0ef59cd400",
+      "mtime_ns": 1791943991983277299,
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687/tokenizer/tokenizer_config.json"
+    }
+  },
+  "metadata": "0312bfef1dd6a61bd003e417be963b2e4daaa357deabce51191527437da92687",
+  "model": "IsValorum/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V2.1-GGUF:V3",
+  "sources": {
+    "draft": {
+      "repo": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16",
+      "revision": null
+    },
+    "target": {
+      "repo": "/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V2.1-GGUF",
+      "revision": null
+    }
+  },
+  "target_format": "gguf",
+  "version": 1,
+  "vision_format": "none"
+}

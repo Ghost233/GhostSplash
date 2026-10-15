@@ -1,0 +1,147 @@
+{
+  "model_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/models/.resolved/be694db7e5823d48c9862ff5207deb3124700a2b56cd2c0413d4c80ac1a2ea13",
+  "model_id": "ConwayResearch/Underdog-Saluki-27B-1.0:IQ2-mix",
+  "base_parameters": {
+    "kv_format": "q4h",
+    "ane_minimum_rows": null,
+    "auto_calibration": true,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 16,
+    "concurrency": 1,
+    "input_tokens": 8192,
+    "output_tokens": 4096,
+    "context_tokens": 262144,
+    "memory_budget_bytes": 42949672960,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true,
+    "ane_requested": true,
+    "ane_share": null
+  },
+  "weights": {
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.8-27B-DFlash2/blobs/67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c",
+      "sha256": "67fc76d68dc5a9415511a4f394ef744d67510cd20e93b37cc2cc7d28e4bab65c",
+      "signature": {
+        "device": 16777233,
+        "inode": 11797734,
+        "bytes": 3848817896,
+        "mtime_ns": 1790780953314304636,
+        "ctime_ns": 1790780954636847924
+      }
+    },
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/ConwayResearch/Underdog-Saluki-27B-1.0/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+      "sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "signature": {
+        "device": 16777233,
+        "inode": 58948699,
+        "bytes": 7898369152,
+        "mtime_ns": 1791511436550718264,
+        "ctime_ns": 1791511444677022701
+      }
+    }
+  },
+  "runtime_code_sha256": "197a8d05b477fd52c41327b55bb1954a6d87559fb1c1a774f22fef4c2f1a8c6f",
+  "compiled_source_sha256": "ff42f55fe4243b9ecc441576a895944aae2c96842421c2af52512eede733957f",
+  "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ane-startup-cli-20261013/splash.metallib",
+  "mode": "native_auto",
+  "planned": 10,
+  "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/saluki-auto-native",
+  "inputs": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/inputs.json",
+  "ranking": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/input-frequency-ranking.splash",
+  "prior_numeric_report": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/numeric-report.json",
+  "manual_results_preserved": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/summary.json",
+  "calibration_cache": "unique namespace for each probe; original selection and breaker logic unchanged",
+  "artifacts": {
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/saluki-auto-native": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/saluki-auto-native",
+      "sha256": "f5fbb39736fc18e627afde079035e0e6309d292a90ab9166b0e33bc62c1d32d0",
+      "signature": {
+        "device": 16777233,
+        "inode": 77649422,
+        "bytes": 2640144,
+        "mtime_ns": 1791910714985843071,
+        "ctime_ns": 1791910714985843071
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/SalukiAutoNative.mm": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/SalukiAutoNative.mm",
+      "sha256": "b9ccbe43a37d000598bd81669dc0012d8f36fb06353b8c40a4d26489c4a2d38c",
+      "signature": {
+        "device": 16777233,
+        "inode": 77649091,
+        "bytes": 26005,
+        "mtime_ns": 1791910712851575580,
+        "ctime_ns": 1791910712851575580
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/SalukiPagedAttention.o": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/SalukiPagedAttention.o",
+      "sha256": "a5bd1f4ede9ee46c90672fdb68d7a4ccd719bb795510bbbe04b8960a4ba06f4b",
+      "signature": {
+        "device": 16777233,
+        "inode": 77353211,
+        "bytes": 63504,
+        "mtime_ns": 1791908904373115903,
+        "ctime_ns": 1791908904373483571
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/inputs.json": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/inputs.json",
+      "sha256": "f1f1178f84fc0810a9d2ae7af863b43e32490d4f7d5e3e6e3574d8a2f1efff29",
+      "signature": {
+        "device": 16777233,
+        "inode": 77353205,
+        "bytes": 165688,
+        "mtime_ns": 1791908903416641779,
+        "ctime_ns": 1791908903416827237
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/input-frequency-ranking.splash": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-share-10-20261014-v1/input-frequency-ranking.splash",
+      "sha256": "23b1b3c919a54ba8087629cd5307cc11ab0a8ffe68515701f6a371b1ff895cbb",
+      "signature": {
+        "device": 16777233,
+        "inode": 77355953,
+        "bytes": 993356,
+        "mtime_ns": 1791909319326748059,
+        "ctime_ns": 1791909319326748059
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ane-startup-cli-20261013/engine/libsplash.a": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ane-startup-cli-20261013/engine/libsplash.a",
+      "sha256": "8cba17bfbb3b543e5de0e439199c9c34bc38917a12e5e053bdeab2d6a7d6c0e5",
+      "signature": {
+        "device": 16777233,
+        "inode": 75138171,
+        "bytes": 5033624,
+        "mtime_ns": 1791876140562594401,
+        "ctime_ns": 1791876140562825151
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ane-startup-cli-20261013/splash.metallib": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/ane-startup-cli-20261013/splash.metallib",
+      "sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+      "signature": {
+        "device": 16777233,
+        "inode": 75139767,
+        "bytes": 43765681,
+        "mtime_ns": 1791876189088065327,
+        "ctime_ns": 1791876189088065327
+      }
+    },
+    "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/controller.py": {
+      "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/saluki27b-ane-auto-10-20261014-v1/controller.py",
+      "sha256": "a04c0baf41a22a6f009c0293f9fca4b833521543b53b61aa3ffde191414b4ba6",
+      "signature": {
+        "device": 16777233,
+        "inode": 77660640,
+        "bytes": 10807,
+        "mtime_ns": 1791911239629667561,
+        "ctime_ns": 1791911239629667561
+      }
+    }
+  }
+}

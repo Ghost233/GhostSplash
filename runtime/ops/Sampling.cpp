@@ -83,6 +83,10 @@ ThinkingCutoffs thinkingCutoffs(std::span<const SamplingPolicy> policies, uint32
 
 } // namespace
 
+uint64_t Sampling::fastWorkspaceBytes(uint32_t rows) {
+  return uint64_t{rows} * kTargetShards * 32 * sizeof(TopKCandidate);
+}
+
 SamplingWorkspace Sampling::workspace(uint32_t rows) {
   if (!rows)
     throw std::invalid_argument("invalid sampling workspace row count");
@@ -128,8 +132,8 @@ void Sampling::countPenaltyTokens(std::span<uint32_t> words,
     ++words[token];
 }
 
-Sampling::Sampling(uint32_t vocabulary)
-    : vocabulary_(vocabulary), maskWords_((vocabulary + 31) / 32) {
+Sampling::Sampling(uint32_t vocabulary, bool fastTopK)
+    : vocabulary_(vocabulary), maskWords_((vocabulary + 31) / 32), fastTopK_(fastTopK) {
   if (!vocabulary)
     throw std::invalid_argument("invalid sampling geometry");
 }
@@ -280,6 +284,12 @@ TargetSamplingParams Sampling::selection(std::span<const SamplingPolicy> policie
       requireBytes(buffers.draftProbabilities, candidates * sizeof(float), "draft probability");
     }
   }
+  bool fast = fastTopK_ && params.sampling_mask && buffers.fastTopK;
+  for (uint32_t lane = 0; fast && lane < lanes; ++lane)
+    if (params.sampling_mask & (1U << lane))
+      fast = params.top_k[lane] >= 1 && params.top_k[lane] <= 32 && params.min_p[lane] == 0.0F;
+  if (fast)
+    requireBytes(buffers.fastTopK, fastWorkspaceBytes(lanes * rows.rows), "fast top-k");
   return params;
 }
 
@@ -300,6 +310,20 @@ void Sampling::addSelection(metal::CommandGraph &graph, const TargetSamplingPara
               params, {selected, 1, 1}, {32, 1, 1});
   }
   if (params.sampling_mask) {
+    bool fast = fastTopK_ && buffers.fastTopK;
+    for (uint32_t lane = 0; fast && lane < lanes; ++lane)
+      if (params.sampling_mask & (1U << lane))
+        fast = params.top_k[lane] >= 1 && params.top_k[lane] <= 32 && params.min_p[lane] == 0.0F;
+    if (fast) {
+      requireBytes(buffers.fastTopK, fastWorkspaceBytes(static_cast<uint32_t>(selected)), "fast top-k");
+      ++fastSelections_;
+      graph.add("decode_sample_topk32_sharded",
+                {buffers.logits, buffers.constraintMasks, buffers.fastTopK},
+                params, {selected * kTargetShards, 1, 1}, {256, 1, 1});
+      graph.add("decode_sample_topk32_merge", {buffers.fastTopK, buffers.vocabularyRows},
+                params, {selected, 1, 1}, {32, 1, 1});
+    } else {
+      if (fastTopK_) ++fastFallbacks_;
     graph.add("decode_sample_mass_sharded",
               {buffers.logits, buffers.constraintMasks, buffers.partialMasses},
               params, {selected * kTargetShards, 1, 1});
@@ -307,6 +331,7 @@ void Sampling::addSelection(metal::CommandGraph &graph, const TargetSamplingPara
               {buffers.logits, buffers.constraintMasks, buffers.partialMasses,
                buffers.vocabularyRows},
               params, {selected, 1, 1}, {kVocabularyThreads, 1, 1});
+    }
     graph.add("decode_sample_vocabulary_draw",
               {buffers.logits, buffers.constraintMasks, buffers.vocabularyRows,
                buffers.inputTokens, buffers.draftCandidates,

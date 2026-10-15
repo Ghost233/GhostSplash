@@ -11,7 +11,10 @@ runtime/metal/kernels/common/quant_formats.h and the GGUF kernels built on it
 follow ggml's Metal dequantize.h and mul_mm.metal. They are compiled into
 splash.metallib. The tests' CPU reference,
 dev/tests/engine/GgufFormatReference.hpp, decodes the same blocks as ggml's
-dequantize_row_* (ggml/src/ggml-quants.c).
+dequantize_row_* (ggml/src/ggml-quants.c). The standard Q4_0 KV block in
+runtime/metal/abi/KvExtent.h and its quantization/dequantization in the paged
+store/attention kernels follow GGML's block_q4_0 and quantize_row_q4_0_ref
+conventions. dev/tuning/Q4KvReference.hpp provides their scalar reference.
 
 MIT License
 

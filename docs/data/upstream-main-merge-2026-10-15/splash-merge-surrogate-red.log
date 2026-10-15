@@ -1,0 +1,84 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+FE
+======================================================================
+ERROR: test_isolated_surrogates_use_the_upstream_text_normalization (dev.tests.server.test_modernbert.ModernBertScorerTests.test_isolated_surrogates_use_the_upstream_text_normalization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_modernbert.py", line 108, in test_isolated_surrogates_use_the_upstream_text_normalization
+    scorer.encode(body["state"], specs[0][1])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/server/modernbert.py", line 75, in encode
+    tokens = self.tokenizer.encode(prompt, add_special_tokens=False)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1247, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_modernbert.py", line 104, in strict_encode
+    text.encode("utf-8")
+    ~~~~~~~~~~~^^^^^^^^^
+UnicodeEncodeError: 'utf-8' codec can't encode character '\ud800' in position 38: surrogates not allowed
+
+======================================================================
+FAIL: test_isolated_surrogates_match_the_upstream_replacement (dev.tests.server.test_kev.KevTests.test_isolated_surrogates_match_the_upstream_replacement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_kev.py", line 113, in test_isolated_surrogates_match_the_upstream_replacement
+    self.assertEqual(actual, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ([248[14 chars] 99, 55296, 248061, 99, 104, 111, 111, 115, 10[133 chars] 33)) != ([248[14 chars] 99, 65533, 248061, 99, 104, 111, 111, 115, 10[133 chars] 33))
+
+First differing element 0:
+[2480[13 chars] 99, 55296, 248061, 99, 104, 111, 111, 115, 10[122 chars]8062]
+[2480[13 chars] 99, 65533, 248061, 99, 104, 111, 111, 115, 10[122 chars]8062]
+
+  ([248060,
+    100,
+    111,
+    99,
+-   55296,
++   65533,
+    248061,
+    99,
+    104,
+    111,
+    111,
+    115,
+    101,
+-   57343,
+?    ^ -
+
++   65533,
+?   + ^
+
+    248049,
+    97,
+    58,
+    32,
+    102,
+    105,
+    114,
+    115,
+    116,
+    248050,
+    248049,
+    98,
+    58,
+    32,
+    115,
+    101,
+    99,
+    111,
+    110,
+    100,
+    248050,
+    248062],
+   (22, 33))
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.005s
+
+FAILED (failures=1, errors=1)

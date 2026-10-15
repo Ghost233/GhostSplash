@@ -1,0 +1,7 @@
+{
+  "sha256": "1c48df00154fa6f7af196deb250ae85ed1ebee40de61077ef9cc7d73a5de0826",
+  "runtime_source_sha256": "5e758d48f5286207a933959d0ecb4e57a7fb15a69622a15cb7c72abae890173b",
+  "compiled_8192_source_sha256": "45d2d357df4b12fd0d148073151b3262764dcbe0d2ce1c11dc2325da79bcc40a",
+  "head": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "previous_nine_samples": "docs/data/swift27b-q4h-prefill-8k4k-2026-10-13/combined-summary.json"
+}

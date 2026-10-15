@@ -67,6 +67,7 @@ class Metadata:
         each tensor's type."""
         self.values = {}
         self.tensors = {}
+        self.shapes = {}
         self.consumed = 0
         with (
             Path(source).open("rb")
@@ -89,12 +90,13 @@ class Metadata:
                 dimensions = self.scalar("I")
                 if dimensions > self.MAX_DIMENSIONS:
                     raise ModelError("invalid GGUF tensor rank: " + name)
-                self.read(dimensions * struct.calcsize("<Q"))  # Its extents.
+                shape = tuple(self.scalar("Q") for _ in range(dimensions))
                 kind = self.scalar("I")
                 self.scalar("Q")  # Data offset; the payload is never read here.
                 if name in self.tensors:
                     raise ModelError("duplicate GGUF tensor: " + name)
                 self.tensors[name] = kind
+                self.shapes[name] = shape
 
     def read(self, size):
         if size > self.MAX_BYTES - self.consumed:
@@ -177,11 +179,11 @@ def tokenizer_files(metadata):
     )
     from tokenizers import models as token_models
 
-    if (
-        metadata.require("tokenizer.ggml.model", str) != "gpt2"
-        or metadata.require("tokenizer.ggml.pre", str) != "qwen35"
-    ):
+    if metadata.require("tokenizer.ggml.model", str) != "gpt2" or metadata.require(
+        "tokenizer.ggml.pre", str
+    ) not in {"qwen35", "modern-bert", "mmbert"}:
         raise ModelError("unsupported GGUF tokenizer profile; expected gpt2/qwen35")
+    profile = metadata.require("tokenizer.ggml.pre", str)
     tokens = metadata.require("tokenizer.ggml.tokens", list)
     types = metadata.require("tokenizer.ggml.token_type", list)
     merges = metadata.require("tokenizer.ggml.merges", list)
@@ -197,35 +199,64 @@ def tokenizer_files(metadata):
         )
     ):
         raise ModelError("invalid or unsupported GGUF tokenizer vocabulary")
-    if not set(pre_tokenizers.ByteLevel.alphabet()) <= set(tokens):
-        raise ModelError("GGUF byte-level tokenizer is missing byte tokens")
+    if profile != "mmbert":
+        missing = set(pre_tokenizers.ByteLevel.alphabet()) - set(tokens)
+        # ModernBERT's published vocabulary omits bytes that cannot occur in valid UTF-8.
+        permitted = (
+            {chr(b) for b in (0xC0, 0xC1, *range(0xF5, 0x100))}
+            if profile == "modern-bert"
+            else set()
+        )
+        if missing - permitted:
+            raise ModelError("GGUF byte-level tokenizer is missing byte tokens")
     pairs = []
     for merge in merges:
         if not isinstance(merge, str) or len(parts := merge.split(" ")) != 2:
             raise ModelError("invalid GGUF BPE merge")
         pairs.append(tuple(parts))
     for key in ("tokenizer.ggml.add_bos_token", "tokenizer.ggml.add_eos_token"):
-        if metadata.values.get(key, False) is not False:
+        if profile == "qwen35" and metadata.values.get(key, False) is not False:
             raise ModelError("GGUF automatic BOS/EOS insertion is unsupported: " + key)
     try:
         backend = Tokenizer(
-            token_models.BPE({t: i for i, t in enumerate(tokens)}, pairs)
+            token_models.BPE(
+                {t: i for i, t in enumerate(tokens)},
+                pairs,
+                **(
+                    {"unk_token": "<unk>", "byte_fallback": True, "fuse_unk": True}
+                    if profile == "mmbert"
+                    else {}
+                ),
+            )
         )
     except Exception as error:
         raise ModelError("invalid GGUF BPE vocabulary or merges") from error
-    backend.normalizer = normalizers.NFC()
-    backend.pre_tokenizer = pre_tokenizers.Sequence(
-        [
-            pre_tokenizers.Split(Regex(QWEN35_PATTERN), behavior="isolated"),
-            pre_tokenizers.ByteLevel(
-                add_prefix_space=False, use_regex=False, trim_offsets=False
-            ),
-        ]
-    )
-    backend.post_processor = processors.ByteLevel(
-        add_prefix_space=False, use_regex=False, trim_offsets=False
-    )
-    backend.decoder = decoders.ByteLevel()
+    if profile == "mmbert":
+        backend.normalizer = normalizers.Replace(" ", "▁")
+        backend.pre_tokenizer = pre_tokenizers.Metaspace(
+            replacement="▁", prepend_scheme="always"
+        )
+        backend.decoder = decoders.Sequence(
+            [decoders.Replace("▁", " "), decoders.ByteFallback(), decoders.Fuse()]
+        )
+    else:
+        backend.normalizer = normalizers.NFC()
+        backend.pre_tokenizer = (
+            pre_tokenizers.ByteLevel(add_prefix_space=False)
+            if profile == "modern-bert"
+            else pre_tokenizers.Sequence(
+                [
+                    pre_tokenizers.Split(Regex(QWEN35_PATTERN), behavior="isolated"),
+                    pre_tokenizers.ByteLevel(
+                        add_prefix_space=False, use_regex=False, trim_offsets=False
+                    ),
+                ]
+            )
+        )
+        backend.post_processor = processors.ByteLevel(
+            add_prefix_space=False, use_regex=False, trim_offsets=False
+        )
+        backend.decoder = decoders.ByteLevel()
     # The index of each added token, and whether it is special.
     added = {
         index: kind == CONTROL_TOKEN
@@ -248,7 +279,20 @@ def tokenizer_files(metadata):
             raise ModelError("invalid GGUF special token: " + key)
         return tokens[index]
 
-    template = metadata.require("tokenizer.chat_template", str)
+    if profile != "qwen35":
+        bos = metadata.require("tokenizer.ggml.bos_token_id", int)
+        eos = metadata.require("tokenizer.ggml.eos_token_id", int)
+        backend.post_processor = processors.TemplateProcessing(
+            single=f"{tokens[bos]} $A {tokens[eos]}",
+            pair=f"{tokens[bos]} $A {tokens[eos]} $B {tokens[eos]}",
+            special_tokens=[(tokens[bos], bos), (tokens[eos], eos)],
+        )
+    template = metadata.values.get("tokenizer.chat_template")
+    if template is None and profile != "qwen35":
+        # Serving rejects generation for these decision-only encoders.
+        template = "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}{% if add_generation_prompt %}assistant: {% endif %}"
+    if not isinstance(template, str):
+        raise ModelError("missing or invalid GGUF chat template")
     if not template.strip():
         raise ModelError("GGUF chat template is empty")
     config = {
@@ -281,7 +325,11 @@ def tokenizer_files(metadata):
 
 # The GGUF text architectures Splash serves, and the model type of each one's
 # text configuration.
-TEXT_MODEL_TYPES = {"qwen35": "qwen3_5_text", "qwen35moe": "qwen3_5_moe_text"}
+TEXT_MODEL_TYPES = {
+    "qwen35": "qwen3_5_text",
+    "qwen35moe": "qwen3_5_moe_text",
+    "modern-bert": "modernbert_text",
+}
 
 
 def text_architecture(metadata):
@@ -291,8 +339,69 @@ def text_architecture(metadata):
     return arch
 
 
+def decision_config(metadata):
+    arch = text_architecture(metadata)
+    kind = metadata.values.get(arch + ".decision.type")
+    if kind is None:
+        return None
+    if kind == "laya" and arch == "modern-bert":
+        temperatures = {}
+        for key, value in metadata.values.items():
+            if key.startswith(arch + ".decision.temperature."):
+                if type(value) is not float or not math.isfinite(value) or value <= 0:
+                    raise ModelError("invalid encoder decision temperature")
+                temperatures[key.removeprefix(arch + ".decision.temperature.")] = value
+        return {
+            "type": "laya",
+            "head_size": 1,
+            "temperatures": temperatures,
+            "chat_template": metadata.require("tokenizer.chat_template.systemone", str),
+            "max_head_tokens": metadata.positive(arch + ".decision.max_head_tokens"),
+            "mask_token_id": metadata.require("tokenizer.ggml.mask_token_id", int),
+            "sep_token_id": metadata.require("tokenizer.ggml.seperator_token_id", int),
+        }
+    if kind != "kev" or arch != "qwen35":
+        raise ModelError("unsupported GGUF decision model: " + str(kind))
+    if metadata.positive(arch + ".embedding_length_out") != 512:
+        raise ModelError("Kev decision head must have 512 outputs")
+    temperatures = {}
+    for question in ("choice", "score", "noul"):
+        value = metadata.require(arch + ".decision.temperature." + question, float)
+        if not math.isfinite(value) or value <= 0:
+            raise ModelError("invalid Kev decision temperature: " + question)
+        temperatures[question] = value
+    template = metadata.require("tokenizer.chat_template.systemone", str)
+    if not template.strip():
+        raise ModelError("Kev systemone template is empty")
+    return {
+        "type": kind,
+        "head_size": 512,
+        "temperatures": temperatures,
+        "chat_template": template,
+    }
+
+
 def model_config(metadata, vision=None):
     arch = text_architecture(metadata)
+    if arch == "modern-bert":
+        hidden = metadata.positive(arch + ".embedding_length")
+        heads = metadata.positive(arch + ".attention.head_count")
+        if hidden % heads:
+            raise ModelError("ModernBERT hidden width is not divisible by heads")
+        return {
+            "model_type": "modernbert",
+            "text_config": {
+                "model_type": "modernbert_text",
+                "hidden_size": hidden,
+                "num_attention_heads": heads,
+                "num_key_value_heads": heads,
+                "head_dim": hidden // heads,
+                "num_hidden_layers": metadata.positive(arch + ".block_count"),
+                "max_position_embeddings": metadata.positive(arch + ".context_length"),
+                "vocab_size": len(metadata.require("tokenizer.ggml.tokens", list)),
+            },
+            "decision_config": decision_config(metadata),
+        }
     fields = {
         "hidden_size": "embedding_length",
         "max_position_embeddings": "context_length",
@@ -310,6 +419,11 @@ def model_config(metadata, vision=None):
         "model_type": TEXT_MODEL_TYPES[arch].removesuffix("_text"),
         "text_config": text,
     }
+    decision = decision_config(metadata)
+    if decision is not None:
+        if vision is not None:
+            raise ModelError("Kev currently requires a text-only target")
+        config["decision_config"] = decision
     if vision is not None:
         config["vision_config"] = vision_config(vision)
     return config
@@ -419,10 +533,12 @@ TENSOR_TYPES = {
     30: "BF16",
     39: "MXFP4",
     40: "NVFP4",
+    42: "Q2_0",
     142: "PQ2_0",
 }
 QUANTIZED_TYPES = {
     "Q2_K",
+    "Q2_0",
     "Q3_K",
     "Q4_K",
     "Q5_K",
@@ -516,8 +632,22 @@ def loaded_tensors(metadata):
     layer whose header lists the fused gate/up experts tensor reads it in place
     of the two."""
     arch = text_architecture(metadata)
+    if arch == "modern-bert":
+        return {
+            name: types for name, (_, types) in modernbert_tensors(metadata).items()
+        }
     period = metadata.positive(arch + ".full_attention_interval")
     tensors = dict(MODEL_TENSORS)
+    if decision_config(metadata) is not None:
+        tensors.pop("output.weight", None)
+        tensors.update({"cls.output.weight": FORMAT_TYPES, "cls.output.bias": F32})
+    if (
+        arch == "qwen35"
+        and metadata.values.get(arch + ".embedding_length") == 2560
+        and loaded_layers(metadata, arch) == 32
+        and "output.weight" not in metadata.tensors
+    ):
+        tensors.pop("output.weight", None)
     for layer in range(loaded_layers(metadata, arch)):
         mixer = ATTENTION_TENSORS if (layer + 1) % period == 0 else GDN_TENSORS
         if arch != "qwen35moe":
@@ -579,6 +709,21 @@ def require_loadable(metadata):
     cannot read, missing a tensor it reads or storing one in a type it does
     not accept for that tensor."""
     require_rotation(metadata)
+    if text_architecture(metadata) == "modern-bert":
+        expected = modernbert_tensors(metadata)
+        for name, (shape, types) in expected.items():
+            if metadata.shapes.get(name) != shape:
+                raise ModelError("unexpected ModernBERT tensor shape: " + name)
+            if TENSOR_TYPES.get(metadata.tensors.get(name)) not in types:
+                raise ModelError("unsupported ModernBERT tensor type: " + name)
+        return
+    if decision_config(metadata) is not None:
+        for name, shape in (
+            ("cls.output.weight", (metadata.positive("qwen35.embedding_length"), 512)),
+            ("cls.output.bias", (512,)),
+        ):
+            if name in metadata.tensors and metadata.shapes.get(name) != shape:
+                raise ModelError("unexpected Kev tensor shape: " + name)
     loaded = loaded_tensors(metadata)
     # The projections and experts are the tensors read only in a format, but
     # the token table; one missing or of a type the loader does not know is
@@ -615,3 +760,68 @@ def require_loadable(metadata):
         raise ModelError(
             f"this GGUF stores tensors Splash cannot load: {listed}; choose another variant"
         )
+
+
+def modernbert_tensors(metadata):
+    arch = "modern-bert"
+    hidden = metadata.positive(arch + ".embedding_length")
+    layers = metadata.positive(arch + ".block_count")
+    vocab = metadata.positive(arch + ".vocab_size")
+    ffn = metadata.require(arch + ".feed_forward_length", list)
+    if (hidden, layers, vocab) not in {(384, 24, 256000), (1024, 30, 50368)}:
+        raise ModelError("unsupported ModernBERT decision dimensions")
+    if (
+        metadata.values.get(arch + ".attention.causal") is not False
+        or metadata.positive(arch + ".decision.block_count") != 2
+    ):
+        raise ModelError(
+            "ModernBERT decisions require a bidirectional encoder and two head blocks"
+        )
+    if len(ffn) != layers or any(type(n) is not int or n <= 0 for n in ffn):
+        raise ModelError("invalid ModernBERT per-layer FFN widths")
+    if decision_config(metadata) is None:
+        raise ModelError("ModernBERT decision metadata is required")
+    result = {}
+
+    def add(name, shape, types):
+        result[name] = (shape, types)
+
+    for name in (
+        "token_embd_norm.weight",
+        "output_norm.weight",
+        "cls.norm.weight",
+        "cls.norm.bias",
+        "cls.bias",
+    ):
+        add(name, (hidden,), {"F32"})
+    add("token_embd.weight", (hidden, vocab), {"Q8_0"})
+    add("token_types.weight", (hidden, 3), {"F32"})
+    add("cls.weight", (hidden, hidden), {"Q8_0"})
+    add("cls.output.weight", (hidden,), {"BF16"})
+    add("cls.output.bias", (1,), {"F32"})
+    for layer in range(layers):
+        prefix = f"blk.{layer}."
+        head = layer >= layers - 2
+        for name in ("ffn_norm.weight",):
+            add(prefix + name, (hidden,), {"F32"})
+        if layer:
+            add(prefix + "attn_norm.weight", (hidden,), {"F32"})
+        add(prefix + "attn_qkv.weight", (hidden, 3 * hidden), {"Q8_0"})
+        add(prefix + "attn_output.weight", (hidden, hidden), {"Q8_0"})
+        add(
+            prefix + "ffn_up.weight",
+            (hidden, ffn[layer] * (1 if head else 2)),
+            {"Q8_0"},
+        )
+        add(prefix + "ffn_down.weight", (ffn[layer], hidden), {"Q8_0"})
+        if head:
+            for name in (
+                "attn_norm.bias",
+                "attn_output.bias",
+                "ffn_norm.bias",
+                "ffn_down.bias",
+            ):
+                add(prefix + name, (hidden,), {"F32"})
+            add(prefix + "attn_qkv.bias", (3 * hidden,), {"F32"})
+            add(prefix + "ffn_up.bias", (ffn[layer],), {"F32"})
+    return result

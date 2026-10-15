@@ -1,0 +1,32 @@
+{
+  "status": "complete",
+  "rows": [
+    {
+      "config": "P8192-on",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true,
+        "budget": 8192,
+        "draft": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 585.7604177405564,
+      "decode_tok_s": 88.36618983586024,
+      "ttft_seconds": 13.985330542,
+      "total_seconds": 60.670624333,
+      "device_peak_gib": 17.333648681640625,
+      "prefill_range": [
+        548.7704267536636,
+        588.5596949224329
+      ],
+      "decode_range": [
+        87.61141211581021,
+        89.43590722466823
+      ],
+      "total_change_vs_A_percent": -4.759588369197154
+    }
+  ],
+  "baseline_automatically_changed": false,
+  "next_step": "retain A; compare8192 against completed512/2048/4096; no automatic promotion"
+}

@@ -1,0 +1,21 @@
+0.00.044.905 I srv  llama_server: initializing ...
+0.00.044.993 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.046.447 I srv    load_model: loading model '/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf'
+0.00.638.515 W load: control-looking token:    213 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.00.659.762 I decision model reads the embeddings output, enabling embedding mode
+0.00.660.396 W llama_init_from_model: model default pooling_type is [-1], but [0] was specified
+0.00.660.407 W llama_context: n_ctx_seq (8448) > n_ctx_train (8192) -- possible training context overflow
+0.00.663.023 I cmn          init: llama threadpool init, n_threads = 6
+0.00.664.313 I srv          init: decision model type: laya
+0.00.664.317 W srv    load_model: the slot context (8448) exceeds the training context of the model (8192) - capping
+0.00.664.318 W srv    load_model: speculative decoding not supported by this context
+0.00.664.318 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8192, kv_unified = 'false'
+0.00.665.603 I srv  llama_server: model loaded
+0.00.665.606 I srv  llama_server: listening on http://127.0.0.1:18149
+0.01.026.403 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.01.026.428 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.01.948.438 I slot      release: id  0 | task 0 | stop processing: n_tokens = 8192, truncated = 0
+0.01.957.894 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 1.000 (> 0.100 thold), f_keep = 1.000
+0.01.957.902 I slot launch_slot_: id  0 | task 2 | processing task, is_child = 0
+0.02.445.691 I slot      release: id  0 | task 2 | stop processing: n_tokens = 8192, truncated = 0
+0.02.446.330 I srv    operator(): operator(): cleaning up before exit...

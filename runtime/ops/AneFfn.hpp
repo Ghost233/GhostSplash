@@ -5,9 +5,12 @@
 #include "metal/CommandGraph.hpp"
 #include "metal/abi/ExecutionGeometry.h"
 #include "ops/AneFfnCalibration.hpp"
+#include "ops/AneFfnRecovery.hpp"
 #include "ops/Linear.hpp"
 
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -34,13 +37,20 @@ class Measurement;
 // of the process: finish() then reports the command's results unusable, and
 // the caller runs the chunk again on the GPU alone, which every later chunk
 // runs too. A split that loses to the GPU alone stops the same way, after a
-// command whose results are usable (setBreaker).
+// command whose results are usable (setBreaker). Optional power-gated recovery
+// can retry a performance stop after every old job reported, without changing share.
 class AneFfn final {
 public:
   // A chunk runs on the smallest of the program's functions that holds it,
   // one every kProgramStep rows from kMinimumRows to the prefill budget,
   // since an evaluation costs the ANE its function's rows.
-  static constexpr uint32_t kMinimumRows = 512, kProgramStep = 128, kMaximumRows = SPLASH_PREFILL_TOKEN_BUDGET;
+  static constexpr uint32_t kMinimumRows = 512, kMaximumRows = SPLASH_PREFILL_TOKEN_BUDGET;
+  // Large mixed-weight FFNs can fail ANE compilation when the program holds
+  // every 128-row function through 4096. Bound the grid's size; up to 2048
+  // rows the original 128-row step remains unchanged.
+  static constexpr uint32_t kMaximumFunctions = 16;
+  static constexpr uint32_t kProgramStep = std::bit_ceil(std::max(
+      128U, (kMaximumRows - kMinimumRows + kMaximumFunctions - 2) / (kMaximumFunctions - 1)));
   static_assert(kMaximumRows >= kMinimumRows && (kMaximumRows - kMinimumRows) % kProgramStep == 0,
                 "the functions cover the chunks the split takes");
 
@@ -77,6 +87,13 @@ public:
     breaker_ = std::move(breaker);
     lost_ = std::move(lost);
   }
+
+  void setRecovery(ane_ffn::RecoverySetting setting,
+                   std::function<ane::PowerSample()> power = {}, std::function<double()> clock = {});
+  void setPowerReference(ane::PowerReference value) { powerReference_ = std::move(value); }
+  [[nodiscard]] const std::optional<ane::PowerReference> &powerReference() const noexcept { return powerReference_; }
+  void tryRecover(const PrefillFfnBuffers &ffn, const std::array<metal::MetalBuffer, 2> &hidden);
+  [[nodiscard]] std::optional<ane_ffn::RecoveryReport> recoveryReport() const;
 
   // The commands finish() found split since the split was built, their
   // evaluations, and the Neural Engine's milliseconds over them
@@ -267,6 +284,17 @@ private:
   ane_ffn::Breaker breaker_;
   std::function<void()> lost_;
   Served served_;
+  std::vector<Projection> recoveryProjections_;
+  std::vector<SwiGluProjections> recoveryLayers_;
+  ane_ffn::RecoverySetting recoverySetting_;
+  std::optional<ane::PowerReference> powerReference_ = std::nullopt;
+  ane_ffn::RecoveryGate recoveryGate_{{}};
+  std::unique_ptr<ane::PowerMonitor> powerMonitor_;
+  std::function<ane::PowerSample()> powerSource_;
+  std::function<double()> recoveryClock_;
+  bool retryable_ = false;
+  uint64_t recoveryAttempts_ = 0, recoveryRestored_ = 0, recoveryStableCommands_ = 0;
+  std::string recoveryReason_;
   // Whether a command committed jobs that finish() has not yet judged.
   bool unfinished_ = false;
   // From a release() that unloaded the program until restore().

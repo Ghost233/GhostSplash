@@ -1,0 +1,5 @@
+2026-10-15 01:13:55.887 compact-projection[70145:23015506] Metal GPU Validation Enabled
+01:13:56 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/compact-public-lifecycle-PUfAI0/ranking.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+01:13:56 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/compact-shared-ranking-kYuIZ7/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+01:13:56 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/compact-shared-ranking-kYuIZ7/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+compact projection: 40 formats, native-plane bytes, selected logits and FP64 bounds PASS

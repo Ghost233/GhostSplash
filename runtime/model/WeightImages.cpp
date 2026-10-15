@@ -25,6 +25,14 @@ WeightFile WeightImages::load(ImagePlan image) {
   return file;
 }
 
+metal::MetalBuffer WeightImages::loadAuxiliary(std::string component, uint64_t bytes, ImageWriter write) {
+  if (released_) throw std::logic_error("weights load while their memory is released");
+  metal::MetalBuffer buffer = backend_->allocateBuffer(bytes, metal::BufferStorage::Shared, component);
+  write(contentsOf(buffer), buffer);
+  images_.push_back({std::move(component), buffer, std::move(write)});
+  return buffer;
+}
+
 void WeightImages::release() {
   // During a restore, only the images it wrote back hold memory.
   const size_t held = released_ ? restored_ : images_.size();

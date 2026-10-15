@@ -224,6 +224,47 @@ def parse_decode_share(value):
     return share
 
 
+def parse_ane_share(value):
+    if value == "auto":
+        return None
+    share = parse_decode_share(value)
+    if share > 1:
+        raise argparse.ArgumentTypeError("must be auto or a share in [0, 1]")
+    return share
+
+
+def parse_ane_rows(value):
+    rows = parse_queue_size(value)
+    if not 512 <= rows <= 8192:
+        raise argparse.ArgumentTypeError(
+            "must be between 512 and 8192; limited by the native build's prefill budget"
+        )
+    return rows
+
+
+def parse_power_reference(value):
+    if value in ("off", "auto"):
+        return value
+    watts = parse_decode_share(value)
+    if watts <= 0:
+        raise argparse.ArgumentTypeError("must be off, auto or positive watts")
+    return str(watts)
+
+
+def parse_power_percent(value):
+    percent = parse_decode_share(value)
+    if percent > 100:
+        raise argparse.ArgumentTypeError("must be in [0, 100]")
+    return percent
+
+
+def parse_compact_capacity(value):
+    rows = parse_queue_size(value)
+    if rows < 512 or rows > 98304 or rows % 256:
+        raise argparse.ArgumentTypeError("must be a multiple of 256 in 512..98304")
+    return rows
+
+
 def parse_max_image_pixels(value):
     try:
         pixels = int(value)
@@ -411,9 +452,10 @@ SERVE_OPTIONS = (
         "--kv-format",
         "memory",
         dict(
-            choices=("int8", "bf16"),
+            choices=("int8", "bf16", "q4h", "q4_0", "q4_0_unrotated"),
             default="int8",
-            help="target KV cache storage (default: int8); bf16 uses more memory",
+            help="target KV cache storage (default: int8); q4_0 uses fixed rotation, "
+            "q4_0_unrotated is its validation control, q4h is experimental",
         ),
     ),
     ServeOption(
@@ -611,6 +653,141 @@ SERVE_OPTIONS = (
         ),
     ),
     ServeOption(
+        "--ane-ffn-share",
+        "requests",
+        dict(
+            type=parse_ane_share,
+            default=None,
+            metavar="auto|SHARE",
+            help="ANE channel share: auto calibrates, 0 disables, otherwise 0..1",
+        ),
+    ),
+    ServeOption(
+        "--ane-ffn-minimum-rows",
+        "requests",
+        dict(
+            type=parse_ane_rows,
+            default=None,
+            metavar="ROWS",
+            help="minimum prefill rows for a fixed ANE share (default: 512)",
+        ),
+    ),
+    ServeOption(
+        "--ane-power-recovery",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="off",
+            help="retry after a performance backoff when ANE power is quiet (default: off)",
+        ),
+    ),
+    ServeOption(
+        "--ane-power-reference",
+        "requests",
+        dict(
+            type=parse_power_reference,
+            default="off",
+            metavar="off|auto|WATTS",
+            help="ANE power reference: off, startup measurement or positive watts (default: off)",
+        ),
+    ),
+    ServeOption(
+        "--ane-recovery-idle-watts",
+        "requests",
+        dict(
+            type=parse_decode_share,
+            default=0.05,
+            metavar="WATTS",
+            help="absolute ANE recovery power threshold (default: 0.05 W)",
+        ),
+    ),
+    ServeOption(
+        "--ane-recovery-max-power-percent",
+        "requests",
+        dict(
+            type=parse_power_percent,
+            default=None,
+            metavar="PERCENT",
+            help="recovery threshold relative to the power reference, 0..100; overrides watts",
+        ),
+    ),
+    ServeOption(
+        "--prompt-lookup",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="off",
+            help="reuse matching prompt continuations (default: off)",
+        ),
+    ),
+    ServeOption(
+        "--prompt-lookup-min-match",
+        "requests",
+        dict(
+            type=int,
+            choices=(2, 3, 4),
+            default=2,
+            help="minimum lookup match length (default: 2)",
+        ),
+    ),
+    ServeOption(
+        "--compact-draft-head",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="off",
+            help="enable validated compact draft head with --compact-draft-ranking FILE (default: off)",
+        ),
+    ),
+    ServeOption(
+        "--compact-draft-capacity",
+        "requests",
+        dict(
+            type=parse_compact_capacity,
+            default=98304,
+            metavar="ROWS",
+            help="compact vocabulary capacity (default: 98304)",
+        ),
+    ),
+    ServeOption(
+        "--compact-draft-ranking",
+        "requests",
+        dict(
+            type=parse_cache_dir,
+            default=None,
+            metavar="FILE",
+            help="explicit public draft ranking file; does not enable compact by itself",
+        ),
+    ),
+    ServeOption(
+        "--encoder-submit-batch-size",
+        "requests",
+        dict(
+            type=int,
+            choices=(1, 2, 4),
+            default=4,
+            help="maximum short encoder requests per Metal submission (default: 4)",
+        ),
+    ),
+    ServeOption(
+        "--encoder-option-queries",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="on",
+            help="ModernBERT final-head option query selection (default: on)",
+        ),
+    ),
+    ServeOption(
+        "--fast-topk",
+        "requests",
+        dict(
+            choices=("on", "off"),
+            default="off",
+            help="use optional fast top-k sampling (default: off)",
+        ),
+    ),
+    ServeOption(
         "--allow-idle-sleep",
         "requests",
         dict(
@@ -645,6 +822,18 @@ def add_serve_arguments(parser, groups=None):
 
 def check_serve_arguments(parser, args):
     """The checks of the shared options that involve more than one."""
+    if args.compact_draft_head == "on" and args.compact_draft_ranking is None:
+        parser.error("--compact-draft-head on requires --compact-draft-ranking FILE")
+    if args.ane_ffn_minimum_rows is not None and args.ane_ffn_share is None:
+        parser.error("--ane-ffn-minimum-rows needs a fixed --ane-ffn-share")
+    if (
+        args.ane_power_recovery == "on"
+        and args.ane_recovery_max_power_percent is not None
+        and args.ane_power_reference == "off"
+    ):
+        parser.error(
+            "--ane-recovery-max-power-percent needs --ane-power-reference auto or watts"
+        )
     if args.announce_served_name and not args.served_model_name:
         parser.error("--announce-served-name needs --served-model-name")
     if args.persistent_cache and args.max_cache_disk == 0:

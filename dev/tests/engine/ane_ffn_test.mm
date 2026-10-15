@@ -42,6 +42,7 @@
 #include "metal/abi/AneFfn.h"
 #include "metal/abi/QuantFormat.h"
 #include "ops/AneFfn.hpp"
+#include "ops/AneFfnMeasurement.hpp"
 #include "ops/Linear.hpp"
 
 #include <algorithm>
@@ -86,9 +87,8 @@ using splash::test::floatToBf16;
 
 namespace {
 
-// The smallest hidden size both the ANE programs (segments of 2560 channels) and ane_ffn_rotate (groups of 1024)
-// take, and an intermediate size whose ANE share, kAneUnits of its 12 channel units, spans two segments of down's
-// inputs.
+// The legacy 5120-channel fixture remains unchanged; the dedicated 4B checks below use 2560. Its intermediate
+// size makes the ANE share, kAneUnits of its 12 channel units, span two segments of down's inputs.
 constexpr uint32_t kHidden = 5120, kSegment = 2560, kIntermediate = 6144, kLayers = 3, kAneUnits = 6;
 // The most the split's output may differ from the GPU's alone, as the RMS of their difference relative to the GPU's:
 // int8 leaves about 1%.
@@ -164,35 +164,48 @@ float peak(std::span<const float> values) {
 // ---------------------------------------------------------------- inputs
 // Rows of normal values, one in 997 forty times larger, and a row of zeros, which takes the least scale and codes of
 // 0, as the ANE's two int8 input segments, each channel's rows at a stride past them.
-void inputs(MetalBackend &backend, const MetalBuffer &signs, const std::vector<float> &sign) {
+void inputs(MetalBackend &backend, const MetalBuffer &signs, const std::vector<float> &sign, uint32_t hidden = kHidden) {
   constexpr uint32_t kRows = 64, kStride = 96, kZeroRow = 7;
   std::normal_distribution<float> normal;
-  std::vector<uint16_t> x(uint64_t{kRows} * kHidden);
+  std::vector<uint16_t> x(uint64_t{kRows} * hidden);
   for (uint64_t i = 0; i < x.size(); ++i)
-    x[i] = i / kHidden == kZeroRow ? 0 : floatToBf16(normal(rng) * (i % 997 ? 1.0f : 40.0f));
-  const MetalBuffer rotated = test::sharedBuffer(backend, x.size() * sizeof(uint16_t));
-  const MetalBuffer scales = filled(backend, kRows * sizeof(uint16_t), kUntouched);
+    x[i] = i / hidden == kZeroRow ? 0 : floatToBf16(normal(rng) * (i % 997 ? 1.0f : 40.0f));
+  // Strong tail-only outliers expose a missed final 512 channels at 2560.
+  if (hidden == 2560)
+    for (uint32_t row = 0; row < kRows; ++row)
+      if (row != kZeroRow)
+        for (uint32_t channel = 2048; channel < hidden; ++channel)
+          x[uint64_t{row} * hidden + channel] = floatToBf16(normal(rng) * 1024.0f);
+  constexpr uint64_t guard = 64;
+  const uint64_t rotatedBytes = x.size() * sizeof(uint16_t), scaleBytes = kRows * sizeof(uint16_t);
+  const MetalBuffer rotatedBase = filled(backend, rotatedBytes + 2 * guard, kUntouched);
+  const MetalBuffer scalesBase = filled(backend, scaleBytes + 2 * guard, kUntouched);
+  const MetalBuffer rotated = backend.view(rotatedBase, guard, rotatedBytes);
+  const MetalBuffer scales = backend.view(scalesBase, guard, scaleBytes);
   CommandGraph graph;
-  graph.add("ane_ffn_rotate", {upload(backend, x), signs, rotated, scales}, AneFfnRotateParams{kHidden},
+  graph.add("ane_ffn_rotate", {upload(backend, x), signs, rotated, scales}, AneFfnRotateParams{hidden},
             {kRows, 1, 1}, {ANE_FFN_ROTATE_THREADS, 1, 1});
   std::vector<MetalBuffer> packed;
-  for (uint32_t segment = 0; segment < kHidden / kSegment; ++segment) {
+  for (uint32_t segment = 0; segment < hidden / kSegment; ++segment) {
     packed.push_back(filled(backend, uint64_t{kSegment} * kStride, kUntouched));
-    graph.add("ane_ffn_pack", {rotated, packed.back()}, AneFfnPackParams{kHidden, segment * kSegment, kStride},
+    graph.add("ane_ffn_pack", {rotated, packed.back()}, AneFfnPackParams{hidden, segment * kSegment, kStride},
               {kRows / ANE_FFN_TILE, kSegment / ANE_FFN_TILE, 1}, {ANE_FFN_TILE, ANE_FFN_TILE_ROWS, 1});
   }
   run(backend, graph);
 
   for (uint32_t row = 0; row < kRows; ++row) {
-    std::vector<float> v(kHidden);
-    for (uint32_t channel = 0; channel < kHidden; ++channel)
-      v[channel] = bf16ToFloat(x[uint64_t{row} * kHidden + channel]);
+    std::vector<float> v(hidden);
+    for (uint32_t channel = 0; channel < hidden; ++channel)
+      v[channel] = bf16ToFloat(x[uint64_t{row} * hidden + channel]);
     rotate(v, ANE_FFN_INPUT_BLOCK, sign);
     const float scale = std::max(peak(v), ANE_FFN_PEAK_FLOOR) / ANE_FFN_INT8_PEAK, inverse = 1.0f / scale;
     if (!near(fromHalf(contents<uint16_t>(scales)[row]), toHalf(scale * ANE_FFN_INT8_UNIT)))
       fail("row " + std::to_string(row) + ": scale " + std::to_string(fromHalf(contents<uint16_t>(scales)[row])) +
            ", not " + std::to_string(toHalf(scale * ANE_FFN_INT8_UNIT)));
-    for (uint32_t channel = 0; channel < kHidden; ++channel) {
+    for (uint32_t channel = 0; channel < hidden; ++channel) {
+      const float rotatedValue = fromHalf(contents<uint16_t>(rotated)[uint64_t{row} * hidden + channel]);
+      if (!std::isfinite(rotatedValue) || !near(rotatedValue, toHalf(v[channel] * inverse)))
+        fail("row " + std::to_string(row) + " channel " + std::to_string(channel) + ": rotated half mismatch");
       const int8_t got = contents<int8_t>(packed[channel / kSegment])[uint64_t{channel % kSegment} * kStride + row];
       const int8_t expected = toInt8(toHalf(v[channel] * inverse));
       if (!near(got, expected))
@@ -207,7 +220,13 @@ void inputs(MetalBackend &backend, const MetalBuffer &signs, const std::vector<f
           fail("channel " + std::to_string(channel) + ": packed past the rows");
   if (!(fromHalf(contents<uint16_t>(scales)[kZeroRow]) >= 0x1p-14f))
     fail("a row of zeros took a scale that is not a normal half");
-  section("inputs: 64 rows of 5120 bf16 values, one of zeros, as two int8 segments and the rows' scales");
+  for (const auto &[base, bytes] : std::array<std::pair<MetalBuffer, uint64_t>, 2>{
+           {{rotatedBase, rotatedBytes}, {scalesBase, scaleBytes}}})
+    for (uint64_t i = 0; i < guard; ++i)
+      if (contents<uint8_t>(base)[i] != kUntouched || contents<uint8_t>(base)[guard + bytes + i] != kUntouched)
+        fail("input rotation wrote outside its output or scale");
+  section("inputs: 64 rows of " + std::to_string(hidden) + " bf16 values, every 128-channel block, CPU rotation, "
+          "int8 packing and guards");
 }
 
 // ---------------------------------------------------------------- weights
@@ -848,9 +867,106 @@ void split(MetalBackend &backend) {
   section("stops: an infinity in the ANE's output stops the split");
 }
 
+// A manual 4B-shaped split, checked by the existing numerical verifier.
+// Its minimum is explicitly 512 rows, with no startup calibration or timing
+// comparison. verify() checks all of the compiled chunk functions.
+void check4b(MetalBackend &backend) {
+  constexpr uint32_t hidden = 2560, intermediate = 9216, layersCount = 2, aneUnits = 9;
+  std::vector<Projection> projections;
+  for (uint32_t layer = 0; layer < layersCount; ++layer)
+    for (const LinearMatrix matrix : {LinearMatrix{intermediate, hidden}, LinearMatrix{intermediate, hidden},
+                                     LinearMatrix{hidden, intermediate}})
+      {
+        using namespace gguf_reference;
+        const Fmt format = Fmt(GGUF_FMT_AF4G64);
+        const auto native = makeNative(format, matrix.outputSize, matrix.inputSize, rng);
+        const auto packed = repack(format, native, matrix.outputSize, matrix.inputSize, nullptr);
+        projections.emplace_back(matrix.outputSize, matrix.inputSize, BlockWeights{{
+            QuantizedSegment::planes(format, matrix.outputSize, matrix.inputSize,
+                                     upload(backend, packed.w0), {}, upload(backend, packed.meta))}});
+      }
+  std::vector<SwiGluProjections> layers;
+  for (uint32_t layer = 0; layer < layersCount; ++layer)
+    layers.push_back({&projections[3 * layer], &projections[3 * layer + 1], &projections[3 * layer + 2]});
+  const auto bf16Rows = [&](uint32_t width) {
+    return test::sharedBuffer(backend, uint64_t{AneFfn::kMaximumRows} * width * sizeof(uint16_t));
+  };
+  PrefillFfnBuffers buffers{bf16Rows(hidden), bf16Rows(intermediate), bf16Rows(intermediate), {}};
+  const std::array<MetalBuffer, 2> output{bf16Rows(hidden), bf16Rows(hidden)};
+  AneFfn split(backend, layers, aneUnits, nullptr);
+  split.setMinimumRows(512);
+  if (split.share() != 0.5 || !split.splits(512)) fail("4B manual split did not keep the requested share/rows");
+  const double error = split.verify(layers, buffers, output);
+  if (!std::isfinite(error)) fail("4B manual split numerical error is not finite");
+  section("4B manual ANE split: hidden2560/intermediate9216, share0.5, minimum512, numerical verification");
+}
+
 // ---------------------------------------------------------------- faults
 // Each fault of an evaluation at layer 0, 1 and 2 of chunks of 512, 700 and 2048 rows stops the split (stops()); an
 // evaluation that signals the event below its value leaves it there.
+void powerReference(MetalBackend &backend) {
+  const Model model = mlxModel(backend);
+  const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
+  const auto split = splitOf(backend, model);
+  const auto reference = ane_ffn::Measurement(backend, model.layers, buffers.ffn, buffers.hidden, {}).powerReference(*split);
+  if (!reference.valid || !reference.peakWatts || !reference.steadyWatts || reference.samples < 3 ||
+      reference.loadSeconds < 5 || !(reference.referenceWatts > 0))
+    fail("automatic reference did not obtain valid high-load power: " + reference.reason);
+  std::cout << "  reference=" << reference.referenceWatts << " W steady=" << reference.steadyWatts.value_or(0)
+            << " W samples=" << reference.samples << " seconds=" << reference.loadSeconds << '\n';
+  split->setPowerReference(reference);
+  static_cast<void>(split->verify(model.layers, buffers.ffn, buffers.hidden));
+  ane_ffn::RecoverySetting setting{.enabled = true};
+  setting.maximumPowerPercent = 50; setting.referenceWatts = reference.referenceWatts;
+  if (setting.powerThreshold() != reference.referenceWatts * 0.5) fail("reference percentage threshold is wrong");
+  section("startup power reference: five-second configured FFN load, valid samples, fixed share and original numerics");
+}
+
+void recovery(MetalBackend &backend) {
+  const Linear linear(backend.capabilities());
+  const Model model = mlxModel(backend);
+  const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
+  fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
+  // splitOf deliberately discards its Projection objects before this recovery uses them.
+  const auto split = splitOf(backend, model);
+  double clock = 0;
+  std::optional<double> watts = 0.0;
+  uint64_t sequence = 0;
+  split->setRecovery({.enabled = true}, [&] {
+    return ane::PowerSample{watts, clock, ++sequence, 1, 10};
+  }, [&] { return clock; });
+  split->setBreaker(ane_ffn::Breaker({{{AneFfn::kMinimumRows, 1e-6}, {AneFfn::kMaximumRows, 2e-6}}}), {});
+  for (unsigned i = 0; i < ane_ffn::Breaker::kWindow; ++i)
+    if (!forward(backend, linear, model, split.get(), buffers, AneFfn::kMaximumRows).usable)
+      fail("recovery setup produced unusable ANE results");
+  if (!split->retired()) fail("recovery test did not reach performance retirement");
+  clock = 59;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  if (split->recoveryReport()->attempts) fail("recovery ignored cooldown");
+  clock = 61; watts = 0.5;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  watts.reset();
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  if (split->recoveryReport()->attempts) fail("busy or unknown power allowed a probe");
+  watts = 0.0;
+  split->tryRecover(buffers.ffn, buffers.hidden);
+  const auto report = *split->recoveryReport();
+  if (report.attempts != 1 || (report.phase != "running" && report.phase != "cooldown"))
+    fail("numeric recovery probe failed: " + report.phase + ": " + report.reason);
+  if (split->share() != 0.5 || split->minimumRows() != AneFfn::kMinimumRows)
+    fail("recovery changed the fixed share or row threshold");
+  if (!split->retired()) {
+    static_cast<void>(split->verify(model.layers, buffers.ffn, buffers.hidden));
+  } else {
+    fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
+    const auto expected = forward(backend, linear, model, nullptr, buffers, AneFfn::kMaximumRows);
+    const auto actual = forward(backend, linear, model, split.get(), buffers, AneFfn::kMaximumRows);
+    if (!actual.usable || expected.bits != actual.bits) fail("GPU output changed after rejected recovery");
+    if (report.cooldownRemaining < 120) fail("rejected recovery did not extend cooldown");
+  }
+  section("power-gated recovery: cooldown, busy/unknown power, original numeric verifier, fixed share and safe GPU fallback");
+}
+
 void faults(MetalBackend &backend) {
   using Faults = ane::ProgramInstrumentation::Faults;
   const Linear linear(backend.capabilities());
@@ -1059,21 +1175,31 @@ void program(MetalBackend &backend) {
 
 int main(int argc, char **argv) {
   const std::string_view mode = argc == 3 ? argv[2] : "";
-  if (mode != "kernels" && mode != "split" && mode != "faults" && mode != "program") {
-    std::cerr << "usage: ane-ffn METALLIB kernels|split|faults|program\n";
+  if (mode != "kernels" && mode != "kernels4b" && mode != "check4b" && mode != "split" &&
+      mode != "faults" && mode != "recovery" && mode != "power-reference" && mode != "program") {
+    std::cerr << "usage: ane-ffn METALLIB kernels|kernels4b|check4b|split|faults|recovery|power-reference|program\n";
     return 2;
   }
   try {
     MetalBackend backend(argv[1]);
-    if (mode == "kernels") {
+    if (mode == "kernels" || mode == "kernels4b") {
       std::vector<float> sign(ANE_FFN_INTERMEDIATE_BLOCK);
       for (float &value : sign) value = rng() & 1 ? -1.0f : 1.0f;
       const MetalBuffer signs = upload(backend, sign);
       inputs(backend, signs, sign);
-      weights(backend, signs, sign);
-      join(backend);
+      inputs(backend, signs, sign, 2560);
+      if (mode == "kernels") {
+        weights(backend, signs, sign);
+        join(backend);
+      }
+    } else if (mode == "check4b") {
+      check4b(backend);
     } else if (mode == "split") {
       split(backend);
+    } else if (mode == "power-reference") {
+      powerReference(backend);
+    } else if (mode == "recovery") {
+      recovery(backend);
     } else if (mode == "faults") {
       faults(backend);
     } else {

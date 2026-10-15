@@ -21,6 +21,14 @@ class ServerMainTests(unittest.TestCase):
             max_concurrent_requests=4, max_context_tokens=262144, vision=False
         )
         backend = mock.Mock()
+        backend.status.return_value = {
+            "ready": True,
+            "ane_ffn": {"state": "off", "reason": "disabled"},
+            "startup_features": {
+                "drafter": "none",
+                "optional": {"compact_draft_head": False},
+            },
+        }
         server = mock.Mock(server_port=8000)
         tokenizer = object()
         handlers = {}
@@ -67,7 +75,7 @@ class ServerMainTests(unittest.TestCase):
             mock.patch.object(api, "Frontend", return_value=mock.Mock()) as app_type,
             mock.patch.object(api, "FrontendServer", side_effect=bind),
             mock.patch.object(api.signal, "signal", side_effect=install),
-            mock.patch("sys.stdout", new_callable=io.StringIO),
+            mock.patch("sys.stdout", new_callable=io.StringIO) as stdout,
         ):
             api.main()
         self.assertEqual(
@@ -109,6 +117,13 @@ class ServerMainTests(unittest.TestCase):
         server.server_bind.assert_called_once_with()
         server.server_activate.assert_called_once_with()
         self.assertEqual(order, ["bind", "runtime"])
+        log = stdout.getvalue()
+        self.assertIn("--compact-draft-head = off", log)
+        self.assertIn("ANE = off", log)
+        self.assertIn("Drafter = off", log)
+        self.assertIn("Compact = off", log)
+        self.assertLess(log.index("Ready ·"), log.index("Startup effective state"))
+        backend.status.assert_called_once_with(timeout=2.0)
 
     def test_main_takes_vision_from_the_ready_event(self):
         args = main_args()
@@ -240,6 +255,7 @@ class ServerMainTests(unittest.TestCase):
         server.server_close.assert_called_once_with()
         backend.close.assert_called_once()
         self.assertIn("Error · late", stderr.getvalue())
+        self.assertIn("Startup state = error; stage=native engine", stderr.getvalue())
 
     def test_main_rejects_an_unservable_chat_template_before_starting_native(self):
         server = mock.Mock()

@@ -122,6 +122,8 @@ struct SamplingBuffers final {
   // finished: a count every draw returns to zero, where it starts.
   metal::MetalBuffer vocabularyRanges;
   metal::MetalBuffer vocabularyArrivals;
+  // Optional exact top-32 shard lists; absent when the feature is off.
+  metal::MetalBuffer fastTopK{};
 };
 
 struct AcceptanceBuffers final {
@@ -141,7 +143,11 @@ struct AcceptanceBuffers final {
 // stop tokens. The draft's own selector is ops::DraftSelector.
 class Sampling final {
 public:
-  explicit Sampling(uint32_t vocabulary);
+  explicit Sampling(uint32_t vocabulary, bool fastTopK = false);
+  [[nodiscard]] uint64_t fastSelections() const noexcept { return fastSelections_; }
+  [[nodiscard]] uint64_t fastFallbacks() const noexcept { return fastFallbacks_; }
+  void resetFastCounters() noexcept { fastSelections_ = fastFallbacks_ = 0; }
+  [[nodiscard]] static uint64_t fastWorkspaceBytes(uint32_t rows);
 
   // Exact scratch/output bytes for the fixed precompiled sampling ABI.
   // Counts may cover one lane or a batch of lanes; the operator owns sharding.
@@ -231,6 +237,8 @@ private:
 
   uint32_t vocabulary_ = 0;
   uint32_t maskWords_ = 0;
+  bool fastTopK_ = false;
+  mutable uint64_t fastSelections_ = 0, fastFallbacks_ = 0;
 };
 
 } // namespace splash::ops

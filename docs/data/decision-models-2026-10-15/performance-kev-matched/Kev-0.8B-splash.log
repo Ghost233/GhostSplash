@@ -1,0 +1,197 @@
+Kev-0.8B: context=8192, KV=bf16, queue=1, memory=4294967296
+Decision head=Kev 512; drafter=off; compact=off; lookup=off; fast-topk=off; ANE=off
+System One: http://127.0.0.1:18145/v1/systemone
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+12:17:17 Startup configuration · on/off are configured flags; effective state follows Ready
+12:17:17   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968
+12:17:17   --model = ggml-org/Kev-0.8B-GGUF:Q8_0
+12:17:17   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968/tokenizer
+12:17:17   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash
+12:17:17   --port = 18145
+12:17:17   --host = 127.0.0.1
+12:17:17   --allowed-host = none
+12:17:17   --allowed-origin = none
+12:17:17   --api-key = off
+12:17:17   --no-webui = on
+12:17:17   --max-memory = 4294967296
+12:17:17   --max-context = 8192
+12:17:17   --kv-format = bf16
+12:17:17   --idle-release = auto (default 600 s)
+12:17:17   --max-cache-disk = 0
+12:17:17   --persistent-cache = off
+12:17:17   --cache-dir = off / unset
+12:17:17   --served-model-name = none
+12:17:17   --announce-served-name = off
+12:17:17   --default-reasoning-effort = auto
+12:17:17   --max-request-size = 134217728
+12:17:17   --max-image-pixels = 4194304
+12:17:17   --request-timeout = off / unset
+12:17:17   --queue-size = 1
+12:17:17   --decode-share = default (0.5)
+12:17:17   --disable-ane = on
+12:17:17   --ane-ffn-share = auto
+12:17:17   --ane-ffn-minimum-rows = auto
+12:17:17   --ane-power-recovery = off
+12:17:17   --ane-power-reference = off
+12:17:17   --ane-recovery-idle-watts = 0.05
+12:17:17   --ane-recovery-max-power-percent = off / unset
+12:17:17   --prompt-lookup = off
+12:17:17   --prompt-lookup-min-match = 2
+12:17:17   --compact-draft-head = off
+12:17:17   --compact-draft-capacity = 98304
+12:17:17   --compact-draft-ranking = off / unset
+12:17:17   --encoder-submit-batch-size = 4
+12:17:17   --encoder-option-queries = on
+12:17:17   --fast-topk = off
+12:17:17   --allow-idle-sleep = off
+12:17:17 Loading · ggml-org/Kev-0.8B-GGUF:Q8_0
+12:17:18 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+12:17:18 Weights loaded in 0.16 s.
+12:17:18 Kernel policy for GPU family 10 with 20 cores.
+12:17:18 Ready · ggml-org/Kev-0.8B-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18145
+12:17:18 Startup effective state · snapshot at Ready; fallback is distinct from error
+12:17:18   Context = 8192 tokens
+12:17:18   Native concurrent capacity = 4 (queue limit is separate)
+12:17:18   Vision = off
+12:17:18   ANE = off; share=0; minimum_rows=0; reason=as given
+12:17:18   ANE power reference = off / unreported; watts=unknown; reason=none
+12:17:18   ANE recovery = off / unreported; phase=unknown; reason=none
+12:17:18   KV = bf16
+12:17:18   Build = src-12dc3a813f59c5080161e5dd47d6941ad3c77b7e208002ba2bf8c42edd2f2d08
+12:17:18   Metal budget = 4294967296 bytes
+12:17:18   Drafter = off; kind=none; layers=0; block=0; tokens=0
+12:17:18   Prefill block = 2048 tokens (compiled)
+12:17:18   Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+12:17:18   FFN FP16 cache = 528482304 bytes
+12:17:18   Prompt lookup = off; reason=none
+12:17:18   Fast top-k = off; reason=none
+12:17:18   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+12:17:19 Started · input 128 · cached 0
+12:17:19 Done · input 128 · cached 0 · output 0
+12:17:25 Started · input 128 · cached 0
+12:17:25 Done · input 128 · cached 0 · output 0
+12:17:25 Started · input 128 · cached 0
+12:17:25 Done · input 128 · cached 0 · output 0
+12:17:25 Started · input 128 · cached 0
+12:17:25 Done · input 128 · cached 0 · output 0
+12:17:25 Started · input 128 · cached 0
+12:17:25 Done · input 128 · cached 0 · output 0
+12:17:25 Started · input 128 · cached 0
+12:17:25 Done · input 128 · cached 0 · output 0
+12:17:29 Started · input 128 · cached 0
+12:17:29 Done · input 128 · cached 0 · output 0
+12:17:29 Started · input 128 · cached 0
+12:17:29 Done · input 128 · cached 0 · output 0
+12:17:29 Started · input 128 · cached 0
+12:17:29 Done · input 128 · cached 0 · output 0
+12:17:29 Started · input 128 · cached 0
+12:17:29 Done · input 128 · cached 0 · output 0
+12:17:29 Started · input 128 · cached 0
+12:17:29 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 128 · cached 0
+12:17:39 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 128 · cached 0
+12:17:39 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 128 · cached 0
+12:17:39 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 128 · cached 0
+12:17:39 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 128 · cached 0
+12:17:39 Done · input 128 · cached 0 · output 0
+12:17:39 Started · input 512 · cached 0
+12:17:39 Done · input 512 · cached 0 · output 0
+12:17:57 Started · input 512 · cached 0
+12:17:57 Done · input 512 · cached 0 · output 0
+12:17:57 Started · input 512 · cached 0
+12:17:57 Done · input 512 · cached 0 · output 0
+12:17:57 Started · input 512 · cached 0
+12:17:57 Done · input 512 · cached 0 · output 0
+12:17:57 Started · input 512 · cached 0
+12:17:57 Done · input 512 · cached 0 · output 0
+12:17:57 Started · input 512 · cached 0
+12:17:57 Done · input 512 · cached 0 · output 0
+12:18:01 Started · input 512 · cached 0
+12:18:01 Done · input 512 · cached 0 · output 0
+12:18:01 Started · input 512 · cached 0
+12:18:01 Done · input 512 · cached 0 · output 0
+12:18:01 Started · input 512 · cached 0
+12:18:01 Done · input 512 · cached 0 · output 0
+12:18:01 Started · input 512 · cached 0
+12:18:01 Done · input 512 · cached 0 · output 0
+12:18:01 Started · input 512 · cached 0
+12:18:01 Done · input 512 · cached 0 · output 0
+12:18:15 Started · input 512 · cached 0
+12:18:15 Done · input 512 · cached 0 · output 0
+12:18:15 Started · input 512 · cached 0
+12:18:15 Done · input 512 · cached 0 · output 0
+12:18:15 Started · input 512 · cached 0
+12:18:15 Done · input 512 · cached 0 · output 0
+12:18:15 Started · input 512 · cached 0
+12:18:15 Done · input 512 · cached 0 · output 0
+12:18:15 Started · input 512 · cached 0
+12:18:15 Done · input 512 · cached 0 · output 0
+12:18:16 Started · input 2,048 · cached 0
+12:18:16 Done · input 2,048 · cached 0 · output 0
+12:18:25 Started · input 2,048 · cached 0
+12:18:25 Done · input 2,048 · cached 0 · output 0
+12:18:25 Started · input 2,048 · cached 0
+12:18:25 Done · input 2,048 · cached 0 · output 0
+12:18:25 Started · input 2,048 · cached 0
+12:18:25 Done · input 2,048 · cached 0 · output 0
+12:18:25 Started · input 2,048 · cached 0
+12:18:25 Done · input 2,048 · cached 0 · output 0
+12:18:25 Started · input 2,048 · cached 0
+12:18:26 Done · input 2,048 · cached 0 · output 0
+12:18:29 Started · input 2,048 · cached 0
+12:18:29 Done · input 2,048 · cached 0 · output 0
+12:18:29 Started · input 2,048 · cached 0
+12:18:29 Done · input 2,048 · cached 0 · output 0
+12:18:29 Started · input 2,048 · cached 0
+12:18:29 Done · input 2,048 · cached 0 · output 0
+12:18:29 Started · input 2,048 · cached 0
+12:18:29 Done · input 2,048 · cached 0 · output 0
+12:18:29 Started · input 2,048 · cached 0
+12:18:30 Done · input 2,048 · cached 0 · output 0
+12:18:42 Started · input 2,048 · cached 0
+12:18:43 Done · input 2,048 · cached 0 · output 0
+12:18:43 Started · input 2,048 · cached 0
+12:18:43 Done · input 2,048 · cached 0 · output 0
+12:18:43 Started · input 2,048 · cached 0
+12:18:43 Done · input 2,048 · cached 0 · output 0
+12:18:43 Started · input 2,048 · cached 0
+12:18:43 Done · input 2,048 · cached 0 · output 0
+12:18:43 Started · input 2,048 · cached 0
+12:18:43 Done · input 2,048 · cached 0 · output 0
+12:18:45 Started · input 8,192 · cached 0
+12:18:45 Done · input 8,192 · cached 0 · output 0
+12:19:00 Started · input 8,192 · cached 0
+12:19:00 Done · input 8,192 · cached 0 · output 0
+12:19:00 Started · input 8,192 · cached 0
+12:19:01 Done · input 8,192 · cached 0 · output 0
+12:19:01 Started · input 8,192 · cached 0
+12:19:01 Done · input 8,192 · cached 0 · output 0
+12:19:01 Started · input 8,192 · cached 0
+12:19:02 Done · input 8,192 · cached 0 · output 0
+12:19:02 Started · input 8,192 · cached 0
+12:19:02 Done · input 8,192 · cached 0 · output 0
+12:19:06 Started · input 8,192 · cached 0
+12:19:06 Done · input 8,192 · cached 0 · output 0
+12:19:06 Started · input 8,192 · cached 0
+12:19:07 Done · input 8,192 · cached 0 · output 0
+12:19:07 Started · input 8,192 · cached 0
+12:19:07 Done · input 8,192 · cached 0 · output 0
+12:19:07 Started · input 8,192 · cached 0
+12:19:08 Done · input 8,192 · cached 0 · output 0
+12:19:08 Started · input 8,192 · cached 0
+12:19:08 Done · input 8,192 · cached 0 · output 0
+12:19:32 Started · input 8,192 · cached 0
+12:19:33 Done · input 8,192 · cached 0 · output 0
+12:19:33 Started · input 8,192 · cached 0
+12:19:34 Done · input 8,192 · cached 0 · output 0
+12:19:34 Started · input 8,192 · cached 0
+12:19:34 Done · input 8,192 · cached 0 · output 0
+12:19:34 Started · input 8,192 · cached 0
+12:19:35 Done · input 8,192 · cached 0 · output 0
+12:19:35 Started · input 8,192 · cached 0
+12:19:35 Done · input 8,192 · cached 0 · output 0
+12:19:35 Stopping · releasing engine resources

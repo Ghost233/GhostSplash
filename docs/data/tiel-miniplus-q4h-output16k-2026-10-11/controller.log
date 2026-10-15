@@ -1,0 +1,349 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+RESUME AFTER GRAPH COMPARISON FIX:17 validated samples retained;46 remaining; production binary unchanged
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=37 busy=[]
+START perf-0-018-graph-validated-concurrency-4
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+START perf-0-018-graph-validated-attempt2-concurrency-4
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+IDLE GATE waiting gpu=56 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+START perf-0-018-graph-validated-attempt3-concurrency-4
+END perf-0-018-graph-validated-attempt3-concurrency-4 status=complete facts=True prefill=607.8 decode=77.8 peak=17.211GiB
+IDLE GATE waiting gpu=60 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=34 busy=[]
+IDLE GATE waiting gpu=58 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+START perf-0-019-graph-validated-lookup
+IDLE GATE ready gpu=41 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+START perf-0-019-graph-validated-attempt2-lookup
+IDLE GATE waiting gpu=63 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=43 busy=[]
+START perf-0-019-graph-validated-attempt3-lookup
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=42 busy=[]
+START perf-0-019-graph-validated-attempt4-lookup
+END perf-0-019-graph-validated-attempt4-lookup status=complete facts=True prefill=2224.5 decode=160.4 peak=15.727GiB
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+START perf-0-020-graph-validated-compact
+IDLE GATE ready gpu=40 busy=[]
+START perf-0-020-graph-validated-attempt2-compact
+IDLE GATE waiting gpu=98 busy=[7810]
+IDLE GATE ready gpu=38 busy=[]
+START perf-0-020-graph-validated-attempt3-compact
+END perf-0-020-graph-validated-attempt3-compact status=complete facts=True prefill=2185.7 decode=209.5 peak=15.761GiB
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+START perf-0-021-graph-validated-lookup-compact
+IDLE GATE waiting gpu=97 busy=[7810]
+IDLE GATE ready gpu=43 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=42 busy=[]
+START perf-0-021-graph-validated-attempt2-lookup-compact
+IDLE GATE ready gpu=49 busy=[]
+START perf-0-021-graph-validated-attempt3-lookup-compact
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=28 busy=[]
+START perf-0-021-graph-validated-attempt4-lookup-compact
+IDLE GATE waiting gpu=66 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=43 busy=[]
+START perf-0-021-graph-validated-attempt5-lookup-compact
+IDLE GATE ready gpu=29 busy=[]
+START perf-0-021-graph-validated-attempt6-lookup-compact
+END perf-0-021-graph-validated-attempt6-lookup-compact status=complete facts=True prefill=2231.2 decode=163.2 peak=15.882GiB
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=61 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=43 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+START perf-1-022-graph-validated-lookup-compact
+IDLE GATE ready gpu=42 busy=[]
+START perf-1-022-graph-validated-attempt2-lookup-compact
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+
+PROCESS INTERRUPTION RECOVERY: retained21; remaining42; prior exit unavailable
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+RESUME AFTER PROCESS INTERRUPTION:21 validated samples retained;42 remaining; production binary unchanged
+IDLE GATE ready gpu=35 busy=[]
+START perf-1-022-process-resume-20261012-015416-lookup-compact
+END perf-1-022-process-resume-20261012-015416-lookup-compact status=complete facts=True prefill=2257.6 decode=163.1 peak=15.882GiB
+IDLE GATE ready gpu=41 busy=[]
+START perf-1-023-process-resume-20261012-015416-compact
+END perf-1-023-process-resume-20261012-015416-compact status=complete facts=True prefill=2027.9 decode=210.5 peak=15.761GiB
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+START perf-1-024-process-resume-20261012-015416-lookup
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+START perf-1-024-process-resume-20261012-015416-attempt2-lookup
+END perf-1-024-process-resume-20261012-015416-attempt2-lookup status=complete facts=True prefill=2238.9 decode=162.9 peak=15.727GiB
+IDLE GATE ready gpu=34 busy=[]
+START perf-1-025-process-resume-20261012-015416-concurrency-4
+IDLE GATE ready gpu=38 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=37 busy=[]
+START perf-1-025-process-resume-20261012-015416-attempt2-concurrency-4
+END perf-1-025-process-resume-20261012-015416-attempt2-concurrency-4 status=complete facts=True prefill=658.6 decode=92.6 peak=17.211GiB
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=56 busy=[]
+IDLE GATE ready gpu=42 busy=[]
+START perf-1-026-process-resume-20261012-015416-concurrency-2
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+START perf-1-026-process-resume-20261012-015416-attempt2-concurrency-2
+END perf-1-026-process-resume-20261012-015416-attempt2-concurrency-2 status=complete facts=True prefill=1544.3 decode=149.1 peak=16.141GiB
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+START perf-1-027-process-resume-20261012-015416-splits-16
+END perf-1-027-process-resume-20261012-015416-splits-16 status=complete facts=True prefill=2114.3 decode=191.3 peak=15.727GiB
+IDLE GATE ready gpu=49 busy=[]
+START perf-1-028-process-resume-20261012-015416-splits-15
+END perf-1-028-process-resume-20261012-015416-splits-15 status=complete facts=True prefill=1998.7 decode=216.8 peak=15.727GiB
+IDLE GATE ready gpu=29 busy=[]
+START perf-1-029-process-resume-20261012-015416-splits-14
+IDLE GATE ready gpu=48 busy=[]
+START perf-1-029-process-resume-20261012-015416-attempt2-splits-14
+END perf-1-029-process-resume-20261012-015416-attempt2-splits-14 status=complete facts=True prefill=2190.2 decode=219.5 peak=15.606GiB
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=83 busy=[]
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=77 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=66 busy=[]
+IDLE GATE ready gpu=29 busy=[]
+START perf-1-030-process-resume-20261012-015416-splits-13
+END perf-1-030-process-resume-20261012-015416-splits-13 status=complete facts=True prefill=2315.8 decode=215.9 peak=15.727GiB
+IDLE GATE ready gpu=50 busy=[]
+START perf-1-031-process-resume-20261012-015416-splits-12
+END perf-1-031-process-resume-20261012-015416-splits-12 status=complete facts=True prefill=2296.2 decode=217.2 peak=15.606GiB
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=95 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+START perf-1-032-process-resume-20261012-015416-splits-11
+END perf-1-032-process-resume-20261012-015416-splits-11 status=complete facts=True prefill=2283.1 decode=222.3 peak=15.606GiB
+IDLE GATE ready gpu=45 busy=[]
+START perf-1-033-process-resume-20261012-015416-splits-10
+END perf-1-033-process-resume-20261012-015416-splits-10 status=complete facts=True prefill=2247.3 decode=208.7 peak=15.727GiB
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=63 busy=[]
+IDLE GATE ready gpu=21 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=45 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+START perf-1-034-process-resume-20261012-015416-splits-9
+END perf-1-034-process-resume-20261012-015416-splits-9 status=complete facts=True prefill=2299.9 decode=217.7 peak=15.727GiB
+IDLE GATE ready gpu=35 busy=[]
+START perf-1-035-process-resume-20261012-015416-splits-1
+IDLE GATE waiting gpu=100 busy=[46890]
+IDLE GATE waiting gpu=68 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+IDLE GATE waiting gpu=77 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=36 busy=[]
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=51 busy=[]
+IDLE GATE ready gpu=50 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=42 busy=[]
+START perf-1-035-process-resume-20261012-015416-attempt2-splits-1
+END perf-1-035-process-resume-20261012-015416-attempt2-splits-1 status=complete facts=True prefill=2260.7 decode=200.9 peak=15.727GiB
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=46 busy=[]
+START perf-1-036-process-resume-20261012-015416-splits-7
+IDLE GATE waiting gpu=54 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=48 busy=[]
+IDLE GATE waiting gpu=62 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+IDLE GATE waiting gpu=52 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=57 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=35 busy=[]
+START perf-1-036-process-resume-20261012-015416-attempt2-splits-7
+END perf-1-036-process-resume-20261012-015416-attempt2-splits-7 status=complete facts=True prefill=2370.5 decode=233.1 peak=15.727GiB
+IDLE GATE ready gpu=30 busy=[]
+START perf-1-037-process-resume-20261012-015416-splits-6
+END perf-1-037-process-resume-20261012-015416-splits-6 status=complete facts=True prefill=1575.9 decode=166.4 peak=15.727GiB
+IDLE GATE ready gpu=46 busy=[]
+START perf-1-038-process-resume-20261012-015416-splits-5
+END perf-1-038-process-resume-20261012-015416-splits-5 status=complete facts=True prefill=2030.9 decode=217.0 peak=15.727GiB
+IDLE GATE ready gpu=31 busy=[]
+START perf-1-039-process-resume-20261012-015416-splits-4
+IDLE GATE waiting gpu=58 busy=[]
+IDLE GATE ready gpu=38 busy=[]
+START perf-1-039-process-resume-20261012-015416-attempt2-splits-4
+IDLE GATE ready gpu=45 busy=[]
+START perf-1-039-process-resume-20261012-015416-attempt3-splits-4
+END perf-1-039-process-resume-20261012-015416-attempt3-splits-4 status=complete facts=True prefill=2362.1 decode=223.0 peak=15.727GiB
+IDLE GATE ready gpu=32 busy=[]
+START perf-1-040-process-resume-20261012-015416-splits-3
+END perf-1-040-process-resume-20261012-015416-splits-3 status=complete facts=True prefill=2387.2 decode=240.3 peak=15.727GiB
+IDLE GATE ready gpu=36 busy=[]
+IDLE GATE waiting gpu=68 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+START perf-1-041-process-resume-20261012-015416-splits-2
+END perf-1-041-process-resume-20261012-015416-splits-2 status=complete facts=True prefill=2177.4 decode=173.1 peak=15.727GiB
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=58 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+IDLE GATE waiting gpu=60 busy=[]
+IDLE GATE ready gpu=0 busy=[]
+IDLE GATE waiting gpu=64 busy=[]
+IDLE GATE ready gpu=47 busy=[]
+IDLE GATE waiting gpu=61 busy=[]
+IDLE GATE ready gpu=46 busy=[]
+IDLE GATE waiting gpu=62 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+START perf-1-042-process-resume-20261012-015416-baseline
+END perf-1-042-process-resume-20261012-015416-baseline status=complete facts=True prefill=2202.7 decode=200.9 peak=15.606GiB
+IDLE GATE ready gpu=42 busy=[]
+IDLE GATE waiting gpu=63 busy=[]
+IDLE GATE ready gpu=30 busy=[]
+START perf-2-043-process-resume-20261012-015416-splits-11
+END perf-2-043-process-resume-20261012-015416-splits-11 status=complete facts=True prefill=2430.3 decode=236.0 peak=15.606GiB
+IDLE GATE ready gpu=25 busy=[]
+START perf-2-044-process-resume-20261012-015416-splits-12
+END perf-2-044-process-resume-20261012-015416-splits-12 status=complete facts=True prefill=2417.5 decode=217.6 peak=15.606GiB
+IDLE GATE ready gpu=38 busy=[]
+START perf-2-045-process-resume-20261012-015416-splits-13
+END perf-2-045-process-resume-20261012-015416-splits-13 status=complete facts=True prefill=2439.8 decode=228.6 peak=15.727GiB
+IDLE GATE ready gpu=34 busy=[]
+START perf-2-046-process-resume-20261012-015416-splits-14
+END perf-2-046-process-resume-20261012-015416-splits-14 status=complete facts=True prefill=2328.5 decode=234.1 peak=15.606GiB
+IDLE GATE ready gpu=40 busy=[]
+START perf-2-047-process-resume-20261012-015416-splits-15
+END perf-2-047-process-resume-20261012-015416-splits-15 status=complete facts=True prefill=2207.7 decode=221.9 peak=15.727GiB
+IDLE GATE ready gpu=43 busy=[]
+START perf-2-048-process-resume-20261012-015416-splits-16
+IDLE GATE ready gpu=41 busy=[]
+IDLE GATE waiting gpu=55 busy=[]
+IDLE GATE ready gpu=34 busy=[]
+IDLE GATE waiting gpu=56 busy=[]
+IDLE GATE ready gpu=42 busy=[]
+START perf-2-048-process-resume-20261012-015416-attempt2-splits-16
+IDLE GATE ready gpu=38 busy=[]
+START perf-2-048-process-resume-20261012-015416-attempt3-splits-16
+END perf-2-048-process-resume-20261012-015416-attempt3-splits-16 status=complete facts=True prefill=2232.7 decode=201.9 peak=15.727GiB
+IDLE GATE waiting gpu=59 busy=[]
+IDLE GATE ready gpu=44 busy=[]
+START perf-2-049-process-resume-20261012-015416-concurrency-2
+IDLE GATE ready gpu=16 busy=[]
+START perf-2-049-process-resume-20261012-015416-attempt2-concurrency-2
+END perf-2-049-process-resume-20261012-015416-attempt2-concurrency-2 status=complete facts=True prefill=1435.7 decode=129.1 peak=16.141GiB
+IDLE GATE ready gpu=47 busy=[]
+START perf-2-050-process-resume-20261012-015416-concurrency-4
+END perf-2-050-process-resume-20261012-015416-concurrency-4 status=complete facts=True prefill=570.7 decode=83.1 peak=17.211GiB
+IDLE GATE waiting gpu=53 busy=[]
+IDLE GATE ready gpu=49 busy=[]
+START perf-2-051-process-resume-20261012-015416-lookup
+END perf-2-051-process-resume-20261012-015416-lookup status=complete facts=True prefill=2221.7 decode=167.2 peak=15.727GiB
+IDLE GATE ready gpu=47 busy=[]
+START perf-2-052-process-resume-20261012-015416-compact
+END perf-2-052-process-resume-20261012-015416-compact status=complete facts=True prefill=2183.4 decode=226.1 peak=15.761GiB
+IDLE GATE ready gpu=36 busy=[]
+START perf-2-053-process-resume-20261012-015416-lookup-compact
+END perf-2-053-process-resume-20261012-015416-lookup-compact status=complete facts=True prefill=2295.2 decode=176.5 peak=15.882GiB
+IDLE GATE ready gpu=24 busy=[]
+START perf-2-054-process-resume-20261012-015416-baseline
+END perf-2-054-process-resume-20261012-015416-baseline status=complete facts=True prefill=2313.6 decode=222.7 peak=15.606GiB
+IDLE GATE ready gpu=33 busy=[]
+START perf-2-055-process-resume-20261012-015416-splits-2
+END perf-2-055-process-resume-20261012-015416-splits-2 status=complete facts=True prefill=2359.9 decode=248.5 peak=15.727GiB
+IDLE GATE ready gpu=33 busy=[]
+START perf-2-056-process-resume-20261012-015416-splits-3
+END perf-2-056-process-resume-20261012-015416-splits-3 status=complete facts=True prefill=2384.7 decode=242.1 peak=15.727GiB
+IDLE GATE ready gpu=31 busy=[]
+START perf-2-057-process-resume-20261012-015416-splits-4
+END perf-2-057-process-resume-20261012-015416-splits-4 status=complete facts=True prefill=2454.5 decode=234.2 peak=15.727GiB
+IDLE GATE ready gpu=0 busy=[]
+START perf-2-058-process-resume-20261012-015416-splits-5
+END perf-2-058-process-resume-20261012-015416-splits-5 status=complete facts=True prefill=2469.6 decode=248.1 peak=15.727GiB
+IDLE GATE ready gpu=23 busy=[]
+START perf-2-059-process-resume-20261012-015416-splits-6
+END perf-2-059-process-resume-20261012-015416-splits-6 status=complete facts=True prefill=2471.0 decode=209.0 peak=15.727GiB
+IDLE GATE ready gpu=24 busy=[]
+START perf-2-060-process-resume-20261012-015416-splits-7
+END perf-2-060-process-resume-20261012-015416-splits-7 status=complete facts=True prefill=2474.7 decode=243.6 peak=15.727GiB
+IDLE GATE ready gpu=33 busy=[]
+START perf-2-061-process-resume-20261012-015416-splits-1
+END perf-2-061-process-resume-20261012-015416-splits-1 status=complete facts=True prefill=2474.3 decode=245.0 peak=15.727GiB
+IDLE GATE ready gpu=13 busy=[]
+START perf-2-062-process-resume-20261012-015416-splits-9
+END perf-2-062-process-resume-20261012-015416-splits-9 status=complete facts=True prefill=2479.0 decode=229.8 peak=15.727GiB
+IDLE GATE ready gpu=40 busy=[]
+START perf-2-063-process-resume-20261012-015416-splits-10
+END perf-2-063-process-resume-20261012-015416-splits-10 status=complete facts=True prefill=2411.2 decode=231.2 peak=15.727GiB
+GRAPH-VALIDATED SWEEP COMPLETE63

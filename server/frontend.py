@@ -12,7 +12,7 @@ from pathlib import Path
 from jinja2 import TemplateError
 
 from . import images as image_input
-from . import json_codec, judgments
+from . import json_codec, judgments, kev
 from . import protocol as wire
 from .api_shapes import (
     IMAGE_PAD_TOKEN,
@@ -38,6 +38,7 @@ from .errors import (
 from .latency import LatencyMetrics
 from .lru import LRUCache
 from .metrics import is_finite_number
+from .modernbert import ModernBertScorer
 from .serve_options import REASONING_EFFORTS, parse_served_model_name
 from .tokenization import PromptTokenizer, tokenizable
 from .tool_schema import (
@@ -254,6 +255,7 @@ class Frontend:
         served_model_names=(),
         announce_served_name=False,
         default_reasoning_effort=None,
+        decision_config=None,
         default_thinking_token_budget=None,
     ):
         if not isinstance(preparation_capacity, int) or preparation_capacity <= 0:
@@ -263,6 +265,15 @@ class Frontend:
         self.vision = vision
         self.latencies = LatencyMetrics()
         self.tokenizer = tokenizer
+        self.decision_scorer = (
+            (
+                ModernBertScorer(tokenizer, decision_config)
+                if decision_config.get("type") == "laya"
+                else kev.KevScorer(tokenizer, decision_config)
+            )
+            if decision_config is not None
+            else None
+        )
         # Probed at startup; requests choose among these, never the
         # tokenizer's own.
         self.chat_templates = chat_templates
@@ -322,6 +333,8 @@ class Frontend:
     def status(self):
         status = self.backend.status()
         status["vision"] = self.vision
+        if self.decision_scorer is not None:
+            status["decision_model"] = self.decision_scorer.status()
         status["input_modalities"] = self.input_modalities
         status["chat_template"] = self.chat_templates.status()
         with self.preparation_lock:
@@ -330,7 +343,11 @@ class Frontend:
                 "active": self.preparation_active,
                 "waiting": self.preparation_waiting,
             }
-        status["grammar_cache"] = self.constraint_factory.stats()
+        status["grammar_cache"] = (
+            self.constraint_factory.stats()
+            if self.constraint_factory is not None
+            else {"enabled": False}
+        )
         status["response_store"] = self.response_store.stats()
         status["image_cache"] = self.images.stats()
         status["tokenizer_cache"] = self.prompt_tokenizer.stats()
@@ -510,6 +527,8 @@ class Frontend:
     def prepare_completion(self, body, *, deadline):
         """A text completion: the prompt generates as given, with no chat
         template, reasoning split, tools or images."""
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         with self._preparation(deadline):
             if not self.accepts_model(body.get("model")):
                 raise APIError(
@@ -656,6 +675,8 @@ class Frontend:
             raise APIError(400, f"{what} prompt could not be rendered") from error
 
     def prepare_judgment(self, body, *, deadline, disconnected):
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         unknown = sorted(
             set(body)
             - {
@@ -733,6 +754,36 @@ class Frontend:
             for qid, spec in specs:
                 if spec.deterministic:
                     jobs.append((qid, spec, None))
+                    continue
+                if self.decision_scorer is not None:
+                    checkpoint()
+                    try:
+                        tokens, positions = self.decision_scorer.encode(
+                            state, spec, body["questions"][qid]
+                        )
+                    except ValueError as error:
+                        raise APIError(400, str(error)) from error
+                    checkpoint()
+                    if len(tokens) > self.max_context:
+                        raise ContextLengthError(len(tokens), self.max_context)
+                    if (
+                        total_tokens + len(tokens)
+                        > judgments.MAX_SYSTEMONE_TOTAL_TOKENS
+                    ):
+                        raise RequestValidationError(
+                            [
+                                field_error(
+                                    ["questions", qid],
+                                    "total prepared question tokens exceed limit",
+                                )
+                            ]
+                        )
+                    total_tokens += len(tokens)
+                    job = self._score_job(
+                        tokens, positions, deadline, priority, None, cache_salt
+                    )
+                    job.flags = self.decision_scorer.flags(spec)
+                    jobs.append((qid, spec, job))
                     continue
                 slots = judgments.slot_labels(self.tokenizer)
                 if len(spec.labels) > len(slots):
@@ -964,6 +1015,8 @@ class Frontend:
         output_field,
         thinking_display,
     ):
+        if self.decision_scorer is not None:
+            raise APIError(400, "Kev supports /v1/systemone decision scoring only")
         # Fields checked without the prompt fail before it is prepared, which
         # can render documents and build validators.
         options = self._generation_options(body)

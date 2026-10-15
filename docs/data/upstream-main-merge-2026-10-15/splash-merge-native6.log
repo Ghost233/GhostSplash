@@ -1,0 +1,206 @@
+build/merge-upstream-20261015/engine-tests/optional-features
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/ane-program-faults' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/ane_program_faults_test.mm build/merge-upstream-20261015/engine/ane/ProgramInstrumented.o build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/ane-program-faults
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/compact-projection' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/compact_projection_test.mm build/merge-upstream-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/compact-projection
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/dflash-batch-control' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/dflash_batch_control_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/dflash-batch-control
+optional features CPU checks passed
+build/merge-upstream-20261015/engine-tests/ffn-policy
+FFN policy, leading-input stride and submission attribution passed
+build/merge-upstream-20261015/engine-tests/draft-block-contract
+draft-block-contract: PASS block=8
+build/merge-upstream-20261015/engine-tests/ane-ffn-4b-registration
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/dflash-standard' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/dflash_standard_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/dflash-standard
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/draft-attention' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_attention_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/draft-attention
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/draft-block-acceptance' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_block_acceptance_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/draft-block-acceptance
+ANE FFN dense registration and 2560/5120 shape checks passed
+build/merge-upstream-20261015/engine-tests/ane-ffn-program-grid
+ANE4096 function grid: all qualifying chunks covered by 15 functions
+build/merge-upstream-20261015/engine-tests/slot-file
+dev/tests/engine/draft_attention_metal_test.mm:816:36: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  816 |     store(earlier, a - std::min(a, kWindow), a, lane);
+      |                                    ^~~~~~~
+      |                                    cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+dev/tests/engine/draft_attention_metal_test.mm:816:24: error: no matching function for call to 'min'
+  816 |     store(earlier, a - std::min(a, kWindow), a, lane);
+      |                        ^~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:35:1: note: candidate template ignored: deduced conflicting types for parameter '_Tp' ('typename tuple_element<0UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int') vs. '(unnamed enum at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:95:1)')
+   35 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:43:1: note: candidate template ignored: could not match 'initializer_list<_Tp>' against 'typename tuple_element<0UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int')
+   43 | min(initializer_list<_Tp> __t, _Compare __comp) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:48:82: note: candidate function template not viable: requires single argument '__t', but 2 arguments were provided
+   48 | [[__nodiscard__]] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp min(initializer_list<_Tp> __t) {
+      |                                                                                  ^   ~~~~~~~~~~~~~~~~~~~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:29:1: note: candidate function template not viable: requires 3 arguments, but 2 were provided
+   29 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b, _Compare __comp) {
+      | ^                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dev/tests/engine/draft_attention_metal_test.mm:824:38: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  824 |     store(reference, s - std::min(s, kWindow), s, whole);
+      |                                      ^~~~~~~
+      |                                      cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+dev/tests/engine/draft_attention_metal_test.mm:824:26: error: no matching function for call to 'min'
+  824 |     store(reference, s - std::min(s, kWindow), s, whole);
+      |                          ^~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:35:1: note: candidate template ignored: deduced conflicting types for parameter '_Tp' ('typename tuple_element<1UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int') vs. '(unnamed enum at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:95:1)')
+   35 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:43:1: note: candidate template ignored: could not match 'initializer_list<_Tp>' against 'typename tuple_element<1UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int')
+   43 | min(initializer_list<_Tp> __t, _Compare __comp) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:48:82: note: candidate function template not viable: requires single argument '__t', but 2 arguments were provided
+   48 | [[__nodiscard__]/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/draft-selector' --config 815aff42b0631d1a -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc dev/tests/engine/draft_selector_metal_test.mm build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/draft-selector
+] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp min(initializer_list<_Tp> __t) {
+      |                                                                                  ^   ~~~~~~~~~~~~~~~~~~~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:29:1: note: candidate function template not viable: requires 3 arguments, but 2 were provided
+   29 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b, _Compare __comp) {
+      | ^                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dev/tests/engine/draft_attention_metal_test.mm:828:41: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  828 |       const uint64_t index = position % kWindow;
+      |                                         ^~~~~~~
+      |                                         cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+dev/tests/engine/draft_attention_metal_test.mm:830:43: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  830 |              (codes ? index * codeBytes : kWindow * codeBytes + index * groupBytes);
+      |                                           ^~~~~~~
+      |                                           cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+dev/tests/engine/draft_attention_metal_test.mm:833:46: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  833 |     for (uint64_t position = s - std::min(s, kWindow); position < s; ++position)
+      |                                              ^~~~~~~
+      |                                              cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+dev/tests/engine/draft_attention_metal_test.mm:833:34: error: no matching function for call to 'min'
+  833 |     for (uint64_t position = s - std::min(s, kWindow); position < s; ++position)
+      |                                  ^~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:35:1: note: candidate template ignored: deduced conflicting types for parameter '_Tp' ('typename tuple_element<1UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int') vs. '(unnamed enum at /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:95:1)')
+   35 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:43:1: note: candidate template ignored: could not match 'initializer_list<_Tp>' against 'typename tuple_element<1UL, std::array<unsigned int, 3>>::type' (aka 'unsigned int')
+   43 | min(initializer_list<_Tp> __t, _Compare __comp) {
+      | ^
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:48:82: note: candidate function template not viable: requires single argument '__t', but 2 arguments were provided
+   48 | [[__nodiscard__]] inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX14 _Tp min(initializer_list<_Tp> __t) {
+      |                                                                                  ^   ~~~~~~~~~~~~~~~~~~~~~~~~~
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/usr/include/c++/v1/__algorithm/min.h:29:1: note: candidate function template not viable: requires 3 arguments, but 2 were provided
+   29 | min(_LIBCPP_LIFETIMEBOUND const _Tp& __a, _LIBCPP_LIFETIMEBOUND const _Tp& __b, _Compare __comp) {
+      | ^                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dev/tests/engine/draft_attention_metal_test.mm:839:24: error: use of undeclared identifier 'kWindow'; did you mean 'cWindow'?
+  839 |         if (position + kWindow < b) {
+      |                        ^~~~~~~
+      |                        cWindow
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/Headers/AERegistry.h:97:3: note: 'cWindow' declared here
+   97 |   cWindow                       = 'cwin', ///< 0x6377696e
+      |   ^
+9 errors generated.
+make: *** [build/merge-upstream-20261015/engine-tests/draft-attention] Error 1
+make: *** Waiting for unfinished jobs....
+12:40:28 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+Slot file tests passed
+build/merge-upstream-20261015/engine-tests/cache-directory
+Cache directory tests passed
+build/merge-upstream-20261015/engine-tests/disk-space
+12:40:30 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+12:40:30 SSD cache: a second write found /Volumes/Share full, a volume whose free space it does not follow; the cache keeps within the 0.0 GiB it holds while this server runs.
+12:40:30 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-wMUbj9/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+12:40:30 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-4sZ3Pn/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+12:40:30 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-ckiGeu/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+Disk space tests passed
+build/merge-upstream-20261015/engine-tests/legacy-weight-cache
+legacy weight cache tests passed
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tests/engine/run_vision_preparation.py build/merge-upstream-20261015/engine-tests/vision-preparation dev/tests/fixtures/weight-goldens/goldens.json
+Vision layouts from MLX, transformers and GGUF, exact BF16 conversion, rejected sources and zero padding PASS
+build/merge-upstream-20261015/engine-tests/safetensors-checkpoint
+safetensors checkpoint: bounded reads, metadata, written and malformed sources PASS
+build/merge-upstream-20261015/engine-tests/model-configuration dev/tests/fixtures/model-configs
+model configuration: both families, sources, one rule per value, quantization, vision, the installer's check PASS
+build/merge-upstream-20261015/engine-tests/standard-draft-checkpoint
+standard DFlash: exact 69 BF16 tensors, seven AF4G64 block images, no fabricated sections, 357892096 prepared bytes PASS
+build/merge-upstream-20261015/engine-tests/weight-source
+weight source: reads, writes to the open file, replacement and naming PASS
+build/merge-upstream-20261015/engine-tests/gguf-file
+GGUF parser bounds tests passed
+build/merge-upstream-20261015/engine-tests/gguf-reference dev/tests/fixtures/weight-goldens/goldens.json dev/tests/fixtures/mlx-quantization/fixture.json
+CPU reference matches the GGML golden hash: q4k                  ok
+CPU reference matches the GGML golden hash: iq4xs                ok
+CPU reference matches the GGML golden hash: iq4nl                ok
+CPU reference matches the GGML golden hash: q5k                  ok
+CPU reference matches the GGML golden hash: q6k                  ok
+CPU reference matches the GGML golden hash: q3k                  ok
+CPU reference matches the GGML golden hash: q80                  ok
+CPU reference matches the GGML golden hash: iq3s                 ok
+CPU reference matches the GGML golden hash: q2k                  ok
+CPU reference matches the GGML golden hash: iq3xxs               ok
+CPU reference matches the GGML golden hash: iq2xxs               ok
+CPU reference matches the GGML golden hash: iq2xs                ok
+CPU reference matches the GGML golden hash: iq2s                 ok
+CPU reference matches the GGML golden hash: iq1s                 ok
+CPU reference matches the GGML golden hash: iq1m                 ok
+CPU reference matches the GGML golden hash: q40                  ok
+CPU reference matches the GGML golden hash: q41                  ok
+CPU reference matches the GGML golden hash: mxfp4                ok
+CPU reference matches the GGML golden hash: pq20                 ok
+CPU reference matches the GGML golden hash: q50                  ok
+CPU reference matches the GGML golden hash: q51                  ok
+CPU reference matches the GGML golden hash: bf16                 ok
+CPU reference matches the GGML golden hash: f16                  ok
+CPU reference matches the GGML golden hash: q20                  FAIL
+  q20 is now 648a8e2b505cda5bb5a7ec1243293e04feeb61a1be719df952a0cd44953d984a
+CPU reference matches the GGML golden hash: llama.cpp's NVFP4    ok
+MLX fixture holds every MLX affine format, mxfp4 and nvfp4       ok
+CPU reference reads MLX's codes: af2g32                          ok
+CPU reference matches MLX's values: af2g32                       ok
+CPU reference reads MLX's codes: af2g64                          ok
+CPU reference matches MLX's values: af2g64                       ok
+CPU reference reads MLX's codes: af2g128                         ok
+CPU reference matches MLX's values: af2g128                      ok
+CPU reference reads MLX's codes: af3g32                          ok
+CPU reference matches MLX's values: af3g32                       ok
+CPU reference reads MLX's codes: af3g64                          ok
+CPU reference matches MLX's values: af3g64                       ok
+CPU reference reads MLX's codes: af3g128                         ok
+CPU reference matches MLX's values: af3g128                      ok
+CPU reference reads MLX's codes: af4g32                          ok
+CPU reference matches MLX's values: af4g32                       ok
+CPU reference reads MLX's codes: af4g64                          ok
+CPU reference matches MLX's values: af4g64                       ok
+CPU reference reads MLX's codes: af4g128                         ok
+CPU reference matches MLX's values: af4g128                      ok
+CPU reference reads MLX's codes: af5g32                          ok
+CPU reference matches MLX's values: af5g32                       ok
+CPU reference reads MLX's codes: af5g64                          ok
+CPU reference matches MLX's values: af5g64                       ok
+CPU reference reads MLX's codes: af5g128                         ok
+CPU reference matches MLX's values: af5g128                      ok
+CPU reference reads MLX's codes: af6g32                          ok
+CPU reference matches MLX's values: af6g32                       ok
+CPU reference reads MLX's codes: af6g64                          ok
+CPU reference matches MLX's values: af6g64                       ok
+CPU reference reads MLX's codes: af6g128                         ok
+CPU reference matches MLX's values: af6g128                      ok
+CPU reference reads MLX's codes: af8g32                          ok
+CPU reference matches MLX's values: af8g32                       ok
+CPU reference reads MLX's codes: af8g64                          ok
+CPU reference matches MLX's values: af8g64                       ok
+CPU reference reads MLX's codes: af8g128                         ok
+CPU reference matches MLX's values: af8g128                      ok
+CPU reference matches MLX's values: mxfp4 (MLX mxfp4)            ok
+CPU reference matches MLX's values: nvfp4 (MLX nvfp4)            ok
+GGUF reference tests FAILED (1 failures)
+make: *** [test-engine-cpu] Error 1

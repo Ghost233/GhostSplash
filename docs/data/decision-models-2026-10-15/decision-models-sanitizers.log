@@ -1,0 +1,65 @@
+mkdir -p build/decision-modernbert-20261015/sanitizers
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/slot-file-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/model/SlotFile.cpp dev/tests/engine/slot_file_test.cpp -o build/decision-modernbert-20261015/sanitizers/slot-file-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/slot-file-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/model/SlotFile.cpp dev/tests/engine/slot_file_test.cpp -o build/decision-modernbert-20261015/sanitizers/slot-file-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/cache-directory-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/CacheDirectory.cpp dev/tests/engine/cache_directory_test.cpp -o build/decision-modernbert-20261015/sanitizers/cache-directory-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/cache-directory-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/CacheDirectory.cpp dev/tests/engine/cache_directory_test.cpp -o build/decision-modernbert-20261015/sanitizers/cache-directory-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/persistent-cache-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/persistent_cache_test.cpp -o build/decision-modernbert-20261015/sanitizers/persistent-cache-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/persistent-cache-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/persistent_cache_test.cpp -o build/decision-modernbert-20261015/sanitizers/persistent-cache-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/engine-cache-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/engine_cache_test.cpp -o build/decision-modernbert-20261015/sanitizers/engine-cache-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/engine-cache-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/model/SlotFile.cpp dev/tests/engine/engine_cache_test.cpp -o build/decision-modernbert-20261015/sanitizers/engine-cache-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/protocol-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/Protocol.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/protocol_test.cpp -o build/decision-modernbert-20261015/sanitizers/protocol-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/protocol-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/Protocol.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/protocol_test.cpp -o build/decision-modernbert-20261015/sanitizers/protocol-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/engine-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp dev/tests/engine/engine_test.cpp -o build/decision-modernbert-20261015/sanitizers/engine-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/engine-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp dev/tests/engine/engine_test.cpp -o build/decision-modernbert-20261015/sanitizers/engine-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/native-fd-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp runtime/engine/Protocol.cpp runtime/engine/NativeRuntime.cpp runtime/engine/FdTransport.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/native_fd_transport_test.cpp -o build/decision-modernbert-20261015/sanitizers/native-fd-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/native-fd-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/engine/Scheduler.cpp runtime/model/DraftContextPlan.cpp runtime/engine/KvPool.cpp runtime/engine/KvCache.cpp runtime/engine/StateCache.cpp runtime/engine/Cache.cpp runtime/engine/WriteBehind.cpp runtime/engine/Engine.cpp runtime/engine/Protocol.cpp runtime/engine/NativeRuntime.cpp runtime/engine/FdTransport.cpp dev/tests/engine/ProtocolPeer.cpp dev/tests/engine/native_fd_transport_test.cpp -o build/decision-modernbert-20261015/sanitizers/native-fd-tsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-asan-ubsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=address,undefined \
+		runtime/ops/AneFfnCalibration.cpp dev/tests/engine/ane_ffn_calibration_test.cpp -o build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-asan-ubsan
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-tsan' --config 8335816428e69125 -- xcrun -sdk macosx clang++ -std=c++20 -O1 -g -fno-omit-frame-pointer -Wall -Wextra -Werror -Iruntime -Idev -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fsanitize=thread \
+		runtime/ops/AneFfnCalibration.cpp dev/tests/engine/ane_ffn_calibration_test.cpp -o build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-tsan
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/slot-file-asan-ubsan
+Slot file tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/slot-file-tsan
+Slot file tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/cache-directory-asan-ubsan
+Cache directory tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/cache-directory-tsan
+Cache directory tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/persistent-cache-asan-ubsan
+Persistent cache tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/persistent-cache-tsan
+Persistent cache tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/engine-cache-asan-ubsan
+engine cache tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/engine-cache-tsan
+engine cache tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/protocol-asan-ubsan dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/protocol-tsan dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/engine-asan-ubsan
+engine tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/engine-tsan
+engine tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/native-fd-asan-ubsan
+native fd transport tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/native-fd-tsan
+native fd transport tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-asan-ubsan
+ane ffn calibration tests passed
+TSAN_OPTIONS=halt_on_error=1 build/decision-modernbert-20261015/sanitizers/ane-ffn-calibration-tsan
+ane ffn calibration tests passed

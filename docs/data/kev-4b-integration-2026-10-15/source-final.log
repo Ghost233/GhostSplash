@@ -1,0 +1,6 @@
+.venv/bin/python dev/tools/check_architecture.py
+backend architecture: PASS
+.venv/bin/python dev/tools/build_identity.py check --root . \
+		--header build/kev-integration-20261015/engine/BuildIdentity.hpp --stamp build/kev-integration-20261015/engine/build-identity.json \
+		--constant 'runtime=qwen-hybrid-dflash8' --constant 'engine_cxxflags=-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4' --constant 'engine_objcxxflags=-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc' --constant 'engine_linkflags=-framework Foundation -framework Metal -framework IOKit -framework IOSurface' --constant 'production_metalflags=-std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4' --binary build/kev-integration-20261015/splash
+{"build_id": "src-2c7fa8d7b59e0fd7c030eb51fb7944afe4f298469041c6532ce8b756d26166ca", "verified": true}

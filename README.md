@@ -19,8 +19,9 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 ## 我们魔改了什么
 
 上游已覆盖的功能统一使用上游代码和测试。后续同步时移除对应的本地改动。
-上游已支持 GGUF embedding 扩展和混合 F32/Q3_K GDN 权重，具体范围见
-[开发文档](DEVELOPMENT.md#gguf-targets)。
+上游已提供完整 GGUF embedding、混合类型 GDN alpha/beta、量化 GGUF 中的
+BF16/F16 张量、融合 MoE gate/up 专家和 Q5_0/Q5_1 支持，具体范围见
+[开发文档](DEVELOPMENT.md#gguf-targets)。本分支仅保留仍有必要的独有功能与测试。
 
 ### 本地模型启动器
 
@@ -33,9 +34,29 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 | Tiel MiniPlus | [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
 | Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
 
+Swift 27B 的单请求 Dense 入口为 [swift27bdense.command](swift27bdense.command)。
+默认 Q4H KV、并发 1，复用上述 IQ3_S-mtp 文件和本机已缓存的配套 DFlash2。
+文件实际采用混合权重量化，启动器保持各张量的原始格式；GGUF 的 MTP 层未参与运行。
+Lookup 和 compact 各有独立开关，fast top-k 默认关闭：
+
+```sh
+sh swift27bdense.command
+sh swift27bdense.command --kv-format int8 --prompt-lookup off --compact-draft-head off
+```
+
+`--kv-format` 只切换 KV 缓存，支持 BF16、INT8、Q4_0、Q4_0 unrotated 和 Q4H。
+Compact 需要匹配模型的排名文件；未准备时会回退完整输出头。
+普通服务使用当前引擎的 prefill 和 ANE 规划。
+本轮测试的固定尾段 splits=16、ANE share=0.5 和阈值 512 行由测试入口设置。
+五种 KV、32K 输入和 16K 实际输出的测试方式见 [Swift KV 测试说明](dev/benchmarks/docs/swift27b-kv.md)。
+
 旧 Splash 模型包已不受新版运行时支持，对应的两个 Qwen 启动器已删除。
 Bonsai、Swift Bonsai、Ornith、Qwen Distill 和普通 Tiel 的本地模型目录已删除，
 对应启动器也已移除。历史测速记录保留。
+
+本地启动器默认使用当前 checkout 的 `build/splash`；支持 `--binary` 的入口仍可显式指定构建。
+切回 `ghost` 后的产物迁移、验证与 worktree 保全说明见
+[整合记录](docs/ghost-worktree-integration-2026-10-15.md)。
 
 脚本中的模型路径、监听地址、端口和内存配置来自个人环境，使用前需要按本机修改。
 启动器监听 `0.0.0.0`（所有 IPv4 网卡），本机使用 `http://127.0.0.1:端口`，

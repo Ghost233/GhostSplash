@@ -1,0 +1,74 @@
+{
+  "2048": {
+    "budget": 2048,
+    "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-2048",
+    "command": [
+      "make",
+      "-j4",
+      "BUILD=build",
+      "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+      "build/engine/libsplash.a",
+      "build/splash.metallib",
+      "build/engine/BuildIdentity.hpp",
+      "build/engine/metal/MetalBackendInstrumented.o",
+      "build/engine/ane/ProgramInstrumented.o"
+    ],
+    "exit_code": 0,
+    "runtime_code_sha256": "c2c2e8287314121a49f77b03474661e5286951955624b3be6356f1b74ac9975e",
+    "compiled_source_sha256": "44bd04bbc7649eb53ade0c8e1a25736b1e3c6b5b8c91f8c714faff4788aa2f9b",
+    "library_sha256": "2b15b1a23a457be3d52c648ab994a8e7f4db1129a5df7b39d5a763682392cfdb",
+    "metallib_sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+    "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-2048/swift27b-kv-native",
+    "numeric": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-2048/budget-numeric",
+    "attention_oracle": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-2048/swift-tail-oracle",
+    "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-2048/build/splash.metallib"
+  },
+  "1024": {
+    "budget": 1024,
+    "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-1024",
+    "command": [
+      "make",
+      "-j4",
+      "BUILD=build",
+      "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+      "build/engine/libsplash.a",
+      "build/splash.metallib",
+      "build/engine/BuildIdentity.hpp",
+      "build/engine/metal/MetalBackendInstrumented.o",
+      "build/engine/ane/ProgramInstrumented.o"
+    ],
+    "exit_code": 0,
+    "runtime_code_sha256": "9833c62d5e7a764acc4b0e7a3a6e3b82115b293993e96583aa0bfc2678905e2f",
+    "compiled_source_sha256": "a1077a0e01af3b6b9b7f6a7da1129938621dfb88200d8e7b6137a15d019a5ebd",
+    "library_sha256": "29acf5bedf89e17207dca9ba5ca43da4b931280a0ff415c74afa327eaa90978a",
+    "metallib_sha256": "1e7769ffa0919a206f616310597c763228f9973004ed83695024569a0cfacec2",
+    "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-1024/swift27b-kv-native",
+    "numeric": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-1024/budget-numeric",
+    "attention_oracle": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-1024/swift-tail-oracle",
+    "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-1024/build/splash.metallib"
+  },
+  "512": {
+    "budget": 512,
+    "source_root": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-512",
+    "command": [
+      "make",
+      "-j4",
+      "BUILD=build",
+      "BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+      "build/engine/libsplash.a",
+      "build/splash.metallib",
+      "build/engine/BuildIdentity.hpp",
+      "build/engine/metal/MetalBackendInstrumented.o",
+      "build/engine/ane/ProgramInstrumented.o"
+    ],
+    "exit_code": 0,
+    "runtime_code_sha256": "28ce617d80e0e7120b7793936b749581e30fd29548483066eef94a49e910884f",
+    "compiled_source_sha256": "a324183052ab4c6ccb5d41c66cf34009cfd1490614c375b6dcce8a81a28e41e5",
+    "library_sha256": "40d61ec7a6b4f6261ad38f8f9d5484d6fbf528a9236af1d83946bc216cea5eb3",
+    "metallib_sha256": "da002fa0c98f58683876b128c6ba647663b15eb82df21dac0bf6855e0d9fa53f",
+    "native": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-512/swift27b-kv-native",
+    "numeric": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-512/budget-numeric",
+    "attention_oracle": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/variant-512/swift-tail-oracle",
+    "metallib": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-budget-draft-v1/sources-512/build/splash.metallib"
+  }
+}

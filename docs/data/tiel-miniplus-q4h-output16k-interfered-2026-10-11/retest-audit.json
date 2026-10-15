@@ -1,0 +1,254 @@
+{
+  "status": "prepared",
+  "previous_directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1",
+  "previous_completed": 22,
+  "retained": [
+    {
+      "name": "perf-0-003-sweep-splits-3",
+      "profile": "splits-3",
+      "repeat": 0,
+      "busy_pids": [],
+      "busy_samples": 0,
+      "all_samples": 47,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-003-sweep-splits-3"
+    },
+    {
+      "name": "perf-0-004-sweep-splits-4",
+      "profile": "splits-4",
+      "repeat": 0,
+      "busy_pids": [],
+      "busy_samples": 0,
+      "all_samples": 49,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-004-sweep-splits-4"
+    },
+    {
+      "name": "perf-0-005-sweep-splits-5",
+      "profile": "splits-5",
+      "repeat": 0,
+      "busy_pids": [],
+      "busy_samples": 0,
+      "all_samples": 47,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-005-sweep-splits-5"
+    }
+  ],
+  "rerun_due_to_external_workload": [
+    {
+      "name": "perf-0-001-sweep-baseline",
+      "profile": "baseline",
+      "repeat": 0,
+      "busy_pids": [
+        32227,
+        54790
+      ],
+      "busy_samples": 9,
+      "all_samples": 51,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-001-sweep-baseline"
+    },
+    {
+      "name": "perf-0-002-sweep-splits-2",
+      "profile": "splits-2",
+      "repeat": 0,
+      "busy_pids": [
+        32227,
+        54790
+      ],
+      "busy_samples": 6,
+      "all_samples": 55,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-002-sweep-splits-2"
+    },
+    {
+      "name": "perf-0-006-sweep-splits-6",
+      "profile": "splits-6",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 30,
+      "all_samples": 60,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-006-sweep-splits-6"
+    },
+    {
+      "name": "perf-0-007-sweep-splits-7",
+      "profile": "splits-7",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 89,
+      "all_samples": 91,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-007-sweep-splits-7"
+    },
+    {
+      "name": "perf-0-008-sweep-splits-1",
+      "profile": "splits-1",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 125,
+      "all_samples": 154,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-008-sweep-splits-1"
+    },
+    {
+      "name": "perf-0-009-sweep-splits-9",
+      "profile": "splits-9",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 137,
+      "all_samples": 155,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-009-sweep-splits-9"
+    },
+    {
+      "name": "perf-0-010-sweep-splits-10",
+      "profile": "splits-10",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 145,
+      "all_samples": 154,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-010-sweep-splits-10"
+    },
+    {
+      "name": "perf-0-011-sweep-splits-11",
+      "profile": "splits-11",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 142,
+      "all_samples": 152,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-011-sweep-splits-11"
+    },
+    {
+      "name": "perf-0-012-sweep-splits-12",
+      "profile": "splits-12",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 113,
+      "all_samples": 121,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-012-sweep-splits-12"
+    },
+    {
+      "name": "perf-0-013-sweep-splits-13",
+      "profile": "splits-13",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 74,
+      "all_samples": 75,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-013-sweep-splits-13"
+    },
+    {
+      "name": "perf-0-014-sweep-splits-14",
+      "profile": "splits-14",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 66,
+      "all_samples": 69,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-014-sweep-splits-14"
+    },
+    {
+      "name": "perf-0-015-sweep-splits-15",
+      "profile": "splits-15",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 66,
+      "all_samples": 67,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-015-sweep-splits-15"
+    },
+    {
+      "name": "perf-0-016-sweep-splits-16",
+      "profile": "splits-16",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 75,
+      "all_samples": 76,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-016-sweep-splits-16"
+    },
+    {
+      "name": "perf-0-017-sweep-concurrency-2",
+      "profile": "concurrency-2",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 113,
+      "all_samples": 113,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-017-sweep-concurrency-2"
+    },
+    {
+      "name": "perf-0-018-sweep-concurrency-4",
+      "profile": "concurrency-4",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 190,
+      "all_samples": 190,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-018-sweep-concurrency-4"
+    },
+    {
+      "name": "perf-0-019-sweep-lookup",
+      "profile": "lookup",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 102,
+      "all_samples": 102,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-019-sweep-lookup"
+    },
+    {
+      "name": "perf-0-020-sweep-compact",
+      "profile": "compact",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 108,
+      "all_samples": 111,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-020-sweep-compact"
+    },
+    {
+      "name": "perf-0-021-sweep-lookup-compact",
+      "profile": "lookup-compact",
+      "repeat": 0,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 125,
+      "all_samples": 130,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-0-021-sweep-lookup-compact"
+    },
+    {
+      "name": "perf-1-022-sweep-lookup-compact",
+      "profile": "lookup-compact",
+      "repeat": 1,
+      "busy_pids": [
+        54790
+      ],
+      "busy_samples": 41,
+      "all_samples": 84,
+      "source_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1/perf-1-022-sweep-lookup-compact"
+    }
+  ],
+  "retained_samples": 3,
+  "fresh_measurements_planned": 60,
+  "reason": "user reported parallel performance test; reject all samples with measured external activity, not based on observed speed",
+  "native_byte_identical": true,
+  "production_rebuilt": false,
+  "strict_external_workload_gate": true,
+  "pre_start_gpu_max_percent": 50
+}

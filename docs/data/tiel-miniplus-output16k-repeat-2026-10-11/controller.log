@@ -1,0 +1,25 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+OUTPUT16K START9; input32768 output16384 context131072; splits8 block8 C1 optional features off
+START long-0-01-int8
+END long-0-01-int8 status=complete facts=True prefill=2334.6 decode=186.4 peak=15.919GiB
+START long-0-02-bf16
+END long-0-02-bf16 status=complete facts=True prefill=2077.9 decode=185.2 peak=16.332GiB
+START long-0-03-q4h
+END long-0-03-q4h status=complete facts=True prefill=2201.9 decode=200.7 peak=15.606GiB
+ROUND COMPLETE 1 /3
+START long-1-04-bf16
+END long-1-04-bf16 status=complete facts=True prefill=1987.2 decode=185.6 peak=16.332GiB
+START long-1-05-q4h
+END long-1-05-q4h status=complete facts=True prefill=1945.2 decode=181.5 peak=15.606GiB
+START long-1-06-int8
+END long-1-06-int8 status=complete facts=True prefill=1764.0 decode=205.6 peak=15.919GiB
+ROUND COMPLETE 2 /3
+START long-2-07-q4h
+END long-2-07-q4h status=complete facts=True prefill=2074.7 decode=185.5 peak=15.606GiB
+START long-2-08-int8
+END long-2-08-int8 status=complete facts=True prefill=2087.9 decode=200.1 peak=15.919GiB
+START long-2-09-bf16
+END long-2-09-bf16 status=complete facts=True prefill=2143.4 decode=190.4 peak=16.332GiB
+ROUND COMPLETE 3 /3
+OUTPUT16K COMPLETE9

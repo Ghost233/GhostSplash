@@ -359,6 +359,24 @@ void cancels(MetalBackend &backend) {
 
 // A shared event never decreases: the CPU and the GPU signalling below its value leave it there, and a GPU wait on a
 // value it has passed completes at once.
+void restartsOnlyAfterReports(MetalBackend &backend) {
+  ane::Handoff handoff(backend, std::chrono::milliseconds(50));
+  ane::Handoff::Report report;
+  const auto ready = handoff.next(), done = handoff.next();
+  handoff.queue(ready, done, [&](const auto &, auto, auto, auto callback) { report = std::move(callback); });
+  handoff.retire("test retirement");
+  require(!handoff.restart(backend), "handoff restarted with outstanding jobs");
+  require(!handoff.finish(), "retired jobs were accepted");
+  require(!handoff.restart(backend), "handoff restarted before a late report");
+  report(true);
+  require(handoff.restart(backend) && !handoff.retired() && handoff.next() == 1,
+          "settled handoff did not restart with a fresh event");
+  report(false);
+  require(!handoff.retired(), "old duplicate report retired the new handoff");
+  require(!handoff.restart(backend), "running handoff was replaced");
+  std::cout << "PASS restart waits for old reports and isolates the fresh event\n";
+}
+
 void eventsNeverDecrease(MetalBackend &backend) {
   const SharedEvent event = backend.newSharedEvent();
   event.signal(10);
@@ -390,6 +408,7 @@ int main(int argc, const char *argv[]) {
     try {
       MetalBackend backend(argv[1], metal::kResidencyKeepAliveSeconds, kCommandTimeoutSeconds);
       eventsNeverDecrease(backend);
+      restartsOnlyAfterReports(backend);
       for (const Behaviour behaviour :
            {Behaviour::Succeed, Behaviour::FailBeforeReady, Behaviour::FailAfterReady, Behaviour::ThrowAtStart,
             Behaviour::Never, Behaviour::Late, Behaviour::Twice}) {

@@ -141,6 +141,7 @@ const SourceTensor &SafetensorsCheckpoint::require(std::string_view name) const 
   if (!tensor) throw WeightStoreError("missing source tensor: " + std::string(name));
   return *tensor;
 }
+size_t SafetensorsCheckpoint::tensorCount() const noexcept { return impl_->tensors.size(); }
 void SafetensorsCheckpoint::checkUnchanged() const { for (const auto &source : impl_->files) source->checkUnchanged(); }
 
 } // namespace splash::model

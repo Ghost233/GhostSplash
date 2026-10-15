@@ -1,0 +1,6 @@
+{
+  "exit_code": 0,
+  "correct_warmup_8192_accepted": true,
+  "stale_warmup_4096_rejected": true,
+  "starts_inference": false
+}

@@ -22,6 +22,18 @@ typedef uint64_t SplashKvPage;
 // The dimension of every KV head a page holds.
 #define SPLASH_KV_HEAD_DIMENSION 256u
 
+// Standard GGML Q4_0: 32 elements, half scale, low/high halves of 16 nibbles.
+// Not q4h's adjacent-dimension nibble layout or its per-head FP32 scale.
+struct SplashQ4Block {
+#ifdef __METAL_VERSION__
+  half d;
+#else
+  uint16_t d;
+#endif
+  uint8_t qs[16];
+};
+static_assert(sizeof(SplashQ4Block) == 18, "GGML Q4_0 block is exactly 18 bytes");
+
 // The tensors of a layer, in the order they sit in its region of an extent.
 // BF16 has no scales: their bytes are zero.
 #define SPLASH_KV_KEYS 0u
@@ -39,7 +51,9 @@ inline uint32_t splash_kv_page_bytes(uint32_t data_bytes, uint32_t scale_bytes,
 // Where one element of one KV head sits in a page's slab of a tensor, in
 // elements, for `token` of the page's SPLASH_TARGET_KV_BLOCK_TOKENS: keys
 // token-major, values dimension-major, and one scale per (head, token) for
-// either of them.
+// either of them. q4h instead uses key_element for both tensors, divided by
+// two for adjacent signed nibbles; its values are token-major. Q4_0 uses
+// key_element / 32 for both tensors, in units of its 18-byte blocks.
 inline uint64_t splash_kv_key_element(uint32_t head, uint32_t token,
                                       uint32_t dimension) {
   return (uint64_t(head) * SPLASH_TARGET_KV_BLOCK_TOKENS + token) *

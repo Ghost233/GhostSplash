@@ -1,0 +1,212 @@
+{
+  "model_id": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+  "base_parameters": {
+    "kv_format": "int8",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 8,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 512,
+    "context_tokens": 36864,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "features": {
+    "lookup": false,
+    "compact": false,
+    "fast": false
+  },
+  "arms": {
+    "A": {
+      "kv_format": "int8"
+    },
+    "B": {
+      "kv_format": "q4h"
+    }
+  },
+  "pairs_per_output": 8,
+  "planned": 32,
+  "schedule": [
+    {
+      "pair": 0,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 0,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 0,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 0,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 1,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 1,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 1,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 1,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 2,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 2,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 2,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 2,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 3,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 3,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 3,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 3,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 4,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 4,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 4,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 4,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 5,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 5,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 5,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 5,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 6,
+      "output": 512,
+      "arm": "A"
+    },
+    {
+      "pair": 6,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 6,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 6,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 7,
+      "output": 2048,
+      "arm": "B"
+    },
+    {
+      "pair": 7,
+      "output": 2048,
+      "arm": "A"
+    },
+    {
+      "pair": 7,
+      "output": 512,
+      "arm": "B"
+    },
+    {
+      "pair": 7,
+      "output": 512,
+      "arm": "A"
+    }
+  ],
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037"
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+    }
+  },
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "source_results": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1",
+  "background_policy": "keep original observations; accept previously authorized load fluctuations; no automatic speed reruns; preserve 2GiB macOS reserve",
+  "scope": "INT8 versus Q4H only; balanced AB/BA pairs; real 32K input and fixed 512/2048 output; compare each KV with its frozen golden output; allow and record cross-KV token differences"
+}

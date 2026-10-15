@@ -1,0 +1,15 @@
+2026-10-15 01:13:56.615 runtime-resources[70189:23015791] Metal GPU Validation Enabled
+01:13:57 Weights loaded in 0.16 s.
+01:13:57 Kernel policy for GPU family 10 with 20 cores.
+01:13:57 The GPU runs the prefill FFN alone: ANE FFN split needs a hidden size of whole 2560-channel segments.
+01:13:57 Weights loaded in 0.17 s.
+01:13:57 Kernel policy for GPU family 10 with 20 cores.
+01:13:58 Weights loaded in 0.16 s.
+01:13:58 Kernel policy for GPU family 10 with 20 cores.
+01:13:58 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-uxYS2t/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+01:13:58 Weights loaded in 0.17 s.
+01:13:58 Kernel policy for GPU family 10 with 20 cores.
+01:13:58 Weights loaded in 0.19 s.
+01:13:58 Kernel policy for GPU family 10 with 20 cores.
+01:13:58 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-uxYS2t/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+runtime resources tests passed

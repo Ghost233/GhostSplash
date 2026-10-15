@@ -1,0 +1,86 @@
+{
+  "target_branch": "ghost",
+  "target_before": "9d792904949aece261420f76e01253253518d101",
+  "incoming_branch": "codex/qwen4b-quantized-ffn",
+  "incoming_commit": "b20accfc5df6f72ed03425f8c388f24f092703ef",
+  "native_build_id": "src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704",
+  "canonical_build_sha256": {
+    "build/splash": "63de69e4aaeb0bf970f1d3ac4ab4ec80b936c91dbd12c3de0a3fa72e2f7f892e",
+    "build/splash.metallib": "dc9285b2e61fe8afa6cecc51db1142dda19617e56b41baba2933a77d0698de04",
+    "build/merge-upstream-20261015/splash": "63de69e4aaeb0bf970f1d3ac4ab4ec80b936c91dbd12c3de0a3fa72e2f7f892e",
+    "build/merge-upstream-20261015/splash.metallib": "dc9285b2e61fe8afa6cecc51db1142dda19617e56b41baba2933a77d0698de04"
+  },
+  "runtime_server_installer_dev_makefile_exactly_equal_to_incoming": true,
+  "launcher_default_changes": 8,
+  "unchanged_performance_parameters": true,
+  "reused_native_gates": {
+    "native_source_unchanged": true,
+    "same_host": true,
+    "binary_and_metallib_byte_identical": true,
+    "original_evidence": "docs/data/upstream-main-merge-2026-10-15/verification.json"
+  },
+  "validation": [
+    {
+      "command": "shell syntax for all *splash.sh",
+      "exit": 0
+    },
+    {
+      "command": "python -m unittest dev.tests.install.test_local_launchers",
+      "tests": 13,
+      "exit": 0
+    },
+    {
+      "command": "make BUILD=build/merge-upstream-20261015 BUILD_ID_PYTHON=<primary absolute python> check-source verify-build-identity",
+      "exit": 0,
+      "note": "rebuild and identity checked in primary workspace"
+    },
+    {
+      "command": "pip check; Ruff lint/format; compileall",
+      "exit": 0
+    },
+    {
+      "command": "default launcher actual-model/repeat checks in primary",
+      "models": [
+        "Kev-0.8B",
+        "Julia-1",
+        "Laya"
+      ],
+      "requests": 6,
+      "exit": 0,
+      "native_exit": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "command": "initial full Python discovery in primary",
+      "exit": 1,
+      "tests": 1405,
+      "skipped": 4,
+      "error": "primary development environment lacked already-pinned gguf==0.19.0"
+    },
+    {
+      "command": "make install-development; failed converter module rerun",
+      "exit": 0,
+      "focused_tests": 4
+    },
+    {
+      "command": "final complete Python discovery in synchronized primary environment",
+      "log": "ghost-integration-python-final.log",
+      "exit": 0,
+      "tests": 1408,
+      "skipped": 4
+    }
+  ],
+  "preservation": {
+    "verified_regular_files": 59843,
+    "verified_logical_bytes": 16416252446,
+    "apfs_clone": true,
+    "directory": "build/worktree-preserved/20261015-ghost-integration",
+    "untracked_baseline_files": 3,
+    "primary_original_untracked_documents_unchanged": 3
+  },
+  "performance_test": false,
+  "status": "passed"
+}

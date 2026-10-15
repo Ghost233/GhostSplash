@@ -64,6 +64,18 @@ class MemoryReleaseTests(HarnessTestCase):
                 )
         self.assertEqual(runtime.release_calls, 3)
 
+    def test_an_encoder_explicitly_reports_unsupported_release(self):
+        runtime = FakeRuntime()
+        runtime.release_event = native_peer.status_event(
+            weights={"release_supported": False, "released": False, "restoring": False}
+        )
+        harness = self.harness(runtime)
+        status, payload = self.post(harness, {})
+        self.assertEqual(status, 409)
+        self.assertEqual(payload["error"]["code"], "unsupported_operation")
+        self.assertIn("does not support", payload["error"]["message"])
+        self.assertEqual(runtime.release_calls, 1)
+
     def test_the_idle_release_off_does_not_stop_a_release(self):
         # --idle-release off turns only the timer off: the engine releases on
         # request, and the server answers its document as for any release.

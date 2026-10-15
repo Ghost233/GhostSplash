@@ -1,0 +1,68 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[transformers] The tokenizer you are loading from '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+PAIR ARMS {"A": {"config": "cross-k0-s0-f0", "parameters": {"kv_format": "int8", "ane_requested": false, "ane_share": 0, "ane_minimum_rows": 0, "auto_calibration": false, "drafter_enabled": true, "drafter_block_size": 8, "tail_prefill_splits": 8, "concurrency": 1, "input_tokens": 32768, "output_tokens": 512, "context_tokens": 36864, "memory_budget_bytes": 34359738368, "temperature": 0, "ignore_eos": true, "cold_requests": true}, "features": {"lookup": false, "compact": false, "fast": false}}, "B": {"config": "cross-k0-s0-f1", "normalized_total_objective": 1.008634507508772, "parameters": {"kv_format": "int8", "ane_requested": false, "ane_share": 0, "ane_minimum_rows": 0, "auto_calibration": false, "drafter_enabled": true, "drafter_block_size": 8, "tail_prefill_splits": 8, "concurrency": 1, "input_tokens": 32768, "output_tokens": 512, "context_tokens": 36864, "memory_budget_bytes": 34359738368, "temperature": 0, "ignore_eos": true, "cold_requests": true}, "features": {"lookup": true, "compact": false, "fast": false}}}
+START pair-0-01-512-A
+END pair-0-01-512-A status=complete facts=True prefill=1689.3 decode=122.1 peak=15.761GiB
+START pair-0-02-512-B
+END pair-0-02-512-B status=complete facts=True prefill=1823.8 decode=115.2 peak=15.761GiB
+START pair-0-03-2048-A
+END pair-0-03-2048-A status=complete facts=True prefill=1747.0 decode=168.6 peak=15.761GiB
+START pair-0-04-2048-B
+END pair-0-04-2048-B status=complete facts=True prefill=1912.7 decode=177.8 peak=15.761GiB
+START pair-1-05-512-A
+END pair-1-05-512-A status=complete facts=True prefill=1847.2 decode=124.3 peak=15.761GiB
+START pair-1-06-512-B
+END pair-1-06-512-B status=complete facts=True prefill=1880.0 decode=121.7 peak=15.761GiB
+START pair-1-07-2048-A
+END pair-1-07-2048-A status=complete facts=True prefill=1886.4 decode=155.8 peak=15.761GiB
+START pair-1-08-2048-B
+END pair-1-08-2048-B status=complete facts=True prefill=1791.5 decode=164.2 peak=15.761GiB
+START pair-2-09-512-A
+END pair-2-09-512-A status=complete facts=True prefill=1866.2 decode=116.3 peak=15.761GiB
+START pair-2-10-512-B
+END pair-2-10-512-B status=complete facts=True prefill=1796.2 decode=115.4 peak=15.761GiB
+START pair-2-11-2048-A
+END pair-2-11-2048-A status=complete facts=True prefill=1895.0 decode=164.4 peak=15.761GiB
+START pair-2-12-2048-B
+END pair-2-12-2048-B status=complete facts=True prefill=1794.6 decode=175.0 peak=15.761GiB
+START pair-3-13-512-A
+END pair-3-13-512-A status=complete facts=True prefill=1858.4 decode=119.1 peak=15.761GiB
+START pair-3-14-512-B
+END pair-3-14-512-B status=complete facts=True prefill=1792.8 decode=111.3 peak=15.761GiB
+START pair-3-15-2048-A
+END pair-3-15-2048-A status=complete facts=True prefill=1826.0 decode=163.8 peak=15.761GiB
+START pair-3-16-2048-B
+END pair-3-16-2048-B status=complete facts=True prefill=1819.2 decode=174.5 peak=15.761GiB
+START pair-4-17-512-A
+END pair-4-17-512-A status=complete facts=True prefill=1696.3 decode=115.5 peak=15.761GiB
+START pair-4-18-512-B
+END pair-4-18-512-B status=complete facts=True prefill=1646.0 decode=111.8 peak=15.761GiB
+START pair-4-19-2048-A
+END pair-4-19-2048-A status=complete facts=True prefill=1662.0 decode=162.7 peak=15.761GiB
+START pair-4-20-2048-B
+END pair-4-20-2048-B status=complete facts=True prefill=1749.2 decode=173.1 peak=15.761GiB
+START pair-5-21-512-A
+END pair-5-21-512-A status=complete facts=True prefill=1758.5 decode=119.8 peak=15.761GiB
+START pair-5-22-512-B
+END pair-5-22-512-B status=complete facts=True prefill=1706.5 decode=114.0 peak=15.761GiB
+START pair-5-23-2048-A
+END pair-5-23-2048-A status=complete facts=True prefill=1719.7 decode=163.2 peak=15.761GiB
+START pair-5-24-2048-B
+END pair-5-24-2048-B status=complete facts=True prefill=1719.2 decode=173.6 peak=15.761GiB
+START pair-6-25-512-A
+END pair-6-25-512-A status=complete facts=True prefill=1779.1 decode=121.7 peak=15.761GiB
+START pair-6-26-512-B
+END pair-6-26-512-B status=complete facts=True prefill=1753.1 decode=112.7 peak=15.761GiB
+START pair-6-27-2048-A
+END pair-6-27-2048-A status=complete facts=True prefill=1604.6 decode=164.9 peak=15.761GiB
+START pair-6-28-2048-B
+END pair-6-28-2048-B status=complete facts=True prefill=1728.8 decode=175.4 peak=15.761GiB
+START pair-7-29-512-A
+END pair-7-29-512-A status=complete facts=True prefill=1632.1 decode=121.0 peak=15.761GiB
+START pair-7-30-512-B
+END pair-7-30-512-B status=complete facts=True prefill=1651.4 decode=112.1 peak=15.761GiB
+START pair-7-31-2048-A
+END pair-7-31-2048-A status=complete facts=True prefill=1705.8 decode=172.9 peak=15.761GiB
+START pair-7-32-2048-B
+END pair-7-32-2048-B status=complete facts=True prefill=1894.8 decode=184.4 peak=15.761GiB
+PAIR COMPLETE 32

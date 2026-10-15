@@ -1,0 +1,36 @@
+Julia-1-splash 31437 starting
+Julia-1-splash billing {'input_tokens': 37, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'shipping': 0.00017319256955334724, 'billing': 0.9998268074304467}, 'confidence': 0.9996536148608934}}
+Julia-1-splash sentiment {'input_tokens': 29, 'output_tokens': 0} {'mood': {'type': 'choice', 'choice': 'positive', 'probabilities': {'negative': 1.0933919775018525e-05, 'positive': 0.9999890660802251}, 'confidence': 0.9999781321604502}}
+Julia-1-splash noul {'input_tokens': 27, 'output_tokens': 0} {'refund': {'type': 'noul', 'noul': 0.9995259063371436}}
+Julia-1-splash rating {'input_tokens': 34, 'output_tokens': 0} {'urgency': {'type': 'score', 'score': 0.8747064540275268, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.353945403081483, '1': 0.41740273980950743, '2': 0.22865185710900968}, 'confidence': 0.126104109714261}}
+Julia-1-splash json {'input_tokens': 34, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'billing': 0.8013255780310926, 'shipping': 0.1986744219689073}, 'confidence': 0.6026511560621852}}
+Julia-1-splash escaped_marker {'input_tokens': 36, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'shipping', 'probabilities': {'billing': 0.24158714039594062, 'shipping': 0.7584128596040594}, 'confidence': 0.5168257192081187}}
+Julia-1-splash exit 0
+Julia-1 billing probability delta 0.00016489887691839566
+Julia-1 sentiment probability delta 8.383794958932711e-06
+Julia-1 noul noul delta 1.254136904349501e-05
+Julia-1 rating probability delta 0.0007098409733518052
+Julia-1 json probability delta 0.02773213253829987
+Julia-1 escaped_marker probability delta 0.00879777137133056
+Laya-reference 31630 starting
+Laya-reference billing {'input_tokens': 41, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'shipping': 0.03148259222017004, 'billing': 0.96851740777983}, 'confidence': 0.93703481555966}}
+Laya-reference sentiment {'input_tokens': 35, 'output_tokens': 0} {'mood': {'type': 'choice', 'choice': 'positive', 'probabilities': {'negative': 0.029120419913944855, 'positive': 0.9708795800860552}, 'confidence': 0.9417591601721105}}
+Laya-reference noul {'input_tokens': 41, 'output_tokens': 0} {'refund': {'type': 'noul', 'noul': 0.8930412553848671}}
+Laya-reference rating {'input_tokens': 43, 'output_tokens': 0} {'urgency': {'type': 'score', 'score': 0.2776131356024955, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.8367232383795709, '1': 0.04894038763836312, '2': 0.11433637398206618}, 'confidence': 0.5835802965962567}}
+Laya-reference json {'input_tokens': 40, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'billing': 0.9853496565168253, 'shipping': 0.014650343483174722}, 'confidence': 0.9706993130336505}}
+Laya-reference escaped_marker {'input_tokens': 41, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'billing': 0.9204287687446293, 'shipping': 0.07957123125537056}, 'confidence': 0.8408575374892586}}
+Laya-reference exit 0
+Laya-splash 31710 starting
+Laya-splash billing {'input_tokens': 41, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'shipping': 0.01920782826726699, 'billing': 0.980792171732733}, 'confidence': 0.9615843434654661}}
+Laya-splash sentiment {'input_tokens': 35, 'output_tokens': 0} {'mood': {'type': 'choice', 'choice': 'positive', 'probabilities': {'negative': 0.02901591600206556, 'positive': 0.9709840839979343}, 'confidence': 0.9419681679958687}}
+Laya-splash noul {'input_tokens': 41, 'output_tokens': 0} {'refund': {'type': 'noul', 'noul': 0.893181980451422}}
+Laya-splash rating {'input_tokens': 43, 'output_tokens': 0} {'urgency': {'type': 'score', 'score': 0.27741539211892285, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.8366109781721599, '1': 0.04936265153675739, '2': 0.11402637029108273}, 'confidence': 0.5838769118216157}}
+Laya-splash json {'input_tokens': 40, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'billing': 0.9849464069199924, 'shipping': 0.0150535930800075}, 'confidence': 0.9698928138399847}}
+Laya-splash escaped_marker {'input_tokens': 41, 'output_tokens': 0} {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'billing': 0.9195460427626816, 'shipping': 0.08045395723731835}, 'confidence': 0.8390920855253632}}
+Laya-splash exit 0
+Laya billing probability delta 0.012274763952903056
+Laya sentiment probability delta 0.00010450391187929661
+Laya noul noul delta 0.00014072506655493644
+Laya rating probability delta 0.0004222638983942678
+Laya json probability delta 0.00040324959683291084
+Laya escaped_marker probability delta 0.0008827259819477878

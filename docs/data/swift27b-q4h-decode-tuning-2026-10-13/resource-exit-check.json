@@ -1,0 +1,32 @@
+{
+  "owned_pids": [
+    23938,
+    23946,
+    24612,
+    26321,
+    28044,
+    29740,
+    31542,
+    33541,
+    35425,
+    37206,
+    38837,
+    40735,
+    42663,
+    44362,
+    46279,
+    47930,
+    49815
+  ],
+  "live_owned_processes": [],
+  "controller_exit": {
+    "exit_code": 0,
+    "pid": 23946,
+    "source": "subprocess.Popen.wait real exit result"
+  },
+  "environment_after": {
+    "gpu_utilization_percent": 33,
+    "servers": [],
+    "busy_pids": []
+  }
+}

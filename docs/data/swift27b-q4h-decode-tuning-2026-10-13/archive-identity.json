@@ -1,0 +1,10 @@
+{
+  "sha256": "c0b7505caeb50e1775c6f4df9ee270739c88c7fc5cbaed6507e34e1ff40ec4cf",
+  "current_runtime_code_sha256": "f2ecbaa89381b7415a89e604cbe23362fb72db9dac90de900db1ccc890ce0b01",
+  "compiled_code_sha256": "583b74c6c1cd1024e66f4b9d5314803185de8e45cf147cac3eb2bf2e60b85881",
+  "production_metallib_sha256": "40e0761c45d6877ca2c3f3b0dd40628b3d9a61048a7b7cda29189d2fb160c917",
+  "original_weights_changed": false,
+  "baseline_default_output_exact_historical": true,
+  "launch_failures_preserved_not_counted": true,
+  "git_head": "f1a3e55252010f43471bbb1a748d186f80940ee1"
+}

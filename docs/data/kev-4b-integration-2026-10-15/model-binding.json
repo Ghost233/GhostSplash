@@ -1,0 +1,62 @@
+{
+  "assembly": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/a144623ca4f405fdf5d57c471d90534b06818306dab03435e916a0e9031707d9",
+  "record": {
+    "family": "Kev-4B",
+    "files": {
+      "config.json": {
+        "bytes": 877,
+        "ctime_ns": 1792006291708444331,
+        "digest": "0aae13068efcc8a7963ef609c95b2d4f7a3500c362867516ddcb2b0a78a066b5",
+        "mtime_ns": 1792006291708444331,
+        "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76/config.json"
+      },
+      "target/Kev-4B-Q4_K_M.gguf": {
+        "bytes": 3033489824,
+        "ctime_ns": 1791650967263309266,
+        "digest": "33ae6b18926502b2209a1bf7d3b61a350d65938441515c686bb87d226a19eff9",
+        "mtime_ns": 1791650964931645997,
+        "path": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf"
+      },
+      "tokenizer/chat_template.jinja": {
+        "bytes": 7756,
+        "ctime_ns": 1792006291714532335,
+        "digest": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715",
+        "mtime_ns": 1792006291714532335,
+        "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76/tokenizer/chat_template.jinja"
+      },
+      "tokenizer/config.json": {
+        "bytes": 877,
+        "ctime_ns": 1792006291708444331,
+        "digest": "0aae13068efcc8a7963ef609c95b2d4f7a3500c362867516ddcb2b0a78a066b5",
+        "mtime_ns": 1792006291708444331,
+        "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76/config.json"
+      },
+      "tokenizer/tokenizer.json": {
+        "bytes": 10085571,
+        "ctime_ns": 1792006291713280210,
+        "digest": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+        "mtime_ns": 1792006291713280210,
+        "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76/tokenizer/tokenizer.json"
+      },
+      "tokenizer/tokenizer_config.json": {
+        "bytes": 6189,
+        "ctime_ns": 1792006291713966502,
+        "digest": "00197ae68b300bb58f990dad1ddd114daab3ca1ccca8a92e2ed3fd0a85b9c047",
+        "mtime_ns": 1792006291713966502,
+        "path": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.metadata/7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76/tokenizer/tokenizer_config.json"
+      }
+    },
+    "metadata": "7a545f21eb80fcec128999e258ea0990148dfec7709e32135a018833ff31dd76",
+    "model": "ggml-org/Kev-4B-GGUF:Q4_K_M",
+    "sources": {
+      "draft": null,
+      "target": {
+        "repo": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF",
+        "revision": null
+      }
+    },
+    "target_format": "gguf",
+    "version": 1,
+    "vision_format": "none"
+  }
+}

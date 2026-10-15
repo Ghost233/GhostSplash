@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "scope": "actual Saluki CPU tokenizer through corrected server.main startup; native startup prevented",
+  "mistral_regex_warning_calls": 0,
+  "loaded_regex_matches_original": true,
+  "sample_count": 10,
+  "sample_token_ids_match_original": true,
+  "iphone_token_ids": [
+    43252
+  ],
+  "server_tokenizer_contract": "pass",
+  "tokenizer_sha256": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+  "compact_ranking_sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba",
+  "tokenizer_and_compact_ranking_unchanged": true,
+  "modified_source_sha256": {
+    "server/server.py": "a7b8ea67db811da527f3bf07cca0307f99c1cfcb57e321cede3658c7d8d8cd7f",
+    "dev/tests/server/test_tokenizer_contract.py": "e241c291cf9618e440b8e24c131cce05bdf3b24daaee4cc18432ae833efc433a"
+  },
+  "regression": {
+    "command": ".venv/bin/python -m unittest dev.tests.server.test_tokenizer_contract",
+    "tests": 8,
+    "exit_code": 0,
+    "log": "tokenizer-contract-tests.log"
+  },
+  "source_check": {
+    "command": "make check-source BUILD_ID_PYTHON=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python",
+    "exit_code": 0
+  },
+  "static_checks": {
+    "compileall": 0,
+    "ruff_check": 0,
+    "ruff_format_check": 0
+  },
+  "server_module_regression": {
+    "command": ".venv/bin/python -m unittest discover -s dev/tests/server -t . -p 'test_*.py'",
+    "tests": 852,
+    "seconds": 293.818,
+    "exit_code": 0,
+    "log": "server-module-tests.log"
+  }
+}

@@ -33,6 +33,21 @@ using namespace splash::engine;
 using splash::test::rejects;
 using splash::test::require;
 
+void testLoadedDraftIsRequiredOnlyWithDraft() {
+  model::LoadedModel loaded;
+  model::Qwen3_5_4BWeights target;
+  target.actualAllocatedBytes = 1;
+  target.manifestFingerprintSha256 = "target";
+  loaded.descriptor = model::makeModelDescriptor("target-only", target.layout, {}, {},
+      model::TargetSource::Gguf, model::VisionSource::None);
+  loaded.target = std::move(target);
+  loaded.manifestFingerprintSha256 = "model";
+  requireLoadedModel(loaded);
+  loaded.draft.actualAllocatedBytes = 1;
+  rejects([&] { requireLoadedModel(loaded); }, "incomplete allocation accounting",
+          "target-only loader reported nonexistent draft weights");
+}
+
 // A small model whose weights load and whose geometry the runtime plans:
 // four target and two draft layers of the 2048-wide hidden state a compiled
 // draft attention takes, with Qwen3.8-27B's attention and GDN heads and a
@@ -180,6 +195,19 @@ void testPersistentCacheNamespace() {
               persistentCacheNamespace(identity('a', "build", kv::Format::Int8), states) != name &&
               persistentCacheNamespace(identity('a', "build", kv::Format::Int8), bfloatStates) != name,
           "other models, layouts or state formats shared a cache namespace");
+  auto standard = model.stateLayout;
+  standard.draft.fullHistory = true;
+  standard.draft.layerContextTokens[0] = 8192;
+  const auto shortHistory = persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard);
+  standard.draft.layerContextTokens[0] = 32768;
+  require(shortHistory != name &&
+              shortHistory != persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard),
+          "standard draft history capacities shared a persistent namespace");
+  const auto rotatedQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Hadamard), model.stateLayout);
+  const auto plainQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Unrotated), model.stateLayout);
+  const auto q4h = persistentCacheNamespace(identity('a', "build", kv::Format::Int4Hadamard), model.stateLayout);
+  require(rotatedQ4 != plainQ4 && rotatedQ4 != q4h && plainQ4 != name,
+          "different Q4 quantizers or rotation bases shared a persistent namespace");
 }
 
 void testWeightBudgetBeforeLoading(const char *metallibPath) {
@@ -696,6 +724,46 @@ void testAutomaticContextIgnoresTheVolume(const char *metallibPath) {
           "a persistent cache with no room anywhere did not leave the tier off once");
 }
 
+// Exercise the production assembly and runtime with each optional allocation.
+// A category's fixed plan must cover the enabled buffers before KV growth.
+void testOptionalFeatureMemoryPlan(const char *metallibPath) {
+  const test::TemporaryDirectory root("optional-memory-plan");
+  const PlannedModel planned = plannedModel();
+  static_cast<void>(test::writeSyntheticModel(root.path(), planned.target, planned.draft, planned.vision));
+  const auto rankingPath = root.path() / "public.splash";
+  const uint32_t vocabulary = planned.target.vocabularySize;
+  std::vector<uint8_t> ranking(12 + uint64_t{vocabulary} * 4);
+  std::memcpy(ranking.data(), "SPLCHD02", 8);
+  std::memcpy(ranking.data() + 8, &vocabulary, 4);
+  for (uint32_t id = 0; id < vocabulary; ++id)
+    std::memcpy(ranking.data() + 12 + uint64_t{id} * 4, &id, 4);
+  test::writeFile(rankingPath, ranking);
+  for (uint32_t switches = 0; switches < 4; ++switches) {
+    RuntimeResourcesConfig config;
+    config.metallibPath = metallibPath;
+    config.modelRoot = root.path();
+    config.model = model::makeModelDescriptor("optional-memory-test", planned.target, planned.draft,
+        planned.vision, model::TargetSource::Safetensors, model::VisionSource::Safetensors);
+    config.model.sourceIdentity = "synthetic";
+    config.buildId = "optional-memory-test";
+    config.maximumMemoryBytes = 4ULL << 30;
+    config.aneFfn.enabled = false;
+    config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64ULL << 30, 64ULL << 30}); };
+    config.optionalFeatures.compactDraftHead = switches & 1;
+    config.optionalFeatures.fastTopK = switches & 2;
+    config.optionalFeatures.compactCapacity = 512;
+    config.optionalFeatures.compactRanking = switches & 1 ? rankingPath : root.path() / "missing-unused";
+    auto resources = RuntimeResources::create(config, 0);
+    auto runtime = model::createRuntime(resources->modelContext());
+    const auto actual = runtime->actualRuntimeMemory();
+    const uint64_t reserved = resources->memoryPlan().breakdown().sharedDecodeBytes;
+    require(actual.sharedDecodeActualAllocatedBytes <= reserved,
+        "shared decode actual exceeds plan with optional switches=" + std::to_string(switches) +
+        ": actual=" + std::to_string(actual.sharedDecodeActualAllocatedBytes) +
+        ", planned=" + std::to_string(reserved));
+  }
+}
+
 // The engine asks the governor whether the host pauses growth, and its
 // serving mark lets a request in service grow through that pause.
 void testEngineFollowsTheGovernor(const char *metallibPath) {
@@ -730,7 +798,14 @@ void testEngineFollowsTheGovernor(const char *metallibPath) {
 int main(int argc, char **argv) {
   @autoreleasepool {
     try {
-      require(argc == 2, "expected metallib path");
+      require(argc == 2 || (argc == 3 && std::string_view(argv[2]) == "--optional-memory"),
+              "expected metallib path and optional --optional-memory");
+      if (argc == 3) {
+        testOptionalFeatureMemoryPlan(argv[1]);
+        std::cout << "optional feature memory plan tests passed\n";
+        return EXIT_SUCCESS;
+      }
+      testLoadedDraftIsRequiredOnlyWithDraft();
       testLoadedVisionIsRequiredOnlyWithVision();
       testPersistentCacheNamespace();
       testWeightBudgetBeforeLoading(argv[1]);
@@ -747,6 +822,7 @@ int main(int argc, char **argv) {
       testAutomaticTierYieldsToTheContext(argv[1]);
       testAutomaticContextIgnoresTheVolume(argv[1]);
       testEngineFollowsTheGovernor(argv[1]);
+      testOptionalFeatureMemoryPlan(argv[1]);
       std::cout << "runtime resources tests passed\n";
       return EXIT_SUCCESS;
     } catch (const std::exception &error) {

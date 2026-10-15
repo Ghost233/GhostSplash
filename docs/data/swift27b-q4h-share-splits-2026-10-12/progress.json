@@ -1,0 +1,11 @@
+{
+  "controller_pid": 56565,
+  "correctness_completed": 14,
+  "correctness_planned": 14,
+  "completed": 21,
+  "planned": 21,
+  "status": "complete",
+  "mode": "performance",
+  "active": "performance-2-S1-16384-attempt1",
+  "directory": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/swift27b-q4h-share-splits-v1/performance-2-S1-16384-attempt1"
+}

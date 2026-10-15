@@ -33,14 +33,24 @@ void clear(const MetalBuffer &buffer, const char *name) {
   std::memset(writableContents(buffer, name), 0, buffer.sizeBytes());
 }
 
-// What a state file slot holds of a state: its GDN cell, then its context
-// window.
-std::vector<std::span<std::byte>> stateSpans(const GdnParityBuffers &gdn,
-                                             const MetalBuffer &window) {
+// A state file slot holds GDN, then Standard's rings or DFlash2's window.
+std::vector<std::span<std::byte>> stateSpans(
+    const GdnParityBuffers &gdn, const std::shared_ptr<DFlashDraftRing> &draft,
+    const std::shared_ptr<DFlashContextWindow> &window) {
   std::vector<std::span<std::byte>> spans;
-  for (const MetalBuffer *buffer : {&gdn.stateBase, &window})
-    spans.emplace_back(static_cast<std::byte *>(writableContents(*buffer, "state IO")),
-                       buffer->sizeBytes());
+  const auto append = [&](const MetalBuffer &buffer) {
+    spans.emplace_back(static_cast<std::byte *>(writableContents(buffer, "state IO")),
+                       buffer.sizeBytes());
+  };
+  append(gdn.stateBase);
+  if (window) {
+    append(window->buffer());
+  } else if (draft) {
+    for (const auto &layer : draft->layers()) {
+      append(layer.keys);
+      append(layer.values);
+    }
+  }
   return spans;
 }
 
@@ -133,7 +143,7 @@ QwenGdnCell::~QwenGdnCell() {
 QwenStateReservation::QwenStateReservation(std::shared_ptr<QwenBufferPool> pool,
                                            QwenCachedBuffers buffers)
     : pool_(std::move(pool)), buffers_(std::move(buffers)) {
-  if (!pool_ || !buffers_.gdn || !buffers_.window)
+  if (!pool_ || !buffers_.gdn)
     throw std::invalid_argument("state reservation buffers are empty");
 }
 
@@ -156,7 +166,9 @@ QwenCompositeState::QwenCompositeState(std::shared_ptr<QwenBufferPool> pool,
                                        std::shared_ptr<StateStaging> staging)
     : pool_(std::move(pool)), buffers_(std::move(buffers)), layout_(layout),
       lengths_(lengths), file_(std::move(file)), staging_(std::move(staging)) {
-  if (!pool_ || !buffers_.gdn || !buffers_.window) {
+  if (!pool_ || !buffers_.gdn ||
+      (layout_.draft.fullHistory && !buffers_.draft) ||
+      (layout_.draft.usesContextWindow() && !buffers_.window)) {
     throw std::invalid_argument("composite state buffers are empty");
   }
 }
@@ -172,7 +184,7 @@ QwenCompositeState::offload(std::function<void()> completion) const {
   // does.
   if (!canOffload(true)) return {};
   return write(file_, staging_,
-               stateSpans(buffers_.gdn->buffers(), buffers_.window->buffer()),
+               stateSpans(buffers_.gdn->buffers(), buffers_.draft, buffers_.window),
                layout_, lengths_, std::move(completion));
 }
 
@@ -215,7 +227,7 @@ QwenCompositeState::persist(std::function<void()> completion) const {
     return {};
   auto copy = std::shared_ptr<const CompositeState>(
       new QwenCompositeState(layout_, lengths_, file_, disk));
-  const auto spans = stateSpans(buffers_.gdn->buffers(), buffers_.window->buffer());
+  const auto spans = stateSpans(buffers_.gdn->buffers(), buffers_.draft, buffers_.window);
   auto operation = file_->write(std::move(disk), {spans.begin(), spans.end()},
                                 std::move(completion));
   // As for write(): nothing stops the file between the check and the write.
@@ -287,6 +299,8 @@ QwenStateStorage::draft(uint32_t index) const {
 const MetalBuffer &QwenStateStorage::window(uint32_t index) const {
   const Lane &assigned = lane(index);
   requireAssigned(assigned);
+  if (!assigned.cells.window)
+    throw std::logic_error("this model has no draft context window");
   return assigned.cells.window->buffer();
 }
 
@@ -322,8 +336,8 @@ void QwenStateStorage::releaseLane(uint32_t index, uint64_t requestId) {
     --parity;
     pool_->cells.push_back(std::move(current.cells.gdn[parity]));
   }
-  pool_->rings.push_back(std::move(current.cells.draft));
-  pool_->windows.push_back(std::move(current.cells.window));
+  if (current.cells.draft) pool_->rings.push_back(std::move(current.cells.draft));
+  if (current.cells.window) pool_->windows.push_back(std::move(current.cells.window));
   current.metadata = {};
 }
 
@@ -375,16 +389,17 @@ uint64_t QwenStateStorage::missingBytes(uint32_t cells, bool rings) const noexce
   const uint64_t missing = cells - std::min<uint64_t>(pool_->cells.size(), cells);
   return missing * layout_.target.cellBytes() +
          (rings && pool_->rings.empty() ? layout_.draft.ringBytes() : 0) +
-         (pool_->windows.empty() ? layout_.draft.windowBytes() : 0);
+         (layout_.draft.usesContextWindow() && pool_->windows.empty() ? layout_.draft.windowBytes() : 0);
 }
 
 uint32_t QwenStateStorage::statesToActivate() const noexcept {
-  if (!idleRings())
+  if (layout_.draft.usesContextWindow() && !idleRings())
     return std::numeric_limits<uint32_t>::max();
   constexpr uint32_t laneCells = CompositeStateLayout::kLaneGdnCells;
   const uint32_t cells = laneCells - std::min(idleCells(), laneCells);
-  const uint32_t windows = idleWindows() ? 0 : 1;
-  return std::max(cells, windows);
+  const uint32_t draft = layout_.draft.fullHistory ? (idleRings() ? 0 : 1)
+      : layout_.draft.usesContextWindow() ? (idleWindows() ? 0 : 1) : 0;
+  return std::max(cells, draft);
 }
 
 void QwenStateStorage::updateLengths(uint32_t index,
@@ -429,21 +444,33 @@ QwenStateStorage::snapshot(uint32_t index, QwenLogicalLengths lengths) {
 
 std::shared_ptr<QwenStateReservation> QwenStateStorage::reserve() {
   Buffers buffers;
-  if (!acquire(1, false, "qwen-state-cache", buffers))
+  if (!acquire(1, layout_.draft.fullHistory, "qwen-state-cache", buffers))
     return nullptr;
   return std::shared_ptr<QwenStateReservation>(new QwenStateReservation(
-      pool_, {std::move(buffers.gdn[0]), std::move(buffers.window)}));
+      pool_, {std::move(buffers.gdn[0]), std::move(buffers.draft),
+              std::move(buffers.window)}));
 }
 
 void QwenStateStorage::copyState(uint32_t index, QwenStateReservation &reservation) const {
   requireCommitted(lane(index));
   copyExact(reservation.buffers().gdn->buffers().stateBase, current(index).stateBase,
             "cached GDN state");
-  copyWindow(index, reservation);
+  if (layout_.draft.fullHistory) {
+    const auto &ring = draft(index);
+    for (uint32_t layer = 0; layer < ring.size(); ++layer) {
+      copyExact(reservation.buffers().draft->layers()[layer].keys, ring[layer].keys,
+                "cached draft keys");
+      copyExact(reservation.buffers().draft->layers()[layer].values, ring[layer].values,
+                "cached draft values");
+    }
+  } else {
+    copyWindow(index, reservation);
+  }
 }
 
 void QwenStateStorage::copyWindow(uint32_t index, QwenStateReservation &reservation) const {
-  copyExact(reservation.buffers().window->buffer(), window(index), "cached context window");
+  if (layout_.draft.usesContextWindow())
+    copyExact(reservation.buffers().window->buffer(), window(index), "cached context window");
 }
 
 std::shared_ptr<const QwenCompositeState>
@@ -466,7 +493,7 @@ QwenStateStorage::snapshotToDisk(uint32_t index, std::function<void()> completio
   if (!canSnapshotToDisk(true))
     return {};
   return QwenCompositeState::write(file_, staging_,
-                                   stateSpans(current(index), window(index)),
+                                   stateSpans(current(index), lane(index).cells.draft, lane(index).cells.window),
                                    layout_, source.metadata.lengths,
                                    std::move(completion));
 }
@@ -480,6 +507,8 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
   const bool pooledRings = !pool_->rings.empty();
   const bool pooledWindow = !pool_->windows.empty();
   Buffers fresh;
+  if (rings && !pooledRings && !layout_.draft.layers)
+    fresh.draft = std::make_shared<DFlashDraftRing>(backend_, allocations_, layout_.draft, label);
   if (const uint64_t bytes = missingBytes(cells, rings) + extraBytes) {
     const auto admission = admitAllocation_(bytes, [&] {
       if (allocateExtra)
@@ -489,12 +518,12 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
             backend_, allocations_, layout_.target,
             std::string(label) + "-gdn-" + std::to_string(cell)));
       }
-      if (rings && !pooledRings) {
+      if (rings && !pooledRings && layout_.draft.layers) {
         fresh.draft = std::shared_ptr<DFlashDraftRing>(new DFlashDraftRing(
             backend_, allocations_, layout_.draft,
             std::string(label) + "-draft"));
       }
-      if (!pooledWindow) {
+      if (layout_.draft.usesContextWindow() && !pooledWindow) {
         fresh.window = std::shared_ptr<DFlashContextWindow>(new DFlashContextWindow(
             backend_, allocations_, layout_.draft, std::string(label) + "-window"));
       }
@@ -518,7 +547,8 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
   };
   if (rings)
     buffers.draft = take(pool_->rings, fresh.draft, pooledRings);
-  buffers.window = take(pool_->windows, fresh.window, pooledWindow);
+  if (layout_.draft.usesContextWindow())
+    buffers.window = take(pool_->windows, fresh.window, pooledWindow);
   return {};
 }
 
@@ -526,8 +556,15 @@ void QwenStateStorage::restore(uint32_t index, const QwenCompositeState &state,
                                bool restoreDraftState) {
   copyExact(current(index).stateBase, state.buffers_.gdn->buffers().stateBase,
             "restored GDN state");
-  if (restoreDraftState)
+  if (restoreDraftState && layout_.draft.fullHistory) {
+    const auto &ring = draft(index);
+    for (uint32_t layer = 0; layer < ring.size(); ++layer) {
+      copyExact(ring[layer].keys, state.buffers_.draft->layers()[layer].keys, "restored draft keys");
+      copyExact(ring[layer].values, state.buffers_.draft->layers()[layer].values, "restored draft values");
+    }
+  } else if (restoreDraftState && layout_.draft.usesContextWindow()) {
     copyExact(window(index), state.buffers_.window->buffer(), "restored context window");
+  }
   restoreLengths(index, state.lengths_, restoreDraftState);
 }
 
@@ -557,7 +594,7 @@ std::unique_ptr<StateRestore> QwenStateStorage::beginRestore(
   }
   // The read takes the window along whether or not the restore uses it:
   // the snapshot that promotes the state copies it from the lane.
-  auto spans = stateSpans(current(index), window(index));
+  auto spans = stateSpans(current(index), lane(index).cells.draft, lane(index).cells.window);
   auto commit = [this, index, lengths = typed->lengths_, restoreDraftState,
                  committed = std::move(committed)] {
     restoreLengths(index, lengths, restoreDraftState);
@@ -577,8 +614,8 @@ std::shared_ptr<const CompositeState> QwenStateStorage::adopt(const SlotRecord &
                                                               uint32_t tokens) {
   if (!file_)
     throw std::logic_error("Qwen states are taken back only from a disk tier");
-  const uint32_t window = std::min(tokens, ExecutionLimits::draftContextTokens);
-  const QwenLogicalLengths lengths{tokens, tokens - window, window, tokens};
+  const uint32_t window = layout_.draft.layers ? std::min(tokens, layout_.draft.historyCapacity()) : 0;
+  const QwenLogicalLengths lengths{tokens, window ? tokens - window : 0, window, layout_.draft.usesContextWindow() ? tokens : 0};
   validateLengths(lengths, true);
   if (record.payloadBytes != layout_.cachedBytes())
     throw std::invalid_argument("a recorded Qwen state does not match the state layout");
@@ -602,20 +639,20 @@ const QwenStateStorage::Lane &QwenStateStorage::lane(uint32_t index) const {
 
 void QwenStateStorage::validateLengths(const QwenLogicalLengths &lengths,
                                        bool cacheSnapshot) const {
-  if (lengths.draftLength > ExecutionLimits::draftContextTokens ||
+  if (lengths.draftLength > layout_.draft.historyCapacity() ||
       lengths.draftEnd() > lengths.targetTokens ||
       lengths.windowEnd > lengths.draftEnd()) {
     throw std::invalid_argument("invalid draft ring metadata");
   }
   if (cacheSnapshot &&
       (!lengths.targetTokens ||
-       !lengths.hasCompleteDraftWindow(ExecutionLimits::draftContextTokens) ||
+       (layout_.draft.layers && !lengths.hasCompleteDraftWindow(layout_.draft.historyCapacity())) ||
        lengths.targetTokens % kv::kPageTokens)) {
     throw std::invalid_argument(
         "composite snapshot requires equal page-aligned committed lengths");
   }
   // States are published in prefill, which keeps the window with the rings.
-  if (cacheSnapshot && !lengths.hasCurrentContextWindow())
+  if (cacheSnapshot && layout_.draft.usesContextWindow() && !lengths.hasCurrentContextWindow())
     throw std::logic_error("a composite snapshot needs the context window of its draft rings");
 }
 

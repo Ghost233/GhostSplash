@@ -57,6 +57,14 @@ inline void splash_store_verify_phase(
   }
 PAGED_VERIFY_STORE(verify_attention_q8_store, 4, int8_t)
 PAGED_VERIFY_STORE(verify_attention_q8_store_kv2_g8, 2, int8_t)
+PAGED_VERIFY_STORE(verify_attention_q8_store_kv2_g4, 2, int8_t)
 PAGED_VERIFY_STORE(verify_attention_bf16_store, 4, bfloat)
 PAGED_VERIFY_STORE(verify_attention_bf16_store_kv2_g8, 2, bfloat)
+PAGED_VERIFY_STORE(verify_attention_bf16_store_kv2_g4, 2, bfloat)
+PAGED_VERIFY_STORE(verify_attention_q4h_store, 4, uchar)
+PAGED_VERIFY_STORE(verify_attention_q4h_store_kv2_g8, 2, uchar)
+PAGED_VERIFY_STORE(verify_attention_q4h_store_kv2_g4, 2, uchar)
+PAGED_VERIFY_STORE(verify_attention_q4_0_store, 4, SplashQ4Block)
+PAGED_VERIFY_STORE(verify_attention_q4_0_store_kv2_g8, 2, SplashQ4Block)
+PAGED_VERIFY_STORE(verify_attention_q4_0_store_kv2_g4, 2, SplashQ4Block)
 #undef PAGED_VERIFY_STORE

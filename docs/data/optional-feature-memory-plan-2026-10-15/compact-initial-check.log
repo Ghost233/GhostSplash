@@ -1,0 +1,3 @@
+2026-10-15 01:12:15.009 compact-projection[65814:22993247] Metal GPU Validation Enabled
+01:12:15 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/compact-public-lifecycle-6LMtAy/ranking.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+compact projection FAIL: explicit compact must validate before enabling

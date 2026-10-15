@@ -1,0 +1,15 @@
+0.00.053.215 I srv  llama_server: initializing ...
+0.00.053.325 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.055.024 I srv    load_model: loading model '/Users/ghost233/.lmstudio/models/ggml-org/Kev-4B-GGUF/Kev-4B-Q4_K_M.gguf'
+0.00.543.744 I decision model reads the embeddings output, enabling embedding mode
+0.00.544.447 W llama_init_from_model: model default pooling_type is [-1], but [0] was specified
+0.00.575.210 I cmn          init: llama threadpool init, n_threads = 6
+0.00.575.747 I srv          init: decision model type: kev
+0.00.581.477 W init: embeddings required but some input tokens were not marked as outputs -> overriding
+0.00.844.596 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 8448, kv_unified = 'false'
+0.00.846.662 I srv  llama_server: model loaded
+0.00.846.665 I srv  llama_server: listening on http://127.0.0.1:18113
+0.01.027.972 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.01.027.981 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.08.849.242 I slot      release: id  0 | task 0 | stop processing: n_tokens = 8192, truncated = 0
+0.08.851.708 I srv    operator(): operator(): cleaning up before exit...

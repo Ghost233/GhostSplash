@@ -1,0 +1,3 @@
+2026-10-14 11:34:55.565 compact-public-real-head[21568:12007747] Metal API Validation Enabled
+2026-10-14 11:34:55.566 compact-public-real-head[21568:12007747] Metal GPU Validation Enabled
+11:34:56 compact head enabled: public ranking=compact-rankings/qwen35-248320-dev-seed.splash; vocabulary=248320; capacity=98304; numerical_validation=passed; comparisons=786432

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metal/abi/KvExtent.h"
+#include "metal/abi/KvCodec.h"
 #include "metal/kernels/common/kv_paging.h"
 #include <metal_stdlib>
 
@@ -24,9 +25,12 @@ inline device uchar *splash_kv_extent(SplashKvPage page, uint index) {
 
 // One page's bytes of keys (or values) and of their scales in one layer.
 template <uint KVHeads, typename CacheElement> struct SplashKvPageBytes {
-  static constexpr constant bool Quantized = is_same<CacheElement, int8_t>::value;
+  static constexpr constant bool Packed4 = is_same<CacheElement, uchar>::value;
+  static constexpr constant bool Blocked4 = is_same<CacheElement, SplashQ4Block>::value;
+  static constexpr constant bool Quantized = !is_same<CacheElement, bfloat>::value && !Blocked4;
   static constexpr constant uint Data =
-      KVHeads * SplashKvPageTokens * SplashKvHeadDimension * sizeof(CacheElement);
+      KVHeads * SplashKvPageTokens * SplashKvHeadDimension * sizeof(CacheElement) /
+      (Blocked4 ? 32 : Packed4 ? SPLASH_Q4H_VALUES_PER_BYTE : 1);
   static constexpr constant uint Scale =
       Quantized ? KVHeads * SplashKvPageTokens * sizeof(float) : 0;
 };
@@ -62,9 +66,11 @@ template <uint KVHeads, typename CacheElement> struct SplashKvAddressing {
     device uchar *region = splash_kv_extent(entry, index) + layer_offset;
     SplashKvPageTensors<CacheElement> tensors{};
     tensors.keys = reinterpret_cast<device CacheElement *>(region) +
-                   splash_kv_key_index<KVHeads>(index, head, 0, 0);
+                   splash_kv_key_index<KVHeads>(index, head, 0, 0) / (Bytes::Blocked4 ? 32 : Bytes::Packed4 ? SPLASH_Q4H_VALUES_PER_BYTE : 1);
     tensors.values = reinterpret_cast<device CacheElement *>(region + values_offset) +
-                     splash_kv_value_index<KVHeads>(index, head, 0, 0);
+                     (Bytes::Blocked4 ? splash_kv_key_index<KVHeads>(index, head, 0, 0) / 32
+                      : Bytes::Packed4 ? splash_kv_key_index<KVHeads>(index, head, 0, 0) / SPLASH_Q4H_VALUES_PER_BYTE
+                                   : splash_kv_value_index<KVHeads>(index, head, 0, 0));
     if constexpr (Bytes::Quantized) {
       const ulong scale_index = splash_q8_scale_index<KVHeads>(index, head, 0);
       tensors.key_scales =

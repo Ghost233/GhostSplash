@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "input_tokens": 32768,
+  "output_tokens": [
+    512,
+    2048
+  ],
+  "kv_formats": [
+    "int8",
+    "bf16",
+    "q4_0",
+    "q4_0_unrotated",
+    "q4h"
+  ],
+  "ane_modes": [
+    "off",
+    "on"
+  ],
+  "ane_on": {
+    "share": 0.5,
+    "minimum_rows": 512
+  },
+  "drafter_states": [
+    "off",
+    2,
+    4,
+    8,
+    16
+  ],
+  "tail_prefill_splits": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "concurrency": [
+    1,
+    2,
+    4
+  ],
+  "repeats": 3,
+  "context_tokens": 36864,
+  "memory_budget_bytes": 34359738368,
+  "temperature": 0,
+  "ignore_eos": true,
+  "cold_requests": true,
+  "allow_shared_prefix_tokens": 31,
+  "auto_calibration": false,
+  "backend_protocol": "qwen4b-matrix-v1"
+}

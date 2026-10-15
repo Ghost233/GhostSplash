@@ -1,0 +1,101 @@
+{
+  "impossible_context": {
+    "command": [
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash",
+      "serve-encoder-native",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1",
+      "8192",
+      "268435456"
+    ],
+    "expected_exit": 70,
+    "exit": 70,
+    "stderr": "error: ModernBERT native failure: encoder context does not fit --max-memory; lower --max-context or increase the memory limit\n"
+  },
+  "smaller_context": {
+    "command": [
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash",
+      "serve-encoder-native",
+      "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1",
+      "128",
+      "268435456"
+    ],
+    "status": {
+      "schema_version": 6,
+      "healthy": true,
+      "ready": true,
+      "active_requests": 0,
+      "model_kind": "modern-bert",
+      "memory": {
+        "loaded_weight_bytes": 175034628,
+        "quantized_weight_bytes": 174915584,
+        "auxiliary_weight_bytes": 119044,
+        "fp16_weight_cache_bytes": 0,
+        "workspace_bytes": 3680288,
+        "kv_bytes": 0,
+        "state_bytes": 0,
+        "allocated_bytes": 178714916,
+        "peak_allocated_bytes": 178714916,
+        "max_memory_bytes": 268435456
+      },
+      "telemetry": {
+        "completed_requests": 0,
+        "submission_batches": 0,
+        "maximum_submission_batch": 0,
+        "total_prefill_gpu_seconds": 0
+      },
+      "features": {
+        "drafter": "none",
+        "ane": "off",
+        "compact_draft_head": "off",
+        "fast_topk": "off",
+        "prompt_lookup": "off",
+        "encoder_option_queries": true,
+        "encoder_submit_batch_limit": 4,
+        "causal_prefix_cache": false
+      },
+      "ane_ffn": {
+        "state": "off",
+        "share": 0,
+        "minimum_rows": 0,
+        "reason": "GPU encoder"
+      },
+      "identity": {
+        "kv": {
+          "format": "none"
+        },
+        "cache": {
+          "build_id": "src-12dc3a813f59c5080161e5dd47d6941ad3c77b7e208002ba2bf8c42edd2f2d08"
+        }
+      },
+      "memory_governor": {
+        "limit_bytes": 268435456
+      },
+      "warmup": {
+        "detail": "typed encoder full/selected-head numerical check"
+      },
+      "startup_features": {
+        "drafter": "none",
+        "draft_layers": 0,
+        "draft_block_size": 0,
+        "draft_tokens": 0,
+        "prefill_token_budget": 2048,
+        "ffn_cache_bytes": 0,
+        "optional": {
+          "prompt_lookup": false,
+          "fast_topk": false,
+          "compact_draft_head": false,
+          "compact_capacity": 0,
+          "compact_validation_maximum_error": 0,
+          "compact_coverage_fallbacks": 0,
+          "compact_request_fallbacks": 0
+        }
+      }
+    },
+    "exit": 0
+  },
+  "shutdown_during_startup": {
+    "exit": 0,
+    "stdout_bytes": 0,
+    "stderr": ""
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "candidate": "A",
+  "basis": "median total request time among three accepted repetitions",
+  "baseline_still_A": true,
+  "requires_ABBA_confirmation": true,
+  "warning": "B output trajectory differs with ANE off; decode is an end-to-end comparison, not a pure kernel comparison."
+}

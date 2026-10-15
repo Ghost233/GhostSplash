@@ -487,7 +487,7 @@ def _install(selection, repo, installed, draft=None):
         draft, files = _draft(target, installed, draft)
         print(
             f"Installing {selection.model} as {target.family.name} ({target.format}); "
-            f"draft {draft.name}; "
+            f"draft {draft.name if draft else 'disabled'}; "
             f"vision {'disabled' if selection.language_only else 'enabled'}.",
             flush=True,
         )
@@ -499,7 +499,10 @@ def _install(selection, repo, installed, draft=None):
         "family": target.family.name,
         "target_format": target.format,
         "vision_format": target.vision_format,
-        "sources": {"target": repo.identity(), "draft": draft.identity()},
+        "sources": {
+            "target": repo.identity(),
+            "draft": draft.identity() if draft else None,
+        },
     }
     models_root = selection.models_root
     models_root.mkdir(parents=True, exist_ok=True)
@@ -538,10 +541,10 @@ def _changes(installed, family, draft):
         return [f"no supported family is named {installed['family']}"]
     changes = []
     recorded = installed["sources"]["draft"]
-    if draft.identity() != recorded:
+    if draft is not None and draft.identity() != recorded:
         changes.append(
             f"{draft.name} moved from {recorded['revision'][:12]} to {draft.revision[:12]}"
-            if draft.name == recorded["repo"]
+            if recorded and draft.name == recorded["repo"]
             else f"its draft is now {_at(draft)}"
         )
     if installed["target_format"] == "gguf" and installed[
@@ -558,8 +561,21 @@ def _resolve_draft(family, selection, installed, target):
     installed draft stands in, unlisted, or without one a commit the Hub
     cache holds for this selection; the installed draft also stands in, with
     the reason, when the draft cannot be resolved."""
+    if family.draft_repo is None and not selection.draft_model:
+        return None
     name = selection.draft_model or family.draft_repo
+    revision = (
+        families.QWEN35_4B_DFLASH_REVISION
+        if family.name == "Qwen3.5-4B" and name == families.QWEN35_4B_DFLASH_REPO
+        else None
+    )
     recorded = installed and installed["sources"]["draft"]
+    if (
+        revision
+        and recorded
+        and (recorded["repo"] != name or recorded["revision"] != revision)
+    ):
+        recorded = None
     asked = _answered(target)
     if recorded and not asked:
         return hub.Repository(recorded["repo"], recorded["revision"], frozenset())
@@ -567,6 +583,7 @@ def _resolve_draft(family, selection, installed, target):
     try:
         return hub.Repository.resolve(
             name,
+            revision=revision,
             installation=selection.link,
             installed=commit,
             unreachable=None
@@ -590,6 +607,8 @@ def _draft(target, installed, draft):
     the installed one, which is kept too when draft cannot be fetched
     (downloaded and checked for the target)."""
     family = target.family
+    if draft is None:
+        return None, {}
     recorded = installed and installed["sources"]["draft"]
     if draft.identity() != recorded:
         try:
@@ -618,10 +637,10 @@ def _at(repo):
 
 
 def _draft_files(repo, target):
-    """The DFlash2 checkpoint in repo for target's family, downloaded, by
+    """The draft checkpoint in repo for target's family, downloaded, by
     assembly path: config.json and the safetensors weights,
     model.safetensors or the shards its index names, at the root of the
-    repository or --draft-model directory, as a DFlash2 release holds them.
+    repository or --draft-model directory, as its release holds them.
     The weights download only once the engine accepts its configuration with
     the target's (check_model)."""
     family = target.family
@@ -631,7 +650,8 @@ def _draft_files(repo, target):
         weights = _weight_files(repo)
     except models.ModelError as error:
         raise models.ModelError(
-            f"{repo.name} does not contain a DFlash2 checkpoint for {family.name}"
+            f"{repo.name} does not contain a "
+            f"{'DFlash' if family.name == 'Qwen3.5-4B' else 'DFlash2'} checkpoint for {family.name}"
             f" ({error})"
         ) from error
     config = repo.file("config.json")

@@ -1,0 +1,577 @@
+2026-10-14 10:19:22.656 gguf-preparation[55742:10921515] Metal API Validation Enabled
+2026-10-14 10:19:22.657 gguf-preparation[55742:10921515] Metal GPU Validation Enabled
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q4k rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4xs rows=512 K=1024                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4nl rows=512 K=1024                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q5k rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q6k rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q3k rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q80 rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3s rows=512 K=1024                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q2k rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3xxs rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xxs rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xs rows=512 K=1024                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2s rows=512 K=1024                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1s rows=512 K=1024                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1m rows=512 K=1024                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q40 rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q41 rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared mxfp4 rows=512 K=1024                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared pq20 rows=512 K=1024                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g32 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g64 rows=512 K=1024                                  ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g128 rows=512 K=1024                                 ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared nvfp4 rows=512 K=1024                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared fp8 rows=512 K=1024                                     ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q4k rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4xs rows=768 K=1280 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4nl rows=768 K=1280 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q5k rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q6k rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q3k rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q80 rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3s rows=768 K=1280 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q2k rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3xxs rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xxs rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xs rows=768 K=1280 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2s rows=768 K=1280 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1s rows=768 K=1280 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1m rows=768 K=1280 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q40 rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q41 rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared mxfp4 rows=768 K=1280 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared pq20 rows=768 K=1280 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g32 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g64 rows=768 K=1280 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g128 rows=768 K=1280 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared nvfp4 rows=768 K=1280 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared fp8 rows=768 K=1280 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q4k rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4xs rows=768 K=8448 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq4nl rows=768 K=8448 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q5k rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q6k rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q3k rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q80 rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3s rows=768 K=8448 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q2k rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq3xxs rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xxs rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2xs rows=768 K=8448 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq2s rows=768 K=8448 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1s rows=768 K=8448 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared iq1m rows=768 K=8448 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q40 rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q41 rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared mxfp4 rows=768 K=8448 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared pq20 rows=768 K=8448 permuted                           ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af2g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af3g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af4g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af5g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af6g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g32 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g64 rows=768 K=8448 permuted                         ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared af8g128 rows=768 K=8448 permuted                        ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared nvfp4 rows=768 K=8448 permuted                          ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared fp8 rows=768 K=8448 permuted                            ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q3k rows=8704 K=2048                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q3k rows=256 K=305152                                   ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q80 rows=8704 K=2048                                    ok
+repack releases its staging buffer                               ok
+repack staging stays within the repack staging bound             ok
+prepared q80 rows=256 K=123392                                   ok
+golden prepared bytes: dense/target/layer-0.bin                  ok
+golden prepared bytes: dense/target/layer-1.bin                  ok
+golden prepared bytes: dense/target/head.bin                     ok
+golden prepared bytes: dense/target/embedding.bin                ok
+every golden dense image is prepared                             ok
+restored dense images are the bytes loaded                       ok
+prepared norm is the GGUF's F32 values as stored: blk.0.attn_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.0.ssm_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.0.post_attention_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.1.attn_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.1.attn_q_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.1.attn_k_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: blk.1.post_attention_norm.weight ok
+prepared norm is the GGUF's F32 values as stored: output_norm.weight ok
+prepared convolution: exact bf16 in grouped head order           ok
+prepared decay: F32 in grouped head order                        ok
+prepared time bias: exact bf16 in grouped head order             ok
+preparation refuses to round blk.0.ssm_conv1d.weight to bf16     ok
+preparation refuses to round blk.0.ssm_dt.bias to bf16           ok
+golden prepared bytes: moe/target/layer-0.bin                    ok
+golden prepared bytes: moe/target/head.bin                       ok
+golden prepared bytes: moe/target/embedding.bin                  ok
+every golden moe image is prepared                               ok
+restored moe images are the bytes loaded                         ok
+prepared F32 alpha/beta tensor: beta then alpha rows in grouped order ok
+loader keeps weights exact beyond 4 GiB: blk.0.ffn_down_exps.weight ok
+loader keeps weights exact beyond 4 GiB: blk.0.ffn_gate_inp.weight ok
+planner widens BF16 alpha/beta into one F32 tensor               ok
+prepared BF16 alpha/beta: their F32 values, beta then alpha rows in grouped order ok
+planner widens BF16 alpha/beta into one F32 tensor               ok
+prepared BF16 alpha/beta: their F32 values, beta then alpha rows in grouped order ok
+prepared q4k alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq4xs alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq4nl alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q5k alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q6k alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q3k alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q80 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq3s alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q2k alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq3xxs alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq2xxs alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq2xs alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq2s alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq1s alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared iq1m alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q40 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q41 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared mxfp4 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared pq20 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared nvfp4 alpha/beta and zero rows match the CPU reference (qwen35) ok
+prepared q4k alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq4xs alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq4nl alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q5k alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q6k alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q3k alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q80 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq3s alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q2k alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq3xxs alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq2xxs alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq2xs alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq2s alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq1s alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared iq1m alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q40 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared q41 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared mxfp4 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared pq20 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+prepared nvfp4 alpha/beta and zero rows match the CPU reference (qwen35moe) ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q3k alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q40 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_beta.weight ok
+mixed F32/q80 alpha/beta equals reference F32 in grouped head order: blk.0.ssm_alpha.weight ok
+llama.cpp NVFP4 blk.0.ffn_up.weight prepares into the planes of its NVFP4 rows, its .scale as g ok
+llama.cpp NVFP4 blk.0.attn_qkv.weight prepares into the planes of its NVFP4 rows, its .scale as g ok
+a llama.cpp NVFP4 token table prepares into native rows of its values, each scale byte read as llama.cpp reads it ok
+a .scale tensor of another count than its weight's is refused: blk.0.ffn_up.scale ok
+a .scale tensor beside a weight of another type than NVFP4 is refused ok
+llama.cpp NVFP4 blk.0.ffn_gate_exps.weight prepares into the planes of its NVFP4 rows, its .scale as g ok
+a .scale tensor of another count than its weight's is refused: blk.0.ffn_gate_exps.scale ok
+GGUF target: every layer                                         ok
+GGUF target: F32 final norm                                      ok
+GGUF target: logits a Q6_K block projection of vocabulary x hidden into fp32 ok
+GGUF target: token table IQ4_XS blocks of vocabulary x hidden    ok
+GGUF target: a valid target geometry                             ok
+GGUF target layer 0: F32 input and post-attention norms          ok
+GGUF target layer 0: gate block projection                       ok
+GGUF target layer 0: up block projection                         ok
+GGUF target layer 0: down block projection                       ok
+GGUF target layer 0: GDN input segments qkv | z | IQ4_XS alpha-beta tile ok
+GGUF target layer 0: GDN output block projection                 ok
+GGUF target layer 0: F32 GDN norm                                ok
+GGUF target layer 0: GDN output in the GGUF's tiled head order   ok
+GGUF target layer 1: F32 input and post-attention norms          ok
+GGUF target layer 1: gate block projection                       ok
+GGUF target layer 1: up block projection                         ok
+GGUF target layer 1: down block projection                       ok
+GGUF target layer 1: GDN input segments qkv | z | IQ4_XS alpha-beta tile ok
+GGUF target layer 1: GDN output block projection                 ok
+GGUF target layer 1: F32 GDN norm                                ok
+GGUF target layer 1: GDN output in the GGUF's tiled head order   ok
+GGUF target layer 2: F32 input and post-attention norms          ok
+GGUF target layer 2: gate block projection                       ok
+GGUF target layer 2: up block projection                         ok
+GGUF target layer 2: down block projection                       ok
+GGUF target layer 2: GDN input segments qkv | z | IQ4_XS alpha-beta tile ok
+GGUF target layer 2: GDN output block projection                 ok
+GGUF target layer 2: F32 GDN norm                                ok
+GGUF target layer 2: GDN output in the GGUF's tiled head order   ok
+GGUF target layer 3: F32 input and post-attention norms          ok
+GGUF target layer 3: gate block projection                       ok
+GGUF target layer 3: up block projection                         ok
+GGUF target layer 3: down block projection                       ok
+GGUF target layer 3: attention input segments q and gate | k | v ok
+GGUF target layer 3: attention output block projection           ok
+GGUF target layer 3: F32 query and key norms                     ok
+MLX af2g32: planes from its codes and scales                     ok
+MLX af2g32: the token gather's native rows                       ok
+MLX af2g32: dequantized to MLX's F32 values                      ok
+MLX af2g64: planes from its codes and scales                     ok
+MLX af2g64: the token gather's native rows                       ok
+MLX af2g64: dequantized to MLX's F32 values                      ok
+MLX af2g128: planes from its codes and scales                    ok
+MLX af2g128: the token gather's native rows                      ok
+MLX af2g128: dequantized to MLX's F32 values                     ok
+MLX af3g32: planes from its codes and scales                     ok
+MLX af3g32: the token gather's native rows                       ok
+MLX af3g32: dequantized to MLX's F32 values                      ok
+MLX af3g64: planes from its codes and scales                     ok
+MLX af3g64: the token gather's native rows                       ok
+MLX af3g64: dequantized to MLX's F32 values                      ok
+MLX af3g128: planes from its codes and scales                    ok
+MLX af3g128: the token gather's native rows                      ok
+MLX af3g128: dequantized to MLX's F32 values                     ok
+MLX af4g32: planes from its codes and scales                     ok
+MLX af4g32: the token gather's native rows                       ok
+MLX af4g32: dequantized to MLX's F32 values                      ok
+MLX af4g64: planes from its codes and scales                     ok
+MLX af4g64: the token gather's native rows                       ok
+MLX af4g64: dequantized to MLX's F32 values                      ok
+MLX af4g128: planes from its codes and scales                    ok
+MLX af4g128: the token gather's native rows                      ok
+MLX af4g128: dequantized to MLX's F32 values                     ok
+MLX af5g32: planes from its codes and scales                     ok
+MLX af5g32: the token gather's native rows                       ok
+MLX af5g32: dequantized to MLX's F32 values                      ok
+MLX af5g64: planes from its codes and scales                     ok
+MLX af5g64: the token gather's native rows                       ok
+MLX af5g64: dequantized to MLX's F32 values                      ok
+MLX af5g128: planes from its codes and scales                    ok
+MLX af5g128: the token gather's native rows                      ok
+MLX af5g128: dequantized to MLX's F32 values                     ok
+MLX af6g32: planes from its codes and scales                     ok
+MLX af6g32: the token gather's native rows                       ok
+MLX af6g32: dequantized to MLX's F32 values                      ok
+MLX af6g64: planes from its codes and scales                     ok
+MLX af6g64: the token gather's native rows                       ok
+MLX af6g64: dequantized to MLX's F32 values                      ok
+MLX af6g128: planes from its codes and scales                    ok
+MLX af6g128: the token gather's native rows                      ok
+MLX af6g128: dequantized to MLX's F32 values                     ok
+MLX af8g32: planes from its codes and scales                     ok
+MLX af8g32: the token gather's native rows                       ok
+MLX af8g32: dequantized to MLX's F32 values                      ok
+MLX af8g64: planes from its codes and scales                     ok
+MLX af8g64: the token gather's native rows                       ok
+MLX af8g64: dequantized to MLX's F32 values                      ok
+MLX af8g128: planes from its codes and scales                    ok
+MLX af8g128: the token gather's native rows                      ok
+MLX af8g128: dequantized to MLX's F32 values                     ok
+MLX mxfp4 as mxfp4: planes from its codes and scales             ok
+MLX mxfp4 as mxfp4: the token gather's native rows               ok
+MLX mxfp4 as mxfp4: dequantized to MLX's F32 values              ok
+MLX nvfp4 as nvfp4: planes from its codes and scales             ok
+MLX nvfp4 as nvfp4: the token gather's native rows               ok
+MLX nvfp4 as nvfp4: dequantized to MLX's F32 values              ok
+Model Optimizer nvfp4: planes from its tensors                   ok
+Model Optimizer nvfp4: native rows of its scales, tensor scale and codes ok
+Model Optimizer nvfp4: dequantized to its F32 values             ok
+Model Optimizer fp8: planes from its tensors                     ok
+Model Optimizer fp8: native rows of its scales, tensor scale and codes ok
+Model Optimizer fp8: dequantized to its F32 values               ok
+compressed-tensors nvfp4: planes from its tensors                ok
+compressed-tensors nvfp4: native rows of its scales, tensor scale and codes ok
+compressed-tensors nvfp4: dequantized to its F32 values          ok
+compressed-tensors fp8: planes from its tensors                  ok
+compressed-tensors fp8: native rows of its scales, tensor scale and codes ok
+compressed-tensors fp8: dequantized to its F32 values            ok
+transformers RMSNorm weight read as the F32 1 + w                ok
+GGUF preparation tests passed (0 failures)

@@ -56,7 +56,7 @@ def quantized_group(weights):
     return struct.pack("<HH", bf16(scale), bf16(bias)) + packed
 
 
-def draft_fixture(root):
+def draft_fixture(root, *, standard=False):
     """A two-layer DFlash2 checkpoint of width 256, its BF16 safetensors as
     its repository releases them, and expected/native.safetensors: each
     projection's native af4g64 rows, as MLX's affine quantization rounds
@@ -81,7 +81,7 @@ def draft_fixture(root):
         )
         expected[name] = ([rows, columns // 64 * 36], "U8", native)
 
-    for layer in range(2):
+    for layer in range(6 if standard else 2):
         p = f"layers.{layer}."
         a = p + "self_attn."
         dynamic = None
@@ -100,26 +100,34 @@ def draft_fixture(root):
             dynamic += [-2.5, -8.5, *(-float(i % 15 + 1) for i in range(62))]
             dynamic += [((i * 37 + 11) % 509 - 254) / 64 for i in range(254 * 256)]
         add(p + "input_layernorm.weight", [256])
-        add(p + "attention_conv.base_kernel", [2, 2, 256])
-        projection(p + "attention_conv.kernel_projection", 256, 256, dynamic)
+        if not standard:
+            add(p + "attention_conv.base_kernel", [2, 2, 256])
+            projection(p + "attention_conv.kernel_projection", 256, 256, dynamic)
         # The fused q|k|v projection's parts.
-        for name, rows in (("q_proj", 256), ("k_proj", 128), ("v_proj", 128)):
+        for name, rows in (
+            ("q_proj", 512 if standard else 256),
+            ("k_proj", 128),
+            ("v_proj", 128),
+        ):
             projection(a + name, rows, 256)
         add(a + "q_norm.weight", [64])
         add(a + "k_norm.weight", [64])
-        projection(a + "o_proj", 256, 256)
+        projection(a + "o_proj", 256, 512 if standard else 256)
         add(p + "post_attention_layernorm.weight", [256])
-        add(p + "mlp_conv.base_kernel", [2, 2, 256])
-        projection(p + "mlp_conv.kernel_projection", 256, 256)
-        projection(p + "mlp.gate_proj", 256, 256)
-        projection(p + "mlp.up_proj", 256, 256)
-        projection(p + "mlp.down_proj", 256, 256)
-    projection("fc", 256, 256)
+        if not standard:
+            add(p + "mlp_conv.base_kernel", [2, 2, 256])
+            projection(p + "mlp_conv.kernel_projection", 256, 256)
+        ffn = 512 if standard else 256
+        projection(p + "mlp.gate_proj", ffn, 256)
+        projection(p + "mlp.up_proj", ffn, 256)
+        projection(p + "mlp.down_proj", 256, ffn)
+    projection("fc", 256, 2048 if standard else 256)
     add("hidden_norm.weight", [256])
     add("norm.weight", [256])
-    projection("candidate_selector.hidden_projection", 256, 256)
-    add("candidate_selector.predecessor_codebook", [256, 256])
-    add("candidate_selector.successor_codebook", [256, 256])
+    if not standard:
+        projection("candidate_selector.hidden_projection", 256, 256)
+        add("candidate_selector.predecessor_codebook", [256, 256])
+        add("candidate_selector.successor_codebook", [256, 256])
     write_safetensors(root / "model.safetensors", tensors)
     (root / "expected").mkdir()
     write_safetensors(root / "expected" / "native.safetensors", expected)
@@ -130,16 +138,19 @@ def main():
     parser.add_argument("binary", type=Path)
     parser.add_argument("metallib", type=Path)
     parser.add_argument("goldens", type=Path)
+    parser.add_argument("--standard", action="store_true")
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="splash-draft-preparation-") as directory:
         root = Path(directory)
-        draft_fixture(root)
+        draft_fixture(root, standard=args.standard)
         command = [
             str(args.binary.resolve()),
             str(args.metallib.resolve()),
             str(root),
             str(args.goldens.resolve()),
         ]
+        if args.standard:
+            command.append("--standard")
         result = subprocess.run(command, capture_output=True, text=True, check=False)
         assert result.returncode == 0, result.stdout + result.stderr
         print(result.stdout.splitlines()[-1])

@@ -4,6 +4,7 @@
 #include "Model.hpp"
 #include "Qwen3_6Moe.hpp"
 #include "Qwen3_8.hpp"
+#include "Qwen3_5_4B.hpp"
 #include "ops/Vision.hpp"
 
 #include <cstdint>
@@ -15,7 +16,7 @@
 
 namespace splash::model {
 
-using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout>;
+using TargetLayout = std::variant<Qwen3_8Layout, Qwen3_6MoeLayout, Qwen3_5_4BLayout, Qwen3_5_4BDFlashLayout, Qwen3_5_0_8BLayout>;
 
 // Where a model's weights come from: a safetensors checkpoint (MLX's, Model
 // Optimizer's or compressed-tensors') or a GGUF, prepared into images when it
@@ -44,13 +45,18 @@ struct ModelDescriptor final {
   // (WeightFileRecord).
   std::string sourceIdentity;
 
+  [[nodiscard]] bool hasDraft() const noexcept { return draft.layers != 0; }
+  [[nodiscard]] bool draftFromCheckpoint() const noexcept { return hasDraft(); }
+
   // A model installed with --language-only has no vision tower: it loads no
   // vision weights and serves no image requests.
   [[nodiscard]] bool hasVision() const noexcept {
     return visionSource != VisionSource::None;
   }
   [[nodiscard]] std::string_view family() const noexcept {
-    return std::visit([](const auto &layout) { return layout.family; }, target);
+    return std::visit([](const auto &layout) -> std::string_view {
+      return layout.decisionHeadSize ? (layout.hiddenSize == 1024 ? "Kev-0.8B" : "Kev-4B") : layout.family;
+    }, target);
   }
   [[nodiscard]] bool valid() const noexcept;
 };

@@ -1,0 +1,122 @@
+{
+  "status": "complete",
+  "rows": [
+    {
+      "config": "A",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 515.6182875492837,
+      "decode_tok_s": 92.01701831405748,
+      "ttft_seconds": 63.553157625,
+      "total_seconds": 241.604907708,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        478.0101232746419,
+        520.6076416769441
+      ],
+      "decode_range": [
+        84.23161060922365,
+        92.40019664300797
+      ],
+      "total_change_vs_A_percent": 0.0
+    },
+    {
+      "config": "B",
+      "settings": {
+        "ane": false,
+        "lookup": true,
+        "compact": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 448.9316054900264,
+      "decode_tok_s": 91.74316886170558,
+      "ttft_seconds": 72.991302167,
+      "total_seconds": 251.576577375,
+      "device_peak_gib": 15.556396484375,
+      "prefill_range": [
+        393.5513742503747,
+        450.0872543686805
+      ],
+      "decode_range": [
+        80.65576591869593,
+        92.17758901032883
+      ],
+      "total_change_vs_A_percent": 4.127262877893023
+    },
+    {
+      "config": "C",
+      "settings": {
+        "ane": true,
+        "lookup": true,
+        "compact": false
+      },
+      "samples": 3,
+      "prefill_tok_s": 519.0097079496066,
+      "decode_tok_s": 91.46673088574873,
+      "ttft_seconds": 63.137869,
+      "total_seconds": 242.26085925,
+      "device_peak_gib": 15.53271484375,
+      "prefill_range": [
+        496.16895174132424,
+        520.1824172671978
+      ],
+      "decode_range": [
+        88.70445123425928,
+        92.45185423083585
+      ],
+      "total_change_vs_A_percent": 0.2714976066598762
+    },
+    {
+      "config": "D",
+      "settings": {
+        "ane": true,
+        "lookup": false,
+        "compact": true
+      },
+      "samples": 3,
+      "prefill_tok_s": 520.333180950524,
+      "decode_tok_s": 89.71310807319801,
+      "ttft_seconds": 62.975346333,
+      "total_seconds": 245.601635541,
+      "device_peak_gib": 15.7967529296875,
+      "prefill_range": [
+        495.863864456003,
+        522.8759984641954
+      ],
+      "decode_range": [
+        84.06873498835054,
+        91.24456522534696
+      ],
+      "total_change_vs_A_percent": 1.6542411621167874
+    },
+    {
+      "config": "E",
+      "settings": {
+        "ane": true,
+        "lookup": false,
+        "compact": false
+      },
+      "samples": 3,
+      "prefill_tok_s": 522.1157080074935,
+      "decode_tok_s": 88.91263950647146,
+      "ttft_seconds": 62.7622485,
+      "total_seconds": 246.899778292,
+      "device_peak_gib": 15.53271484375,
+      "prefill_range": [
+        493.69460067520583,
+        523.2079780438867
+      ],
+      "decode_range": [
+        84.7404415926225,
+        89.31524430385026
+      ],
+      "total_change_vs_A_percent": 2.191540989059426
+    }
+  ],
+  "baseline_automatically_changed": false,
+  "next_step": "ABBA confirmation of selected candidate versus A; share/splits follow later"
+}

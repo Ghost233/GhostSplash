@@ -1,0 +1,95 @@
+Main model: /Users/ghost233/.lmstudio/models/mlx-community/Qwen3.8-27B-4bit (MLX affine 4-bit, group size 64, text only)
+Qwen3.8 27B MLX 4-bit: context=262144, KV=q4h, queue=1, memory=42949672960
+Qwen3.8 27B MLX Splash: http://127.0.0.1:18110/v1 (WebUI disabled; listening on 127.0.0.1)
+Draft: /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16 (compatible Qwen3.8-27B Q4_K_M GGUF converted to BF16)
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+01:14:00 Startup configuration · on/off are configured flags; effective state follows Ready
+01:14:00   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/fc80280a750777c2479546f72940cac4dc02c02ab78ce971485df4e9d97d131d
+01:14:00   --model = mlx-community/Qwen3.8-27B-4bit
+01:14:00   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/fc80280a750777c2479546f72940cac4dc02c02ab78ce971485df4e9d97d131d/tokenizer
+01:14:00   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/optional-memory-fix-20261015/splash
+01:14:00   --port = 18110
+01:14:00   --host = 127.0.0.1
+01:14:00   --allowed-host = none
+01:14:00   --allowed-origin = none
+01:14:00   --api-key = off
+01:14:00   --no-webui = on
+01:14:00   --max-memory = 42949672960
+01:14:00   --max-context = 262144
+01:14:00   --kv-format = q4h
+01:14:00   --idle-release = auto (default 600 s)
+01:14:00   --max-cache-disk = 53687091200
+01:14:00   --persistent-cache = off
+01:14:00   --cache-dir = off / unset
+01:14:00   --served-model-name = splash_mlx-community/Qwen3.8-27B-4bit
+01:14:00   --announce-served-name = off
+01:14:00   --default-reasoning-effort = auto
+01:14:00   --max-request-size = 134217728
+01:14:00   --max-image-pixels = 4194304
+01:14:00   --request-timeout = off / unset
+01:14:00   --queue-size = 1
+01:14:00   --decode-share = default (0.5)
+01:14:00   --disable-ane = off
+01:14:00   --ane-ffn-share = 0.4182
+01:14:00   --ane-ffn-minimum-rows = auto
+01:14:00   --ane-power-recovery = on
+01:14:00   --ane-power-reference = auto
+01:14:00   --ane-recovery-idle-watts = 0.05
+01:14:00   --ane-recovery-max-power-percent = 50.0
+01:14:00   --prompt-lookup = on
+01:14:00   --prompt-lookup-min-match = 2
+01:14:00   --compact-draft-head = on
+01:14:00   --compact-draft-capacity = 98304
+01:14:00   --compact-draft-ranking = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/compact-rankings/qwen35-248320-dev-seed.splash
+01:14:00   --fast-topk = on
+01:14:00   --allow-idle-sleep = off
+01:14:00 Loading · mlx-community/Qwen3.8-27B-4bit
+01:14:02 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+01:14:10 Weights loaded in 8.12 s.
+01:14:10 Kernel policy for GPU family 10 with 20 cores.
+01:14:10 Setting up the Neural Engine FFN split (splash serve --disable-ane keeps the FFN on the GPU).
+01:14:22 Neural Engine loaded-power sample: 0 W over 1.00872 s; full load interval=0
+01:14:22 Neural Engine loaded-power sample: 1.98469 W over 1.00771 s; full load interval=1
+01:14:22 Neural Engine loaded-power sample: 0 W over 1.00682 s; full load interval=1
+01:14:22 Neural Engine loaded-power sample: 3.38235 W over 1.00611 s; full load interval=1
+01:14:22 Neural Engine loaded-power sample: 0 W over 1.00882 s; full load interval=1
+01:14:22 Neural Engine power reference 3.38235 W (auto_ffn, workload reference; not hardware maximum)
+01:14:22 Neural Engine FFN split at the given share 0.41 for chunks of 512 rows or more, 1.6% from the GPU alone on the Neural Engine's part (set up in 3.8 s).
+01:14:22 SSD cache: 51200 MiB for KV pages of 528 KiB and states of 152 MiB; a state's write stages through 152 MiB of the memory plan.
+01:14:22 compact head enabled: public ranking=/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/compact-rankings/qwen35-248320-dev-seed.splash; vocabulary=248320; capacity=98304; numerical_validation=passed; comparisons=786432
+01:14:31 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=; compact=1 cycles=0 validated=1 validation_comparisons=786432 fallback=0 coverage_fallback=0 request_fallback=0 rows=0 reason=; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:32 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=no complete earlier continuation; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=0 coverage_fallback=0 request_fallback=0 rows=98048 reason=; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:33 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=1 coverage_fallback=0 request_fallback=1 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:33 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=1 coverage_fallback=0 request_fallback=1 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:34 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=2 coverage_fallback=0 request_fallback=2 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:34 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=2 coverage_fallback=0 request_fallback=2 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:34 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=2 coverage_fallback=0 request_fallback=2 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:35 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:35 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:35 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:35 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:36 optional features (cumulative): lookup=1 hits=0 accepted=0 reason=lookup requires one unconstrained text lane; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=compact head requires one text lane; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:36 optional features (cumulative): lookup=1 hits=1 accepted=0 reason=; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=3 coverage_fallback=0 request_fallback=3 rows=98048 reason=lookup supplied proposals; draft head skipped; fast_topk=1 selections=0 fallback=0 reason=no sampled selection with top_k 1..32 and min_p 0; extra_metal_bytes=283639808
+01:14:36 Thermal state: fair
+01:14:38 Ready · mlx-community/Qwen3.8-27B-4bit · context 256K · language only · http://127.0.0.1:18110
+01:14:38 Startup effective state · snapshot at Ready; fallback is distinct from error
+01:14:38   Context = 262144 tokens
+01:14:38   Native concurrent capacity = 4 (queue limit is separate)
+01:14:38   Vision = off
+01:14:38   ANE = on; share=0.4117647059; minimum_rows=512; reason=at the given share 0.41 for chunks of 512 rows or more, 1.6% from the GPU alone on the Neural Engine's part (set up in 3.8 s)
+01:14:38   ANE power reference = valid; watts=3.382349629; reason=none
+01:14:38   ANE recovery = on; phase=running; reason=not sampling
+01:14:38   KV = q4h
+01:14:38   Build = src-b2d04d25cd91237b3f164b9b7ecaca7acd01a220bbad1f23eda5b4d17fc7fd9c
+01:14:38   Metal budget = 42949672960 bytes
+01:14:38   Drafter = on; kind=dflash2; layers=5; block=8; tokens=7
+01:14:38   Prefill block = 2048 tokens (compiled)
+01:14:38   Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+01:14:38   FFN FP16 cache = 0 bytes
+01:14:38   Prompt lookup = on (conditional); reason=none
+01:14:38   Fast top-k = on (conditional); reason=no sampled selection with top_k 1..32 and min_p 0
+01:14:38   Compact = validated; capacity=98304; maximum_error=0; coverage_fallbacks=0; request_fallbacks=3; reason=lookup supplied proposals; draft head skipped
+01:14:38 Started · input 59 · cached 0
+01:14:42 optional features (cumulative): lookup=1 hits=2 accepted=5 reason=no complete earlier continuation; compact=1 cycles=1 validated=1 validation_comparisons=786432 fallback=12 coverage_fallback=9 request_fallback=3 rows=98048 reason=rare-token ratio exceeds 1 percent; fast_topk=1 selections=11 fallback=0 reason=; extra_metal_bytes=283639808
+01:14:42 Done · input 59 · cached 0 · output 32 · TTFT 1.0s · 10.8 tok/s
+01:14:42 Stopping · releasing engine resources

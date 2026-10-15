@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "ranking_sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba",
+  "corpus_archive_sha256": "ef27c7896fe1b3f52b6bf38e1cbea5e092b2237668065c2509278b981ee0045b",
+  "corpus_archive_files": 321,
+  "corpus_archive_hashes_match_generation_inputs": true,
+  "binary_header_permutation_special_tokens": {
+    "magic": "SPLCHD01",
+    "bytes": 993356,
+    "sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba",
+    "manifest_matches_saved_native_status": true,
+    "complete_permutation": true,
+    "all_special_tokens_in_fixed_rows": true,
+    "generation_exit_code": 0
+  }
+}

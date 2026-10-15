@@ -22,7 +22,8 @@ namespace {
 constexpr uint32_t kRows = 256, kColumns = 1024, kSeed = 7;
 
 void checkFormat(void *ggml, const Goldens &hashes, Fmt f) {
-  const std::vector<uint8_t> native = fixture(f, kRows, kColumns, kSeed + f);
+  // Q2_0 keeps its independent oracle fixture seed when internal format IDs change.
+  const std::vector<uint8_t> native = fixture(f, kRows, kColumns, f == Q20 ? 26 : kSeed + f);
   std::vector<float> values;
   repack(f, native, kRows, kColumns, &values);
   const std::span<const uint8_t> bytes(reinterpret_cast<const uint8_t *>(values.data()), values.size() * sizeof(float));

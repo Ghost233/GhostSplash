@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "format_version": 2,
+  "tokenizer_profile": "qwen35-vocab248320-nfc-bytelevel-bpe",
+  "corpus_source": "repository technical documents and source code; original Saluki seed corpus",
+  "output": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/compact-rankings/qwen35-248320-dev-seed.splash",
+  "source": "legacy_import",
+  "imported_from": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/docs/data/saluki27b-compact-seed-2026-10-14/head-ranked.splash",
+  "original_file_sha256": "0df5cd7b6794890923cbe16e2ad12f21ce1a2a38c5b29cb6fe6c1b3f08bfd1ba",
+  "vocabulary_size": 248320,
+  "output_sha256": "3acde3857a833bb2a26373a15b0ce73dcc62e1d27731c5f1ce3655344b386111",
+  "shared_tokenizer_sha256": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+  "tokenizer_profile_informational_only": true,
+  "legacy_file_preserved": true,
+  "token_order_unchanged": true,
+  "corpus_report": "docs/data/saluki27b-compact-seed-2026-10-14/report.json",
+  "training_coverage": {
+    "tokens": 844075,
+    "observed_token_ids": 16952,
+    "fixed_rows": 98048,
+    "token_coverage_percent": 100.0,
+    "outside_fixed_tokens": 0,
+    "outside_fixed_token_ids": 0
+  },
+  "validation_coverage": {
+    "tokens": 219308,
+    "observed_token_ids": 8660,
+    "fixed_rows": 98048,
+    "token_coverage_percent": 99.84314297700038,
+    "outside_fixed_tokens": 344,
+    "outside_fixed_token_ids": 277
+  },
+  "tokenizer_identity_verified_for": [
+    "Saluki 27B IQ2-mix",
+    "MiniPlus V3"
+  ]
+}

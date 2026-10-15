@@ -1,0 +1,189 @@
+{
+  "branch": "codex/qwen4b-quantized-ffn",
+  "base_commit": "cbbe322106fb960ce5e92cac75c52b729962ede9",
+  "ours_checkpoint": "f1567968e10ce3581f580855e086af574239010b",
+  "upstream_commit": "be3b083c5f413673d44e44881042e875e674e333",
+  "ghost_reference": [
+    "6ea64b6f55ab27a80fc4aa719bc5470cbd48c0ad",
+    "9d792904949aece261420f76e01253253518d101"
+  ],
+  "native_build_id": "src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704",
+  "build": "build/merge-upstream-20261015/splash",
+  "conflicted_files": 41,
+  "performance_test": false,
+  "validation": [
+    {
+      "command": "make -k -j4 BUILD=build/merge-upstream-20261015 BUILD_ID_PYTHON=<absolute .venv/bin/python> check-native-build",
+      "exit": 0,
+      "log": "splash-merge-build-final.log"
+    },
+    {
+      "command": "make -j4 ... check-native-cpu",
+      "exit": 0,
+      "log": "splash-merge-cpu-final.log"
+    },
+    {
+      "command": "make -j4 ... test-sanitizers",
+      "exit": 0,
+      "log": "splash-merge-sanitizers1.log"
+    },
+    {
+      "command": "python splash-merge-python-suite.py (complete unittest discovery with install.paths.BINARY bound to merged binary)",
+      "exit": 0,
+      "tests": 1406,
+      "skipped": 4,
+      "log": "splash-merge-python1.log"
+    },
+    {
+      "command": "make ... check-source verify-build-identity",
+      "exit": 0,
+      "log": "splash-merge-source-final.log"
+    },
+    {
+      "command": "python -m compileall -q server install/*.py dev/tools dev/tests dev/benchmarks",
+      "exit": 0,
+      "log": "splash-merge-compileall.log"
+    },
+    {
+      "command": "python -m ruff check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+      "exit": 0,
+      "log": "splash-merge-ruff-final.log"
+    },
+    {
+      "command": "python -m ruff format --check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+      "exit": 0,
+      "files": 186,
+      "log": "splash-merge-format-final.log"
+    },
+    {
+      "command": "python splash-merge-real-controlled.py",
+      "exit": 0,
+      "primary_cases": 104,
+      "processes": 8,
+      "extra_checks": [
+        "repeat",
+        "concurrent4",
+        "new complete vs selected head",
+        "zero encoder KV/FP16 cache",
+        "reference choice and token count"
+      ],
+      "log": "splash-merge-real-controlled-progress.log"
+    },
+    {
+      "command": "python -m dev.tests.decision_control_real (Julia then Laya)",
+      "exit": 0,
+      "native_process_exit": [
+        0,
+        0
+      ],
+      "checks_each": 4,
+      "data": [
+        "splash-merge-julia-control.json",
+        "splash-merge-laya-control.json"
+      ]
+    },
+    {
+      "command": "make -j4 ... check-native-metal",
+      "log": "splash-merge-metal2.log",
+      "exit": 0
+    },
+    {
+      "command": "new Kev/ModernBERT surrogate regression tests and affected scorer modules",
+      "exit": 0,
+      "tests": 12,
+      "log": "splash-merge-surrogate-green2.log"
+    },
+    {
+      "command": "python splash-merge-surrogate-real.py (actual Kev, Julia, Laya)",
+      "exit": 0,
+      "requests": 6,
+      "all_native_exit": [
+        0,
+        0,
+        0
+      ],
+      "log": "splash-merge-surrogate-real-progress2.log"
+    },
+    {
+      "command": "complete Python discovery on final source after surrogate fix",
+      "log": "splash-merge-python2.log",
+      "exit": 0,
+      "tests": 1408,
+      "skipped": 4
+    },
+    {
+      "command": "final-source compileall / Ruff lint / Ruff format / architecture / whitespace / build identity",
+      "exit": 0,
+      "logs": [
+        "splash-merge-compileall-final2.log",
+        "splash-merge-ruff-final2.log",
+        "splash-merge-format-final2.log",
+        "splash-merge-source-final2.log"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "obsolete interface calls and new format integration errors",
+      "exit": 2,
+      "outcome": "fixed in source/test/benchmark adapters; final native build and CPU gate passed",
+      "logs": "splash-merge-native1.log through splash-merge-native8.log"
+    },
+    {
+      "name": "Q2_0 golden after format-ID renumbering",
+      "exit": 2,
+      "outcome": "original seed26 and independent golden preserved; final CPU gate now includes Q2_0 and passed"
+    },
+    {
+      "name": "manual draft test used a nonexistent metallib path",
+      "exit": 1,
+      "outcome": "rerun with production splash.metallib; exit0; final gate uses original repository target"
+    },
+    {
+      "name": "extra Metal API debug layer with shader validation",
+      "exit": 134,
+      "outcome": "known repository-documented double TG memory estimate; original shader-only gate resource test exit0"
+    },
+    {
+      "name": "comparison against historical recorded Kev probabilities",
+      "exit": 1,
+      "outcome": "old build reproduces same current probability as merged build; all three live controlled old/new comparisons pass unchanged 1e-3 bound; historical difference remains unassigned",
+      "log": "splash-merge-real-progress.log",
+      "data": "archived-comparison-failed.json"
+    },
+    {
+      "name": "read-only Ruff invocation could not write its cache",
+      "exit": 1,
+      "outcome": "rerun with workspace write permission; full lint exit0"
+    },
+    {
+      "name": "isolated surrogate bypassed upstream preprocessing in local scorers",
+      "red_exit": 1,
+      "outcome": "reuse upstream tokenizable(); 12 affected tests and 3 actual model comparisons pass; tolerances unchanged"
+    },
+    {
+      "name": "new mock regression template omitted instructions",
+      "exit": 1,
+      "outcome": "fixture now actually renders the field being asserted; single failing test then affected modules exit0"
+    },
+    {
+      "name": "real-check client omitted required model field",
+      "exit": 1,
+      "http_status": 422,
+      "outcome": "client corrected, preserved initial logs, all 3 real models pass"
+    }
+  ],
+  "retained_evidence": {
+    "decision_models_archive_byte_identical_to": "f1567968e10ce3581f580855e086af574239010b",
+    "old_build_preserved": true,
+    "primary_untracked_documents": "3 SHA-256 hashes checked before/after; no stash, movement or deletion"
+  },
+  "limits": [
+    "Historical Kev probability JSON is not exactly reproducible even with preserved old binary; controlled old/new tests and original operator tolerances remain the merge correctness evidence.",
+    "No fresh speed conclusion; prior performance data retains its own original build/source association."
+  ],
+  "final_source_changes_after_initial_python_gate": "Only server/kev.py and server/modernbert.py reuse upstream tokenizable(), plus their two regressions; native runtime, operator inputs, build ID and all native gates unchanged.",
+  "status": "passed",
+  "final_python_tests": 1408,
+  "final_python_skips": 4
+}

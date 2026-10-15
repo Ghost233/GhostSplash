@@ -1,0 +1,836 @@
+{
+  "status": "complete",
+  "samples": 32,
+  "source_unchanged": true,
+  "artifacts_unchanged": true,
+  "all_native_exit_codes_zero": true,
+  "all_tokens_match": true,
+  "all_facts_pass": true,
+  "source_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "commit": "5ea170cb3304bc1898270e56be3ad19e50c7da81",
+  "ranking_sha256": "eb18e8af1d4ec4b81fed0e8dc94f4f37ac1b10704dfb6a1f5cb1fd44da39eb19",
+  "ranking_basis": "only input token frequency, remaining IDs ascending; no expected-output tokens used",
+  "isolated_performance_usable": false,
+  "observed_busy_samples": 0,
+  "pre_start_gpu_values": [
+    0,
+    17,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    36,
+    37,
+    38,
+    39,
+    40,
+    42,
+    43,
+    44,
+    45,
+    49,
+    51,
+    52,
+    54,
+    56,
+    57
+  ],
+  "elapsed_seconds": 883.4321327209473,
+  "aggregates": [
+    {
+      "output_tokens": 512,
+      "arm": "A",
+      "n": 8,
+      "median": {
+        "prefill_tok_s": 2239.7786891005917,
+        "decode_tok_s": 139.2674917956756,
+        "ttft_seconds": 14.657497853999999,
+        "total_seconds": 18.32133175,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "range": {
+        "prefill_tok_s": [
+          1975.717843096521,
+          2471.158916915134
+        ],
+        "decode_tok_s": [
+          120.05199984844184,
+          147.75190924973847
+        ],
+        "ttft_seconds": [
+          13.260177125,
+          16.585365833
+        ],
+        "total_seconds": [
+          16.805987708,
+          20.735270292
+        ],
+        "memory_peak_gib": [
+          5.671587351709604,
+          5.671587351709604
+        ]
+      },
+      "first_half_median": {
+        "prefill_tok_s": 2086.2004512522703,
+        "decode_tok_s": 122.62588863399417,
+        "ttft_seconds": 15.7183821665,
+        "total_seconds": 19.951293812499998,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "second_half_median": {
+        "prefill_tok_s": 2356.9395337811466,
+        "decode_tok_s": 142.77853852967297,
+        "ttft_seconds": 13.9031873745,
+        "total_seconds": 17.462046854,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "busy_samples": 0
+    },
+    {
+      "output_tokens": 512,
+      "arm": "B",
+      "n": 8,
+      "median": {
+        "prefill_tok_s": 2289.11686642517,
+        "decode_tok_s": 139.66047221832224,
+        "ttft_seconds": 14.3230016465,
+        "total_seconds": 17.932008979000003,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "range": {
+        "prefill_tok_s": [
+          1997.1390724368468,
+          2412.417227169541
+        ],
+        "decode_tok_s": [
+          122.56718157802754,
+          149.05709742250167
+        ],
+        "ttft_seconds": [
+          13.583058541,
+          16.40747225
+        ],
+        "total_seconds": [
+          17.069631833,
+          20.584771209
+        ],
+        "memory_peak_gib": [
+          5.477129343897104,
+          5.477129343897104
+        ]
+      },
+      "first_half_median": {
+        "prefill_tok_s": 2143.771038618551,
+        "decode_tok_s": 130.77096348452866,
+        "ttft_seconds": 15.285350667,
+        "total_seconds": 19.2076898125,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "second_half_median": {
+        "prefill_tok_s": 2373.949485645355,
+        "decode_tok_s": 146.17820889310622,
+        "ttft_seconds": 13.8053204375,
+        "total_seconds": 17.3016912085,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "busy_samples": 0
+    },
+    {
+      "output_tokens": 2048,
+      "arm": "A",
+      "n": 8,
+      "median": {
+        "prefill_tok_s": 2257.977058363397,
+        "decode_tok_s": 265.06780885126255,
+        "ttft_seconds": 14.5127438335,
+        "total_seconds": 22.2410955625,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "range": {
+        "prefill_tok_s": [
+          2039.4458312578588,
+          2479.781201258217
+        ],
+        "decode_tok_s": [
+          224.42474515406147,
+          283.58732636745424
+        ],
+        "ttft_seconds": [
+          13.214070375,
+          16.067112209
+        ],
+        "total_seconds": [
+          20.53448875,
+          25.192663167
+        ],
+        "memory_peak_gib": [
+          5.671587351709604,
+          5.671587351709604
+        ]
+      },
+      "first_half_median": {
+        "prefill_tok_s": 2137.252862038072,
+        "decode_tok_s": 239.48723302414305,
+        "ttft_seconds": 15.359396625,
+        "total_seconds": 23.9316492915,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "second_half_median": {
+        "prefill_tok_s": 2421.3116612208587,
+        "decode_tok_s": 278.9377646036205,
+        "ttft_seconds": 13.5340321045,
+        "total_seconds": 20.8269052085,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "busy_samples": 0
+    },
+    {
+      "output_tokens": 2048,
+      "arm": "B",
+      "n": 8,
+      "median": {
+        "prefill_tok_s": 2314.451951258806,
+        "decode_tok_s": 261.69347893889847,
+        "ttft_seconds": 14.160367999999998,
+        "total_seconds": 21.986726249500002,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "range": {
+        "prefill_tok_s": [
+          1893.3375272315773,
+          2418.779466372281
+        ],
+        "decode_tok_s": [
+          217.7169980040958,
+          279.5393140945843
+        ],
+        "ttft_seconds": [
+          13.547329958,
+          17.307006792
+        ],
+        "total_seconds": [
+          20.957720458,
+          26.713710875
+        ],
+        "memory_peak_gib": [
+          5.477129343897104,
+          5.477129343897104
+        ]
+      },
+      "first_half_median": {
+        "prefill_tok_s": 1999.730389245471,
+        "decode_tok_s": 237.78257836752204,
+        "ttft_seconds": 16.393807521,
+        "total_seconds": 25.006760354,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "second_half_median": {
+        "prefill_tok_s": 2344.9328038285657,
+        "decode_tok_s": 269.97864500317326,
+        "ttft_seconds": 13.97396375,
+        "total_seconds": 21.578650832999998,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "busy_samples": 0
+    }
+  ],
+  "paired_summary": [
+    {
+      "output_tokens": 512,
+      "pairs": 8,
+      "median_compact_prefill_gain_pct": -1.4207111925407856,
+      "median_compact_decode_gain_pct": -2.1077865898590287,
+      "geometric_compact_decode_gain_pct": -2.5739888090993257,
+      "median_compact_total_reduction_pct": -0.7992729166176549,
+      "compact_decode_wins": 3,
+      "compact_total_wins": 1,
+      "first_half_decode_gain_pct": -1.0006117384887492,
+      "second_half_decode_gain_pct": -2.340745800463945,
+      "memory_increment_mib": 199.125
+    },
+    {
+      "output_tokens": 2048,
+      "pairs": 8,
+      "median_compact_prefill_gain_pct": 2.150574149964324,
+      "median_compact_decode_gain_pct": 0.19567155632491673,
+      "geometric_compact_decode_gain_pct": 1.3051006075462501,
+      "median_compact_total_reduction_pct": 0.5905153503139637,
+      "compact_decode_wins": 4,
+      "compact_total_wins": 5,
+      "first_half_decode_gain_pct": -3.33205791149766,
+      "second_half_decode_gain_pct": 4.374544631484456,
+      "memory_increment_mib": 199.125
+    }
+  ],
+  "pairs": [
+    {
+      "output_tokens": 512,
+      "pair": 1,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/01-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/02-512-lookup",
+      "A": {
+        "prefill_tok_s": 2336.7574718373544,
+        "decode_tok_s": 138.35528022609788,
+        "ttft_seconds": 14.022852083,
+        "total_seconds": 17.723467916,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2357.625311260431,
+        "decode_tok_s": 137.38963869352781,
+        "ttft_seconds": 13.898732875,
+        "total_seconds": 17.625358458,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -0.8851211141739923,
+      "compact_decode_gain_pct": 0.7028488769259322,
+      "compact_total_reduction_pct": -0.5566380861631082,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          51,
+          43
+        ],
+        "B": [
+          52,
+          34
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 2,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/05-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/06-512-lookup",
+      "A": {
+        "prefill_tok_s": 1975.717843096521,
+        "decode_tok_s": 123.3762860258502,
+        "ttft_seconds": 16.585365833,
+        "total_seconds": 20.735270292,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 1997.1390724368468,
+        "decode_tok_s": 122.56718157802754,
+        "ttft_seconds": 16.40747225,
+        "total_seconds": 20.584771209,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -1.0725957764267435,
+      "compact_decode_gain_pct": 0.6601313968434441,
+      "compact_total_reduction_pct": -0.731118560764954,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          57,
+          32
+        ],
+        "B": [
+          54,
+          40
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 3,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/09-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/10-512-lookup",
+      "A": {
+        "prefill_tok_s": 2030.1249559474486,
+        "decode_tok_s": 120.05199984844184,
+        "ttft_seconds": 16.14088025,
+        "total_seconds": 20.405696959,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2137.41348897667,
+        "decode_tok_s": 136.33421415966674,
+        "ttft_seconds": 15.330680792,
+        "total_seconds": 19.086155917,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -5.019549730669482,
+      "compact_decode_gain_pct": -11.942867321739293,
+      "compact_total_reduction_pct": -6.913602968236732,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          34,
+          40
+        ],
+        "B": [
+          49,
+          26
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 4,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/13-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/14-512-lookup",
+      "A": {
+        "prefill_tok_s": 2142.275946557092,
+        "decode_tok_s": 121.87549124213812,
+        "ttft_seconds": 15.295884083,
+        "total_seconds": 19.496890666,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2150.128588260431,
+        "decode_tok_s": 125.20771280939057,
+        "ttft_seconds": 15.240020542,
+        "total_seconds": 19.329223708,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -0.36521730589574863,
+      "compact_decode_gain_pct": -2.6613548738209425,
+      "compact_total_reduction_pct": -0.8674272724703558,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          33,
+          45
+        ],
+        "B": [
+          24,
+          44
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 5,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/17-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/18-512-lookup",
+      "A": {
+        "prefill_tok_s": 2344.1333182187,
+        "decode_tok_s": 140.17970336525332,
+        "ttft_seconds": 13.978729291,
+        "total_seconds": 17.631181708,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2403.6473119185785,
+        "decode_tok_s": 148.96642178058164,
+        "ttft_seconds": 13.632617291,
+        "total_seconds": 17.069631833,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -2.4759869472021134,
+      "compact_decode_gain_pct": -5.898455712570327,
+      "compact_total_reduction_pct": -3.28975973526493,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          22,
+          37
+        ],
+        "B": [
+          20,
+          31
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 6,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/21-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/22-512-lookup",
+      "A": {
+        "prefill_tok_s": 2142.799906363829,
+        "decode_tok_s": 141.16140243888614,
+        "ttft_seconds": 15.292143625,
+        "total_seconds": 18.919195584,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2233.9820734782093,
+        "decode_tok_s": 143.3899960056308,
+        "ttft_seconds": 14.667979709,
+        "total_seconds": 18.2386595,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -4.081597976854567,
+      "compact_decode_gain_pct": -1.5542183058971148,
+      "compact_total_reduction_pct": -3.731283453150702,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          42,
+          38
+        ],
+        "B": [
+          36,
+          39
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 7,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/25-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/26-512-lookup",
+      "A": {
+        "prefill_tok_s": 2471.158916915134,
+        "decode_tok_s": 144.39567462045977,
+        "ttft_seconds": 13.260177125,
+        "total_seconds": 16.805987708,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2344.2516593721307,
+        "decode_tok_s": 149.05709742250167,
+        "ttft_seconds": 13.978023584,
+        "total_seconds": 17.412946792,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 5.413550931515321,
+      "compact_decode_gain_pct": -3.1272732950307747,
+      "compact_total_reduction_pct": 3.485677015212918,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          26,
+          23
+        ],
+        "B": [
+          24,
+          36
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 512,
+      "pair": 8,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/29-512-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/30-512-lookup",
+      "A": {
+        "prefill_tok_s": 2369.745749343593,
+        "decode_tok_s": 147.75190924973847,
+        "ttft_seconds": 13.827645458,
+        "total_seconds": 17.292912,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2412.417227169541,
+        "decode_tok_s": 141.93130574311664,
+        "ttft_seconds": 13.583058541,
+        "total_seconds": 17.190435625,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -1.7688266086548277,
+      "compact_decode_gain_pct": 4.101000463672633,
+      "compact_total_reduction_pct": -0.596124363776851,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          26,
+          22
+        ],
+        "B": [
+          29,
+          22
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 1,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/03-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/04-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2227.792307317857,
+        "decode_tok_s": 251.24157615655457,
+        "ttft_seconds": 14.708733708,
+        "total_seconds": 22.860249083,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 1893.3375272315773,
+        "decode_tok_s": 217.7169980040958,
+        "ttft_seconds": 17.307006792,
+        "total_seconds": 26.713710875,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 17.66482601627386,
+      "compact_decode_gain_pct": 15.398236453649838,
+      "compact_total_reduction_pct": 14.425033684130572,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          34,
+          49
+        ],
+        "B": [
+          0,
+          56
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 2,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/07-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/08-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2046.7134167582872,
+        "decode_tok_s": 227.73288989173153,
+        "ttft_seconds": 16.010059542,
+        "total_seconds": 25.0030495,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2042.777612350244,
+        "decode_tok_s": 238.32272239251043,
+        "ttft_seconds": 16.040905959,
+        "total_seconds": 24.634293792,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 0.1926692550499931,
+      "compact_decode_gain_pct": -4.443484194233804,
+      "compact_total_reduction_pct": -1.496920151694181,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          0,
+          36
+        ],
+        "B": [
+          54,
+          43
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 3,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/11-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/12-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2039.4458312578588,
+        "decode_tok_s": 224.42474515406147,
+        "ttft_seconds": 16.067112209,
+        "total_seconds": 25.192663167,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 1956.6831661406982,
+        "decode_tok_s": 237.24243434253364,
+        "ttft_seconds": 16.746709083,
+        "total_seconds": 25.379226916,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 4.229742788680446,
+      "compact_decode_gain_pct": -5.402781009221069,
+      "compact_total_reduction_pct": 0.7351041448878215,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          21,
+          42
+        ],
+        "B": [
+          43,
+          34
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 4,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/15-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/16-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2272.9341179737653,
+        "decode_tok_s": 269.36269912291624,
+        "ttft_seconds": 14.416609667,
+        "total_seconds": 22.019739333,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2393.555231284223,
+        "decode_tok_s": 275.4800972943782,
+        "ttft_seconds": 13.690097417,
+        "total_seconds": 21.1243895,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -5.039412157025525,
+      "compact_decode_gain_pct": -2.2206316287615158,
+      "compact_total_reduction_pct": -4.2384648938611935,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          20,
+          22
+        ],
+        "B": [
+          22,
+          24
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 5,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/19-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/20-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2440.7180489651437,
+        "decode_tok_s": 278.11014943234755,
+        "ttft_seconds": 13.425559334,
+        "total_seconds": 20.789546,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2344.3989109791996,
+        "decode_tok_s": 259.7983149831663,
+        "ttft_seconds": 13.977145375,
+        "total_seconds": 21.860181541,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 4.108479044878655,
+      "compact_decode_gain_pct": 7.048480838056159,
+      "compact_total_reduction_pct": 4.897651645719225,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          23,
+          22
+        ],
+        "B": [
+          37,
+          23
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 6,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/23-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/24-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2243.019998753029,
+        "decode_tok_s": 260.77291857960887,
+        "ttft_seconds": 14.608878,
+        "total_seconds": 22.462451792,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2345.4666966779323,
+        "decode_tok_s": 279.5393140945843,
+        "ttft_seconds": 13.970782125,
+        "total_seconds": 21.297120125,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -4.36785984085839,
+      "compact_decode_gain_pct": -6.713329599365647,
+      "compact_total_reduction_pct": -5.4717805044075085,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          44,
+          26
+        ],
+        "B": [
+          20,
+          20
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 7,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/27-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/28-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2479.781201258217,
+        "decode_tok_s": 279.76537977489346,
+        "ttft_seconds": 13.214070375,
+        "total_seconds": 20.53448875,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2284.504991538412,
+        "decode_tok_s": 263.5886428946306,
+        "ttft_seconds": 14.343590625,
+        "total_seconds": 22.113270958,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": 8.547856557244993,
+      "compact_decode_gain_pct": 6.137114521557563,
+      "compact_total_reduction_pct": 7.13952364170185,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          20,
+          22
+        ],
+        "B": [
+          17,
+          0
+        ]
+      },
+      "observed_busy_pids": []
+    },
+    {
+      "output_tokens": 2048,
+      "pair": 8,
+      "a_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/31-2048-lookup_compact",
+      "b_attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/performance-abab-5ea170c-v1/32-2048-lookup",
+      "A": {
+        "prefill_tok_s": 2401.9052734765737,
+        "decode_tok_s": 283.58732636745424,
+        "ttft_seconds": 13.642504875,
+        "total_seconds": 20.864264417,
+        "memory_peak_gib": 5.671587351709604
+      },
+      "B": {
+        "prefill_tok_s": 2418.779466372281,
+        "decode_tok_s": 276.368647111716,
+        "ttft_seconds": 13.547329958,
+        "total_seconds": 20.957720458,
+        "memory_peak_gib": 5.477129343897104
+      },
+      "compact_prefill_gain_pct": -0.697632551057481,
+      "compact_decode_gain_pct": 2.611974741411349,
+      "compact_total_reduction_pct": 0.445926555740106,
+      "memory_increment_mib": 199.125,
+      "pre_start_gpu": {
+        "A": [
+          26,
+          40
+        ],
+        "B": [
+          25,
+          30
+        ]
+      },
+      "observed_busy_pids": []
+    }
+  ]
+}

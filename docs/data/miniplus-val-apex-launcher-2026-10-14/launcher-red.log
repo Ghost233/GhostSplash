@@ -1,0 +1,31 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+FE
+======================================================================
+ERROR: test_val_apex_miniplus_uses_shared_draft_and_keeps_compact_off (dev.tests.install.test_local_launchers.LocalLauncherTests.test_val_apex_miniplus_uses_shared_draft_and_keeps_compact_off)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_local_launchers.py", line 249, in test_val_apex_miniplus_uses_shared_draft_and_keeps_compact_off
+    parsed = self.launch(ROOT / "qwen38valapexminiplusv3splash.sh", installed=True)
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_local_launchers.py", line 55, in launch
+    text = script.read_text()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 787, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/qwen38valapexminiplusv3splash.sh'
+
+======================================================================
+FAIL: test_saluki_launcher_is_removed (dev.tests.install.test_local_launchers.LocalLauncherTests.test_saluki_launcher_is_removed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/install/test_local_launchers.py", line 246, in test_saluki_launcher_is_removed
+    self.assertFalse((ROOT / "saluki27biq2mixsplash.sh").exists())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.004s
+
+FAILED (failures=1, errors=1)

@@ -1,0 +1,4430 @@
+{
+  "performance_test": false,
+  "runs": {
+    "Kev-0.8B": {
+      "reference": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.054939082428033116,
+                  "billing": 0.945060917571967
+                },
+                "confidence": 0.890121835143934
+              }
+            },
+            "usage": {
+              "input_tokens": 39,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 0.008521731661166746,
+                  "positive": 0.9914782683388332
+                },
+                "confidence": 0.9829565366776665
+              }
+            },
+            "usage": {
+              "input_tokens": 32,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9723302292954119
+              }
+            },
+            "usage": {
+              "input_tokens": 24,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.825153307063387,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.43284578373911614,
+                  "1": 0.3091551254583805,
+                  "2": 0.2579990908025033
+                },
+                "confidence": 0.0
+              }
+            },
+            "usage": {
+              "input_tokens": 33,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9813089814992543,
+                  "shipping": 0.018691018500745702
+                },
+                "confidence": 0.9626179629985085
+              }
+            },
+            "usage": {
+              "input_tokens": 33,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.8711862816256573,
+                  "shipping": 0.12881371837434272
+                },
+                "confidence": 0.7423725632513145
+              }
+            },
+            "usage": {
+              "input_tokens": 39,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.014880149202429489,
+                  "billing": 0.9851198507975706
+                },
+                "confidence": 0.9702397015951412
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.011685147239897163,
+                  "billing": 0.9883148527601028
+                },
+                "confidence": 0.9766297055202056
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.01286626500307676,
+                  "billing": 0.9871337349969231
+                },
+                "confidence": 0.9742674699938463
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.01269187930647385,
+                  "billing": 0.9873081206935261
+                },
+                "confidence": 0.9746162413870523
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.013477056469818022,
+                  "billing": 0.9865229435301819
+                },
+                "confidence": 0.9730458870603638
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.015350591652475308,
+                  "billing": 0.9846494083475247
+                },
+                "confidence": 0.9692988166950494
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Kev-0.8B-GGUF/Kev-0.8B-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.07279660654647341,
+                  "billing": 0.9272033934535266
+                },
+                "confidence": 0.8544067869070533
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.952104702401246
+              },
+              "urgency": {
+                "type": "score",
+                "score": 0.8942085345785034,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.4057481233321344,
+                  "1": 0.2942952187572279,
+                  "2": 0.29995665791063775
+                },
+                "confidence": 0.0
+              }
+            },
+            "usage": {
+              "input_tokens": 87,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "splash": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.05055712685041638,
+                  "billing": 0.9494428731495836
+                },
+                "confidence": 0.8988857462991673
+              }
+            },
+            "usage": {
+              "input_tokens": 39,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 0.008742047008669146,
+                  "positive": 0.9912579529913308
+                },
+                "confidence": 0.9825159059826616
+              }
+            },
+            "usage": {
+              "input_tokens": 32,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9722705327374868
+              }
+            },
+            "usage": {
+              "input_tokens": 24,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.8269970201643893,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.4323729178220509,
+                  "1": 0.3082571441915091,
+                  "2": 0.25936993798644004
+                },
+                "confidence": 0.0
+              }
+            },
+            "usage": {
+              "input_tokens": 33,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9814499867853831,
+                  "shipping": 0.018550013214616995
+                },
+                "confidence": 0.9628999735707662
+              }
+            },
+            "usage": {
+              "input_tokens": 33,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.8690202528638409,
+                  "shipping": 0.13097974713615898
+                },
+                "confidence": 0.7380405057276818
+              }
+            },
+            "usage": {
+              "input_tokens": 39,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.015400048040131852,
+                  "billing": 0.984599951959868
+                },
+                "confidence": 0.9691999039197361
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.0121801864236595,
+                  "billing": 0.9878198135763404
+                },
+                "confidence": 0.9756396271526808
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.0121079774113408,
+                  "billing": 0.9878920225886593
+                },
+                "confidence": 0.9757840451773185
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.01237113108738528,
+                  "billing": 0.9876288689126148
+                },
+                "confidence": 0.9752577378252296
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.012799891449724309,
+                  "billing": 0.9872001085502757
+                },
+                "confidence": 0.9744002171005515
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.014967810446708219,
+                  "billing": 0.9850321895532917
+                },
+                "confidence": 0.9700643791065835
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.047914829714419516,
+                  "billing": 0.9520851702855804
+                },
+                "confidence": 0.9041703405711607
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.9509089621184198
+              },
+              "urgency": {
+                "type": "score",
+                "score": 0.8926462438360656,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.4064408324731698,
+                  "1": 0.29447209121759477,
+                  "2": 0.2990870763092354
+                },
+                "confidence": 0.0
+              }
+            },
+            "usage": {
+              "input_tokens": 87,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "concurrent4": [
+        {
+          "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.05055712685041638,
+                "billing": 0.9494428731495836
+              },
+              "confidence": 0.8988857462991673
+            }
+          },
+          "usage": {
+            "input_tokens": 39,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "answers": {
+            "mood": {
+              "type": "choice",
+              "choice": "positive",
+              "probabilities": {
+                "negative": 0.008682229815191617,
+                "positive": 0.9913177701848084
+              },
+              "confidence": 0.9826355403696168
+            }
+          },
+          "usage": {
+            "input_tokens": 32,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "answers": {
+            "refund": {
+              "type": "noul",
+              "noul": 0.9715686639422746
+            }
+          },
+          "usage": {
+            "input_tokens": 24,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "answers": {
+            "urgency": {
+              "type": "score",
+              "score": 0.8269970201643893,
+              "legend": {
+                "0": "No urgency",
+                "1": "This week",
+                "2": "Today"
+              },
+              "probabilities": {
+                "0": 0.4323729178220509,
+                "1": 0.3082571441915091,
+                "2": 0.25936993798644004
+              },
+              "confidence": 0.0
+            }
+          },
+          "usage": {
+            "input_tokens": 33,
+            "output_tokens": 0
+          }
+        }
+      ],
+      "status": {
+        "schema_version": 6,
+        "ready": true,
+        "maximum_context_tokens": 8192,
+        "memory_pressure": "normal",
+        "thermal_state": "nominal",
+        "admission": {
+          "waiting": 0,
+          "waiting_memory": 0,
+          "waiting_concurrency": 0,
+          "held_behind_refusal": 0,
+          "restoring": 0,
+          "suspended": 0,
+          "draining": false,
+          "oldest_wait_ms": 0
+        },
+        "loop": {
+          "max_tick_ms": 8.002417
+        },
+        "identity": {
+          "cache": {
+            "loaded_model_layout_sha256": "e52b088c7f2bd8ed0beabf4f23f297fd634932fefd3e24c67f4b7ee375bb3608",
+            "build_id": "src-dba0c1be8715794e7f2784e0253fb0556b6c8d305fbf04bc5e3c65303be782ba",
+            "dtype": "bf16_k_token_major_v_dimension_major",
+            "block_tokens": 32
+          },
+          "kv": {
+            "target_model_sha256": "e52b088c7f2bd8ed0beabf4f23f297fd634932fefd3e24c67f4b7ee375bb3608",
+            "format": "bf16",
+            "quantization": "none",
+            "scale_type": "none",
+            "key_layout": "token_major",
+            "value_layout": "dimension_major"
+          }
+        },
+        "memory_plan": {
+          "valid": true,
+          "maximum_context_tokens": 148089,
+          "device": {
+            "device_name": "Apple M5 Pro",
+            "macos_version": "27.0.1",
+            "apple_gpu_family": 10,
+            "gpu_core_count": 20,
+            "physical_memory_bytes": 68719476736,
+            "recommended_max_working_set_bytes": 55662788608,
+            "max_buffer_length_bytes": 41747087360,
+            "max_threadgroup_memory_bytes": 32768,
+            "max_threadgroup_width": 1024,
+            "has_unified_memory": true
+          },
+          "model": {
+            "model_name": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+            "maximum_context_tokens": 262144,
+            "attention_layers": 6,
+            "kv_heads": 2,
+            "head_dimension": 256,
+            "kv_page_tokens": 32,
+            "kv_format": "bf16",
+            "kv_elements_per_scale": 0,
+            "kv_page_bytes": 393216,
+            "memory": {
+              "target_weights_bytes": 1338310656,
+              "draft_weights_bytes": 0,
+              "vision_weights_bytes": 0,
+              "lane_state_bytes": 39518208,
+              "shared_prefill_bytes": 197525504,
+              "shared_decode_bytes": 94224832,
+              "pipeline_reserve_bytes": 268435456,
+              "runtime_overhead_reserve_bytes": 536870912,
+              "ane_ffn_bytes": 0,
+              "state_staging_bytes": 0
+            }
+          },
+          "budget": {
+            "physical_memory_bytes": 68719476736,
+            "recommended_working_set_bytes": 55662788608,
+            "configured_memory_limit_bytes": 4294967296,
+            "working_set_margin_bytes": 1113255772,
+            "hard_budget_bytes": 4294967296,
+            "target_weights_bytes": 1338310656,
+            "draft_weights_bytes": 0,
+            "vision_weights_bytes": 0,
+            "maximum_batch_width": 4,
+            "lane_state_bytes": 39518208,
+            "shared_prefill_bytes": 197525504,
+            "shared_decode_bytes": 94224832,
+            "pipeline_reserve_bytes": 268435456,
+            "runtime_overhead_reserve_bytes": 536870912,
+            "ane_ffn_bytes": 0,
+            "state_staging_bytes": 0,
+            "fixed_runtime_bytes": 2435367360,
+            "dynamic_budget_bytes": 1859599936,
+            "kv_page_tokens": 32,
+            "kv_page_bytes": 393216,
+            "kv_extent_pages": 356,
+            "kv_extent_bytes": 139984896,
+            "kv_capacity_pages": 4628,
+            "kv_capacity_bytes": 1819803648,
+            "kv_capacity_tokens": 148096,
+            "minimum_dynamic_bytes": 107151360,
+            "minimum_required_bytes": 2542518720,
+            "deficit_bytes": 0
+          }
+        },
+        "memory_actual": {
+          "allocated_bytes": 2007155136,
+          "current_bytes": 2037661696,
+          "peak_bytes": 2037661696
+        },
+        "memory_governor": {
+          "limit_bytes": 4294967296,
+          "charged_bytes": 2812461504,
+          "headroom_bytes": 1482505792,
+          "growth_allowed": true,
+          "denied_reservations": 0,
+          "system_pressure": "normal",
+          "host_measurement_valid": true,
+          "host_available_bytes": 31733399552,
+          "host_reserve_bytes": 2147483648,
+          "host_headroom_bytes": 29585915904
+        },
+        "memory_audit": {
+          "scope": "startup_warmup",
+          "valid": true,
+          "error": "none",
+          "categorized_bytes": 1928118720,
+          "backend_unclassified_bytes": 0,
+          "device_untracked_bytes": 30506560,
+          "device_peak_deviation_basis_points": 0,
+          "actual_headroom_bytes": 2336210944,
+          "backend_allocated_bytes": 1928118720,
+          "device_current_allocated_bytes": 1958625280,
+          "device_peak_allocated_bytes": 1958756352,
+          "backend_peak_allocated_bytes": 1928118720
+        },
+        "weights": {
+          "idle_release_seconds": 600,
+          "released": false,
+          "restores": 0,
+          "restore_failures": 0
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "as given",
+          "split_commands": 0,
+          "reruns": 0,
+          "ane_ms": 0,
+          "evaluations": 0
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 528482304,
+          "optional": {
+            "prompt_lookup": false,
+            "lookup_reason": "",
+            "compact_draft_head": false,
+            "compact_validated": false,
+            "compact_capacity": 0,
+            "compact_validation_comparisons": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0,
+            "compact_reason": "",
+            "fast_topk": false,
+            "fast_topk_reason": "",
+            "extra_metal_bytes": 0
+          }
+        },
+        "kv": {
+          "block_tokens": 32,
+          "pages_allocated": 356,
+          "pages_active": 0,
+          "pages_cache": 266,
+          "pages_free": 90,
+          "allocated_bytes": 139984896,
+          "reclaimable_bytes": 0,
+          "extent_allocations": 1,
+          "extent_releases": 0,
+          "extent_allocate_max_ms": 2.997834,
+          "extent_release_max_ms": 0,
+          "extent_compactions": 0,
+          "pages_moved": 0,
+          "extent_compact_max_ms": 0
+        },
+        "state": {
+          "entries": 6,
+          "pinned": 0,
+          "in_use": 0,
+          "in_use_evictions": 0,
+          "bytes": 118554624,
+          "allocated_bytes": 237109248,
+          "active_lanes": 0,
+          "idle_gdn_cells": 6,
+          "idle_draft_rings": 3,
+          "idle_context_windows": 0,
+          "publications": 6,
+          "evictions": 0,
+          "checkpoint_entries": 0,
+          "checkpoint_bytes": 0,
+          "checkpoint_evictions": 0,
+          "checkpoint_retirements": 0,
+          "disk_hits": 0,
+          "disk_promotions": 0,
+          "disk_promotions_skipped": 0,
+          "disk_bytes": 0,
+          "offloads": 0,
+          "offload_failures": 0,
+          "invalidations": 0
+        },
+        "disk": {
+          "capacity_bytes": 0,
+          "used_bytes": 0,
+          "file_bytes": 0,
+          "read_bytes": 0,
+          "written_bytes": 0,
+          "kv_blocks": 0,
+          "kv_bytes": 0,
+          "kv_demotions": 0,
+          "kv_demotion_failures": 0,
+          "kv_demotions_refused": 0,
+          "kv_restores": 0,
+          "kv_restore_failures": 0,
+          "kv_pending_pages": 0,
+          "persistent": false,
+          "kv_copies": 0,
+          "kv_copy_failures": 0,
+          "taken_back": {
+            "states": 0,
+            "kv_blocks": 0,
+            "bytes": 0,
+            "left_behind": 0
+          },
+          "write_behind": {
+            "waiting": 0,
+            "durable": 0,
+            "unneeded": 0,
+            "refused": 0
+          }
+        },
+        "cache": {
+          "probe_hashed_blocks": 500,
+          "hits": 6,
+          "cold_misses": 14,
+          "hit_rate": 0.3,
+          "kv_hit_tokens": 15808,
+          "kv_disk_hit_tokens": 0,
+          "lost_state_misses": 0,
+          "reused_tokens": 15296,
+          "replay_state_publications": 6,
+          "deduplicated_state_publications": 0,
+          "recycled_state_publications": 0,
+          "disk_state_publications": 0,
+          "replay_state_publication_failures": 0,
+          "lazy_junctions": 1,
+          "junction_materializations": 0,
+          "junction_materialization_failures": 0,
+          "checkpoint_publications": 0,
+          "checkpoint_publication_failures": 0,
+          "resource_suspensions": 0,
+          "priority_suspensions": 0,
+          "resource_resumptions": 0,
+          "resource_replay_tokens": 0
+        },
+        "draft_context": {
+          "target_prefill_rows": 11496,
+          "prompt_end_rows": 0,
+          "materialization_rows": 0,
+          "avoided_rows": 11496,
+          "restore_skipped": 2,
+          "resets": 0
+        },
+        "model_timing": {
+          "scope": "model_lifetime",
+          "prefill": {
+            "last_gpu_ms": 31.105125,
+            "last_wall_ms": 35.51675,
+            "total_gpu_ms": 2505.665333,
+            "total_wall_ms": 2603.313709
+          },
+          "decode": {
+            "last_gpu_ms": 0,
+            "last_wall_ms": 0,
+            "total_gpu_ms": 0,
+            "total_wall_ms": 0
+          }
+        },
+        "constraint_masks": {
+          "overlap_batches": 0,
+          "overlap_requests": 0,
+          "last_target_forward_gpu_ms": 0,
+          "total_target_forward_gpu_ms": 0,
+          "last_residual_wait_ms": 0,
+          "total_residual_wait_ms": 0
+        },
+        "images": {
+          "encodes": 0,
+          "embedding_reuses": 0,
+          "arena_bytes": 0,
+          "cached_bytes": 0,
+          "state_held_bytes": 0,
+          "rows_bytes": 0
+        },
+        "scheduler": {
+          "queued": 0,
+          "waiting_resources": 0,
+          "waiting_prefix": 0,
+          "prefilling": 0,
+          "decoding": 0,
+          "waiting_mask": 0,
+          "terminal": 0,
+          "prefill_batches": 25,
+          "prefill_rows": 9336,
+          "decode_batches": 0,
+          "decode_batches_by_width": {
+            "b1": 0,
+            "b2": 0,
+            "b3": 0,
+            "b4": 0
+          }
+        },
+        "active_requests": [],
+        "requests": {
+          "submitted": 20,
+          "completed": 20,
+          "cancelled": 0,
+          "failed": 0
+        },
+        "metrics": {
+          "ttft_ms": {
+            "p50": 0,
+            "p95": 0,
+            "samples": 0
+          },
+          "itl_ms": {
+            "p50": 0,
+            "p95": 0,
+            "samples": 0
+          },
+          "prefill_input_tokens": 9336,
+          "prefill_wall_ms": 2118.730709,
+          "prefill_tokens_per_second": 4406.411801,
+          "decode_output_tokens": 0,
+          "decode_wall_ms": 0,
+          "decode_cycle_ms": 0,
+          "decode_tokens_per_second": 0,
+          "drafted_tokens": 0,
+          "accepted_draft_tokens": 0,
+          "draft_acceptance_rate": 0,
+          "capacity_failures": 0,
+          "metal_failures": 0,
+          "current_prefill_batch": {
+            "valid": true,
+            "width": 3,
+            "input_tokens": 89,
+            "output_tokens": 0,
+            "drafted_tokens": 0,
+            "accepted_draft_tokens": 0,
+            "wall_ms": 35.51675,
+            "tokens_per_second": 2505.859911
+          },
+          "current_decode_batch": {
+            "valid": false,
+            "width": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "drafted_tokens": 0,
+            "accepted_draft_tokens": 0,
+            "wall_ms": 0,
+            "tokens_per_second": 0
+          }
+        },
+        "warmup": {
+          "prefill_2048": true,
+          "decode_b1": true,
+          "decode_b2": true,
+          "decode_b3": true,
+          "decode_b4": true,
+          "composite_state_restore": true,
+          "memory_limited_steps": [],
+          "detail": "real 2048-row KV target+draft prefill [M32]"
+        },
+        "metal": {
+          "healthy": true,
+          "failure_reason": ""
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "kev",
+          "head_size": 512,
+          "generation": false,
+          "readout": "option-end keys against final-position query",
+          "temperatures": {
+            "choice": 2.3510959148406982,
+            "noul": 2.3510959148406982,
+            "score": 2.3510959148406982
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 2,
+              "0.05": 8,
+              "0.1": 13,
+              "0.25": 15,
+              "0.5": 17,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 2.3513213329715654
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.0006429569912143052
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 2.712389687076211e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 13,
+              "0.005": 16,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.032091707951622084
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "1266c458c1cf4e8e88d84f77",
+          "pid": 93014,
+          "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+          "host": "127.0.0.1",
+          "port": 18135,
+          "started_at": 1792034678.485607
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "comparison": [
+        {
+          "name": "billing",
+          "maximum_probability_delta": 0.004381955577616739
+        },
+        {
+          "name": "sentiment",
+          "maximum_probability_delta": 0.0002203153475024422
+        },
+        {
+          "name": "noul",
+          "maximum_probability_delta": 5.96965579251485e-05
+        },
+        {
+          "name": "rating",
+          "maximum_probability_delta": 0.001370847183936763
+        },
+        {
+          "name": "json",
+          "maximum_probability_delta": 0.0001410052861288147
+        },
+        {
+          "name": "escaped_marker",
+          "maximum_probability_delta": 0.0021660287618163743
+        },
+        {
+          "name": "length_128",
+          "maximum_probability_delta": 0.0005198988377025371
+        },
+        {
+          "name": "length_512",
+          "maximum_probability_delta": 0.0004950391837623691
+        },
+        {
+          "name": "length_1049",
+          "maximum_probability_delta": 0.0007582875917361287
+        },
+        {
+          "name": "length_2048",
+          "maximum_probability_delta": 0.00032074821908867346
+        },
+        {
+          "name": "length_4096",
+          "maximum_probability_delta": 0.0006771650200938506
+        },
+        {
+          "name": "length_8192",
+          "maximum_probability_delta": 0.00038278120576708957
+        },
+        {
+          "name": "multi_question",
+          "maximum_probability_delta": 0.024881776832053892
+        }
+      ]
+    },
+    "Julia-1": {
+      "reference": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 8.293692634953415e-06,
+                  "billing": 0.9999917063073651
+                },
+                "confidence": 0.9999834126147302
+              }
+            },
+            "usage": {
+              "input_tokens": 37,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 1.9317714733893548e-05,
+                  "positive": 0.9999806822852662
+                },
+                "confidence": 0.9999613645705323
+              }
+            },
+            "usage": {
+              "input_tokens": 29,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.999538447706187
+              }
+            },
+            "usage": {
+              "input_tokens": 27,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.8735711568524329,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.354370859283225,
+                  "1": 0.41768712458111723,
+                  "2": 0.22794201613565787
+                },
+                "confidence": 0.12653068687167568
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.8290577105693925,
+                  "shipping": 0.17094228943060752
+                },
+                "confidence": 0.658115421138785
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "billing": 0.2503849117672712,
+                  "shipping": 0.7496150882327288
+                },
+                "confidence": 0.49923017646545764
+              }
+            },
+            "usage": {
+              "input_tokens": 36,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.013275124113467963,
+                  "billing": 0.986724875886532
+                },
+                "confidence": 0.973449751773064
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03621480873394584,
+                  "billing": 0.9637851912660541
+                },
+                "confidence": 0.9275703825321082
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.92455858250359,
+                  "billing": 0.07544141749641003
+                },
+                "confidence": 0.84911716500718
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9949178164055644,
+                  "billing": 0.005082183594435624
+                },
+                "confidence": 0.9898356328111289
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9801320718936157,
+                  "billing": 0.01986792810638425
+                },
+                "confidence": 0.9602641437872315
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9984988759938442,
+                  "billing": 0.001501124006155656
+                },
+                "confidence": 0.9969977519876885
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Julia-1-GGUF/Julia-1-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 7.549572496375218e-06,
+                  "billing": 0.9999924504275036
+                },
+                "confidence": 0.9999849008550072
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.9986613371603255
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.1040236533316947,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.1035318598488324,
+                  "1": 0.6889126269706408,
+                  "2": 0.2075555131805269
+                },
+                "confidence": 0.5333689404559611
+              }
+            },
+            "usage": {
+              "input_tokens": 89,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "splash": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 8.564691915765168e-06,
+                  "billing": 0.9999914353080842
+                },
+                "confidence": 0.9999828706161684
+              }
+            },
+            "usage": {
+              "input_tokens": 37,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 1.0933919775018525e-05,
+                  "positive": 0.9999890660802251
+                },
+                "confidence": 0.9999781321604502
+              }
+            },
+            "usage": {
+              "input_tokens": 29,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9952755219811443
+              }
+            },
+            "usage": {
+              "input_tokens": 27,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.8747064540275268,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.353945403081483,
+                  "1": 0.41740273980950743,
+                  "2": 0.22865185710900968
+                },
+                "confidence": 0.126104109714261
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.8013255780310926,
+                  "shipping": 0.1986744219689073
+                },
+                "confidence": 0.6026511560621852
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "billing": 0.24158714039594062,
+                  "shipping": 0.7584128596040594
+                },
+                "confidence": 0.5168257192081187
+              }
+            },
+            "usage": {
+              "input_tokens": 36,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.011283999447129963,
+                  "billing": 0.98871600055287
+                },
+                "confidence": 0.97743200110574
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.04578298529099253,
+                  "billing": 0.9542170147090074
+                },
+                "confidence": 0.9084340294180149
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9304707503568148,
+                  "billing": 0.06952924964318512
+                },
+                "confidence": 0.8609415007136296
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9951798579628106,
+                  "billing": 0.0048201420371894775
+                },
+                "confidence": 0.9903597159256212
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9811828205791836,
+                  "billing": 0.018817179420816465
+                },
+                "confidence": 0.9623656411583672
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9987576932838879,
+                  "billing": 0.0012423067161121736
+                },
+                "confidence": 0.9975153865677757
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 8.194368559156454e-06,
+                  "billing": 0.9999918056314409
+                },
+                "confidence": 0.9999836112628817
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.998221196100975
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.1168314349451456,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.10326611672554907,
+                  "1": 0.6766363316037561,
+                  "2": 0.22009755167069478
+                },
+                "confidence": 0.5149544974056341
+              }
+            },
+            "usage": {
+              "input_tokens": 89,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "concurrent4": [
+        {
+          "model": "ggml-org/Julia-1-GGUF:Q8_0",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 8.564691915765168e-06,
+                "billing": 0.9999914353080842
+              },
+              "confidence": 0.9999828706161684
+            }
+          },
+          "usage": {
+            "input_tokens": 37,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Julia-1-GGUF:Q8_0",
+          "answers": {
+            "mood": {
+              "type": "choice",
+              "choice": "positive",
+              "probabilities": {
+                "negative": 1.0933919775018525e-05,
+                "positive": 0.9999890660802251
+              },
+              "confidence": 0.9999781321604502
+            }
+          },
+          "usage": {
+            "input_tokens": 29,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Julia-1-GGUF:Q8_0",
+          "answers": {
+            "refund": {
+              "type": "noul",
+              "noul": 0.9952755219811443
+            }
+          },
+          "usage": {
+            "input_tokens": 27,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Julia-1-GGUF:Q8_0",
+          "answers": {
+            "urgency": {
+              "type": "score",
+              "score": 0.8747064540275268,
+              "legend": {
+                "0": "No urgency",
+                "1": "This week",
+                "2": "Today"
+              },
+              "probabilities": {
+                "0": 0.353945403081483,
+                "1": 0.41740273980950743,
+                "2": 0.22865185710900968
+              },
+              "confidence": 0.126104109714261
+            }
+          },
+          "usage": {
+            "input_tokens": 34,
+            "output_tokens": 0
+          }
+        }
+      ],
+      "status": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "modern-bert",
+        "memory": {
+          "loaded_weight_bytes": 175034628,
+          "quantized_weight_bytes": 174915584,
+          "auxiliary_weight_bytes": 119044,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 160702496,
+          "kv_bytes": 0,
+          "state_bytes": 0,
+          "allocated_bytes": 335737124,
+          "peak_allocated_bytes": 335737124,
+          "max_memory_bytes": 4294967296
+        },
+        "telemetry": {
+          "completed_requests": 20,
+          "submission_batches": 18,
+          "maximum_submission_batch": 3,
+          "total_prefill_gpu_seconds": 1.45072
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "none"
+          },
+          "cache": {
+            "build_id": "src-dba0c1be8715794e7f2784e0253fb0556b6c8d305fbf04bc5e3c65303be782ba"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 4294967296
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "laya",
+          "architecture": "modern-bert",
+          "head_size": 1,
+          "generation": false,
+          "readout": "typed option-marker scores",
+          "max_head_tokens": 256,
+          "temperatures": {}
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "native"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": false,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 1,
+              "0.025": 8,
+              "0.05": 13,
+              "0.1": 15,
+              "0.25": 16,
+              "0.5": 16,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 1.65129862606409
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.0005851680180057883
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 2.1459010895341635e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 13,
+              "0.005": 16,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.024391501006903127
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "ba1e5a9ac1b1772d20bf066a",
+          "pid": 93211,
+          "model": "ggml-org/Julia-1-GGUF:Q8_0",
+          "host": "127.0.0.1",
+          "port": 18135,
+          "started_at": 1792034684.2790499
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "comparison": [
+        {
+          "name": "billing",
+          "maximum_probability_delta": 2.709992809046824e-07
+        },
+        {
+          "name": "sentiment",
+          "maximum_probability_delta": 8.383794958932711e-06
+        },
+        {
+          "name": "noul",
+          "maximum_probability_delta": 0.004262925725042721
+        },
+        {
+          "name": "rating",
+          "maximum_probability_delta": 0.0007098409733518052
+        },
+        {
+          "name": "json",
+          "maximum_probability_delta": 0.02773213253829987
+        },
+        {
+          "name": "escaped_marker",
+          "maximum_probability_delta": 0.00879777137133056
+        },
+        {
+          "name": "length_128",
+          "maximum_probability_delta": 0.0019911246663380008
+        },
+        {
+          "name": "length_512",
+          "maximum_probability_delta": 0.009568176557046684
+        },
+        {
+          "name": "length_1049",
+          "maximum_probability_delta": 0.005912167853224917
+        },
+        {
+          "name": "length_2048",
+          "maximum_probability_delta": 0.0002620415572461843
+        },
+        {
+          "name": "length_4096",
+          "maximum_probability_delta": 0.0010507486855678705
+        },
+        {
+          "name": "length_8192",
+          "maximum_probability_delta": 0.00025881729004362253
+        },
+        {
+          "name": "multi_question",
+          "maximum_probability_delta": 0.012542038490167884
+        }
+      ],
+      "splash_full_head": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 8.564691915765168e-06,
+                  "billing": 0.9999914353080842
+                },
+                "confidence": 0.9999828706161684
+              }
+            },
+            "usage": {
+              "input_tokens": 37,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 1.0933919775018525e-05,
+                  "positive": 0.9999890660802251
+                },
+                "confidence": 0.9999781321604502
+              }
+            },
+            "usage": {
+              "input_tokens": 29,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9952755219811443
+              }
+            },
+            "usage": {
+              "input_tokens": 27,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.8747064540275268,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.353945403081483,
+                  "1": 0.41740273980950743,
+                  "2": 0.22865185710900968
+                },
+                "confidence": 0.126104109714261
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.8013255780310926,
+                  "shipping": 0.1986744219689073
+                },
+                "confidence": 0.6026511560621852
+              }
+            },
+            "usage": {
+              "input_tokens": 34,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "billing": 0.24158714039594062,
+                  "shipping": 0.7584128596040594
+                },
+                "confidence": 0.5168257192081187
+              }
+            },
+            "usage": {
+              "input_tokens": 36,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.011283999447129963,
+                  "billing": 0.98871600055287
+                },
+                "confidence": 0.97743200110574
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.04578298529099253,
+                  "billing": 0.9542170147090074
+                },
+                "confidence": 0.9084340294180149
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9304707503568148,
+                  "billing": 0.06952924964318512
+                },
+                "confidence": 0.8609415007136296
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9951798579628106,
+                  "billing": 0.0048201420371894775
+                },
+                "confidence": 0.9903597159256212
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9811828205791836,
+                  "billing": 0.018817179420816465
+                },
+                "confidence": 0.9623656411583672
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.9987576952067232,
+                  "billing": 0.0012423047932768707
+                },
+                "confidence": 0.9975153904134464
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "ggml-org/Julia-1-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 8.194368559156454e-06,
+                  "billing": 0.9999918056314409
+                },
+                "confidence": 0.9999836112628817
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.998221196100975
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.1168314349451456,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.10326611672554907,
+                  "1": 0.6766363316037561,
+                  "2": 0.22009755167069478
+                },
+                "confidence": 0.5149544974056341
+              }
+            },
+            "usage": {
+              "input_tokens": 89,
+              "output_tokens": 0
+            }
+          }
+        }
+      ]
+    },
+    "Laya": {
+      "reference": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03148259222017004,
+                  "billing": 0.96851740777983
+                },
+                "confidence": 0.93703481555966
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 0.029120419913944855,
+                  "positive": 0.9708795800860552
+                },
+                "confidence": 0.9417591601721105
+              }
+            },
+            "usage": {
+              "input_tokens": 35,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.8930412553848671
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.2776131356024955,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.8367232383795709,
+                  "1": 0.04894038763836312,
+                  "2": 0.11433637398206618
+                },
+                "confidence": 0.5835802965962567
+              }
+            },
+            "usage": {
+              "input_tokens": 43,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9853496565168253,
+                  "shipping": 0.014650343483174722
+                },
+                "confidence": 0.9706993130336505
+              }
+            },
+            "usage": {
+              "input_tokens": 40,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9204287687446293,
+                  "shipping": 0.07957123125537056
+                },
+                "confidence": 0.8408575374892586
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.14847733395526222,
+                  "billing": 0.8515226660447378
+                },
+                "confidence": 0.7030453320894756
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.46447458243940914,
+                  "billing": 0.5355254175605908
+                },
+                "confidence": 0.0710508351211816
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.38313792373825606,
+                  "billing": 0.6168620762617439
+                },
+                "confidence": 0.23372415252348788
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.38401898085715147,
+                  "billing": 0.6159810191428485
+                },
+                "confidence": 0.23196203828569706
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.47140255602187126,
+                  "billing": 0.5285974439781288
+                },
+                "confidence": 0.0571948879562576
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.5262557773877933,
+                  "billing": 0.47374422261220667
+                },
+                "confidence": 0.052511554775586555
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "/Users/ghost233/.lmstudio/models/ggml-org/Laya-GGUF/Laya-Q8_0.gguf",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.032856764357223414,
+                  "billing": 0.9671432356427766
+                },
+                "confidence": 0.9342864712855532
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.947548162892523
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.5158422067437716,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.08398493609148787,
+                  "1": 0.3161879210732528,
+                  "2": 0.5998271428352594
+                },
+                "confidence": 0.27376331011565713
+              }
+            },
+            "usage": {
+              "input_tokens": 118,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "splash": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03166422726410005,
+                  "billing": 0.9683357727358999
+                },
+                "confidence": 0.9366715454717998
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 0.02901591600206556,
+                  "positive": 0.9709840839979343
+                },
+                "confidence": 0.9419681679958687
+              }
+            },
+            "usage": {
+              "input_tokens": 35,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.8743661785484267
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.27741539211892285,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.8366109781721599,
+                  "1": 0.04936265153675739,
+                  "2": 0.11402637029108273
+                },
+                "confidence": 0.5838769118216157
+              }
+            },
+            "usage": {
+              "input_tokens": 43,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9849464069199924,
+                  "shipping": 0.0150535930800075
+                },
+                "confidence": 0.9698928138399847
+              }
+            },
+            "usage": {
+              "input_tokens": 40,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9195460427626816,
+                  "shipping": 0.08045395723731835
+                },
+                "confidence": 0.8390920855253632
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.15133281299370535,
+                  "billing": 0.8486671870062946
+                },
+                "confidence": 0.6973343740125892
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.46217411567689765,
+                  "billing": 0.5378258843231024
+                },
+                "confidence": 0.07565176864620482
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.38129705654556945,
+                  "billing": 0.6187029434544306
+                },
+                "confidence": 0.2374058869088611
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.3834514959753344,
+                  "billing": 0.6165485040246655
+                },
+                "confidence": 0.2330970080493311
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.4735948462602064,
+                  "billing": 0.5264051537397936
+                },
+                "confidence": 0.05281030747958715
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.5269406158430797,
+                  "billing": 0.4730593841569204
+                },
+                "confidence": 0.053881231686159436
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03313430944152928,
+                  "billing": 0.9668656905584707
+                },
+                "confidence": 0.9337313811169414
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.9260937903781128
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.5158501839808745,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.08438499327146397,
+                  "1": 0.3153798294761976,
+                  "2": 0.6002351772523384
+                },
+                "confidence": 0.2737752759713117
+              }
+            },
+            "usage": {
+              "input_tokens": 118,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "concurrent4": [
+        {
+          "model": "ggml-org/Laya-GGUF:Q8_0",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.03166422726410005,
+                "billing": 0.9683357727358999
+              },
+              "confidence": 0.9366715454717998
+            }
+          },
+          "usage": {
+            "input_tokens": 41,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Laya-GGUF:Q8_0",
+          "answers": {
+            "mood": {
+              "type": "choice",
+              "choice": "positive",
+              "probabilities": {
+                "negative": 0.02901591600206556,
+                "positive": 0.9709840839979343
+              },
+              "confidence": 0.9419681679958687
+            }
+          },
+          "usage": {
+            "input_tokens": 35,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Laya-GGUF:Q8_0",
+          "answers": {
+            "refund": {
+              "type": "noul",
+              "noul": 0.8743661785484267
+            }
+          },
+          "usage": {
+            "input_tokens": 41,
+            "output_tokens": 0
+          }
+        },
+        {
+          "model": "ggml-org/Laya-GGUF:Q8_0",
+          "answers": {
+            "urgency": {
+              "type": "score",
+              "score": 0.27741539211892285,
+              "legend": {
+                "0": "No urgency",
+                "1": "This week",
+                "2": "Today"
+              },
+              "probabilities": {
+                "0": 0.8366109781721599,
+                "1": 0.04936265153675739,
+                "2": 0.11402637029108273
+              },
+              "confidence": 0.5838769118216157
+            }
+          },
+          "usage": {
+            "input_tokens": 43,
+            "output_tokens": 0
+          }
+        }
+      ],
+      "status": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "modern-bert",
+        "memory": {
+          "loaded_weight_bytes": 457365508,
+          "quantized_weight_bytes": 456998912,
+          "auxiliary_weight_bytes": 366596,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 380838224,
+          "kv_bytes": 0,
+          "state_bytes": 0,
+          "allocated_bytes": 838203732,
+          "peak_allocated_bytes": 838203732,
+          "max_memory_bytes": 4294967296
+        },
+        "telemetry": {
+          "completed_requests": 20,
+          "submission_batches": 18,
+          "maximum_submission_batch": 3,
+          "total_prefill_gpu_seconds": 4.94525
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "none"
+          },
+          "cache": {
+            "build_id": "src-dba0c1be8715794e7f2784e0253fb0556b6c8d305fbf04bc5e3c65303be782ba"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 4294967296
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "laya",
+          "architecture": "modern-bert",
+          "head_size": 1,
+          "generation": false,
+          "readout": "typed option-marker scores",
+          "max_head_tokens": 192,
+          "temperatures": {
+            "choice": 1.6369030475616455,
+            "choice.11": 0.10058280825614929,
+            "choice.2": 1.9063563346862793,
+            "choice.3_5": 1.7601518630981445,
+            "choice.6_10": 1.0000158548355103,
+            "noul": 1.983399510383606,
+            "noul.2": 1.983399510383606,
+            "score": 1.2514300346374512,
+            "score.3_5": 1.2514300346374512
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "native"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": false,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 2,
+              "0.05": 8,
+              "0.1": 13,
+              "0.25": 14,
+              "0.5": 15,
+              "1": 16,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 5.320121044962434
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.0009421661379747093
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 18,
+              "0.005": 18,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 2.7710979338735342e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 12,
+              "0.005": 16,
+              "0.01": 18,
+              "0.025": 18,
+              "0.05": 18,
+              "0.1": 18,
+              "0.25": 18,
+              "0.5": 18,
+              "1": 18,
+              "2.5": 18,
+              "5": 18,
+              "10": 18,
+              "30": 18,
+              "60": 18,
+              "120": 18,
+              "300": 18,
+              "900": 18,
+              "1800": 18,
+              "+Inf": 18
+            },
+            "count": 18,
+            "sum": 0.03238016500836238
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "f4a4bb98d849a5a53f4667f0",
+          "pid": 93483,
+          "model": "ggml-org/Laya-GGUF:Q8_0",
+          "host": "127.0.0.1",
+          "port": 18135,
+          "started_at": 1792034692.430511
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "comparison": [
+        {
+          "name": "billing",
+          "maximum_probability_delta": 0.0001816350439300951
+        },
+        {
+          "name": "sentiment",
+          "maximum_probability_delta": 0.00010450391187929661
+        },
+        {
+          "name": "noul",
+          "maximum_probability_delta": 0.01867507683644043
+        },
+        {
+          "name": "rating",
+          "maximum_probability_delta": 0.0004222638983942678
+        },
+        {
+          "name": "json",
+          "maximum_probability_delta": 0.00040324959683291084
+        },
+        {
+          "name": "escaped_marker",
+          "maximum_probability_delta": 0.0008827259819477878
+        },
+        {
+          "name": "length_128",
+          "maximum_probability_delta": 0.002855479038443187
+        },
+        {
+          "name": "length_512",
+          "maximum_probability_delta": 0.0023004667625116104
+        },
+        {
+          "name": "length_1049",
+          "maximum_probability_delta": 0.0018408671926866127
+        },
+        {
+          "name": "length_2048",
+          "maximum_probability_delta": 0.0005674848818170708
+        },
+        {
+          "name": "length_4096",
+          "maximum_probability_delta": 0.002192290238335226
+        },
+        {
+          "name": "length_8192",
+          "maximum_probability_delta": 0.0006848384552864406
+        },
+        {
+          "name": "multi_question",
+          "maximum_probability_delta": 0.02145437251441018
+        }
+      ],
+      "splash_full_head": [
+        {
+          "name": "billing",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03166422726410005,
+                  "billing": 0.9683357727358999
+                },
+                "confidence": 0.9366715454717998
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "sentiment",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "mood": {
+                "type": "choice",
+                "choice": "positive",
+                "probabilities": {
+                  "negative": 0.02901591600206556,
+                  "positive": 0.9709840839979343
+                },
+                "confidence": 0.9419681679958687
+              }
+            },
+            "usage": {
+              "input_tokens": 35,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "noul",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.8743661785484267
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "rating",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "urgency": {
+                "type": "score",
+                "score": 0.27741539211892285,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.8366109781721599,
+                  "1": 0.04936265153675739,
+                  "2": 0.11402637029108273
+                },
+                "confidence": 0.5838769118216157
+              }
+            },
+            "usage": {
+              "input_tokens": 43,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "json",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9849464106286672,
+                  "shipping": 0.015053589371332913
+                },
+                "confidence": 0.9698928212573343
+              }
+            },
+            "usage": {
+              "input_tokens": 40,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "escaped_marker",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9195460427626816,
+                  "shipping": 0.08045395723731835
+                },
+                "confidence": 0.8390920855253632
+              }
+            },
+            "usage": {
+              "input_tokens": 41,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_128",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.15133281299370535,
+                  "billing": 0.8486671870062946
+                },
+                "confidence": 0.6973343740125892
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_512",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.46217411567689765,
+                  "billing": 0.5378258843231024
+                },
+                "confidence": 0.07565176864620482
+              }
+            },
+            "usage": {
+              "input_tokens": 512,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_1049",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.38129705654556945,
+                  "billing": 0.6187029434544306
+                },
+                "confidence": 0.2374058869088611
+              }
+            },
+            "usage": {
+              "input_tokens": 1049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_2048",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.3834514959753344,
+                  "billing": 0.6165485040246655
+                },
+                "confidence": 0.2330970080493311
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_4096",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.4735948462602064,
+                  "billing": 0.5264051537397936
+                },
+                "confidence": 0.05281030747958715
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "length_8192",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "shipping",
+                "probabilities": {
+                  "shipping": 0.5269406158430797,
+                  "billing": 0.4730593841569204
+                },
+                "confidence": 0.053881231686159436
+              }
+            },
+            "usage": {
+              "input_tokens": 8192,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "name": "multi_question",
+          "response": {
+            "model": "ggml-org/Laya-GGUF:Q8_0",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "shipping": 0.03313430944152928,
+                  "billing": 0.9668656905584707
+                },
+                "confidence": 0.9337313811169414
+              },
+              "refund": {
+                "type": "noul",
+                "noul": 0.9260937903781128
+              },
+              "urgency": {
+                "type": "score",
+                "score": 1.5158501839808745,
+                "legend": {
+                  "0": "No urgency",
+                  "1": "This week",
+                  "2": "Today"
+                },
+                "probabilities": {
+                  "0": 0.08438499327146397,
+                  "1": 0.3153798294761976,
+                  "2": 0.6002351772523384
+                },
+                "confidence": 0.2737752759713117
+              }
+            },
+            "usage": {
+              "input_tokens": 118,
+              "output_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "Kev-0.8B-reference": {
+      "exit": 0
+    },
+    "Kev-0.8B-splash": {
+      "exit": 0
+    },
+    "Julia-1-reference": {
+      "exit": 0
+    },
+    "Julia-1-splash": {
+      "exit": 0
+    },
+    "Laya-reference": {
+      "exit": 0
+    },
+    "Laya-splash": {
+      "exit": 0
+    },
+    "Kev-0.8B-splash-final": {
+      "exit": 0
+    },
+    "Julia-1-splash-final": {
+      "exit": 0
+    },
+    "Julia-1-splash_full_head-final": {
+      "exit": 0
+    },
+    "Laya-splash-final": {
+      "exit": 0
+    },
+    "Laya-splash_full_head-final": {
+      "exit": 0
+    }
+  }
+}

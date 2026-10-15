@@ -1,0 +1,126 @@
+{
+  "status": "held_for_second_external_benchmark",
+  "reason": "human confirmed another performance test started during isolated retest; precise overlap interval unavailable",
+  "original_completed": 16,
+  "retained_pre_retest_samples": 3,
+  "fresh_samples_held": 13,
+  "fresh_attempts": [
+    {
+      "profile": "baseline",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-001-isolated-retest-attempt3-baseline",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791725962.475496,
+      "completed_at_unix": 1791726069.9803252
+    },
+    {
+      "profile": "splits-2",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-002-isolated-retest-attempt2-splits-2",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726091.5708082,
+      "completed_at_unix": 1791726188.14703
+    },
+    {
+      "profile": "splits-6",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-006-isolated-retest-attempt2-splits-6",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726194.7052522,
+      "completed_at_unix": 1791726305.7695098
+    },
+    {
+      "profile": "splits-7",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-007-isolated-retest-splits-7",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726344.3690932,
+      "completed_at_unix": 1791726447.989866
+    },
+    {
+      "profile": "splits-1",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-008-isolated-retest-splits-1",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726452.239198,
+      "completed_at_unix": 1791726555.838329
+    },
+    {
+      "profile": "splits-9",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-009-isolated-retest-splits-9",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726560.1154659,
+      "completed_at_unix": 1791726665.329646
+    },
+    {
+      "profile": "splits-10",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-010-isolated-retest-splits-10",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726669.5675972,
+      "completed_at_unix": 1791726770.121851
+    },
+    {
+      "profile": "splits-11",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-011-isolated-retest-splits-11",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726774.3589718,
+      "completed_at_unix": 1791726875.857291
+    },
+    {
+      "profile": "splits-12",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-012-isolated-retest-splits-12",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726880.118809,
+      "completed_at_unix": 1791726985.758065
+    },
+    {
+      "profile": "splits-13",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-013-isolated-retest-splits-13",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791726990.012906,
+      "completed_at_unix": 1791727103.8643358
+    },
+    {
+      "profile": "splits-14",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-014-isolated-retest-splits-14",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791727108.141642,
+      "completed_at_unix": 1791727216.657782
+    },
+    {
+      "profile": "splits-15",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-015-isolated-retest-splits-15",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791727220.8981912,
+      "completed_at_unix": 1791727321.7895958
+    },
+    {
+      "profile": "splits-16",
+      "repeat": 0,
+      "attempt": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v2/perf-0-016-isolated-retest-splits-16",
+      "recorded_busy_pids": [],
+      "started_at_unix": 1791727326.036389,
+      "completed_at_unix": 1791727435.878056
+    }
+  ],
+  "timings_not_used_for_parameter_selection": true,
+  "numerical_outputs_and_raw_timings_preserved": true,
+  "controller_stop_exit_code": 1,
+  "finish_stop_exit_code": 143,
+  "cancelled_active_attempt": "concurrency-2",
+  "cpu_python_investigation": {
+    "pid": 50938,
+    "module": "pytest",
+    "cwd": "GhostHermesProjectManagerPlugins",
+    "gpu_files_found": false,
+    "classification": "not established as a GPU benchmark"
+  },
+  "time": 1791728071.876847
+}

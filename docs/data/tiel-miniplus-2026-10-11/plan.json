@@ -1,0 +1,365 @@
+{
+  "model_root": "/Users/ghost233/Ghost233Code/GhostSplash/install/models-local/.resolved/8a4d6f9e2b41486cf6457c096475874d4a62df066e22074266b0aa916467e382",
+  "model_id": "IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF",
+  "family": "Qwen3.6-35B-A3B",
+  "base_parameters": {
+    "kv_format": "int8",
+    "ane_requested": false,
+    "ane_share": 0,
+    "ane_minimum_rows": 0,
+    "auto_calibration": false,
+    "drafter_enabled": true,
+    "drafter_block_size": 8,
+    "tail_prefill_splits": 8,
+    "concurrency": 1,
+    "input_tokens": 32768,
+    "output_tokens": 512,
+    "context_tokens": 36864,
+    "memory_budget_bytes": 34359738368,
+    "temperature": 0,
+    "ignore_eos": true,
+    "cold_requests": true
+  },
+  "profiles": [
+    {
+      "name": "baseline",
+      "change": {},
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "kv-bf16",
+      "change": {
+        "kv_format": "bf16"
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "kv-q4_0",
+      "change": {
+        "kv_format": "q4_0"
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "kv-q4_0_unrotated",
+      "change": {
+        "kv_format": "q4_0_unrotated"
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "kv-q4h",
+      "change": {
+        "kv_format": "q4h"
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-2",
+      "change": {
+        "tail_prefill_splits": 2
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-3",
+      "change": {
+        "tail_prefill_splits": 3
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-4",
+      "change": {
+        "tail_prefill_splits": 4
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-5",
+      "change": {
+        "tail_prefill_splits": 5
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-6",
+      "change": {
+        "tail_prefill_splits": 6
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-7",
+      "change": {
+        "tail_prefill_splits": 7
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-1",
+      "change": {
+        "tail_prefill_splits": 1
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-9",
+      "change": {
+        "tail_prefill_splits": 9
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-10",
+      "change": {
+        "tail_prefill_splits": 10
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-11",
+      "change": {
+        "tail_prefill_splits": 11
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-12",
+      "change": {
+        "tail_prefill_splits": 12
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-13",
+      "change": {
+        "tail_prefill_splits": 13
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-14",
+      "change": {
+        "tail_prefill_splits": 14
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-15",
+      "change": {
+        "tail_prefill_splits": 15
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "splits-16",
+      "change": {
+        "tail_prefill_splits": 16
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "concurrency-2",
+      "change": {
+        "concurrency": 2
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "concurrency-4",
+      "change": {
+        "concurrency": 4
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "lookup",
+      "change": {},
+      "features": {
+        "lookup": true,
+        "compact": false,
+        "fast": false
+      }
+    },
+    {
+      "name": "compact",
+      "change": {},
+      "features": {
+        "lookup": false,
+        "compact": true,
+        "fast": false
+      }
+    },
+    {
+      "name": "lookup-compact",
+      "change": {},
+      "features": {
+        "lookup": true,
+        "compact": true,
+        "fast": false
+      }
+    },
+    {
+      "name": "ane-requested-on",
+      "change": {
+        "ane_requested": true,
+        "ane_share": 0.5,
+        "ane_minimum_rows": 512
+      },
+      "features": {
+        "lookup": false,
+        "compact": false,
+        "fast": false
+      },
+      "diagnostic_only": true,
+      "expected_fallback": "the target has no dense FFN layers"
+    }
+  ],
+  "output_tokens": [
+    512,
+    2048
+  ],
+  "repeats": 3,
+  "initial_sweep_runs": 156,
+  "scope": "all supported values, one parameter at a time; confirm winners with crossed configurations and longer paired repeats",
+  "unsupported": [
+    {
+      "parameter": "drafter off",
+      "reason": "ModelDescriptor::valid and installed model contract require a paired draft for Qwen3.6-35B-A3B"
+    },
+    {
+      "parameter": "DFlash2 block 2/4/16",
+      "reason": "DFlashDraftLayout::supportsExecutionBlock requires block8 for DFlash2"
+    },
+    {
+      "parameter": "actual ANE on",
+      "reason": "aneFfnLayers does not register SparseMoe; requested-on diagnosis is measured and labeled fallback"
+    },
+    {
+      "parameter": "4B FFN cache modes",
+      "reason": "ModelFactory only enables quantized/limited FFN experiment for Qwen3.5-4B"
+    },
+    {
+      "parameter": "fast top-k greedy benchmark",
+      "reason": "greedy does not execute the sampled fast top-k path; it remains off in this fixed sampling sweep"
+    }
+  ],
+  "weights": {
+    "target": {
+      "path": "/Users/ghost233/.lmstudio/models/IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+      "sha256": "d02c69658344a1cf4d45ecc90d06d3ca0ba621d56a3dbae9a12cc95f112ba037"
+    },
+    "draft": {
+      "path": "/Users/ghost233/.cache/huggingface/hub/models--incoai--Qwen3.6-35B-A3B-DFlash2/snapshots/51ef7b6923ad6c14cb1bb41c37a9041446496ab6/model.safetensors",
+      "sha256": "d1f16c0ff85afbe6166fabfae998af3ec16fa11da87da4391b5e0e0a7c796a4d"
+    }
+  },
+  "runtime_code_sha256": "241f44f3cfcdd638fe51c58e69962fd0e5ce06d9ee408e09cb733df57f7620a7",
+  "measured_commit": "f1a3e55252010f43471bbb1a748d186f80940ee1",
+  "tokenizer": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-matrix-v1/tokenizer",
+  "tokenizer_json_sha256": "8e852142d8ab38bb7678f650bd504ba28c29d9c6357e6ed762bebdbd474689eb",
+  "template_sha256": "139e6927cabaa4bc445e3b44053418b944ba12f8e0df36efe7ada57a331be921",
+  "original_template_sha256": "c12441d835690f5099793812ff62b2b7ff5e08049ebdee7a49763eb806959a47",
+  "native_harness_sha256": "ad8ecfd15b37cf02fd29a00105a0693306f696bb8d264ef819525a1feaab53fc",
+  "attention_harness_sha256": "9e4f9ea31ba4dc333e8c49fce38fed8052abe11905f8e7ea31881b06a2de357b",
+  "cold_requests": true,
+  "ranking_basis": "only input token frequency; never expected output; new model-bound ranking generated after initial native probe",
+  "background_policy": "keep original observations; accept previously authorized load fluctuations; no automatic speed reruns; preserve 2GiB macOS reserve",
+  "production_tail_splits": {
+    "rows": 32,
+    "query_tile_rows": 8,
+    "maximum_splits": 32,
+    "derived_default": 8,
+    "formula": "max(1, maximum_splits / ceil(rows/query_tile_rows))"
+  },
+  "initial_correctness_tail_splits": 1
+}
