@@ -18,13 +18,9 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 
 ## 我们魔改了什么
 
-### GGUF 兼容性
-
-- 扩展 token embedding 的原生 GGUF 解码，覆盖线性层和专家层已支持的量化格式，
-  包括原先未覆盖的部分 IQ 格式与 MXFP4，减少第三方 GGUF 被加载器拒绝的情况。
-- 支持 GDN `ssm_alpha` / `ssm_beta` 使用混合 F32/Q3_K 权重，加载时统一解码为 F32。
-- 补充 GGUF 元数据、权重准备和投影测试；具体支持范围见
-  [开发文档](DEVELOPMENT.md#gguf-targets)。
+上游已覆盖的功能统一使用上游代码和测试。后续同步时移除对应的本地改动。
+上游已支持 GGUF embedding 扩展和混合 F32/Q3_K GDN 权重，具体范围见
+[开发文档](DEVELOPMENT.md#gguf-targets)。
 
 ### 本地模型启动器
 

@@ -36,23 +36,13 @@ NORMAL, UNKNOWN, CONTROL, USER_DEFINED, UNUSED, BYTE = 1, 2, 3, 4, 5, 6
 GGML = {
     "F32": 0,
     "F16": 1,
-    "Q4_0": 2,
-    "Q4_1": 3,
     "Q5_0": 6,
     "Q5_1": 7,
     "Q8_0": 8,
     "Q2_K": 10,
-    "Q3_K": 11,
     "Q4_K": 12,
-    "Q5_K": 13,
-    "Q6_K": 14,
     "IQ2_XXS": 16,
-    "IQ2_XS": 17,
     "IQ3_XXS": 18,
-    "IQ1_S": 19,
-    "IQ4_NL": 20,
-    "IQ3_S": 21,
-    "IQ2_S": 22,
     "IQ4_XS": 23,
     "IQ1_M": 29,
     "BF16": 30,
@@ -356,53 +346,6 @@ class GgufMetadataTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(models.ModelError, "input rotation"):
             gguf.require_loadable(gguf.Metadata(path, tensors=True))
-
-    def test_screening_accepts_mixed_f32_q3k_gdn_projections(self):
-        values = fixture()
-        tensors = loadable_tensors(values, self.root)
-        for alpha, beta in (("F32", "Q3_K"), ("Q3_K", "F32")):
-            with self.subTest(alpha=alpha, beta=beta):
-                mixed = tensors | {
-                    "blk.0.ssm_alpha.weight": GGML[alpha],
-                    "blk.0.ssm_beta.weight": GGML[beta],
-                }
-                path = write_gguf(self.root / "mixed.gguf", values, mixed.items())
-                gguf.require_loadable(gguf.Metadata(path, tensors=True))
-
-    def test_screening_accepts_all_quantized_embeddings(self):
-        values = fixture()
-        tensors = loadable_tensors(values, self.root)
-        for kind in (
-            "Q2_K",
-            "Q3_K",
-            "Q4_K",
-            "Q5_K",
-            "Q6_K",
-            "Q8_0",
-            "Q4_0",
-            "Q4_1",
-            "Q5_0",
-            "Q5_1",
-            "IQ1_S",
-            "IQ1_M",
-            "IQ2_XXS",
-            "IQ2_XS",
-            "IQ2_S",
-            "IQ3_XXS",
-            "IQ3_S",
-            "IQ4_NL",
-            "IQ4_XS",
-            "MXFP4",
-            "NVFP4",
-            "PQ2_0",
-        ):
-            with self.subTest(kind=kind):
-                path = write_gguf(
-                    self.root / "embedding.gguf",
-                    values,
-                    (tensors | {"token_embd.weight": GGML[kind]}).items(),
-                )
-                gguf.require_loadable(gguf.Metadata(path, tensors=True))
 
     def test_screening_accepts_each_tensor_as_the_native_loader_reads_it(self):
         values = fixture()
