@@ -1,0 +1,16 @@
+{
+  "qwen35-4b-optimization": {
+    "head": "04a95e8c05d6674eacfc20a2a06bb05d1f6f0ce2",
+    "snapshot_ref": "refs/worktree-preserved/20261015/qwen35-4b-optimization",
+    "snapshot_commit": "e65fe0bb3e620f533f5cec90d726c90f618df9b3",
+    "snapshot_tree": "022cd8c6e0ce201177aa8c290530f1686152576b",
+    "checkout": "/Users/ghost233/.codex/worktrees/qwen35-4b-optimization/GhostSplash"
+  },
+  "qwen4b-quantized-ffn": {
+    "head": "b20accfc5df6f72ed03425f8c388f24f092703ef",
+    "snapshot_ref": "refs/worktree-preserved/20261015/qwen4b-quantized-ffn",
+    "snapshot_commit": "b20accfc5df6f72ed03425f8c388f24f092703ef",
+    "snapshot_tree": "6649d1132dbb1406ae33356e55abeda7b4638d4b",
+    "checkout": "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash"
+  }
+}

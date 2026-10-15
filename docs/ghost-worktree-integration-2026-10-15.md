@@ -18,7 +18,7 @@ MiniPlus 转换产物仍为原先的 BF16 safetensors，SHA-256 为 `db45fb56268
 
 ## worktree 数据保全
 
-本仓库两个附加 worktree 通过 Codex 的可恢复归档机制移除，保留主工作区 `/Users/ghost233/Ghost233Code/GhostSplash`。Git 分支与历史保留。
+本仓库两个附加 worktree 已从磁盘和 Git 登记中移除，仅保留主工作区 `/Users/ghost233/Ghost233Code/GhostSplash`。Codex 归档接口只返回排队状态，未观察到实际删除；最终另存 Git 恢复快照，再使用 `git worktree remove` 完成清理。Git 分支与历史保留。
 
 删除 checkout 前，已把主工作区原构建／模型安装目录，以及两个 worktree 的构建、模型安装目录、虚拟环境和未跟踪基准文件保存在：
 
@@ -44,8 +44,10 @@ build/worktree-preserved/20261015-ghost-integration/
 
 实际模型检查使用默认启动器，覆盖 Kev-0.8B、Julia-1、Laya 的启动、回答、重复请求、原数值容差和正常退出，确认实际使用主目录的 `build/splash`。本轮没有运行模型性能矩阵。
 
-命令、退出码与源码一致性说明见 [验证记录](data/ghost-worktree-integration-2026-10-15/verification.json)。归档工具返回的恢复信息及最终分支同步结果保存在本机保全目录中。
+命令、退出码与源码一致性说明见 [验证记录](data/ghost-worktree-integration-2026-10-15/verification.json)。Git 恢复快照、清理结果及最终分支同步结果保存在本机保全目录中。
 
 最终主目录验证：完整 Python 发现 1,408 项、4 项既有跳过，退出 0；启动器 13 项、全部 shell 语法、compileall、Ruff、架构、空白、重建及构建身份检查均退出 0；三个真实模型的默认启动、回答、重复请求和正常退出检查均通过。
 
 首次 Python 运行因主目录旧开发环境缺少锁文件已有的 `gguf==0.19.0`，转换工具测试模块导入失败。通过仓库的 `make install-development` 同步后，先重跑该模块 4 项测试，再完成全量重跑；没有改动依赖锁文件或测试标准。首次失败与最终成功日志均保留。
+
+两个源码恢复引用分别为 `refs/worktree-preserved/20261015/qwen35-4b-optimization` 和 `refs/worktree-preserved/20261015/qwen4b-quantized-ffn`。前者的快照提交 `e65fe0bb3e620f533f5cec90d726c90f618df9b3` 额外包含原来三个未跟踪文件；后者指向已推送的 `b20accfc5df6f72ed03425f8c388f24f092703ef`。这些恢复引用是本机备份，不是新增开发分支。源码可按需从引用恢复；被 Git 忽略的构建、模型和虚拟环境另在文件保全目录中。
