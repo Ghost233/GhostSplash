@@ -7,6 +7,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from . import protocol as wire
 from .kev import KevScorer
+from .tokenization import tokenizable
 
 
 class ModernBertScorer(KevScorer):
@@ -72,7 +73,7 @@ class ModernBertScorer(KevScorer):
             ),
             options=self._escape(options),
         )
-        tokens = self.tokenizer.encode(prompt, add_special_tokens=False)
+        tokens = self.tokenizer.encode(tokenizable(prompt), add_special_tokens=False)
         markers = [i for i, token in enumerate(tokens) if token == self.mask]
         if (
             len(markers) != len(options)

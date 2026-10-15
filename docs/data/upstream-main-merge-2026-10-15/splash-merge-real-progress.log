@@ -1,0 +1,13 @@
+Kev-0.8B-splash-defaults 32489 START
+Kev-0.8B-splash-defaults billing PASS {'input_tokens': 39, 'output_tokens': 0}
+Kev-0.8B-splash-defaults sentiment PASS {'input_tokens': 32, 'output_tokens': 0}
+Kev-0.8B-splash-defaults noul PASS {'input_tokens': 24, 'output_tokens': 0}
+Kev-0.8B-splash-defaults EXIT 0
+Traceback (most recent call last):
+  File "/private/tmp/splash-merge-real.py", line 52, in <module>
+    if mode=='splash': same(response,premerge[family][len(outputs)-1]['response'])
+                       ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/splash-merge-real.py", line 30, in same
+    for key,value in answer['probabilities'].items():assert abs(value-reference['probabilities'][key])<=1e-3*max(1,abs(value)),(qid,key,value,reference)
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('urgency', '0', 0.42941430456092394, {'type': 'score', 'score': 0.8269970201643893, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.4323729178220509, '1': 0.3082571441915091, '2': 0.25936993798644004}, 'confidence': 0.0})

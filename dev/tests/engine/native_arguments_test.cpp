@@ -121,11 +121,22 @@ void testServerCommandLines(const char *path) {
          read.maxContext = 102400;
          read.maxMemoryBytes = 32 * kGiB;
        }},
-      {"disk", [](NativeArguments &read) { read.maxCacheDiskBytes = 5 * kGiB; }},
+      // No quota is the automatic one.
+      {"disk_auto", [](NativeArguments &) {}},
+      {"disk_off", [](NativeArguments &read) { read.maxCacheDisk = {}; }},
+      {"disk", [](NativeArguments &read) { read.maxCacheDisk = {.bytes = 5 * kGiB}; }},
+      {"disk_writes", [](NativeArguments &read) { read.maxCacheDiskWritesBytes = 200 * kGiB; }},
+      {"persistent_auto", [](NativeArguments &read) { read.persistentCache = true; }},
       {"persistent",
        [](NativeArguments &read) {
-         read.maxCacheDiskBytes = 5 * kGiB;
-         read.persistentCacheRoot = "/srv/cache";
+         read.maxCacheDisk = {.bytes = 5 * kGiB};
+         read.persistentCache = true;
+       }},
+      {"persistent_dir",
+       [](NativeArguments &read) {
+         read.maxCacheDisk = {.bytes = 5 * kGiB};
+         read.persistentCache = true;
+         read.cacheRoot = "/srv/cache";
        }},
       {"bf16", [](NativeArguments &read) { read.kvFormat = kv::Format::BFloat16; }},
       {"q4h", [](NativeArguments &read) { read.kvFormat = kv::Format::Int4Hadamard; }},
@@ -133,9 +144,11 @@ void testServerCommandLines(const char *path) {
       {"q4_0_unrotated", [](NativeArguments &read) { read.kvFormat = kv::Format::Q4_0Unrotated; }},
       {"disk_bf16",
        [](NativeArguments &read) {
-         read.maxCacheDiskBytes = 5 * kGiB;
+         read.maxCacheDisk = {.bytes = 5 * kGiB};
          read.kvFormat = kv::Format::BFloat16;
        }},
+      {"state_bf16",
+       [](NativeArguments &read) { read.stateFormat = ops::GdnStateFormat::BFloat16; }},
       {"idle_release", [](NativeArguments &read) { read.idleReleaseSeconds = 1800.0; }},
       {"idle_release_off",
        [](NativeArguments &read) {
@@ -143,7 +156,7 @@ void testServerCommandLines(const char *path) {
        }},
       {"decode_share",
        [](NativeArguments &read) {
-         read.maxCacheDiskBytes = 5 * kGiB;
+         read.maxCacheDisk = {.bytes = 5 * kGiB};
          read.decodeShare = 0.0;
        }},
       {"image_patches", [](NativeArguments &read) { read.maxImagePatches = 4096; }},
@@ -170,14 +183,26 @@ void testServerCommandLines(const char *path) {
       }},
       {"fast_topk", [](NativeArguments &read) { read.optionalFeatures.fastTopK = true; }},
       {"features_off", [](NativeArguments &) {}},
+      // A relaunch keeps the first engine's context; with --max-context,
+      // which every start holds, its command is the first one's.
+      {"relaunch", [](NativeArguments &read) { read.relaunchContext = 61433; }},
+      {"relaunch_limits",
+       [](NativeArguments &read) {
+         read.maxContext = 102400;
+         read.maxMemoryBytes = 32 * kGiB;
+       }},
   };
   // Every field but the model inspected from the directory.
   const auto same = [](const NativeArguments &read, const NativeArguments &meant) {
     return read.modelRoot == meant.modelRoot && read.maxContext == meant.maxContext &&
+           read.relaunchContext == meant.relaunchContext &&
            read.maxMemoryBytes == meant.maxMemoryBytes &&
-           read.maxCacheDiskBytes == meant.maxCacheDiskBytes &&
-           read.persistentCacheRoot == meant.persistentCacheRoot &&
-           read.kvFormat == meant.kvFormat && read.decodeShare == meant.decodeShare &&
+           read.maxCacheDisk.automatic == meant.maxCacheDisk.automatic &&
+           read.maxCacheDisk.bytes == meant.maxCacheDisk.bytes &&
+           read.maxCacheDiskWritesBytes == meant.maxCacheDiskWritesBytes &&
+           read.persistentCache == meant.persistentCache && read.cacheRoot == meant.cacheRoot &&
+           read.kvFormat == meant.kvFormat && read.stateFormat == meant.stateFormat &&
+           read.decodeShare == meant.decodeShare &&
            read.maxImagePatches == meant.maxImagePatches &&
            read.idleReleaseSeconds == meant.idleReleaseSeconds &&
            read.preventIdleSleep == meant.preventIdleSleep &&
@@ -233,6 +258,9 @@ void testRefusals() {
           "--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
   // An option's missing value fails its check.
   refuses({"auto", "auto", "--kv-format"}, "--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
+  refuses({"auto", "auto", "--state-format", "fp16"},
+          "--state-format requires fp32 or bf16");
+  refuses({"auto", "auto", "--state-format"}, "--state-format requires fp32 or bf16");
   for (const char *share : {"-1", "nan", "inf", "half"})
     refuses({"auto", "auto", "--decode-share", share},
             "--decode-share requires a nonnegative number");
@@ -268,12 +296,23 @@ void testRefusals() {
   for (const char *value : {"256", "33000", "98305", "65536x", ""})
     refuses({"auto", "auto", "--compact-draft-capacity", value}, "--compact-draft-capacity");
   refuses({"auto", "auto", "--compact-draft-ranking"}, "--compact-draft-ranking requires a file");
-  refuses({"auto", "auto", "--cache-dir", "/srv/cache"},
-          "--cache-dir requires a MAX_CACHE_DISK_BYTES quota");
-  refuses({"auto", "auto", "5368709120", "--cache-dir", ""},
+  refuses({"auto", "auto", "--persistent-cache", "yes"}, "--persistent-cache requires on or off");
+  refuses({"auto", "auto", "0", "--persistent-cache", "on"},
+          "--persistent-cache requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
+  refuses({"auto", "auto", "5368709120", "--cache-dir", "/srv/cache"},
+          "--cache-dir requires --persistent-cache on");
+  refuses({"auto", "auto", "5368709120", "--persistent-cache", "on", "--cache-dir", ""},
           "--cache-dir requires a directory");
   refuses({"auto", "auto", "5G"},
           "MAX_CACHE_DISK_BYTES must be a nonnegative integer");
+  for (const char *writes : {"200G", "-1", "1.5", ""})
+    refuses({"auto", "auto", "5368709120", "--max-cache-disk-writes", writes},
+            "--max-cache-disk-writes requires a nonnegative integer byte count");
+  refuses({"auto", "auto", "0", "--max-cache-disk-writes", "214748364800"},
+          "--max-cache-disk-writes requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
+  require(parse(model, {"auto", "auto", "5368709120", "--max-cache-disk-writes", "0"})
+                  .maxCacheDiskWritesBytes == 0,
+          "--max-cache-disk-writes 0 set a write budget");
   refuses({"auto", "auto", "--max-memory", "32G"},
           "unexpected argument --max-memory");
   for (const char *memory : {"0", "32G", "-1"})
@@ -287,6 +326,19 @@ void testRefusals() {
             "MAX_CONTEXT must be auto or an integer in [1, " + maximum + "]");
   require(parse(model, {maximum, "auto"}).maxContext == std::stoul(maximum),
           "the model's whole context was refused");
+  // A relaunch's context is one the model holds, and only without
+  // MAX_CONTEXT, which every start holds.
+  for (const std::string &context : {std::string("0"), std::string("auto"), std::string("100K"),
+                                     std::to_string(std::stoull(maximum) + 1), std::string()})
+    refuses({"auto", "auto", "--relaunch-context", context},
+            "--relaunch-context requires an integer in [1, " + maximum + "]");
+  refuses({"auto", "auto", "--relaunch-context"},
+          "--relaunch-context requires an integer in [1, " + maximum + "]");
+  refuses({"102400", "auto", "--relaunch-context", "102400"},
+          "--relaunch-context requires MAX_CONTEXT auto");
+  require(parse(model, {"auto", "auto", "--relaunch-context", maximum}).relaunchContext ==
+              std::stoul(maximum),
+          "the model's whole context was refused a relaunch");
 
   const auto commandRefused = [](const std::vector<std::string> &command,
                                  std::string_view expected) {

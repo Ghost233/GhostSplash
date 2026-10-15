@@ -1,0 +1,17 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+13:14:49 Error · invalid_request_error · POST /v1/chat/completions
+13:14:49 Error · invalid_request_error · POST /v1/completions
+.......F....
+======================================================================
+FAIL: test_isolated_surrogates_use_the_upstream_text_normalization (dev.tests.server.test_modernbert.ModernBertScorerTests.test_isolated_surrogates_use_the_upstream_text_normalization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/dev/tests/server/test_modernbert.py", line 111, in test_isolated_surrogates_use_the_upstream_text_normalization
+    self.assertIn("choose\ufffd", prompt)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'choose�' not found in '[CLS]choice[SEP][MASK]a[MASK]b[SEP]doc�[SEP]'
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.546s
+
+FAILED (failures=1)

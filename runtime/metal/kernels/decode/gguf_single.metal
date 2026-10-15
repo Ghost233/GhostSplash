@@ -33,6 +33,11 @@ inline float4 single_chunk_dot(typename F::Chunk q, QuantCoef k, threadgroup hal
     const uint2 values = F::values(q);
     lo = half4(float4(quant_e4m3_word(values.x)) * k.s.x);
     hi = half4(float4(quant_e4m3_word(values.y)) * k.s.y);
+  } else if constexpr (F::Kind == QuantFloat16) {
+    typedef vec<typename F::Value, 2> V2;
+    const uint4 values = F::values(q);
+    lo = half4(float4(float2(as_type<V2>(values.x)), float2(as_type<V2>(values.y))) * k.s.x);
+    hi = half4(float4(float2(as_type<V2>(values.z)), float2(as_type<V2>(values.w))) * k.s.y);
   } else {
     const uint2 grid = F::grid(q); const uint signs = F::signs(q);
     lo = half4(float4(as_type<uchar4>(grid.x)) * k.s.x);

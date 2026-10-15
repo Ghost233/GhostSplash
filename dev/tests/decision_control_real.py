@@ -57,6 +57,7 @@ def run(args):
                 score_tokens=(3, 5),
                 generation_prompt_tokens=0,
                 flags=flags[kind],
+                cache_salt=0,
             )
             return GenerationRequest(frame, time.monotonic() + 120, None, None)
 
@@ -101,6 +102,11 @@ def run(args):
         result["checks"].append(
             "status during work, cancellation, no leaked scores and subsequent request"
         )
+        release = json.loads(runtime.release_weights(timeout=2).json)
+        assert release["weights"]["release_supported"] is False
+        assert release["weights"]["released"] is False
+        assert runtime.submit(request()).result(120).option_logits
+        result["checks"].append("unsupported encoder release preserves usable weights")
         result["status"] = json.loads(runtime.status(timeout=2).json)
         result["status_result"] = "passed"
     finally:

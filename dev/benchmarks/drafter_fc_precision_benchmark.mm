@@ -159,11 +159,11 @@ Result run(const std::filesystem::path &library, const std::filesystem::path &ro
                                  kv::kPageTokens - 1) / kv::kPageTokens + 1;
   const uint32_t extentPages = layout.maximumExtentPages();
   const uint32_t pageCount = (pagesPerLane + extentPages - 1) / extentPages * extentPages;
-  MemoryGovernor governor(backend, HardBudgetBytes, 1, queryHostAvailableMemory, 0);
+  MemoryGovernor governor(backend, HardBudgetBytes, 1, 1, queryHostMemory, 0);
   kv::PageStorage pages(backend, governor.allocationAdmission(), layout, pageCount, extentPages);
   for (uint32_t i = 0; i < pageCount / extentPages; ++i)
     if (!pages.allocateExtent(i)) throw std::runtime_error("could not allocate target KV extent");
-  model::QwenStateStorage states(backend, governor.allocationAdmission(), loaded.stateLayout(), nullptr);
+  model::QwenStateStorage states(backend, governor.allocationAdmission(), loaded.stateLayout(ops::GdnStateFormat::Float32), nullptr);
   model::Runtime executor({backend, loaded, pages, states, operators});
   if (backend.memoryStats().allocatedBytes > HardBudgetBytes)
     throw std::runtime_error("benchmark runtime allocation exceeds 12 GiB");

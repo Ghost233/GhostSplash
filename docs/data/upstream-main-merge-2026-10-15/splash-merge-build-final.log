@@ -1,0 +1,3 @@
+/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/.venv/bin/python dev/tools/build_config.py record --output 'build/merge-upstream-20261015/engine-tests/backend-benchmark' --config 1fe4816c7c094ab7 -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -DSPLASH_DRAFT_BLOCK_SIZE=8 -mmacosx-version-min=26.4 -fobjc-arc -include build/merge-upstream-20261015/engine/BuildIdentity.hpp dev/benchmarks/backend_benchmark.mm \
+		build/merge-upstream-20261015/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/merge-upstream-20261015/engine-tests/backend-benchmark

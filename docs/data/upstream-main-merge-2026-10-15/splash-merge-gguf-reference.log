@@ -1,0 +1,65 @@
+CPU reference matches the GGML golden hash: q4k                  ok
+CPU reference matches the GGML golden hash: iq4xs                ok
+CPU reference matches the GGML golden hash: iq4nl                ok
+CPU reference matches the GGML golden hash: q5k                  ok
+CPU reference matches the GGML golden hash: q6k                  ok
+CPU reference matches the GGML golden hash: q3k                  ok
+CPU reference matches the GGML golden hash: q80                  ok
+CPU reference matches the GGML golden hash: iq3s                 ok
+CPU reference matches the GGML golden hash: q2k                  ok
+CPU reference matches the GGML golden hash: iq3xxs               ok
+CPU reference matches the GGML golden hash: iq2xxs               ok
+CPU reference matches the GGML golden hash: iq2xs                ok
+CPU reference matches the GGML golden hash: iq2s                 ok
+CPU reference matches the GGML golden hash: iq1s                 ok
+CPU reference matches the GGML golden hash: iq1m                 ok
+CPU reference matches the GGML golden hash: q40                  ok
+CPU reference matches the GGML golden hash: q41                  ok
+CPU reference matches the GGML golden hash: mxfp4                ok
+CPU reference matches the GGML golden hash: pq20                 ok
+CPU reference matches the GGML golden hash: q50                  ok
+CPU reference matches the GGML golden hash: q51                  ok
+CPU reference matches the GGML golden hash: bf16                 ok
+CPU reference matches the GGML golden hash: f16                  ok
+CPU reference matches the GGML golden hash: q20                  ok
+CPU reference matches the GGML golden hash: llama.cpp's NVFP4    ok
+MLX fixture holds every MLX affine format, mxfp4 and nvfp4       ok
+CPU reference reads MLX's codes: af2g32                          ok
+CPU reference matches MLX's values: af2g32                       ok
+CPU reference reads MLX's codes: af2g64                          ok
+CPU reference matches MLX's values: af2g64                       ok
+CPU reference reads MLX's codes: af2g128                         ok
+CPU reference matches MLX's values: af2g128                      ok
+CPU reference reads MLX's codes: af3g32                          ok
+CPU reference matches MLX's values: af3g32                       ok
+CPU reference reads MLX's codes: af3g64                          ok
+CPU reference matches MLX's values: af3g64                       ok
+CPU reference reads MLX's codes: af3g128                         ok
+CPU reference matches MLX's values: af3g128                      ok
+CPU reference reads MLX's codes: af4g32                          ok
+CPU reference matches MLX's values: af4g32                       ok
+CPU reference reads MLX's codes: af4g64                          ok
+CPU reference matches MLX's values: af4g64                       ok
+CPU reference reads MLX's codes: af4g128                         ok
+CPU reference matches MLX's values: af4g128                      ok
+CPU reference reads MLX's codes: af5g32                          ok
+CPU reference matches MLX's values: af5g32                       ok
+CPU reference reads MLX's codes: af5g64                          ok
+CPU reference matches MLX's values: af5g64                       ok
+CPU reference reads MLX's codes: af5g128                         ok
+CPU reference matches MLX's values: af5g128                      ok
+CPU reference reads MLX's codes: af6g32                          ok
+CPU reference matches MLX's values: af6g32                       ok
+CPU reference reads MLX's codes: af6g64                          ok
+CPU reference matches MLX's values: af6g64                       ok
+CPU reference reads MLX's codes: af6g128                         ok
+CPU reference matches MLX's values: af6g128                      ok
+CPU reference reads MLX's codes: af8g32                          ok
+CPU reference matches MLX's values: af8g32                       ok
+CPU reference reads MLX's codes: af8g64                          ok
+CPU reference matches MLX's values: af8g64                       ok
+CPU reference reads MLX's codes: af8g128                         ok
+CPU reference matches MLX's values: af8g128                      ok
+CPU reference matches MLX's values: mxfp4 (MLX mxfp4)            ok
+CPU reference matches MLX's values: nvfp4 (MLX nvfp4)            ok
+GGUF reference tests passed (0 failures)

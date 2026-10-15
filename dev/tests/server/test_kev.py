@@ -91,6 +91,29 @@ class KevTests(HarnessTestCase):
         )
         self.assertIn("decision_model", harness.app.status())
 
+    def test_isolated_surrogates_match_the_upstream_replacement(self):
+        from server import judgments
+        from server.kev import KevScorer
+
+        scorer = KevScorer(KevTokenizer(), config())
+        body = {
+            "state": "doc\ud800",
+            "questions": {
+                "q": {
+                    "type": "choice",
+                    "instructions": "choose\udfff",
+                    "criteria": {"a": "first", "b": "second"},
+                }
+            },
+        }
+        _, specs, _ = judgments.validate_systemone(body)
+        spec = specs[0][1]
+        actual = scorer.encode(body["state"], spec)
+        expected = scorer.encode(
+            "doc\ufffd", replace(spec, instructions="choose\ufffd")
+        )
+        self.assertEqual(actual, expected)
+
     def test_score_confidence_matches_distance_to_mode(self):
         runtime = FakeRuntime(Plan(logits=(3.0, 0.0, -1.0)))
         harness = self.harness(

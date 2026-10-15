@@ -1,0 +1,13 @@
+old rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+old rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+old billing {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'shipping': 0.04986752032090256, 'billing': 0.9501324796790975}, 'confidence': 0.9002649593581951}}
+old sentiment {'mood': {'type': 'choice', 'choice': 'positive', 'probabilities': {'negative': 0.00856954693934675, 'positive': 0.9914304530606532}, 'confidence': 0.9828609061213065}}
+old noul {'refund': {'type': 'noul', 'noul': 0.9721660439950274}}
+old rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+new rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+new rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+new billing {'team': {'type': 'choice', 'choice': 'billing', 'probabilities': {'shipping': 0.04986752032090256, 'billing': 0.9501324796790975}, 'confidence': 0.9002649593581951}}
+new sentiment {'mood': {'type': 'choice', 'choice': 'positive', 'probabilities': {'negative': 0.00856954693934675, 'positive': 0.9914304530606532}, 'confidence': 0.9828609061213065}}
+new noul {'refund': {'type': 'noul', 'noul': 0.9721660439950274}}
+new rating {'urgency': {'type': 'score', 'score': 0.831243462123672, 'legend': {'0': 'No urgency', '1': 'This week', '2': 'Today'}, 'probabilities': {'0': 0.42941430456092394, '1': 0.30992792875448, '2': 0.260657766684596}, 'confidence': 0.0}}
+Cold old/new comparison completed

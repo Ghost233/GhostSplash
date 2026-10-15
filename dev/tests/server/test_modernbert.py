@@ -86,6 +86,33 @@ class ModernBertScorerTests(unittest.TestCase):
         self.assertEqual(tokens[-3:], [1, 11, 1])
         self.assertLessEqual(positions[-1] + 49, 195)
 
+    def test_isolated_surrogates_use_the_upstream_text_normalization(self):
+        scorer = self.scorer()
+        scorer.template = scorer.template.environment.from_string(
+            "[CLS]{{ instructions }}{{ type }}[SEP]{% for o in options %}[MASK]{{ o.key }}{% endfor %}[SEP]{{ state }}[SEP]"
+        )
+        body = {
+            "state": "doc\ud800",
+            "questions": {
+                "q": {
+                    "type": "choice",
+                    "instructions": "choose\udfff",
+                    "criteria": {"a": "first", "b": "second"},
+                }
+            },
+        }
+        _, specs, _ = judgments.validate_systemone(body)
+
+        def strict_encode(text, **kwargs):
+            text.encode("utf-8")
+            return [2, 1, 4, 8, 4, 9, 1, 12, 1]
+
+        scorer.tokenizer.encode.side_effect = strict_encode
+        scorer.encode(body["state"], specs[0][1])
+        prompt = scorer.tokenizer.encode.call_args.args[0]
+        self.assertIn("doc\ufffd", prompt)
+        self.assertIn("choose\ufffd", prompt)
+
     def test_missing_marker_is_a_failure(self):
         scorer = self.scorer()
         _, specs, _ = judgments.validate_systemone(

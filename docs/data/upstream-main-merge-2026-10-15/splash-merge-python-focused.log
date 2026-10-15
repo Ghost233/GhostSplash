@@ -1,0 +1,14 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+12:38:41 Error · invalid_request_error · POST /v1/memory/release
+12:38:41 Error · invalid_request_error · POST /v1/memory/release
+12:38:41 Error · invalid_request_error · POST /v1/memory/release
+.12:38:41 Error · unsupported_operation · POST /v1/memory/release
+.12:38:42 Error · engine_busy · POST /v1/memory/release
+12:38:42 Error · runtime_unavailable · POST /v1/memory/release
+.....12:38:44 Error · invalid_request_error · POST /v1/chat/completions
+12:38:44 Error · invalid_request_error · POST /v1/completions
+....................
+----------------------------------------------------------------------
+Ran 27 tests in 6.392s
+
+OK

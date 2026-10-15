@@ -1,0 +1,78 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+12:50:54 Startup configuration · on/off are configured flags; effective state follows Ready
+12:50:54   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968
+12:50:54   --model = ggml-org/Kev-0.8B-GGUF:Q8_0
+12:50:54   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968/tokenizer
+12:50:54   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/decision-modernbert-20261015/splash
+12:50:54   --port = 18156
+12:50:54   --host = 127.0.0.1
+12:50:54   --allowed-host = none
+12:50:54   --allowed-origin = none
+12:50:54   --api-key = off
+12:50:54   --no-webui = on
+12:50:54   --max-memory = 4294967296
+12:50:54   --max-context = 8192
+12:50:54   --kv-format = bf16
+12:50:54   --idle-release = auto (default 600 s)
+12:50:54   --max-cache-disk = 0
+12:50:54   --persistent-cache = off
+12:50:54   --cache-dir = off / unset
+12:50:54   --served-model-name = none
+12:50:54   --announce-served-name = off
+12:50:54   --default-reasoning-effort = auto
+12:50:54   --max-request-size = 134217728
+12:50:54   --max-image-pixels = 4194304
+12:50:54   --request-timeout = off / unset
+12:50:54   --queue-size = 1
+12:50:54   --decode-share = default (0.5)
+12:50:54   --disable-ane = on
+12:50:54   --ane-ffn-share = auto
+12:50:54   --ane-ffn-minimum-rows = auto
+12:50:54   --ane-power-recovery = off
+12:50:54   --ane-power-reference = off
+12:50:54   --ane-recovery-idle-watts = 0.05
+12:50:54   --ane-recovery-max-power-percent = off / unset
+12:50:54   --prompt-lookup = off
+12:50:54   --prompt-lookup-min-match = 2
+12:50:54   --compact-draft-head = off
+12:50:54   --compact-draft-capacity = 98304
+12:50:54   --compact-draft-ranking = off / unset
+12:50:54   --encoder-submit-batch-size = 4
+12:50:54   --encoder-option-queries = on
+12:50:54   --fast-topk = off
+12:50:54   --allow-idle-sleep = off
+12:50:54 Loading · ggml-org/Kev-0.8B-GGUF:Q8_0
+12:50:55 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+12:50:55 Weights loaded in 0.26 s.
+12:50:55 Kernel policy for GPU family 10 with 20 cores.
+12:50:56 Ready · ggml-org/Kev-0.8B-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18156
+12:50:56 Startup effective state · snapshot at Ready; fallback is distinct from error
+12:50:56   Context = 8192 tokens
+12:50:56   Native concurrent capacity = 4 (queue limit is separate)
+12:50:56   Vision = off
+12:50:56   ANE = off; share=0; minimum_rows=0; reason=as given
+12:50:56   ANE power reference = off / unreported; watts=unknown; reason=none
+12:50:56   ANE recovery = off / unreported; phase=unknown; reason=none
+12:50:56   KV = bf16
+12:50:56   Build = src-12dc3a813f59c5080161e5dd47d6941ad3c77b7e208002ba2bf8c42edd2f2d08
+12:50:56   Metal budget = 4294967296 bytes
+12:50:56   Drafter = off; kind=none; layers=0; block=0; tokens=0
+12:50:56   Prefill block = 2048 tokens (compiled)
+12:50:56   Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+12:50:56   FFN FP16 cache = 528482304 bytes
+12:50:56   Prompt lookup = off; reason=none
+12:50:56   Fast top-k = off; reason=none
+12:50:56   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+12:50:56 Started · input 33 · cached 0
+12:50:56 Done · input 33 · cached 0 · output 0
+12:50:56 Started · input 33 · cached 0
+12:50:56 Done · input 33 · cached 0 · output 0
+12:50:56 Started · input 39 · cached 0
+12:50:56 Done · input 39 · cached 0 · output 0
+12:50:56 Started · input 32 · cached 0
+12:50:56 Done · input 32 · cached 0 · output 0
+12:50:56 Started · input 24 · cached 0
+12:50:56 Done · input 24 · cached 0 · output 0
+12:50:56 Started · input 33 · cached 0
+12:50:56 Done · input 33 · cached 0 · output 0
+12:50:56 Stopping · releasing engine resources

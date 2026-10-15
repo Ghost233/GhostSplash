@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 namespace splash::encoder {
-using engine::awakeMilliseconds;
 using engine::systemUnixMicros;
 using engine::EngineFinishReason;
 namespace {
@@ -85,7 +84,8 @@ int serveModernBert(int argc, char **argv, const std::filesystem::path &metallib
     std::ostringstream s;
     s << "{\"schema_version\":" << protocol::kStatusSchemaVersion
       << ",\"healthy\":true,\"ready\":" << (loaded ? "true" : "false")
-      << ",\"active_requests\":" << active << ",\"model_kind\":\"modern-bert\",\"memory\":{"
+      << ",\"active_requests\":" << active << ",\"model_kind\":\"modern-bert\","
+      << "\"weights\":{\"release_supported\":false,\"released\":false,\"restoring\":false},\"memory\":{"
       << "\"loaded_weight_bytes\":" << weightBytes << ",\"quantized_weight_bytes\":" << quantizedBytes << ",\"auxiliary_weight_bytes\":" << weightBytes - quantizedBytes << ",\"fp16_weight_cache_bytes\":0,\"workspace_bytes\":" << workspaceBytes
       << ",\"kv_bytes\":0,\"state_bytes\":0,\"allocated_bytes\":" << allocatedBytes << ",\"peak_allocated_bytes\":" << peakBytes
       << ",\"max_memory_bytes\":" << maximum << "},\"telemetry\":{\"completed_requests\":" << requests
@@ -236,7 +236,8 @@ int serveModernBert(int argc, char **argv, const std::filesystem::path &metallib
           pending.insert(message.requestId); ++active; queue.push_back({std::move(message), micros()}); ready.notify_one();
         } else if constexpr (std::is_same_v<T, protocol::CancelFrame>) {
           std::lock_guard lock(mutex); if (pending.contains(message.requestId)) cancelled.insert(message.requestId);
-        } else if constexpr (std::is_same_v<T, protocol::StatusRequestFrame>) {
+        } else if constexpr (std::is_same_v<T, protocol::StatusRequestFrame> ||
+                             std::is_same_v<T, protocol::ReleaseRequestFrame>) {
           send(protocol::StatusJsonEvent{message.correlationId, status()});
         } else { error(message.requestId, "encoder does not accept token masks"); }
       }, std::move(*decoded.value));

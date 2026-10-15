@@ -1,0 +1,78 @@
+Julia-1: context=8192, KV=none, queue=1, memory=4294967296
+Decision head=ModernBERT typed option scores; drafter=off; compact=off; lookup=off; fast-topk=off; ANE=off
+System One: http://127.0.0.1:18158/v1/systemone
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+13:17:03 Startup configuration · on/off are configured flags; effective state follows Ready
+13:17:03   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1
+13:17:03   --model = ggml-org/Julia-1-GGUF:Q8_0
+13:17:03   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/b411b78bc4c0c5c0de35e50192800f81d02cd3c3c4e3d3c006ec2922f88febd1/tokenizer
+13:17:03   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/merge-upstream-20261015/splash
+13:17:03   --port = 18158
+13:17:03   --host = 127.0.0.1
+13:17:03   --allowed-host = none
+13:17:03   --allowed-origin = none
+13:17:03   --api-key = off
+13:17:03   --no-webui = on
+13:17:03   --max-memory = 4294967296
+13:17:03   --max-context = 8192
+13:17:03   --kv-format = bf16
+13:17:03   --state-format = fp32
+13:17:03   --idle-release = auto (default 600 s)
+13:17:03   --max-cache-disk = 0
+13:17:03   --max-cache-disk-writes = 0
+13:17:03   --persistent-cache = off
+13:17:03   --cache-dir = off / unset
+13:17:03   --served-model-name = none
+13:17:03   --announce-served-name = off
+13:17:03   --default-reasoning-effort = auto
+13:17:03   --thinking-token-budget = off / unset
+13:17:03   --thinking-end-text = off / unset
+13:17:03   --max-request-size = 134217728
+13:17:03   --max-image-pixels = 4194304
+13:17:03   --request-timeout = off / unset
+13:17:03   --queue-size = 1
+13:17:03   --decode-share = default (0.5)
+13:17:03   --disable-ane = on
+13:17:03   --ane-ffn-share = auto
+13:17:03   --ane-ffn-minimum-rows = auto
+13:17:03   --ane-power-recovery = off
+13:17:03   --ane-power-reference = off
+13:17:03   --ane-recovery-idle-watts = 0.05
+13:17:03   --ane-recovery-max-power-percent = off / unset
+13:17:03   --prompt-lookup = off
+13:17:03   --prompt-lookup-min-match = 2
+13:17:03   --compact-draft-head = off
+13:17:03   --compact-draft-capacity = 98304
+13:17:03   --compact-draft-ranking = off / unset
+13:17:03   --encoder-submit-batch-size = 4
+13:17:03   --encoder-option-queries = on
+13:17:03   --fast-topk = off
+13:17:03   --allow-idle-sleep = off
+13:17:03 Loading · ggml-org/Julia-1-GGUF:Q8_0
+13:17:04 Chat template · renders later system messages in place, generation prompt 3 tokens
+13:17:04 ModernBERT: quantized weights=175034628; workspace=3680288; KV=0; FP16 cache=0; selected option queries=on; numerical check passed
+13:17:04 Ready · ggml-org/Julia-1-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18158
+13:17:04 Startup effective state · snapshot at Ready; fallback is distinct from error
+13:17:04   Context = 8192 tokens
+13:17:04   Native concurrent capacity = 4 (queue limit is separate)
+13:17:04   Vision = off
+13:17:04   ANE = off; share=0; minimum_rows=0; reason=GPU encoder
+13:17:04   ANE power reference = off / unreported; watts=unknown; reason=none
+13:17:04   ANE recovery = off / unreported; phase=unknown; reason=none
+13:17:04   KV = none
+13:17:04   Build = src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704
+13:17:04   Metal budget = 4294967296 bytes
+13:17:04   Encoder option queries = on
+13:17:04   Encoder state = full bidirectional sequence; causal prefix cache off
+13:17:04   Drafter = off; kind=none; layers=0; block=0; tokens=0
+13:17:04   Prefill block = 2048 tokens (compiled)
+13:17:04   Prefill warmup geometry = typed encoder full/selected-head numerical check
+13:17:04   FFN FP16 cache = 0 bytes
+13:17:04   Prompt lookup = off; reason=none
+13:17:04   Fast top-k = off; reason=none
+13:17:04   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+13:17:05 Started · input 15 · cached 0
+13:17:05 Done · input 15 · cached 0 · output 0
+13:17:05 Started · input 15 · cached 0
+13:17:05 Done · input 15 · cached 0 · output 0
+13:17:05 Stopping · releasing engine resources

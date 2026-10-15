@@ -22,7 +22,8 @@ namespace {
 constexpr uint32_t kRows = 256, kColumns = 1024, kSeed = 7;
 
 void checkFormat(void *ggml, const Goldens &hashes, Fmt f) {
-  const std::vector<uint8_t> native = fixture(f, kRows, kColumns, kSeed + f);
+  // Q2_0 keeps its independent oracle fixture seed when internal format IDs change.
+  const std::vector<uint8_t> native = fixture(f, kRows, kColumns, f == Q20 ? 26 : kSeed + f);
   std::vector<float> values;
   repack(f, native, kRows, kColumns, &values);
   const std::span<const uint8_t> bytes(reinterpret_cast<const uint8_t *>(values.data()), values.size() * sizeof(float));
@@ -107,7 +108,8 @@ int main(int argc, char **argv) {
       check(ggml, std::string("load ") + oracle + (ggml ? "" : std::string(": ") + dlerror()));
     }
     const Goldens hashes = goldens(argv[1], @"gguf_dequantization");
-    for (uint32_t f = 0; f < GGUF_FMT_AF2G32; ++f) checkFormat(ggml, hashes, Fmt(f));
+    for (uint32_t f = 0; f < GGUF_FMT_COUNT; ++f)
+      if (!quant_loader_format(f)) checkFormat(ggml, hashes, Fmt(f));
     checkBlockNvfp4(ggml, hashes);
     checkMlx(argv[2]);
     std::printf("%s (%d failures)\n", failures ? "GGUF reference tests FAILED" : "GGUF reference tests passed",

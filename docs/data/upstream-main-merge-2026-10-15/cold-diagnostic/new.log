@@ -1,0 +1,82 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+12:50:58 Startup configuration · on/off are configured flags; effective state follows Ready
+12:50:58   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968
+12:50:58   --model = ggml-org/Kev-0.8B-GGUF:Q8_0
+12:50:58   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/00c7f8d515847de538982b11503a1f27bcb5542b74d61027a9a0c8d7f3d64968/tokenizer
+12:50:58   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/merge-upstream-20261015/splash
+12:50:58   --port = 18156
+12:50:58   --host = 127.0.0.1
+12:50:58   --allowed-host = none
+12:50:58   --allowed-origin = none
+12:50:58   --api-key = off
+12:50:58   --no-webui = on
+12:50:58   --max-memory = 4294967296
+12:50:58   --max-context = 8192
+12:50:58   --kv-format = bf16
+12:50:58   --state-format = fp32
+12:50:58   --idle-release = auto (default 600 s)
+12:50:58   --max-cache-disk = 0
+12:50:58   --max-cache-disk-writes = 0
+12:50:58   --persistent-cache = off
+12:50:58   --cache-dir = off / unset
+12:50:58   --served-model-name = none
+12:50:58   --announce-served-name = off
+12:50:58   --default-reasoning-effort = auto
+12:50:58   --thinking-token-budget = off / unset
+12:50:58   --thinking-end-text = off / unset
+12:50:58   --max-request-size = 134217728
+12:50:58   --max-image-pixels = 4194304
+12:50:58   --request-timeout = off / unset
+12:50:58   --queue-size = 1
+12:50:58   --decode-share = default (0.5)
+12:50:58   --disable-ane = on
+12:50:58   --ane-ffn-share = auto
+12:50:58   --ane-ffn-minimum-rows = auto
+12:50:58   --ane-power-recovery = off
+12:50:58   --ane-power-reference = off
+12:50:58   --ane-recovery-idle-watts = 0.05
+12:50:58   --ane-recovery-max-power-percent = off / unset
+12:50:58   --prompt-lookup = off
+12:50:58   --prompt-lookup-min-match = 2
+12:50:58   --compact-draft-head = off
+12:50:58   --compact-draft-capacity = 98304
+12:50:58   --compact-draft-ranking = off / unset
+12:50:58   --encoder-submit-batch-size = 4
+12:50:58   --encoder-option-queries = on
+12:50:58   --fast-topk = off
+12:50:58   --allow-idle-sleep = off
+12:50:58 Loading · ggml-org/Kev-0.8B-GGUF:Q8_0
+12:50:58 Chat template · patched to render later system messages in place (the original template rejects them), generation prompt 5-7 tokens
+12:50:59 Weights loaded in 0.26 s.
+12:50:59 Kernel policy for GPU family 10 with 20 cores.
+12:50:59 Ready · ggml-org/Kev-0.8B-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18156
+12:50:59 Startup effective state · snapshot at Ready; fallback is distinct from error
+12:50:59   Context = 8192 tokens
+12:50:59   Native concurrent capacity = 4 (queue limit is separate)
+12:50:59   Vision = off
+12:50:59   ANE = off; share=0; minimum_rows=0; reason=as given
+12:50:59   ANE power reference = off / unreported; watts=unknown; reason=none
+12:50:59   ANE recovery = off / unreported; phase=unknown; reason=none
+12:50:59   KV = bf16
+12:50:59   Build = src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704
+12:50:59   Metal budget = 4294967296 bytes
+12:50:59   Drafter = off; kind=none; layers=0; block=0; tokens=0
+12:50:59   Prefill block = 2048 tokens (compiled)
+12:50:59   Prefill warmup geometry = real 2048-row KV target+draft prefill [M32]
+12:50:59   FFN FP16 cache = 528482304 bytes
+12:50:59   Prompt lookup = off; reason=none
+12:50:59   Fast top-k = off; reason=none
+12:50:59   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+12:51:00 Started · input 33 · cached 0
+12:51:00 Done · input 33 · cached 0 · output 0
+12:51:00 Started · input 33 · cached 0
+12:51:00 Done · input 33 · cached 0 · output 0
+12:51:00 Started · input 39 · cached 0
+12:51:00 Done · input 39 · cached 0 · output 0
+12:51:00 Started · input 32 · cached 0
+12:51:00 Done · input 32 · cached 0 · output 0
+12:51:00 Started · input 24 · cached 0
+12:51:00 Done · input 24 · cached 0 · output 0
+12:51:00 Started · input 33 · cached 0
+12:51:00 Done · input 33 · cached 0 · output 0
+12:51:00 Stopping · releasing engine resources

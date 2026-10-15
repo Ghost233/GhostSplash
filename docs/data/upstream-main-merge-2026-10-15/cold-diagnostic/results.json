@@ -1,0 +1,286 @@
+{
+  "old": [
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "billing",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.04986752032090256,
+              "billing": 0.9501324796790975
+            },
+            "confidence": 0.9002649593581951
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "sentiment",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "mood": {
+            "type": "choice",
+            "choice": "positive",
+            "probabilities": {
+              "negative": 0.00856954693934675,
+              "positive": 0.9914304530606532
+            },
+            "confidence": 0.9828609061213065
+          }
+        },
+        "usage": {
+          "input_tokens": 32,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "noul",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "refund": {
+            "type": "noul",
+            "noul": 0.9721660439950274
+          }
+        },
+        "usage": {
+          "input_tokens": 24,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    }
+  ],
+  "old_exit": 0,
+  "new": [
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "billing",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "shipping": 0.04986752032090256,
+              "billing": 0.9501324796790975
+            },
+            "confidence": 0.9002649593581951
+          }
+        },
+        "usage": {
+          "input_tokens": 39,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "sentiment",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "mood": {
+            "type": "choice",
+            "choice": "positive",
+            "probabilities": {
+              "negative": 0.00856954693934675,
+              "positive": 0.9914304530606532
+            },
+            "confidence": 0.9828609061213065
+          }
+        },
+        "usage": {
+          "input_tokens": 32,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "noul",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "refund": {
+            "type": "noul",
+            "noul": 0.9721660439950274
+          }
+        },
+        "usage": {
+          "input_tokens": 24,
+          "output_tokens": 0
+        }
+      }
+    },
+    {
+      "case": "rating",
+      "response": {
+        "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+        "answers": {
+          "urgency": {
+            "type": "score",
+            "score": 0.831243462123672,
+            "legend": {
+              "0": "No urgency",
+              "1": "This week",
+              "2": "Today"
+            },
+            "probabilities": {
+              "0": 0.42941430456092394,
+              "1": 0.30992792875448,
+              "2": 0.260657766684596
+            },
+            "confidence": 0.0
+          }
+        },
+        "usage": {
+          "input_tokens": 33,
+          "output_tokens": 0
+        }
+      }
+    }
+  ],
+  "new_exit": 0
+}

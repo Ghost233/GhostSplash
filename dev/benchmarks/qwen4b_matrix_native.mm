@@ -142,7 +142,7 @@ public:
   }
   void maskRequested(uint64_t, std::span<const uint32_t>) override { throw std::logic_error("unexpected mask"); }
   void completed(uint64_t id, EngineFinishReason reason, uint32_t, uint32_t count,
-                 std::span<const float>) override {
+                 uint32_t, std::span<const float>, const SpeculativeCounts &) override {
     auto &request = requests.at(id - 1);
     if (reason != EngineFinishReason::Length || count != request.output.size())
       throw std::runtime_error("forced generation did not finish at length");

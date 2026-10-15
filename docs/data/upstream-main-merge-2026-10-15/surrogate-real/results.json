@@ -1,0 +1,122 @@
+{
+  "Kev-0.8B": {
+    "actual": {
+      "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.5401432259222708,
+            "b": 0.4598567740777292
+          },
+          "confidence": 0.08028645184454164
+        }
+      },
+      "usage": {
+        "input_tokens": 17,
+        "output_tokens": 0
+      }
+    },
+    "replacement": {
+      "model": "ggml-org/Kev-0.8B-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.5401432259222708,
+            "b": 0.4598567740777292
+          },
+          "confidence": 0.08028645184454164
+        }
+      },
+      "usage": {
+        "input_tokens": 17,
+        "output_tokens": 0
+      }
+    },
+    "status": "passed",
+    "exit": 0
+  },
+  "Julia-1": {
+    "actual": {
+      "model": "ggml-org/Julia-1-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.8791661700432845,
+            "b": 0.12083382995671546
+          },
+          "confidence": 0.7583323400865689
+        }
+      },
+      "usage": {
+        "input_tokens": 15,
+        "output_tokens": 0
+      }
+    },
+    "replacement": {
+      "model": "ggml-org/Julia-1-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.8791661700432845,
+            "b": 0.12083382995671546
+          },
+          "confidence": 0.7583323400865689
+        }
+      },
+      "usage": {
+        "input_tokens": 15,
+        "output_tokens": 0
+      }
+    },
+    "status": "passed",
+    "exit": 0
+  },
+  "Laya": {
+    "actual": {
+      "model": "ggml-org/Laya-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.6882227793392715,
+            "b": 0.31177722066072855
+          },
+          "confidence": 0.3764455586785429
+        }
+      },
+      "usage": {
+        "input_tokens": 21,
+        "output_tokens": 0
+      }
+    },
+    "replacement": {
+      "model": "ggml-org/Laya-GGUF:Q8_0",
+      "answers": {
+        "q": {
+          "type": "choice",
+          "choice": "a",
+          "probabilities": {
+            "a": 0.6882227793392715,
+            "b": 0.31177722066072855
+          },
+          "confidence": 0.3764455586785429
+        }
+      },
+      "usage": {
+        "input_tokens": 21,
+        "output_tokens": 0
+      }
+    },
+    "status": "passed",
+    "exit": 0
+  }
+}

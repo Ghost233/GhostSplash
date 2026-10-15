@@ -7,6 +7,7 @@ import re
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from . import judgments
+from .tokenization import tokenizable
 
 _SPECIAL = re.compile(r"<\|([A-Za-z0-9_]+)\|>")
 
@@ -92,7 +93,7 @@ class KevScorer:
             options=options,
             type=spec.kind,
         )
-        tokens = self.tokenizer.encode(prompt, add_special_tokens=False)
+        tokens = self.tokenizer.encode(tokenizable(prompt), add_special_tokens=False)
         positions = tuple(
             index for index, token in enumerate(tokens) if token == 248050
         )

@@ -23,9 +23,11 @@ kernel void gdn_single_vh32(device const bfloat *packed [[buffer(0)]],
   const uint keyHead = head / 2, qChannel = keyHead * HeadDim + tid,
              kChannel = KeyWidth + qChannel, vChannel = 2 * KeyWidth + head * HeadDim + tid;
   const bool sharedWriter = (head & 1) == 0;
-  const float query = float(gdn_conv_silu(packed, convIn, convWeights, PackedWidth, ConvDim, 0, qChannel));
-  const float key = float(gdn_conv_silu(packed, convIn, convWeights, PackedWidth, ConvDim, 0, kChannel));
-  const bfloat value = gdn_conv_silu(packed, convIn, convWeights, PackedWidth, ConvDim, 0, vChannel);
+  const GdnConvHistory history{convIn, packed, ConvDim, PackedWidth, 0};
+  const GdnConvHistory carried{convIn, packed, ConvDim, PackedWidth, 1};
+  const float query = float(gdn_conv_silu(packed, history, convWeights, PackedWidth, 0, qChannel));
+  const float key = float(gdn_conv_silu(packed, history, convWeights, PackedWidth, 0, kChannel));
+  const bfloat value = gdn_conv_silu(packed, history, convWeights, PackedWidth, 0, vChannel);
   threadgroup float reductions[8];
   const float qSum = simd_sum(query * query), kSum = simd_sum(key * key);
   if (lane == 0) { reductions[simdgroup] = qSum; reductions[4 + simdgroup] = kSum; }
@@ -49,10 +51,10 @@ kernel void gdn_single_vh32(device const bfloat *packed [[buffer(0)]],
     decay[head] = gate.decay; beta[head] = gate.beta;
   }
   for (uint row = 0; row < SPLASH_GDN_CONVOLUTION_TAPS - 1; ++row) {
-    convOut[row * ConvDim + vChannel] = gdn_conv_carry(packed, convIn, PackedWidth, ConvDim, 1, row, vChannel);
+    convOut[row * ConvDim + vChannel] = carried.at(row, vChannel);
     if (sharedWriter) {
-      convOut[row * ConvDim + qChannel] = gdn_conv_carry(packed, convIn, PackedWidth, ConvDim, 1, row, qChannel);
-      convOut[row * ConvDim + kChannel] = gdn_conv_carry(packed, convIn, PackedWidth, ConvDim, 1, row, kChannel);
+      convOut[row * ConvDim + qChannel] = carried.at(row, qChannel);
+      convOut[row * ConvDim + kChannel] = carried.at(row, kChannel);
     }
   }
   threadgroup_barrier(mem_flags::mem_threadgroup);

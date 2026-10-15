@@ -1,0 +1,78 @@
+Laya: context=8192, KV=none, queue=1, memory=4294967296
+Decision head=ModernBERT typed option scores; drafter=off; compact=off; lookup=off; fast-topk=off; ANE=off
+System One: http://127.0.0.1:18158/v1/systemone
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+13:17:06 Startup configuration · on/off are configured flags; effective state follows Ready
+13:17:06   MODEL_DIRECTORY = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/fd41ed0c0a692997db508a5626d3c31112474d1f3f354e8b603a73f49f6f7212
+13:17:06   --model = ggml-org/Laya-GGUF:Q8_0
+13:17:06   --tokenizer = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/install/models-local/.resolved/fd41ed0c0a692997db508a5626d3c31112474d1f3f354e8b603a73f49f6f7212/tokenizer
+13:17:06   --binary = /Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/merge-upstream-20261015/splash
+13:17:06   --port = 18158
+13:17:06   --host = 127.0.0.1
+13:17:06   --allowed-host = none
+13:17:06   --allowed-origin = none
+13:17:06   --api-key = off
+13:17:06   --no-webui = on
+13:17:06   --max-memory = 4294967296
+13:17:06   --max-context = 8192
+13:17:06   --kv-format = bf16
+13:17:06   --state-format = fp32
+13:17:06   --idle-release = auto (default 600 s)
+13:17:06   --max-cache-disk = 0
+13:17:06   --max-cache-disk-writes = 0
+13:17:06   --persistent-cache = off
+13:17:06   --cache-dir = off / unset
+13:17:06   --served-model-name = none
+13:17:06   --announce-served-name = off
+13:17:06   --default-reasoning-effort = auto
+13:17:06   --thinking-token-budget = off / unset
+13:17:06   --thinking-end-text = off / unset
+13:17:06   --max-request-size = 134217728
+13:17:06   --max-image-pixels = 4194304
+13:17:06   --request-timeout = off / unset
+13:17:06   --queue-size = 1
+13:17:06   --decode-share = default (0.5)
+13:17:06   --disable-ane = on
+13:17:06   --ane-ffn-share = auto
+13:17:06   --ane-ffn-minimum-rows = auto
+13:17:06   --ane-power-recovery = off
+13:17:06   --ane-power-reference = off
+13:17:06   --ane-recovery-idle-watts = 0.05
+13:17:06   --ane-recovery-max-power-percent = off / unset
+13:17:06   --prompt-lookup = off
+13:17:06   --prompt-lookup-min-match = 2
+13:17:06   --compact-draft-head = off
+13:17:06   --compact-draft-capacity = 98304
+13:17:06   --compact-draft-ranking = off / unset
+13:17:06   --encoder-submit-batch-size = 4
+13:17:06   --encoder-option-queries = on
+13:17:06   --fast-topk = off
+13:17:06   --allow-idle-sleep = off
+13:17:06 Loading · ggml-org/Laya-GGUF:Q8_0
+13:17:06 Chat template · renders later system messages in place, generation prompt 4 tokens
+13:17:07 ModernBERT: quantized weights=457365508; workspace=9120080; KV=0; FP16 cache=0; selected option queries=on; numerical check passed
+13:17:07 Ready · ggml-org/Laya-GGUF:Q8_0 · context 8K · language only · http://127.0.0.1:18158
+13:17:07 Startup effective state · snapshot at Ready; fallback is distinct from error
+13:17:07   Context = 8192 tokens
+13:17:07   Native concurrent capacity = 4 (queue limit is separate)
+13:17:07   Vision = off
+13:17:07   ANE = off; share=0; minimum_rows=0; reason=GPU encoder
+13:17:07   ANE power reference = off / unreported; watts=unknown; reason=none
+13:17:07   ANE recovery = off / unreported; phase=unknown; reason=none
+13:17:07   KV = none
+13:17:07   Build = src-d22fd38e821706a8290ca95f7d89c1be5a97b764ef5f3728cd0aa9c52fc29704
+13:17:07   Metal budget = 4294967296 bytes
+13:17:07   Encoder option queries = on
+13:17:07   Encoder state = full bidirectional sequence; causal prefix cache off
+13:17:07   Drafter = off; kind=none; layers=0; block=0; tokens=0
+13:17:07   Prefill block = 2048 tokens (compiled)
+13:17:07   Prefill warmup geometry = typed encoder full/selected-head numerical check
+13:17:07   FFN FP16 cache = 0 bytes
+13:17:07   Prompt lookup = off; reason=none
+13:17:07   Fast top-k = off; reason=none
+13:17:07   Compact = off; capacity=0; maximum_error=0; coverage_fallbacks=0; request_fallbacks=0; reason=none
+13:17:07 Started · input 21 · cached 0
+13:17:07 Done · input 21 · cached 0 · output 0
+13:17:07 Started · input 21 · cached 0
+13:17:07 Done · input 21 · cached 0 · output 0
+13:17:07 Stopping · releasing engine resources

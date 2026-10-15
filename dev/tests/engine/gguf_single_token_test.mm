@@ -312,7 +312,8 @@ void gdnSingle(MetalBackend &backend, bool floatNorm, GdnHeadOrder order) {
         GDNGatePrefillParams{order == GdnHeadOrder::Tiled}, {32, 1, 1}, {128, 1, 1});
     static_cast<void>(backend.submitCommandAsync(reference.command()).wait());
     metal::CommandGraph graph;
-    GDN::addPrefill(graph, buffers(actualOutput, fusedConv, fusedState), shape, 1, order);
+    GDN::addPrefill(graph, backend, buffers(actualOutput, fusedConv, fusedState), shape, 1,
+                    GdnStateFormat::Float32, order);
     test::require(graph.dispatches().size() == 1, "single-token GDN did not fuse its three stages");
     static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
     const std::array<const Guarded *, 9> expected{&expectedOutput.carry, &expectedOutput.queries, &expectedOutput.keys,

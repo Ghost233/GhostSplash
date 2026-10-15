@@ -18,13 +18,10 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 
 ## 我们魔改了什么
 
-### GGUF 兼容性
-
-- 扩展 token embedding 的原生 GGUF 解码，覆盖线性层和专家层已支持的量化格式，
-  包括原先未覆盖的部分 IQ 格式与 MXFP4，减少第三方 GGUF 被加载器拒绝的情况。
-- 支持 GDN `ssm_alpha` / `ssm_beta` 使用混合 F32/Q3_K 权重，加载时统一解码为 F32。
-- 补充 GGUF 元数据、权重准备和投影测试；具体支持范围见
-  [开发文档](DEVELOPMENT.md#gguf-targets)。
+上游已覆盖的功能统一使用上游代码和测试。后续同步时移除对应的本地改动。
+上游已提供完整 GGUF embedding、混合类型 GDN alpha/beta、量化 GGUF 中的
+BF16/F16 张量、融合 MoE gate/up 专家和 Q5_0/Q5_1 支持，具体范围见
+[开发文档](DEVELOPMENT.md#gguf-targets)。本分支仅保留仍有必要的独有功能与测试。
 
 ### 本地模型启动器
 
@@ -191,8 +188,10 @@ automatically:
 | Qwen3.8-27B | `unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M` | `mlx-community/Qwen3.8-27B-4bit` |
 | Qwen3.6-35B-A3B | `unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M` | `mlx-community/Qwen3.6-35B-A3B-4bit` |
 
-Unsloth GGUF variants span **1–8 bits**, including mixed-precision UD formats;
-`UD-Q8_K_XL` and BF16 targets are not supported.
+Unsloth GGUF variants span **1–8 bits**, including mixed-precision UD formats
+up to `UD-Q8_K_XL`, whose BF16 tensors load too. Whole-BF16 and F16 models are
+not supported: the installer refuses a GGUF whose projections and experts are
+all BF16, F16 or F32.
 [Prism ML Ternary Bonsai 2](https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf)
 is also supported in PQ2_0 (7.2 GB), including vision. Pass `OWNER/REPO:VARIANT`
 to `--model`, as in the quick start. MLX targets can be affine 2–8-bit,
@@ -218,9 +217,10 @@ window. To set your own limits or cache options, add these to `splash serve`:
 | `--max-context 100K` | Set the context limit. |
 | `--language-only` | Skip vision; serve text only. |
 | `--kv-format bf16` | Use BF16 KV cache. Default: 8-bit (INT8). |
+| `--state-format bf16` | Use BF16 recurrent states, half the size. Default: FP32. |
 | `--disable-ane` | Prefill on the GPU alone. Default: the 27B also uses the Neural Engine. |
-| `--max-cache-disk 16G` | Keep cached prompts on SSD when memory runs short. Off by default. |
-| `--persistent-cache` | Keep the SSD cache across restarts; needs `--max-cache-disk`. Off by default. |
+| `--max-cache-disk 16G` | Cap the SSD cache (default: auto, up to 32 GiB; `0` turns it off). |
+| `--persistent-cache` | Keep the SSD cache across restarts. Off by default. |
 
 Use `--max-memory` to leave room for other applications.
 The server listens on localhost without authentication by default. For LAN
