@@ -1,0 +1,9 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+UNICODE lite 120
+UNICODE lite 104
+UNICODE lite 115
+ENGLISH FIXTURE lite probability delta 0.0
+UNICODE mini 120
+UNICODE mini 104
+UNICODE mini 115
+ENGLISH FIXTURE mini probability delta 0.0

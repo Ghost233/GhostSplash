@@ -1,0 +1,50 @@
+[
+  {
+    "model": "vllm-d3-lite",
+    "input_tokens": 32768,
+    "status": "failed",
+    "error": "HTTP 504: {\n    \"error\": {\n        \"message\": \"vllm-d3-lite: Engine protocol systemOne request timed out after 30000ms.\",\n        \"type\": \"engine_error\",\n        \"param\": null,\n        \"code\": \"request_timeout\"\n    }\n}",
+    "seconds": 30.029995500051882,
+    "recovery_unload": {
+      "instance_id": "vllm-d3-lite"
+    },
+    "recovery_load": {
+      "type": "decision",
+      "instance_id": "vllm-d3-lite",
+      "load_time_seconds": 1.794,
+      "status": "loaded",
+      "load_config": {
+        "context_length": 262144,
+        "eval_batch_size": 32768,
+        "physical_batch_size": 32768,
+        "parallel": 4,
+        "flash_attention": true,
+        "offload_kv_cache_to_gpu": true
+      }
+    }
+  },
+  {
+    "model": "vllm-d3-mini",
+    "input_tokens": 32768,
+    "status": "failed",
+    "error": "HTTP 504: {\n    \"error\": {\n        \"message\": \"vllm-d3-mini: Engine protocol systemOne request timed out after 30000ms.\",\n        \"type\": \"engine_error\",\n        \"param\": null,\n        \"code\": \"request_timeout\"\n    }\n}",
+    "seconds": 30.007663374999538,
+    "recovery_unload": {
+      "instance_id": "vllm-d3-mini"
+    },
+    "recovery_load": {
+      "type": "decision",
+      "instance_id": "vllm-d3-mini",
+      "load_time_seconds": 2.294,
+      "status": "loaded",
+      "load_config": {
+        "context_length": 262144,
+        "eval_batch_size": 32768,
+        "physical_batch_size": 32768,
+        "parallel": 4,
+        "flash_attention": true,
+        "offload_kv_cache_to_gpu": true
+      }
+    }
+  }
+]

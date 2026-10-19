@@ -1,0 +1,82 @@
+{
+  "at": 1792350430.2727349,
+  "services": [
+    {
+      "native_pid": 70625,
+      "parent_pid": 70542,
+      "port": 51925,
+      "status": "available",
+      "active_requests": [],
+      "scheduler": {
+        "queued": 0,
+        "waiting_resources": 0,
+        "waiting_prefix": 0,
+        "prefilling": 0,
+        "decoding": 0,
+        "waiting_mask": 0,
+        "terminal": 0,
+        "prefill_batches": 0,
+        "prefill_rows": 0,
+        "decode_batches": 0,
+        "decode_batches_by_width": {
+          "b1": 0,
+          "b2": 0,
+          "b3": 0,
+          "b4": 0
+        }
+      },
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 32,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "ready": true
+    },
+    {
+      "native_pid": 73456,
+      "parent_pid": 73427,
+      "port": 61346,
+      "status": "available",
+      "active_requests": 0,
+      "scheduler": null,
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 32,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "ready": true
+    },
+    {
+      "native_pid": 73592,
+      "parent_pid": 73562,
+      "port": 62306,
+      "status": "available",
+      "active_requests": 0,
+      "scheduler": null,
+      "transport": {
+        "ready": true,
+        "recovering": false,
+        "stopped": false,
+        "pending": 0,
+        "pending_limit": 32,
+        "restarts": 0,
+        "last_crash_trace": null,
+        "status_stale": false,
+        "status_age_ms": 0.0
+      },
+      "ready": true
+    }
+  ]
+}

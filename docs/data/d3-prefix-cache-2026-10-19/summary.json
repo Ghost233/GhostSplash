@@ -1,0 +1,96 @@
+{
+  "correctness_status": "passed",
+  "causal_prefix_cache_supported": false,
+  "rows": [
+    {
+      "model": "lite",
+      "input_tokens": 4096,
+      "common_prefix_tokens": 4042,
+      "requests": 6,
+      "matched_prefix_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "deduplicated_tokens": 0,
+      "maximum_numeric_error": 0.0,
+      "different_suffix_max_logit_change": 6.438831329345703
+    },
+    {
+      "model": "lite",
+      "input_tokens": 32768,
+      "common_prefix_tokens": 32714,
+      "requests": 6,
+      "matched_prefix_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "deduplicated_tokens": 0,
+      "maximum_numeric_error": 0.0,
+      "different_suffix_max_logit_change": 5.713616847991943
+    },
+    {
+      "model": "mini",
+      "input_tokens": 4096,
+      "common_prefix_tokens": 4042,
+      "requests": 6,
+      "matched_prefix_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "deduplicated_tokens": 0,
+      "maximum_numeric_error": 0.0,
+      "different_suffix_max_logit_change": 7.280459403991699
+    },
+    {
+      "model": "mini",
+      "input_tokens": 32768,
+      "common_prefix_tokens": 32714,
+      "requests": 6,
+      "matched_prefix_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "deduplicated_tokens": 0,
+      "maximum_numeric_error": 0.0,
+      "different_suffix_max_logit_change": 7.1605987548828125
+    }
+  ],
+  "suffix_dependency": [
+    {
+      "query_heads": 8,
+      "prefix_tokens": 64,
+      "suffix_tokens": 64,
+      "prefix_input_unchanged": true,
+      "prefix_output_A": 0,
+      "prefix_output_B": 0.5,
+      "exact_equality": true,
+      "status": "passed"
+    },
+    {
+      "query_heads": 16,
+      "prefix_tokens": 64,
+      "suffix_tokens": 64,
+      "prefix_input_unchanged": true,
+      "prefix_output_A": 0,
+      "prefix_output_B": 0.5,
+      "exact_equality": true,
+      "status": "passed"
+    }
+  ]
+}

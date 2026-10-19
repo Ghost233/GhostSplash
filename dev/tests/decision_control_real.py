@@ -14,16 +14,29 @@ from server.runtime import GenerationRequest, MultiplexedRuntime, RequestFailed
 def run(args):
     source = next((args.model_root / "target").glob("*.gguf"))
     metadata = Metadata(source)
-    bos = metadata.values["tokenizer.ggml.bos_token_id"]
-    sep = metadata.values["tokenizer.ggml.seperator_token_id"]
-    marker = metadata.values["tokenizer.ggml.mask_token_id"]
+    d3 = metadata.values.get("qwen35.decision.type") == "vllm-d3"
+    context = args.context if args.context is not None else (262144 if d3 else 8192)
+    bos = 248045 if d3 else metadata.values["tokenizer.ggml.bos_token_id"]
+    sep = 248046 if d3 else metadata.values["tokenizer.ggml.seperator_token_id"]
+    marker = 8 if d3 else metadata.values["tokenizer.ggml.mask_token_id"]
+    option_ids = (
+        tuple(
+            json.loads((args.model_root / "config.json").read_text())[
+                "decision_config"
+            ]["token_ids"][:2]
+        )
+        if d3
+        else (3, 5)
+    )
     command = [
         str(args.binary),
-        "serve-encoder-native",
+        "serve-d3-native" if d3 else "serve-encoder-native",
         str(args.model_root),
-        "8192",
-        str(4 << 30),
+        str(context),
+        str((40 if d3 else 4) << 30),
     ]
+    if d3:
+        command.extend(("--kv-format", "q4h"))
     runtime = MultiplexedRuntime(command, startup_timeout=180, pending_limit=4)
     result = {"command": command, "checks": [], "performance_test": False}
     process = None
@@ -32,15 +45,26 @@ def run(args):
         process = runtime._process
         assert process is not None
         result["pid"] = process.pid
+        readiness = runtime.readiness
+        assert readiness is not None
+        startup_status = json.loads(runtime.status(timeout=2).json)
+        assert startup_status["maximum_context_tokens"] == context
+        assert startup_status["maximum_context_tokens"] == readiness.max_context_tokens
+        assert readiness.max_concurrent_requests == 4
+        result["checks"].append(
+            "status context matches configured and native Ready capacity"
+        )
         flags = [
             wire.RequestFlag.DECISION_SCORING,
             wire.RequestFlag.DECISION_SCORING | wire.RequestFlag.DECISION_SCORE_TYPE,
             wire.RequestFlag.DECISION_SCORING | wire.RequestFlag.DECISION_NOUL_TYPE,
         ]
+        if d3:
+            flags = [wire.RequestFlag(0)] * 3
 
         def request(kind=0, number=0, long=False):
             prompt = [bos, 8 + number, sep, marker, 10, marker, 11, sep]
-            prompt += [12] * (8192 - len(prompt) - 1 if long else 1)
+            prompt += [12] * (min(8192, context) - len(prompt) - 1 if long else 1)
             prompt += [sep]
             frame = wire.RequestFrame(
                 request_id=0,
@@ -54,7 +78,7 @@ def run(args):
                 constraint=wire.ConstraintMode.NONE,
                 image_spans=(),
                 image_pixels=b"",
-                score_tokens=(3, 5),
+                score_tokens=option_ids,
                 generation_prompt_tokens=0,
                 flags=flags[kind],
                 cache_salt=0,
@@ -76,7 +100,9 @@ def run(args):
         )
 
         invalid = request()
-        invalid = replace(invalid, frame=replace(invalid.frame, score_tokens=(3, 4)))
+        invalid = replace(
+            invalid, frame=replace(invalid.frame, score_tokens=(0, 1) if d3 else (3, 4))
+        )
         try:
             runtime.submit(invalid).result(120)
         except RequestFailed:
@@ -131,6 +157,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--model-root", type=Path, required=True)
+    parser.add_argument("--context", type=int)
     parser.add_argument("--output", type=Path, required=True)
     run(parser.parse_args())
 

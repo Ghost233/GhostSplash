@@ -50,6 +50,7 @@ SERVER_FILES = (
     "judgments.py",
     "kev.py",
     "modernbert.py",
+    "d3.py",
     "diagnostics.py",
     "api_shapes.py",
     "tool_schema.py",

@@ -173,6 +173,7 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
 // The layers' images, then the head's and the embedding's. Checks the
 // metadata (requireMetadata) and each tensor's shape; throws GgufError naming
 // every missing tensor and every tensor of a type this build cannot load.
-[[nodiscard]] std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &geometry);
+[[nodiscard]] std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &geometry,
+                                          std::span<const uint32_t> headTokens = {});
 
 } // namespace splash::model::gguf

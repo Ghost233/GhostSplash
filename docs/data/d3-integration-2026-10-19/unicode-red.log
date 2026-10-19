@@ -1,0 +1,24 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+F
+======================================================================
+FAIL: test_structured_unicode_matches_model_json_template (dev.tests.server.test_d3.D3Tests.test_structured_unicode_matches_model_json_template)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/tests/server/test_d3.py", line 34, in test_structured_unicode_matches_model_json_template
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        harness.tokenizer.decode(runtime.requests[0].frame.prompt_tokens),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        '{"消息": "请退款 <已付款>", "enabled": true, "a": [1, 2]}|{"提示": "选择部门"}',
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: '{"a": [1, 2], "enabled": true, "\\u6d88\\u6[113 chars]e8"}' != '{"消息": "请退款 <已付款>", "enabled": true, "a": [[17 chars]部门"}'
+- {"a": [1, 2], "enabled": true, "\u6d88\u606f": "\u8bf7\u9000\u6b3e \u003c\u5df2\u4ed8\u6b3e\u003e"}|{"\u63d0\u793a": "\u9009\u62e9\u90e8\u95e8"}
++ {"消息": "请退款 <已付款>", "enabled": true, "a": [1, 2]}|{"提示": "选择部门"}
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.512s
+
+FAILED (failures=1)

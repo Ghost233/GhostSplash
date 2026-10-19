@@ -1,0 +1,61 @@
+[
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "ruff",
+      "check",
+      "--config",
+      "dev/ruff.toml",
+      "dev/tests/decision_control_real.py"
+    ],
+    "exit": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "--config",
+      "dev/ruff.toml",
+      "dev/tests/decision_control_real.py"
+    ],
+    "exit": 0,
+    "stdout": "1 file already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "py_compile",
+      "dev/tests/decision_control_real.py"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "dev/tools/check_architecture.py"
+    ],
+    "exit": 0,
+    "stdout": "backend architecture: PASS\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

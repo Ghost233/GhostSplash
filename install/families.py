@@ -25,6 +25,8 @@ FAMILIES = (
     ModelFamily("Qwen3.5-4B", None),
     ModelFamily("Kev-4B", None),
     ModelFamily("Kev-0.8B", None),
+    ModelFamily("D3-lite", None),
+    ModelFamily("D3-mini", None),
     ModelFamily("Julia-1", None),
     ModelFamily("Laya", None),
     ModelFamily("Qwen3.8-27B", "incoai/Qwen3.8-27B-DFlash2"),

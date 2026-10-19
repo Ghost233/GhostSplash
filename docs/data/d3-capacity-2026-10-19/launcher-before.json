@@ -1,0 +1,15 @@
+{
+  "ok": false,
+  "target": "jev",
+  "context": {
+    "status": "unavailable",
+    "reason": {
+      "code": "jev-context-unavailable",
+      "message": "所选 Jev 模型没有有效的已加载上下文容量，请在模型服务中加载并重新探测。"
+    }
+  },
+  "reason": {
+    "code": "jev-context-unavailable",
+    "message": "所选 Jev 模型没有有效的已加载上下文容量，请在模型服务中加载并重新探测。"
+  }
+}

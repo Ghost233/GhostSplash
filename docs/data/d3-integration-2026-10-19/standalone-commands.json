@@ -1,0 +1,56 @@
+[
+  {
+    "phase": "correctness",
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-u",
+      "-m",
+      "dev.benchmarks.d3_models",
+      "--reference-mode",
+      "llama",
+      "--models",
+      "lite",
+      "mini",
+      "--lengths",
+      "4096",
+      "32767",
+      "--accept-desktop-load",
+      "--phase",
+      "correctness",
+      "--output",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k"
+    ],
+    "started_at": 1792349747.258432,
+    "exit": 0,
+    "ended_at": 1792349983.437593
+  },
+  {
+    "phase": "performance",
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-u",
+      "-m",
+      "dev.benchmarks.d3_models",
+      "--reference-mode",
+      "llama",
+      "--models",
+      "lite",
+      "mini",
+      "--lengths",
+      "4096",
+      "32767",
+      "--accept-desktop-load",
+      "--phase",
+      "performance",
+      "--output",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-performance-near32k",
+      "--rounds",
+      "3",
+      "--correctness-report",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k/results.json"
+    ],
+    "started_at": 1792349983.439373,
+    "exit": 0,
+    "ended_at": 1792350775.8597
+  }
+]

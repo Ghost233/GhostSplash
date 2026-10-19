@@ -1,0 +1,82 @@
+{
+  "status": "passed",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "source_patch_sha256": "37e2d4709a8be42bbd9f474edcd408525286ea05f2e7061ab0935a510a7e4646",
+  "requirements": [
+    {
+      "requirement": "D3 lite first, then D3 mini; MLX decider excluded",
+      "evidence": [
+        "standalone-correctness.json",
+        "standalone-commands.json"
+      ],
+      "verified": true
+    },
+    {
+      "requirement": "Weight-preserving optimized Splash path, correct head/code mapping and attention arithmetic",
+      "evidence": [
+        "attention-final.log",
+        "lite-model-final.log",
+        "mini-model-final.log",
+        "verification.json"
+      ],
+      "verified": true
+    },
+    {
+      "requirement": "Correctness precedes performance; no tolerance relaxed",
+      "evidence": [
+        "standalone-commands.json",
+        "standalone-correctness.json",
+        "server-final.log"
+      ],
+      "verified": true
+    },
+    {
+      "requirement": "Configured context 262144; Splash Q4H, reference Q4_0",
+      "evidence": [
+        "standalone-performance.json",
+        "reference-kv-proof.json"
+      ],
+      "verified": true,
+      "note": "Reference copies original four-slot parameters, total context 262144 and 65536 per slot. Actual inputs fit without truncation."
+    },
+    {
+      "requirement": "4096 and approximately 32768 input tokens, both models, speed and memory comparison",
+      "evidence": [
+        "standalone-summary.json",
+        "standalone-performance.json"
+      ],
+      "verified": true,
+      "actual_tokens": [
+        4096,
+        32767
+      ]
+    },
+    {
+      "requirement": "Splash faster than the authorized reference on required comparisons",
+      "evidence": [
+        "standalone-summary.json"
+      ],
+      "verified": true,
+      "mean_speedups": [
+        2.0013416706293516,
+        1.777171346288047,
+        1.625245949505647,
+        1.3117115873651621
+      ],
+      "all_12_paired_comparisons_faster": true
+    },
+    {
+      "requirement": "Preserve user files, original models and historical results; release owned test resources",
+      "evidence": [
+        "verification.json",
+        "final-resources.json"
+      ],
+      "verified": true
+    }
+  ],
+  "limitations": [
+    "Desktop GPU load was accepted by user; measurements are diagnostic, not idle machine peak.",
+    "Exact 32768 remains an unresolved reference backend abnormal case; it is not counted as a successful timing sample.",
+    "Final comparator follows latest user instruction: standalone llama.cpp, not the LM Studio public API."
+  ]
+}

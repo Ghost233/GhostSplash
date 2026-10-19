@@ -1,0 +1,144 @@
+{
+  "verified_at": "2026-10-19T15:40:07.560730+08:00",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "branch": "ghost",
+  "uncommitted": true,
+  "scope": "Read-only capability and correctness verification; no production-code changes, performance measurements or formal-service restarts.",
+  "status": "verified_unavailable",
+  "correctness_status": "passed",
+  "performance_test": false,
+  "models": [
+    {
+      "model": "lite",
+      "assembly": "/Users/ghost233/Ghost233Code/GhostSplash/install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+      "source": "/Users/ghost233/.lmstudio/models/ggml-org/vllm-d3-lite-GGUF/vllm-d3-lite-BF16.gguf",
+      "size_bytes": 2025305632,
+      "mtime_ns": 1792339416061662166,
+      "architecture": "qwen35",
+      "decision_type": "vllm-d3",
+      "attention_causal": false
+    },
+    {
+      "model": "mini",
+      "assembly": "/Users/ghost233/Ghost233Code/GhostSplash/install/models-local/.resolved/308afd49fc9c39a21c91daa588d509e81640338d7b83a48ea93123822f27afaa",
+      "source": "/Users/ghost233/.lmstudio/models/ggml-org/vllm-d3-mini-GGUF/vllm-d3-mini-Q4_K_M.gguf",
+      "size_bytes": 3707523520,
+      "mtime_ns": 1792339754583681421,
+      "architecture": "qwen35",
+      "decision_type": "vllm-d3",
+      "attention_causal": false
+    }
+  ],
+  "binary_sha256": "311ead4c092fb33eb0eb0fe1d6d91934ef8d1e43b45f31814f3049cad7b2148a",
+  "source_sha256": {
+    "runtime/encoder/Service.cpp": "33d0bf3116c3ed31ae284ee2885a9549192e4315fd00b65fd15b082a88ce04c3",
+    "runtime/model/D3.mm": "cb74c79c5e57a2e831b683975c974b8b455829d42ff67bd724636628d537ad19",
+    "runtime/metal/kernels/shared/d3.metal": "92ace9d60428d97e31f6f3b305a9f1a3c14c607e5e1a7cdfaac0e553b96bdd74",
+    "runtime/engine/Cache.cpp": "d1bff811050db21c5d68e27014760288aa29bad519c0ca0e82913a33bca8b399",
+    "server/server.py": "24e627e91ac1f501333351aad3533a73082ece8463c8d9f725854ef086c61e4c"
+  },
+  "commands": [
+    {
+      "name": "real_probe",
+      "exit_code": 0,
+      "command": ".venv/bin/python -u -c 'import runpy; runpy.run_path(\"build/d3-prefix-cache-20261019/probe.py\", run_name=\"__main__\")' --binary build/splash --output docs/data/d3-prefix-cache-2026-10-19/results.json"
+    },
+    {
+      "name": "unit_tests",
+      "exit_code": 0,
+      "command": ".venv/bin/python -m unittest dev.tests.server.test_d3 dev.tests.install.test_d3_metadata"
+    },
+    {
+      "name": "suffix_build",
+      "exit_code": 0,
+      "command": "clang++ -std=c++20 -O3 -Wall -Wextra -Werror -mmacosx-version-min=26.4 -fobjc-arc -Iruntime -Idev/tests/engine build/d3-prefix-cache-20261019/suffix_dependency.mm build/d3-capacity-20261019/engine/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/d3-prefix-cache-20261019/suffix-dependency"
+    },
+    {
+      "name": "suffix_gpu_test",
+      "exit_code": 0,
+      "command": "build/d3-prefix-cache-20261019/suffix-dependency build/splash.metallib"
+    },
+    {
+      "name": "architecture",
+      "exit_code": 0,
+      "command": ".venv/bin/python dev/tools/check_architecture.py"
+    },
+    {
+      "name": "ruff",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--config",
+        "dev/ruff.toml",
+        "/Users/ghost233/Ghost233Code/GhostSplash/docs/data/d3-prefix-cache-2026-10-19/probe.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "format",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--config",
+        "dev/ruff.toml",
+        "/Users/ghost233/Ghost233Code/GhostSplash/docs/data/d3-prefix-cache-2026-10-19/probe.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "git-diff",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "executed_probe_sha256": "78ebb90efa142f60911366de4df957b4876fe0902e1a31e5b1f54600de4dd974",
+  "executed_probe_archive": "probe-executed.txt",
+  "normalized_probe_ast_matches_after_import_formatting": true,
+  "total_requests": 24,
+  "numeric_comparisons": 16,
+  "logits_per_comparison": 255,
+  "maximum_absolute_error": 0,
+  "all_engine_exits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "report_sha256": "5123a921ef159d55bfa6040a5f5e0e6676e088ed394667ba5970f21a7cada640",
+  "cleanup": {
+    "tested_pids": [
+      23594,
+      23641,
+      23660,
+      24578,
+      24737,
+      24899,
+      24928,
+      28748
+    ],
+    "live_test_processes": [],
+    "normal_exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

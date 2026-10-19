@@ -1667,7 +1667,7 @@ def _native_command(args, relaunch_context=None):
     """The engine's command line, a relaunch's with `relaunch_context`, the
     context the first engine served: without --max-context the relaunch keeps
     it, where its own would follow a Neural Engine split calibrated anew."""
-    if getattr(args, "decision_type", None) == "laya":
+    if getattr(args, "decision_type", None) in ("laya", "vllm-d3"):
         if any(
             getattr(args, key) == "on"
             for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
@@ -1677,9 +1677,11 @@ def _native_command(args, relaunch_context=None):
             raise ValueError(
                 "ModernBERT ANE programs are not implemented; use the GPU encoder"
             )
-        return [
+        command = [
             args.binary,
-            "serve-encoder-native",
+            "serve-d3-native"
+            if args.decision_type == "vllm-d3"
+            else "serve-encoder-native",
             args.model_root,
             str(args.max_context if args.max_context is not None else relaunch_context)
             if args.max_context is not None or relaunch_context is not None
@@ -1690,6 +1692,11 @@ def _native_command(args, relaunch_context=None):
             "--encoder-submit-batch-size",
             str(getattr(args, "encoder_submit_batch_size", 4)),
         ]
+        if args.decision_type == "vllm-d3":
+            if args.kv_format not in ("q4h", "bf16"):
+                raise ValueError("D3 KV format must be q4h or bf16")
+            command.extend(("--kv-format", args.kv_format))
+        return command
     command = [
         args.binary,
         "serve-native",

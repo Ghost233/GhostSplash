@@ -16,11 +16,12 @@ std::filesystem::path findTargetGguf(const std::filesystem::path &directory) {
 }
 
 GgufTargetLoader::GgufTargetLoader(metal::MetalBackend &backend, WeightImages &images,
-                                   const std::filesystem::path &path, const QwenTargetDimensions &geometry)
+                                   const std::filesystem::path &path, const QwenTargetDimensions &geometry,
+                                   std::span<const uint32_t> headTokens)
     : backend_(backend), images_(images), planned_(std::make_shared<Planned>(path)) {
   const GgufFile file(planned_->source);
   rotation_ = file.rotation();
-  planned_->images = gguf::planImages(file, geometry);
+  planned_->images = gguf::planImages(file, geometry, headTokens);
 }
 
 WeightFile GgufTargetLoader::open(size_t index) {

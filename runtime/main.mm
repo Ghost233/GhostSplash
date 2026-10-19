@@ -417,6 +417,8 @@ int main(int argc, char **argv) {
         return splash::checkDevice();
       if (argc > 1 && std::string_view(argv[1]) == "serve-encoder-native")
         return splash::encoder::serveModernBert(argc, argv, std::filesystem::path(argv[0]).parent_path() / "splash.metallib", SPLASH_BUILD_ID);
+      if (argc > 1 && std::string_view(argv[1]) == "serve-d3-native")
+        return splash::encoder::serveD3(argc, argv, std::filesystem::path(argv[0]).parent_path() / "splash.metallib", SPLASH_BUILD_ID);
       if (argc > 1 && std::string_view(argv[1]) == "model-check")
         return splash::checkModel(argc, argv);
       const splash::engine::NativeArguments arguments =

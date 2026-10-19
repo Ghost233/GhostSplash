@@ -1,0 +1,58 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+15:33:53 D3: native weights=1519960064; workspace=139825472; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:33:53.569930+08:00 lite 4096 A_first start
+2026-10-19T15:33:53.906445+08:00 lite 4096 A_first PASS, matched=0
+2026-10-19T15:33:53.906512+08:00 lite 4096 A_repeat start
+2026-10-19T15:33:54.217772+08:00 lite 4096 A_repeat PASS, matched=0
+2026-10-19T15:33:54.217841+08:00 lite 4096 B_changed_suffix start
+2026-10-19T15:33:54.536046+08:00 lite 4096 B_changed_suffix PASS, matched=0
+2026-10-19T15:33:54.536119+08:00 lite 4096 A_after_B start
+2026-10-19T15:33:54.851208+08:00 lite 4096 A_after_B PASS, matched=0
+2026-10-19T15:33:54.851278+08:00 lite 4096 A_other_salt start
+2026-10-19T15:33:55.157402+08:00 lite 4096 A_other_salt PASS, matched=0
+15:33:55 D3: native weights=1519960064; workspace=139825472; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:33:55.552263+08:00 lite 4096 B_fresh start
+2026-10-19T15:33:55.894665+08:00 lite 4096 B_fresh PASS, matched=0
+15:33:56 D3: native weights=1519960064; workspace=139825472; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:33:56.374283+08:00 lite 32768 A_first start
+2026-10-19T15:34:02.679461+08:00 lite 32768 A_first PASS, matched=0
+2026-10-19T15:34:02.679535+08:00 lite 32768 A_repeat start
+2026-10-19T15:34:09.138327+08:00 lite 32768 A_repeat PASS, matched=0
+2026-10-19T15:34:09.138423+08:00 lite 32768 B_changed_suffix start
+2026-10-19T15:34:15.454491+08:00 lite 32768 B_changed_suffix PASS, matched=0
+2026-10-19T15:34:15.454582+08:00 lite 32768 A_after_B start
+2026-10-19T15:34:21.886336+08:00 lite 32768 A_after_B PASS, matched=0
+2026-10-19T15:34:21.886442+08:00 lite 32768 A_other_salt start
+2026-10-19T15:34:28.411691+08:00 lite 32768 A_other_salt PASS, matched=0
+15:34:28 D3: native weights=1519960064; workspace=139825472; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:34:28.862085+08:00 lite 32768 B_fresh start
+2026-10-19T15:34:35.431984+08:00 lite 32768 B_fresh PASS, matched=0
+15:34:37 D3: native weights=3039068160; workspace=272928928; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:34:37.233763+08:00 mini 4096 A_first start
+2026-10-19T15:34:38.767168+08:00 mini 4096 A_first PASS, matched=0
+2026-10-19T15:34:38.767240+08:00 mini 4096 A_repeat start
+2026-10-19T15:34:40.287648+08:00 mini 4096 A_repeat PASS, matched=0
+2026-10-19T15:34:40.287723+08:00 mini 4096 B_changed_suffix start
+2026-10-19T15:34:41.921866+08:00 mini 4096 B_changed_suffix PASS, matched=0
+2026-10-19T15:34:41.922152+08:00 mini 4096 A_after_B start
+2026-10-19T15:34:43.601535+08:00 mini 4096 A_after_B PASS, matched=0
+2026-10-19T15:34:43.601615+08:00 mini 4096 A_other_salt start
+2026-10-19T15:34:45.173819+08:00 mini 4096 A_other_salt PASS, matched=0
+15:34:46 D3: native weights=3039068160; workspace=272928928; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:34:46.078526+08:00 mini 4096 B_fresh start
+2026-10-19T15:34:47.527595+08:00 mini 4096 B_fresh PASS, matched=0
+15:34:48 D3: native weights=3039068160; workspace=272928928; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:34:48.493423+08:00 mini 32768 A_first start
+2026-10-19T15:35:13.421843+08:00 mini 32768 A_first PASS, matched=0
+2026-10-19T15:35:13.421937+08:00 mini 32768 A_repeat start
+2026-10-19T15:35:39.629671+08:00 mini 32768 A_repeat PASS, matched=0
+2026-10-19T15:35:39.629750+08:00 mini 32768 B_changed_suffix start
+2026-10-19T15:36:08.926529+08:00 mini 32768 B_changed_suffix PASS, matched=0
+2026-10-19T15:36:08.926625+08:00 mini 32768 A_after_B start
+2026-10-19T15:36:37.509180+08:00 mini 32768 A_after_B PASS, matched=0
+2026-10-19T15:36:37.509270+08:00 mini 32768 A_other_salt start
+2026-10-19T15:37:05.702141+08:00 mini 32768 A_other_salt PASS, matched=0
+15:37:06 D3: native weights=3039068160; workspace=272928928; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+2026-10-19T15:37:06.618909+08:00 mini 32768 B_fresh start
+2026-10-19T15:37:34.146232+08:00 mini 32768 B_fresh PASS, matched=0
+{"status": "verified_unavailable", "correctness_status": "passed", "total_requests": 24}

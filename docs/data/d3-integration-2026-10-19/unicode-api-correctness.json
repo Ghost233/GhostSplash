@@ -1,0 +1,380 @@
+{
+  "status": "passed",
+  "models": {
+    "lite": {
+      "cases": [
+        {
+          "body": {
+            "state": {
+              "消息": "请退款 <已付款>",
+              "enabled": true,
+              "a": [
+                1,
+                2
+              ]
+            },
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "选择负责的部门。",
+                "criteria": {
+                  "billing": {
+                    "说明": "退款与账单"
+                  },
+                  "shipping": "物流"
+                }
+              }
+            }
+          },
+          "input_tokens": 120,
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9990156826308225,
+                  "shipping": 0.0009843173691774158
+                },
+                "confidence": 0.9887486878658669
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.998728682666708,
+                  "shipping": 0.001271317333292042
+                },
+                "confidence": 0.9859376567984034
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "body": {
+            "state": {
+              "内容": "等级：高"
+            },
+            "questions": {
+              "level": {
+                "type": "score",
+                "instructions": {
+                  "提示": "选择内容的等级。"
+                },
+                "criteria": [
+                  "低",
+                  "中",
+                  "高"
+                ]
+              }
+            }
+          },
+          "input_tokens": 104,
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "level": {
+                "type": "score",
+                "score": 1.990700714171176,
+                "legend": {
+                  "0": "低",
+                  "1": "中",
+                  "2": "高"
+                },
+                "probabilities": {
+                  "0": 0.0021210748094192475,
+                  "1": 0.005057136209985699,
+                  "2": 0.9928217889805951
+                },
+                "confidence": 0.9572677109559965
+              }
+            },
+            "usage": {
+              "input_tokens": 104,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "level": {
+                "type": "score",
+                "score": 1.9884699683603009,
+                "legend": {
+                  "0": "低",
+                  "1": "中",
+                  "2": "高"
+                },
+                "probabilities": {
+                  "0": 0.002799507039916918,
+                  "1": 0.005931017559865339,
+                  "2": 0.9912694754002178
+                },
+                "confidence": 0.9494268144118839
+              }
+            },
+            "usage": {
+              "input_tokens": 104,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "body": {
+            "state": [
+              "已付款两次，请退回重复款项。",
+              {
+                "x": "<tag>&'"
+              }
+            ],
+            "questions": {
+              "refund": {
+                "type": "noul",
+                "instructions": {
+                  "问题": "是否请求退款？"
+                },
+                "criteria": {
+                  "true": {
+                    "解释": "是"
+                  },
+                  "false": "否"
+                }
+              }
+            }
+          },
+          "input_tokens": 115,
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9610501583958048
+              }
+            },
+            "usage": {
+              "input_tokens": 115,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9605485902532872
+              }
+            },
+            "usage": {
+              "input_tokens": 115,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "unchanged_english_performance_fixture_probability_delta": 0.0,
+      "splash_exit": 0
+    },
+    "mini": {
+      "cases": [
+        {
+          "body": {
+            "state": {
+              "消息": "请退款 <已付款>",
+              "enabled": true,
+              "a": [
+                1,
+                2
+              ]
+            },
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "选择负责的部门。",
+                "criteria": {
+                  "billing": {
+                    "说明": "退款与账单"
+                  },
+                  "shipping": "物流"
+                }
+              }
+            }
+          },
+          "input_tokens": 120,
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9972686331400866,
+                  "shipping": 0.0027313668599133496
+                },
+                "confidence": 0.9728040965671091
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9966658893232665,
+                  "shipping": 0.0033341106767334093
+                },
+                "confidence": 0.9677632520459989
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "body": {
+            "state": {
+              "内容": "等级：高"
+            },
+            "questions": {
+              "level": {
+                "type": "score",
+                "instructions": {
+                  "提示": "选择内容的等级。"
+                },
+                "criteria": [
+                  "低",
+                  "中",
+                  "高"
+                ]
+              }
+            }
+          },
+          "input_tokens": 104,
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "level": {
+                "type": "score",
+                "score": 1.9795455426598978,
+                "legend": {
+                  "0": "低",
+                  "1": "中",
+                  "2": "高"
+                },
+                "probabilities": {
+                  "0": 0.004190983544093255,
+                  "1": 0.012072490251915455,
+                  "2": 0.9837365262039912
+                },
+                "confidence": 0.9158961995406504
+              }
+            },
+            "usage": {
+              "input_tokens": 104,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "level": {
+                "type": "score",
+                "score": 1.980717066781794,
+                "legend": {
+                  "0": "低",
+                  "1": "中",
+                  "2": "高"
+                },
+                "probabilities": {
+                  "0": 0.0052328607072742285,
+                  "1": 0.008817211803657434,
+                  "2": 0.9859499274890683
+                },
+                "confidence": 0.9243111262357897
+              }
+            },
+            "usage": {
+              "input_tokens": 104,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "body": {
+            "state": [
+              "已付款两次，请退回重复款项。",
+              {
+                "x": "<tag>&'"
+              }
+            ],
+            "questions": {
+              "refund": {
+                "type": "noul",
+                "instructions": {
+                  "问题": "是否请求退款？"
+                },
+                "criteria": {
+                  "true": {
+                    "解释": "是"
+                  },
+                  "false": "否"
+                }
+              }
+            }
+          },
+          "input_tokens": 115,
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9835360488551299
+              }
+            },
+            "usage": {
+              "input_tokens": 115,
+              "output_tokens": 0
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "refund": {
+                "type": "noul",
+                "noul": 0.9859069468196426
+              }
+            },
+            "usage": {
+              "input_tokens": 115,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "unchanged_english_performance_fixture_probability_delta": 0.0,
+      "splash_exit": 0
+    }
+  },
+  "performance_test": false
+}

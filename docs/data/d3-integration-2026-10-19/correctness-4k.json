@@ -1,0 +1,3111 @@
+{
+  "phase": "correctness",
+  "reference_mode": "lmstudio",
+  "engine_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "context_capacity": 262144,
+  "validated_lengths": [
+    4096
+  ],
+  "splash_kv": "q4h",
+  "lmstudio_kv": "q4_0",
+  "concurrent_requests": 1,
+  "models": {
+    "lite": {
+      "cases": [
+        {
+          "input_tokens": 128,
+          "body": {
+            "state": "Run 128. Archive: note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9994596395790377,
+                  "shipping": 0.0005403604209622358
+                },
+                "confidence": 0.9933556766296379
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9995204205622481,
+                  "shipping": 0.0004795794377518155
+                },
+                "confidence": 0.9940204637161149
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9995204205622481,
+                  "shipping": 0.0004795794377518155
+                },
+                "confidence": 0.9940204637161149
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 129,
+          "body": {
+            "state": "Run 129. Archive: note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9994475753127154,
+                  "shipping": 0.0005524246872847035
+                },
+                "confidence": 0.9932249359900783
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996034495575408,
+                  "shipping": 0.0003965504424591814
+                },
+                "confidence": 0.9949469096147484
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996034495575408,
+                  "shipping": 0.0003965504424591814
+                },
+                "confidence": 0.9949469096147484
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 2048,
+          "body": {
+            "state": "Run 2048. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996075614788785,
+                  "shipping": 0.00039243852112149914
+                },
+                "confidence": 0.9949934037036633
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996376293661482,
+                  "shipping": 0.00036237063385167334
+                },
+                "confidence": 0.9953353188078295
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996376293661482,
+                  "shipping": 0.00036237063385167334
+                },
+                "confidence": 0.9953353188078295
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 2049,
+          "body": {
+            "state": "Run 2049. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997036620035707,
+                  "shipping": 0.00029633799642930623
+                },
+                "confidence": 0.9960993177650816
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996787282809608,
+                  "shipping": 0.00032127171903930464
+                },
+                "confidence": 0.9958085665373437
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996787282809608,
+                  "shipping": 0.00032127171903930464
+                },
+                "confidence": 0.9958085665373437
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 4096,
+          "body": {
+            "state": "Run 4096. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996398382061398,
+                  "shipping": 0.00036016179386021027
+                },
+                "confidence": 0.9953605749736445
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996130900855323,
+                  "shipping": 0.0003869099144677798
+                },
+                "confidence": 0.995056014586372
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996130900855323,
+                  "shipping": 0.0003869099144677798
+                },
+                "confidence": 0.995056014586372
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "samples": [],
+      "command": [
+        "sh",
+        "d3litesplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "4",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 139825472,
+          "kv_bytes": 135168,
+          "state_bytes": 0,
+          "allocated_bytes": 1659920704,
+          "peak_allocated_bytes": 1659920704,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "57da40a2c81c3625ebd80da9",
+          "pid": 25655,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792345843.689599
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "concurrency_four": {
+        "serial": [
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996936244779113,
+                  "shipping": 0.00030637552208864375
+                },
+                "confidence": 0.9959819201515923
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997188320465674,
+                  "shipping": 0.00028116795343259424
+                },
+                "confidence": 0.9962776814551504
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996256541343472,
+                  "shipping": 0.0003743458656527577
+                },
+                "confidence": 0.9951987276992124
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996746010855535,
+                  "shipping": 0.00032539891444648345
+                },
+                "confidence": 0.9957607149071229
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        ],
+        "parallel": [
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996936244779113,
+                  "shipping": 0.00030637552208864375
+                },
+                "confidence": 0.9959819201515923
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997188320465674,
+                  "shipping": 0.00028116795343259424
+                },
+                "confidence": 0.9962776814551504
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996256541343472,
+                  "shipping": 0.0003743458656527577
+                },
+                "confidence": 0.9951987276992124
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996746010855535,
+                  "shipping": 0.00032539891444648345
+                },
+                "confidence": 0.9957607149071229
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        ]
+      },
+      "question_types": {
+        "body": {
+          "state": {
+            "request": "charged twice; refund the extra charge"
+          },
+          "questions": {
+            "team": {
+              "type": "choice",
+              "instructions": "Choose the responsible team.",
+              "criteria": {
+                "shipping": "Delivery",
+                "billing": "Refunds"
+              }
+            },
+            "refund": {
+              "type": "noul",
+              "instructions": "Is a refund requested?"
+            },
+            "priority": {
+              "type": "score",
+              "instructions": "Rate the urgency.",
+              "criteria": [
+                "routine",
+                "urgent",
+                "emergency"
+              ]
+            }
+          }
+        },
+        "splash": {
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.00023579002190699452,
+                "billing": 0.9997642099780929
+              },
+              "confidence": 0.9968185478007117
+            },
+            "refund": {
+              "type": "noul",
+              "noul": 0.9966807602345547
+            },
+            "priority": {
+              "type": "score",
+              "score": 0.2868336897663105,
+              "legend": {
+                "0": "routine",
+                "1": "urgent",
+                "2": "emergency"
+              },
+              "probabilities": {
+                "0": 0.7857646856679464,
+                "1": 0.1416369388977967,
+                "2": 0.0725983754342569
+              },
+              "confidence": 0.4022587300781342
+            }
+          },
+          "usage": {
+            "input_tokens": 303,
+            "output_tokens": 0
+          }
+        },
+        "lmstudio": {
+          "model": "vllm-d3-lite",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.0004346934731951154,
+                "billing": 0.999565306526805
+              },
+              "confidence": 0.9945184738437582
+            },
+            "refund": {
+              "type": "noul",
+              "noul": 0.9962723389111386
+            },
+            "priority": {
+              "type": "score",
+              "score": 0.30994933403075275,
+              "legend": {
+                "0": "routine",
+                "1": "urgent",
+                "2": "emergency"
+              },
+              "probabilities": {
+                "0": 0.7658726760659943,
+                "1": 0.15830531383725857,
+                "2": 0.07582201009674708
+              },
+              "confidence": 0.3704292142193304
+            }
+          },
+          "usage": {
+            "input_tokens": 303,
+            "output_tokens": 0
+          }
+        }
+      },
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 242499904,
+          "kv_bytes": 2244608,
+          "state_bytes": 0,
+          "allocated_bytes": 1764704576,
+          "peak_allocated_bytes": 1764704576,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 21,
+          "submission_batches": 21,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 6.47266
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 4,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 9,
+              "1": 16,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 9.783332829014398
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 19,
+              "0.005": 19,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 0.0011292090057395399
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 19,
+              "0.005": 19,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 5.858793156221509e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 3,
+              "0.005": 15,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 0.07500158599577844
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "57da40a2c81c3625ebd80da9",
+          "pid": 25655,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792345843.689599
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "splash_exit": 0
+    },
+    "mini": {
+      "cases": [
+        {
+          "input_tokens": 128,
+          "body": {
+            "state": "Run 128. Archive: note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997375135362341,
+                  "shipping": 0.00026248646376582336
+                },
+                "confidence": 0.996498962099545
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997323833886242,
+                  "shipping": 0.00026761661137570465
+                },
+                "confidence": 0.9964380104076842
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997323833886242,
+                  "shipping": 0.00026761661137570465
+                },
+                "confidence": 0.9964380104076842
+              }
+            },
+            "usage": {
+              "input_tokens": 128,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 129,
+          "body": {
+            "state": "Run 129. Archive: note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996899356655252,
+                  "shipping": 0.0003100643344748789
+                },
+                "confidence": 0.9959388963666608
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996462352618938,
+                  "shipping": 0.0003537647381061625
+                },
+                "confidence": 0.9954338304800945
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996462352618938,
+                  "shipping": 0.0003537647381061625
+                },
+                "confidence": 0.9954338304800945
+              }
+            },
+            "usage": {
+              "input_tokens": 129,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 2048,
+          "body": {
+            "state": "Run 2048. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997806742546836,
+                  "shipping": 0.00021932574531648898
+                },
+                "confidence": 0.9970177896721918
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998198547222455,
+                  "shipping": 0.00018014527775452003
+                },
+                "confidence": 0.9974993823889352
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998198547222455,
+                  "shipping": 0.00018014527775452003
+                },
+                "confidence": 0.9974993823889352
+              }
+            },
+            "usage": {
+              "input_tokens": 2048,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 2049,
+          "body": {
+            "state": "Run 2049. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997717277384873,
+                  "shipping": 0.00022827226151281256
+                },
+                "confidence": 0.9969093106410023
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997166643194864,
+                  "shipping": 0.0002833356805136896
+                },
+                "confidence": 0.996252123246627
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997166643194864,
+                  "shipping": 0.0002833356805136896
+                },
+                "confidence": 0.996252123246627
+              }
+            },
+            "usage": {
+              "input_tokens": 2049,
+              "output_tokens": 0
+            }
+          }
+        },
+        {
+          "input_tokens": 4096,
+          "body": {
+            "state": "Run 4096. Archive: note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note note\nCurrent request: charged twice; please refund the extra charge.",
+            "questions": {
+              "team": {
+                "type": "choice",
+                "instructions": "Choose the responsible team.",
+                "criteria": {
+                  "billing": "Refunds",
+                  "shipping": "Delivery"
+                }
+              }
+            }
+          },
+          "lmstudio": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997931685285824,
+                  "shipping": 0.00020683147141758334
+                },
+                "confidence": 0.9971701726592738
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "splash": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997897918687373,
+                  "shipping": 0.00021020813126267144
+                },
+                "confidence": 0.997128885419189
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "repeated": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997897918687373,
+                  "shipping": 0.00021020813126267144
+                },
+                "confidence": 0.997128885419189
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        }
+      ],
+      "samples": [],
+      "command": [
+        "sh",
+        "d3minisplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "4",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 272928928,
+          "kv_bytes": 270336,
+          "state_bytes": 0,
+          "allocated_bytes": 3312267424,
+          "peak_allocated_bytes": 3312267424,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "5d3b42a1e6c819ba835c4516",
+          "pid": 25908,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792345859.6796532
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "concurrency_four": {
+        "serial": [
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997960685771596,
+                  "shipping": 0.00020393142284031766
+                },
+                "confidence": 0.9972056957085909
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.999798050868599,
+                  "shipping": 0.00020194913140106843
+                },
+                "confidence": 0.9972300112289956
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998097687784605,
+                  "shipping": 0.00019023122153959428
+                },
+                "confidence": 0.9973743304939547
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998174155582334,
+                  "shipping": 0.00018258444176660055
+                },
+                "confidence": 0.9974690670765137
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        ],
+        "parallel": [
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997960685771596,
+                  "shipping": 0.00020393142284031766
+                },
+                "confidence": 0.9972056957085909
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.999798050868599,
+                  "shipping": 0.00020194913140106843
+                },
+                "confidence": 0.9972300112289956
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998097687784605,
+                  "shipping": 0.00019023122153959428
+                },
+                "confidence": 0.9973743304939547
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998174155582334,
+                  "shipping": 0.00018258444176660055
+                },
+                "confidence": 0.9974690670765137
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          }
+        ]
+      },
+      "question_types": {
+        "body": {
+          "state": {
+            "request": "charged twice; refund the extra charge"
+          },
+          "questions": {
+            "team": {
+              "type": "choice",
+              "instructions": "Choose the responsible team.",
+              "criteria": {
+                "shipping": "Delivery",
+                "billing": "Refunds"
+              }
+            },
+            "refund": {
+              "type": "noul",
+              "instructions": "Is a refund requested?"
+            },
+            "priority": {
+              "type": "score",
+              "instructions": "Rate the urgency.",
+              "criteria": [
+                "routine",
+                "urgent",
+                "emergency"
+              ]
+            }
+          }
+        },
+        "splash": {
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.0004730620439417156,
+                "billing": 0.9995269379560583
+              },
+              "confidence": 0.9940923838275403
+            },
+            "refund": {
+              "type": "noul",
+              "noul": 0.9972938312862925
+            },
+            "priority": {
+              "type": "score",
+              "score": 0.9306841947437823,
+              "legend": {
+                "0": "routine",
+                "1": "urgent",
+                "2": "emergency"
+              },
+              "probabilities": {
+                "0": 0.20335479753528876,
+                "1": 0.6626062101856401,
+                "2": 0.13403899227907104
+              },
+              "confidence": 0.2117474349560522
+            }
+          },
+          "usage": {
+            "input_tokens": 303,
+            "output_tokens": 0
+          }
+        },
+        "lmstudio": {
+          "model": "vllm-d3-mini",
+          "answers": {
+            "team": {
+              "type": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "shipping": 0.0003222986626212461,
+                "billing": 0.9996777013373788
+              },
+              "confidence": 0.9957966528100406
+            },
+            "refund": {
+              "type": "noul",
+              "noul": 0.9974557107050632
+            },
+            "priority": {
+              "type": "score",
+              "score": 0.9110743026359174,
+              "legend": {
+                "0": "routine",
+                "1": "urgent",
+                "2": "emergency"
+              },
+              "probabilities": {
+                "0": 0.2276816852863074,
+                "1": 0.6335623267914681,
+                "2": 0.13875598792222463
+              },
+              "confidence": 0.18066711602038732
+            }
+          },
+          "usage": {
+            "input_tokens": 303,
+            "output_tokens": 0
+          }
+        }
+      },
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 485310624,
+          "kv_bytes": 4472832,
+          "state_bytes": 0,
+          "allocated_bytes": 3528851616,
+          "peak_allocated_bytes": 3528851616,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 21,
+          "submission_batches": 21,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 34.2899
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 4,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 2,
+              "0.25": 4,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 9,
+              "5": 16,
+              "10": 18,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 51.522068626014516
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 19,
+              "0.005": 19,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 0.00132125208619982
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 19,
+              "0.005": 19,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 3.5583856515586376e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 2,
+              "0.005": 16,
+              "0.01": 19,
+              "0.025": 19,
+              "0.05": 19,
+              "0.1": 19,
+              "0.25": 19,
+              "0.5": 19,
+              "1": 19,
+              "2.5": 19,
+              "5": 19,
+              "10": 19,
+              "30": 19,
+              "60": 19,
+              "120": 19,
+              "300": 19,
+              "900": 19,
+              "1800": 19,
+              "+Inf": 19
+            },
+            "count": 19,
+            "sum": 0.07008245901670307
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "5d3b42a1e6c819ba835c4516",
+          "pid": 25908,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792345859.6796532
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 4
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 4
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 68
+          }
+        }
+      },
+      "splash_exit": 0
+    }
+  },
+  "status": "passed",
+  "isolation": [],
+  "lmstudio_models": [
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-mini",
+      "display_name": "Vllm D3 Mini",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits_per_weight": 4
+      },
+      "size_bytes": 4383092800,
+      "params_string": "4.8B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-lite",
+      "display_name": "Vllm D3 Lite",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "BF16",
+        "bits_per_weight": 16
+      },
+      "size_bytes": 2232652096,
+      "params_string": "1.0B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    }
+  ]
+}

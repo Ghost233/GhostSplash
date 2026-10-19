@@ -1,0 +1,3426 @@
+{
+  "phase": "performance",
+  "reference_mode": "none",
+  "engine_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "context_capacity": 262144,
+  "validated_lengths": [
+    32768
+  ],
+  "splash_kv": "q4h",
+  "lmstudio_kv": null,
+  "concurrent_requests": 1,
+  "accept_desktop_load": true,
+  "models": {
+    "lite": {
+      "cases": [],
+      "samples": [
+        {
+          "engine": "splash",
+          "round": 1,
+          "input_tokens": 32768,
+          "seconds": 7.22539312497247,
+          "input_tokens_per_second": 4535.116558121515,
+          "memory_before": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 477954048,
+                "physical_footprint_bytes": 351094536,
+                "lifetime_peak_physical_footprint_bytes": 352814760
+              },
+              "47239": {
+                "rss_bytes": 1593212928,
+                "physical_footprint_bytes": 2587675168,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2938769704,
+            "total_rss_bytes": 2071166976
+          },
+          "memory_after": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 445956096,
+                "physical_footprint_bytes": 317490976,
+                "lifetime_peak_physical_footprint_bytes": 354862880
+              },
+              "47239": {
+                "rss_bytes": 1593212928,
+                "physical_footprint_bytes": 2653342240,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2970833216,
+            "total_rss_bytes": 2039169024
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    67553.\nPages active:                                1175790.\nPages inactive:                              1190598.\nPages speculative:                              1870.\nPages throttled:                                   0.\nPages wired down:                            1014128.\nPages purgeable:                               15866.\n\"Translation faults\":                    27330887675.\nPages copy-on-write:                      1577730116.\nPages zero filled:                       36513630431.\nPages reactivated:                        1909355687.\nPages purged:                              282549225.\nFile-backed pages:                            243957.\nAnonymous pages:                             2124301.\nPages stored in compressor:                  1159358.\nPages occupied by compressor:                 700428.\nDecompressions:                           2101677697.\nCompressions:                             2317176128.\nPageins:                                   533264839.\nPageouts:                                     883357.\nSwapins:                                    63311368.\nSwapouts:                                   77227691.\nPages tagged:                                 197886.\nPages tagged resident:                        166261.\nPages tagged compressed:                       31625.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15939.\nPages tag-storage free:                          122.\nPages tag-storage non-tag pageable:           114886.\nPages tag-storage non-tag wired:                  13.\nBytes of compressed tags:                    4976320.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386559.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    59901.\nPages active:                                1186998.\nPages inactive:                              1200562.\nPages speculative:                              2489.\nPages throttled:                                   0.\nPages wired down:                            1010519.\nPages purgeable:                               20842.\n\"Translation faults\":                    27331105078.\nPages copy-on-write:                      1577733298.\nPages zero filled:                       36513820595.\nPages reactivated:                        1909355695.\nPages purged:                              282549545.\nFile-backed pages:                            245480.\nAnonymous pages:                             2144569.\nPages stored in compressor:                  1138694.\nPages occupied by compressor:                 689898.\nDecompressions:                           2101697831.\nCompressions:                             2317176128.\nPageins:                                   533266676.\nPageouts:                                     883357.\nSwapins:                                    63311420.\nSwapouts:                                   77227691.\nPages tagged:                                 198103.\nPages tagged resident:                        166680.\nPages tagged compressed:                       31423.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15939.\nPages tag-storage free:                           92.\nPages tag-storage non-tag pageable:           114917.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4929856.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386757.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 3008172352,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997045986488488,
+                  "shipping": 0.0002954013511513098
+                },
+                "confidence": 0.9961102974247275
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 98,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 2,
+          "input_tokens": 32768,
+          "seconds": 7.217565416998696,
+          "input_tokens_per_second": 4540.035054316976,
+          "memory_before": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 445956096,
+                "physical_footprint_bytes": 317490976,
+                "lifetime_peak_physical_footprint_bytes": 354862880
+              },
+              "47239": {
+                "rss_bytes": 1593212928,
+                "physical_footprint_bytes": 2587675168,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2905166144,
+            "total_rss_bytes": 2039169024
+          },
+          "memory_after": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 453132288,
+                "physical_footprint_bytes": 324667168,
+                "lifetime_peak_physical_footprint_bytes": 354862880
+              },
+              "47239": {
+                "rss_bytes": 1593229312,
+                "physical_footprint_bytes": 2653358624,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2978025792,
+            "total_rss_bytes": 2046361600
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    27228.\nPages active:                                1204714.\nPages inactive:                              1217262.\nPages speculative:                              3024.\nPages throttled:                                   0.\nPages wired down:                            1020060.\nPages purgeable:                               29970.\n\"Translation faults\":                    27331251293.\nPages copy-on-write:                      1577740229.\nPages zero filled:                       36513926679.\nPages reactivated:                        1909355700.\nPages purged:                              282549675.\nFile-backed pages:                            246797.\nAnonymous pages:                             2178203.\nPages stored in compressor:                  1119063.\nPages occupied by compressor:                 678079.\nDecompressions:                           2101717728.\nCompressions:                             2317176128.\nPageins:                                   533268056.\nPageouts:                                     883357.\nSwapins:                                    63311458.\nSwapouts:                                   77227691.\nPages tagged:                                 197895.\nPages tagged resident:                        166544.\nPages tagged compressed:                       31351.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15936.\nPages tag-storage free:                          117.\nPages tag-storage non-tag pageable:           114892.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4917824.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386827.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    64804.\nPages active:                                1201453.\nPages inactive:                              1216058.\nPages speculative:                              2626.\nPages throttled:                                   0.\nPages wired down:                             997719.\nPages purgeable:                               20008.\n\"Translation faults\":                    27331428644.\nPages copy-on-write:                      1577743344.\nPages zero filled:                       36514093232.\nPages reactivated:                        1909355861.\nPages purged:                              282549682.\nFile-backed pages:                            246580.\nAnonymous pages:                             2173557.\nPages stored in compressor:                  1115865.\nPages occupied by compressor:                 667707.\nDecompressions:                           2101720844.\nCompressions:                             2317176128.\nPageins:                                   533269069.\nPageouts:                                     883357.\nSwapins:                                    63311498.\nSwapouts:                                   77227691.\nPages tagged:                                 197841.\nPages tagged resident:                        166517.\nPages tagged compressed:                       31324.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15936.\nPages tag-storage free:                          117.\nPages tag-storage non-tag pageable:           114907.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4914624.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386854.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2978025792,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997351651588989,
+                  "shipping": 0.00026483484110111826
+                },
+                "confidence": 0.9964710430529334
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 97,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 3,
+          "input_tokens": 32768,
+          "seconds": 7.9559870840166695,
+          "input_tokens_per_second": 4118.659275582522,
+          "memory_before": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 453132288,
+                "physical_footprint_bytes": 324667168,
+                "lifetime_peak_physical_footprint_bytes": 354862880
+              },
+              "47239": {
+                "rss_bytes": 1593229312,
+                "physical_footprint_bytes": 2587691552,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2912358720,
+            "total_rss_bytes": 2046361600
+          },
+          "memory_after": {
+            "processes": {
+              "47107": {
+                "rss_bytes": 432406528,
+                "physical_footprint_bytes": 299517728,
+                "lifetime_peak_physical_footprint_bytes": 354862880
+              },
+              "47239": {
+                "rss_bytes": 1593229312,
+                "physical_footprint_bytes": 2653358624,
+                "lifetime_peak_physical_footprint_bytes": 2681670176
+              }
+            },
+            "total_physical_footprint_bytes": 2952876352,
+            "total_rss_bytes": 2025635840
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    30187.\nPages active:                                1203041.\nPages inactive:                              1214376.\nPages speculative:                              2723.\nPages throttled:                                   0.\nPages wired down:                            1034392.\nPages purgeable:                                9890.\n\"Translation faults\":                    27331567959.\nPages copy-on-write:                      1577750665.\nPages zero filled:                       36514208625.\nPages reactivated:                        1909355887.\nPages purged:                              282550098.\nFile-backed pages:                            246945.\nAnonymous pages:                             2173195.\nPages stored in compressor:                  1111308.\nPages occupied by compressor:                 665648.\nDecompressions:                           2101725696.\nCompressions:                             2317176128.\nPageins:                                   533269639.\nPageouts:                                     883357.\nSwapins:                                    63311532.\nSwapouts:                                   77227691.\nPages tagged:                                 197956.\nPages tagged resident:                        166648.\nPages tagged compressed:                       31308.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15936.\nPages tag-storage free:                           70.\nPages tag-storage non-tag pageable:           114954.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4912896.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386867.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    51921.\nPages active:                                1209508.\nPages inactive:                              1222428.\nPages speculative:                              2884.\nPages throttled:                                   0.\nPages wired down:                            1000965.\nPages purgeable:                               19433.\n\"Translation faults\":                    27331833144.\nPages copy-on-write:                      1577767767.\nPages zero filled:                       36514410092.\nPages reactivated:                        1909355898.\nPages purged:                              282550098.\nFile-backed pages:                            247207.\nAnonymous pages:                             2187613.\nPages stored in compressor:                  1102937.\nPages occupied by compressor:                 662661.\nDecompressions:                           2101733823.\nCompressions:                             2317176128.\nPageins:                                   533270718.\nPageouts:                                     883357.\nSwapins:                                    63311548.\nSwapouts:                                   77227691.\nPages tagged:                                 197997.\nPages tagged resident:                        166760.\nPages tagged compressed:                       31237.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15929.\nPages tag-storage free:                          112.\nPages tag-storage non-tag pageable:           114912.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4894336.\nTagged compressions:                        31178786.\nTagged decompressions:                      29386936.\n",
+            "swap": "total = 24576.00M  used = 23116.75M  free = 1459.25M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2952876352,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997306981935412,
+                  "shipping": 0.0002693018064587552
+                },
+                "confidence": 0.9964180195712096
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.0,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.0,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.0,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        }
+      ],
+      "command": [
+        "sh",
+        "d3litesplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "1",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 139825472,
+          "kv_bytes": 135168,
+          "state_bytes": 0,
+          "allocated_bytes": 1659920704,
+          "peak_allocated_bytes": 1659920704,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "19616df6755a57e0cb133c1a",
+          "pid": 47107,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346977.430658
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "summary": [
+        {
+          "engine": "splash",
+          "input_tokens": 32768,
+          "mean_seconds": 7.4663152086626114,
+          "mean_tokens_per_second": 4397.936962673671
+        }
+      ],
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 984301888,
+          "kv_bytes": 17383424,
+          "state_bytes": 0,
+          "allocated_bytes": 2521645376,
+          "peak_allocated_bytes": 2521645376,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 5,
+          "submission_batches": 5,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 36.5475
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 36.8342733749887
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.000811500009149313
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 1.1001946404576302e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.14948754105716944
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "19616df6755a57e0cb133c1a",
+          "pid": 47107,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346977.430658
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "splash_exit": 0
+    },
+    "mini": {
+      "cases": [],
+      "samples": [
+        {
+          "engine": "splash",
+          "round": 1,
+          "input_tokens": 32768,
+          "seconds": 28.005150333978236,
+          "input_tokens_per_second": 1170.0704909354859,
+          "memory_before": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 375324672,
+                "physical_footprint_bytes": 202884848,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2497675264,
+                "physical_footprint_bytes": 5161193720,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5364078568,
+            "total_rss_bytes": 2872999936
+          },
+          "memory_after": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 379043840,
+                "physical_footprint_bytes": 206604016,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2498215936,
+                "physical_footprint_bytes": 5228024056,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5434628072,
+            "total_rss_bytes": 2877259776
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    10486.\nPages active:                                1125195.\nPages inactive:                              1125682.\nPages speculative:                              2342.\nPages throttled:                                   0.\nPages wired down:                            1201202.\nPages purgeable:                               17688.\n\"Translation faults\":                    27334351051.\nPages copy-on-write:                      1577842160.\nPages zero filled:                       36516764582.\nPages reactivated:                        1909369172.\nPages purged:                              282555003.\nFile-backed pages:                            246941.\nAnonymous pages:                             2006278.\nPages stored in compressor:                  1068892.\nPages occupied by compressor:                 685460.\nDecompressions:                           2101864662.\nCompressions:                             2317504777.\nPageins:                                   533305973.\nPageouts:                                     883357.\nSwapins:                                    63313705.\nSwapouts:                                   77227691.\nPages tagged:                                 197796.\nPages tagged resident:                        168162.\nPages tagged compressed:                       29634.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15944.\nPages tag-storage free:                           76.\nPages tag-storage non-tag pageable:           114914.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4585792.\nTagged compressions:                        31179091.\nTagged decompressions:                      29388797.\n",
+            "swap": "total = 24576.00M  used = 23100.75M  free = 1475.25M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    42060.\nPages active:                                1117843.\nPages inactive:                              1131680.\nPages speculative:                              1684.\nPages throttled:                                   0.\nPages wired down:                            1173039.\nPages purgeable:                               30922.\n\"Translation faults\":                    27334996744.\nPages copy-on-write:                      1577855757.\nPages zero filled:                       36517423743.\nPages reactivated:                        1909374954.\nPages purged:                              282557081.\nFile-backed pages:                            251057.\nAnonymous pages:                             2000150.\nPages stored in compressor:                  1064965.\nPages occupied by compressor:                 684061.\nDecompressions:                           2101869694.\nCompressions:                             2317521703.\nPageins:                                   533313367.\nPageouts:                                     883357.\nSwapins:                                    63313813.\nSwapouts:                                   77227691.\nPages tagged:                                 197617.\nPages tagged resident:                        168121.\nPages tagged compressed:                       29496.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15940.\nPages tag-storage free:                          241.\nPages tag-storage non-tag pageable:           114749.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4568448.\nTagged compressions:                        31179097.\nTagged decompressions:                      29388932.\n",
+            "swap": "total = 24576.00M  used = 23092.75M  free = 1483.25M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5434628072,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996176796537755,
+                  "shipping": 0.00038232034622460206
+                },
+                "confidence": 0.9951080775031147
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 2,
+          "input_tokens": 32768,
+          "seconds": 27.05570266698487,
+          "input_tokens_per_second": 1211.1309916184748,
+          "memory_before": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 379043840,
+                "physical_footprint_bytes": 206604016,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2498215936,
+                "physical_footprint_bytes": 5161734392,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5368338408,
+            "total_rss_bytes": 2877259776
+          },
+          "memory_after": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 347553792,
+                "physical_footprint_bytes": 170428120,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2498347008,
+                "physical_footprint_bytes": 5228155128,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5398583248,
+            "total_rss_bytes": 2845900800
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    26021.\nPages active:                                1129949.\nPages inactive:                              1136883.\nPages speculative:                              1400.\nPages throttled:                                   0.\nPages wired down:                            1173497.\nPages purgeable:                               29993.\n\"Translation faults\":                    27335132254.\nPages copy-on-write:                      1577863704.\nPages zero filled:                       36517537893.\nPages reactivated:                        1909374960.\nPages purged:                              282558058.\nFile-backed pages:                            249592.\nAnonymous pages:                             2018640.\nPages stored in compressor:                  1062584.\nPages occupied by compressor:                 682617.\nDecompressions:                           2101872159.\nCompressions:                             2317525658.\nPageins:                                   533315355.\nPageouts:                                     883359.\nSwapins:                                    63313849.\nSwapouts:                                   77227691.\nPages tagged:                                 197508.\nPages tagged resident:                        168030.\nPages tagged compressed:                       29478.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15940.\nPages tag-storage free:                           80.\nPages tag-storage non-tag pageable:           114910.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4566080.\nTagged compressions:                        31179097.\nTagged decompressions:                      29388948.\n",
+            "swap": "total = 24576.00M  used = 23092.75M  free = 1483.25M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    41109.\nPages active:                                1125630.\nPages inactive:                              1131551.\nPages speculative:                              2789.\nPages throttled:                                   0.\nPages wired down:                            1169433.\nPages purgeable:                               13908.\n\"Translation faults\":                    27335861368.\nPages copy-on-write:                      1577889290.\nPages zero filled:                       36518157436.\nPages reactivated:                        1909375161.\nPages purged:                              282558570.\nFile-backed pages:                            254252.\nAnonymous pages:                             2005718.\nPages stored in compressor:                  1056744.\nPages occupied by compressor:                 679855.\nDecompressions:                           2101886829.\nCompressions:                             2317525658.\nPageins:                                   533321431.\nPageouts:                                     883359.\nSwapins:                                    63319220.\nSwapouts:                                   77227691.\nPages tagged:                                 197767.\nPages tagged resident:                        168371.\nPages tagged compressed:                       29396.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15939.\nPages tag-storage free:                           47.\nPages tag-storage non-tag pageable:           114943.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4556544.\nTagged compressions:                        31179097.\nTagged decompressions:                      29389020.\n",
+            "swap": "total = 24576.00M  used = 23004.62M  free = 1571.38M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5441918952,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996579153413561,
+                  "shipping": 0.00034208465864396493
+                },
+                "confidence": 0.99556801710802
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 98,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 3,
+          "input_tokens": 32768,
+          "seconds": 26.85614424996311,
+          "input_tokens_per_second": 1220.1304734965822,
+          "memory_before": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 347553792,
+                "physical_footprint_bytes": 170428120,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2498347008,
+                "physical_footprint_bytes": 5161865464,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5332293584,
+            "total_rss_bytes": 2845900800
+          },
+          "memory_after": {
+            "processes": {
+              "47785": {
+                "rss_bytes": 337870848,
+                "physical_footprint_bytes": 154322648,
+                "lifetime_peak_physical_footprint_bytes": 294028944
+              },
+              "47794": {
+                "rss_bytes": 2498347008,
+                "physical_footprint_bytes": 5228155128,
+                "lifetime_peak_physical_footprint_bytes": 5256843512
+              }
+            },
+            "total_physical_footprint_bytes": 5382477776,
+            "total_rss_bytes": 2836217856
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    41769.\nPages active:                                1119885.\nPages inactive:                              1130454.\nPages speculative:                              2664.\nPages throttled:                                   0.\nPages wired down:                            1176128.\nPages purgeable:                               19264.\n\"Translation faults\":                    27335982453.\nPages copy-on-write:                      1577897614.\nPages zero filled:                       36518262340.\nPages reactivated:                        1909375324.\nPages purged:                              282558570.\nFile-backed pages:                            254084.\nAnonymous pages:                             1998919.\nPages stored in compressor:                  1055503.\nPages occupied by compressor:                 679467.\nDecompressions:                           2101888270.\nCompressions:                             2317525658.\nPageins:                                   533321806.\nPageouts:                                     883359.\nSwapins:                                    63319251.\nSwapouts:                                   77227691.\nPages tagged:                                 197660.\nPages tagged resident:                        168274.\nPages tagged compressed:                       29386.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15939.\nPages tag-storage free:                          138.\nPages tag-storage non-tag pageable:           114852.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4556224.\nTagged compressions:                        31179097.\nTagged decompressions:                      29389028.\n",
+            "swap": "total = 24576.00M  used = 23004.62M  free = 1571.38M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    41003.\nPages active:                                1129187.\nPages inactive:                              1142386.\nPages speculative:                              3359.\nPages throttled:                                   0.\nPages wired down:                            1157476.\nPages purgeable:                               34251.\n\"Translation faults\":                    27336653566.\nPages copy-on-write:                      1577914373.\nPages zero filled:                       36518901555.\nPages reactivated:                        1909375373.\nPages purged:                              282559146.\nFile-backed pages:                            255893.\nAnonymous pages:                             2019039.\nPages stored in compressor:                  1050892.\nPages occupied by compressor:                 676956.\nDecompressions:                           2101895108.\nCompressions:                             2317525658.\nPageins:                                   533326055.\nPageouts:                                     883359.\nSwapins:                                    63320413.\nSwapouts:                                   77227691.\nPages tagged:                                 197591.\nPages tagged resident:                        168384.\nPages tagged compressed:                       29207.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15939.\nPages tag-storage free:                          153.\nPages tag-storage non-tag pageable:           114837.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    4529984.\nTagged compressions:                        31179097.\nTagged decompressions:                      29389196.\n",
+            "swap": "total = 24576.00M  used = 22980.62M  free = 1595.38M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5403088848,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996464112662624,
+                  "shipping": 0.0003535887337375637
+                },
+                "confidence": 0.9954358483298283
+              }
+            },
+            "usage": {
+              "input_tokens": 32768,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 93,
+            "servers": [
+              {
+                "pid": 39768,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.0,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.0,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 97812,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        }
+      ],
+      "command": [
+        "sh",
+        "d3minisplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "1",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 272928928,
+          "kv_bytes": 270336,
+          "state_bytes": 0,
+          "allocated_bytes": 3312267424,
+          "peak_allocated_bytes": 3312267424,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "fc1ebffdb82d0d9e003f9ede",
+          "pid": 47785,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792347028.191658
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "summary": [
+        {
+          "engine": "splash",
+          "input_tokens": 32768,
+          "mean_seconds": 27.305665750308737,
+          "mean_tokens_per_second": 1200.443985350181
+        }
+      ],
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 2019836064,
+          "kv_bytes": 34750464,
+          "state_bytes": 0,
+          "allocated_bytes": 5093654688,
+          "peak_allocated_bytes": 5093654688,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 5,
+          "submission_batches": 5,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 145.628
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 3,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 146.1147066660924
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.0010461679776199162
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 1.0332907550036907e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.14074441802222282
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "fc1ebffdb82d0d9e003f9ede",
+          "pid": 47785,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792347028.191658
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "splash_exit": 0
+    }
+  },
+  "status": "passed",
+  "isolation": [
+    {
+      "at": 1792346993.446031,
+      "gpu_utilization_percent": 98,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346994.572913,
+      "gpu_utilization_percent": 62,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346995.702262,
+      "gpu_utilization_percent": 65,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347004.2279649,
+      "gpu_utilization_percent": 43,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.1,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347005.358287,
+      "gpu_utilization_percent": 62,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347006.493134,
+      "gpu_utilization_percent": 59,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347015.004684,
+      "gpu_utilization_percent": 45,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.1,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347016.138614,
+      "gpu_utilization_percent": 69,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347017.266277,
+      "gpu_utilization_percent": 64,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347094.80602,
+      "gpu_utilization_percent": 99,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347095.944778,
+      "gpu_utilization_percent": 65,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347097.068916,
+      "gpu_utilization_percent": 65,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347126.3654232,
+      "gpu_utilization_percent": 42,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347127.493619,
+      "gpu_utilization_percent": 69,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347128.6190798,
+      "gpu_utilization_percent": 68,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347157.004339,
+      "gpu_utilization_percent": 36,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347158.139162,
+      "gpu_utilization_percent": 69,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792347159.273686,
+      "gpu_utilization_percent": 68,
+      "servers": [
+        {
+          "pid": 39768,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 97812,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    }
+  ],
+  "lmstudio_models": []
+}

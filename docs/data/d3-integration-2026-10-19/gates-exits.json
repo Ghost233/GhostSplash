@@ -1,0 +1,141 @@
+{
+  "production_build": {
+    "log": "build11.log",
+    "exit": 0
+  },
+  "native_build_and_sanitizers": {
+    "command": "make -j4 check-native-build test-sanitizers BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+    "log": "native-build-sanitizers1.log",
+    "exit": 0
+  },
+  "source_and_metal": {
+    "command": "make check-source check-native-metal BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+    "log": "metal-gates1.log",
+    "exit": 0
+  },
+  "python_suite_and_checks": {
+    "log": "python-gates2.log",
+    "tests": 1412,
+    "skipped": 4,
+    "exit": 0
+  },
+  "api_correctness_types": {
+    "report": "api-correctness-types-final/results.json",
+    "exit": 0
+  },
+  "api_correctness_32k": {
+    "report": "api-correctness-32k-final/results.json",
+    "exit": 0
+  },
+  "lite_real_model": {
+    "log": "lite-model-final.log",
+    "exit": 0
+  },
+  "mini_real_model": {
+    "log": "mini-model-final.log",
+    "exit": 0
+  },
+  "lite_protocol": {
+    "report": "lite-protocol.json",
+    "exit": 0
+  },
+  "mini_protocol": {
+    "report": "mini-protocol.json",
+    "exit": 0
+  },
+  "server_after_unicode_fix": {
+    "command": ".venv/bin/python -m unittest discover -s dev/tests/server -t . -p 'test_*.py'",
+    "log": "server-final.log",
+    "tests": 930,
+    "exit": 0
+  },
+  "unicode_api_correctness": {
+    "command": ".venv/bin/python -u -m build.d3-integration-20261019.unicode-check",
+    "report": "unicode-api-correctness.json",
+    "exit": 0
+  },
+  "unicode_regression_red": {
+    "command": ".venv/bin/python -m unittest dev.tests.server.test_d3.D3Tests.test_structured_unicode_matches_model_json_template",
+    "log": "unicode-red.log",
+    "exit": 1,
+    "meaning": "expected pre-fix reproducer failure"
+  },
+  "unicode_regression_green": {
+    "command": ".venv/bin/python -m unittest dev.tests.server.test_d3",
+    "log": "unicode-green.log",
+    "tests": 3,
+    "exit": 0
+  },
+  "measurement_isolation": {
+    "command": ".venv/bin/python -m unittest dev.tests.test_d3_benchmark",
+    "tests": 2,
+    "exit": 0
+  },
+  "standalone_correctness": {
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-u",
+      "-m",
+      "dev.benchmarks.d3_models",
+      "--reference-mode",
+      "llama",
+      "--models",
+      "lite",
+      "mini",
+      "--lengths",
+      "4096",
+      "32767",
+      "--accept-desktop-load",
+      "--phase",
+      "correctness",
+      "--output",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k"
+    ],
+    "exit": 0,
+    "report": "standalone-correctness.json"
+  },
+  "standalone_performance": {
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-u",
+      "-m",
+      "dev.benchmarks.d3_models",
+      "--reference-mode",
+      "llama",
+      "--models",
+      "lite",
+      "mini",
+      "--lengths",
+      "4096",
+      "32767",
+      "--accept-desktop-load",
+      "--phase",
+      "performance",
+      "--output",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-performance-near32k",
+      "--rounds",
+      "3",
+      "--correctness-report",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k/results.json"
+    ],
+    "exit": 0,
+    "report": "standalone-performance.json",
+    "samples": 24,
+    "input_tokens": [
+      4096,
+      32767
+    ]
+  },
+  "reference_effective_kv": {
+    "command": ".venv/bin/python -u -m build.d3-integration-20261019.reference-kv-proof",
+    "exit": 0,
+    "report": "reference-kv-proof.json",
+    "effective_k": "q4_0",
+    "effective_v": "q4_0"
+  },
+  "benchmark_tool_tests": {
+    "command": ".venv/bin/python -m unittest dev.tests.test_d3_benchmark",
+    "tests": 4,
+    "exit": 0
+  }
+}

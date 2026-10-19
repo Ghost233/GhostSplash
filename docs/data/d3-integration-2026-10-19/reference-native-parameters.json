@@ -1,0 +1,30 @@
+{
+  "lite": {
+    "pid": 97812,
+    "port": 53179,
+    "parameters": {
+      "--ctx-size": "262144",
+      "--parallel": "4",
+      "--batch-size": "32768",
+      "--ubatch-size": "32768",
+      "--cache-type-k": "q4_0",
+      "--cache-type-v": "q4_0",
+      "--flash-attn": "on",
+      "--n-gpu-layers": "999999"
+    }
+  },
+  "mini": {
+    "pid": 39768,
+    "port": 56317,
+    "parameters": {
+      "--ctx-size": "262144",
+      "--parallel": "4",
+      "--batch-size": "32768",
+      "--ubatch-size": "32768",
+      "--cache-type-k": "q4_0",
+      "--cache-type-v": "q4_0",
+      "--flash-attn": "on",
+      "--n-gpu-layers": "999999"
+    }
+  }
+}

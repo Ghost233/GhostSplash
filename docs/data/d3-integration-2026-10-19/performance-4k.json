@@ -1,0 +1,4333 @@
+{
+  "phase": "performance",
+  "reference_mode": "lmstudio",
+  "engine_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "context_capacity": 262144,
+  "validated_lengths": [
+    4096
+  ],
+  "splash_kv": "q4h",
+  "lmstudio_kv": "q4_0",
+  "concurrent_requests": 1,
+  "accept_desktop_load": true,
+  "models": {
+    "lite": {
+      "cases": [],
+      "samples": [
+        {
+          "engine": "lmstudio",
+          "round": 1,
+          "input_tokens": 4096,
+          "seconds": 1.086173333984334,
+          "input_tokens_per_second": 3771.037155713378,
+          "memory_before": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2231664640,
+                "physical_footprint_bytes": 2837828384,
+                "lifetime_peak_physical_footprint_bytes": 2917667616
+              }
+            },
+            "total_physical_footprint_bytes": 2837828384,
+            "total_rss_bytes": 2231664640
+          },
+          "memory_after": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2356527104,
+                "physical_footprint_bytes": 2908410656,
+                "lifetime_peak_physical_footprint_bytes": 2917667616
+              }
+            },
+            "total_physical_footprint_bytes": 2908410656,
+            "total_rss_bytes": 2356527104
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    40649.\nPages active:                                1194829.\nPages inactive:                              1158109.\nPages speculative:                               297.\nPages throttled:                                   0.\nPages wired down:                             981508.\nPages purgeable:                               24124.\n\"Translation faults\":                    27325640545.\nPages copy-on-write:                      1577567529.\nPages zero filled:                       36510130161.\nPages reactivated:                        1908583716.\nPages purged:                              282330801.\nFile-backed pages:                            344171.\nAnonymous pages:                             2009064.\nPages stored in compressor:                  1257885.\nPages occupied by compressor:                 774975.\nDecompressions:                           2098889304.\nCompressions:                             2314476501.\nPageins:                                   533182894.\nPageouts:                                     883329.\nSwapins:                                    63270772.\nSwapouts:                                   77213203.\nPages tagged:                                 203597.\nPages tagged resident:                        166898.\nPages tagged compressed:                       36699.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16262.\nPages tag-storage free:                          317.\nPages tag-storage non-tag pageable:           114369.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6086400.\nTagged compressions:                        31150498.\nTagged decompressions:                      29356312.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    10248.\nPages active:                                 547177.\nPages inactive:                               567088.\nPages speculative:                               514.\nPages throttled:                                   0.\nPages wired down:                            2250767.\nPages purgeable:                               14761.\n\"Translation faults\":                    27325679273.\nPages copy-on-write:                      1577568508.\nPages zero filled:                       36510169513.\nPages reactivated:                        1908583716.\nPages purged:                              282335844.\nFile-backed pages:                            344504.\nAnonymous pages:                              770275.\nPages stored in compressor:                  1254528.\nPages occupied by compressor:                 774573.\nDecompressions:                           2098896610.\nCompressions:                             2314476501.\nPageins:                                   533183222.\nPageouts:                                     883329.\nSwapins:                                    63270776.\nSwapouts:                                   77213203.\nPages tagged:                                 203681.\nPages tagged resident:                        166984.\nPages tagged compressed:                       36697.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16262.\nPages tag-storage free:                           99.\nPages tag-storage non-tag pageable:           114587.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6086272.\nTagged compressions:                        31150498.\nTagged decompressions:                      29356312.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2908410656,
+          "response": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996307820804712,
+                  "shipping": 0.0003692179195289336
+                },
+                "confidence": 0.995257149009172
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 1,
+          "input_tokens": 4096,
+          "seconds": 0.3869810829637572,
+          "input_tokens_per_second": 10584.496711389926,
+          "memory_before": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 171704320,
+                "physical_footprint_bytes": 437077768,
+                "lifetime_peak_physical_footprint_bytes": 437077768
+              },
+              "46070": {
+                "rss_bytes": 780828672,
+                "physical_footprint_bytes": 1826621360,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2263699128,
+            "total_rss_bytes": 952532992
+          },
+          "memory_after": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 172261376,
+                "physical_footprint_bytes": 437307144,
+                "lifetime_peak_physical_footprint_bytes": 437307144
+              },
+              "46070": {
+                "rss_bytes": 781221888,
+                "physical_footprint_bytes": 1890043824,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2327350968,
+            "total_rss_bytes": 953483264
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    30549.\nPages active:                                1496752.\nPages inactive:                               862313.\nPages speculative:                              1387.\nPages throttled:                                   0.\nPages wired down:                             986376.\nPages purgeable:                               14878.\n\"Translation faults\":                    27325827657.\nPages copy-on-write:                      1577579299.\nPages zero filled:                       36510266629.\nPages reactivated:                        1908583890.\nPages purged:                              282343735.\nFile-backed pages:                            338595.\nAnonymous pages:                             2021857.\nPages stored in compressor:                  1247818.\nPages occupied by compressor:                 772990.\nDecompressions:                           2098906815.\nCompressions:                             2314479568.\nPageins:                                   533186027.\nPageouts:                                     883329.\nSwapins:                                    63270780.\nSwapouts:                                   77213203.\nPages tagged:                                 203654.\nPages tagged resident:                        168340.\nPages tagged compressed:                       35314.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16256.\nPages tag-storage free:                          116.\nPages tag-storage non-tag pageable:           114570.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5758400.\nTagged compressions:                        31150652.\nTagged decompressions:                      29357849.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    27738.\nPages active:                                1454084.\nPages inactive:                               902832.\nPages speculative:                              1385.\nPages throttled:                                   0.\nPages wired down:                             991446.\nPages purgeable:                               13629.\n\"Translation faults\":                    27325836976.\nPages copy-on-write:                      1577580367.\nPages zero filled:                       36510275400.\nPages reactivated:                        1908583890.\nPages purged:                              282343735.\nFile-backed pages:                            338599.\nAnonymous pages:                             2019702.\nPages stored in compressor:                  1247490.\nPages occupied by compressor:                 772881.\nDecompressions:                           2098907179.\nCompressions:                             2314479568.\nPageins:                                   533186036.\nPageouts:                                     883329.\nSwapins:                                    63270784.\nSwapouts:                                   77213203.\nPages tagged:                                 203633.\nPages tagged resident:                        168319.\nPages tagged compressed:                       35314.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16256.\nPages tag-storage free:                           95.\nPages tag-storage non-tag pageable:           114591.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5758400.\nTagged compressions:                        31150652.\nTagged decompressions:                      29357849.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2327350968,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996799703315092,
+                  "shipping": 0.0003200296684908348
+                },
+                "confidence": 0.995822982084134
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 0,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 2,
+          "input_tokens": 4096,
+          "seconds": 0.3910277090035379,
+          "input_tokens_per_second": 10474.960995572159,
+          "memory_before": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 173096960,
+                "physical_footprint_bytes": 437274376,
+                "lifetime_peak_physical_footprint_bytes": 437307144
+              },
+              "46070": {
+                "rss_bytes": 781221888,
+                "physical_footprint_bytes": 1826621360,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2263895736,
+            "total_rss_bytes": 954318848
+          },
+          "memory_after": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 173178880,
+                "physical_footprint_bytes": 437339912,
+                "lifetime_peak_physical_footprint_bytes": 437339912
+              },
+              "46070": {
+                "rss_bytes": 781238272,
+                "physical_footprint_bytes": 1890043824,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2327383736,
+            "total_rss_bytes": 954417152
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    48646.\nPages active:                                1180383.\nPages inactive:                              1193091.\nPages speculative:                              1449.\nPages throttled:                                   0.\nPages wired down:                             956467.\nPages purgeable:                               14289.\n\"Translation faults\":                    27325972253.\nPages copy-on-write:                      1577591684.\nPages zero filled:                       36510349356.\nPages reactivated:                        1908583895.\nPages purged:                              282344006.\nFile-backed pages:                            338888.\nAnonymous pages:                             2036035.\nPages stored in compressor:                  1240713.\nPages occupied by compressor:                 770331.\nDecompressions:                           2098914604.\nCompressions:                             2314479568.\nPageins:                                   533186525.\nPageouts:                                     883329.\nSwapins:                                    63270819.\nSwapouts:                                   77213203.\nPages tagged:                                 203643.\nPages tagged resident:                        168368.\nPages tagged compressed:                       35275.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16255.\nPages tag-storage free:                          207.\nPages tag-storage non-tag pageable:           114479.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5748224.\nTagged compressions:                        31150652.\nTagged decompressions:                      29357887.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    28229.\nPages active:                                1172749.\nPages inactive:                              1187677.\nPages speculative:                               570.\nPages throttled:                                   0.\nPages wired down:                             989496.\nPages purgeable:                               15296.\n\"Translation faults\":                    27326018420.\nPages copy-on-write:                      1577593251.\nPages zero filled:                       36510395455.\nPages reactivated:                        1908586158.\nPages purged:                              282344013.\nFile-backed pages:                            338556.\nAnonymous pages:                             2022440.\nPages stored in compressor:                  1242339.\nPages occupied by compressor:                 771642.\nDecompressions:                           2098918086.\nCompressions:                             2314484746.\nPageins:                                   533187638.\nPageouts:                                     883329.\nSwapins:                                    63270823.\nSwapouts:                                   77213203.\nPages tagged:                                 203651.\nPages tagged resident:                        168239.\nPages tagged compressed:                       35412.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16255.\nPages tag-storage free:                          163.\nPages tag-storage non-tag pageable:           114542.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5774848.\nTagged compressions:                        31150792.\nTagged decompressions:                      29357890.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2327383736,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996933933452748,
+                  "shipping": 0.00030660665472514184
+                },
+                "confidence": 0.9959792225043497
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 93,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "lmstudio",
+          "round": 2,
+          "input_tokens": 4096,
+          "seconds": 1.0960945419501513,
+          "input_tokens_per_second": 3736.9039286633724,
+          "memory_before": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2354069504,
+                "physical_footprint_bytes": 2837877536,
+                "lifetime_peak_physical_footprint_bytes": 2917667616
+              }
+            },
+            "total_physical_footprint_bytes": 2837877536,
+            "total_rss_bytes": 2354069504
+          },
+          "memory_after": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2424848384,
+                "physical_footprint_bytes": 2975945552,
+                "lifetime_peak_physical_footprint_bytes": 2975945552
+              }
+            },
+            "total_physical_footprint_bytes": 2975945552,
+            "total_rss_bytes": 2424848384
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    49560.\nPages active:                                1177218.\nPages inactive:                              1194881.\nPages speculative:                              1015.\nPages throttled:                                   0.\nPages wired down:                             957340.\nPages purgeable:                               12288.\n\"Translation faults\":                    27326116807.\nPages copy-on-write:                      1577599059.\nPages zero filled:                       36510459243.\nPages reactivated:                        1908586163.\nPages purged:                              282344429.\nFile-backed pages:                            339008.\nAnonymous pages:                             2034106.\nPages stored in compressor:                  1238617.\nPages occupied by compressor:                 770353.\nDecompressions:                           2098922397.\nCompressions:                             2314484746.\nPageins:                                   533188385.\nPageouts:                                     883329.\nSwapins:                                    63270827.\nSwapouts:                                   77213203.\nPages tagged:                                 203707.\nPages tagged resident:                        168327.\nPages tagged compressed:                       35380.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16255.\nPages tag-storage free:                          139.\nPages tag-storage non-tag pageable:           114566.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5768832.\nTagged compressions:                        31150792.\nTagged decompressions:                      29357921.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    31018.\nPages active:                                 528474.\nPages inactive:                               561749.\nPages speculative:                               838.\nPages throttled:                                   0.\nPages wired down:                            2254348.\nPages purgeable:                                1357.\n\"Translation faults\":                    27326155928.\nPages copy-on-write:                      1577599978.\nPages zero filled:                       36510515990.\nPages reactivated:                        1908589509.\nPages purged:                              282350694.\nFile-backed pages:                            338827.\nAnonymous pages:                              752234.\nPages stored in compressor:                  1246811.\nPages occupied by compressor:                 773940.\nDecompressions:                           2098924272.\nCompressions:                             2314495767.\nPageins:                                   533188533.\nPageouts:                                     883329.\nSwapins:                                    63270835.\nSwapouts:                                   77213203.\nPages tagged:                                 203615.\nPages tagged resident:                        167647.\nPages tagged compressed:                       35968.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16231.\nPages tag-storage free:                          443.\nPages tag-storage non-tag pageable:           114179.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5881344.\nTagged compressions:                        31151465.\nTagged decompressions:                      29358006.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2975945552,
+          "response": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9996517229460474,
+                  "shipping": 0.0003482770539525043
+                },
+                "confidence": 0.9954968052976643
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "lmstudio",
+          "round": 3,
+          "input_tokens": 4096,
+          "seconds": 1.1170754169579595,
+          "input_tokens_per_second": 3666.7175177431645,
+          "memory_before": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2424832000,
+                "physical_footprint_bytes": 2905396048,
+                "lifetime_peak_physical_footprint_bytes": 2975945552
+              }
+            },
+            "total_physical_footprint_bytes": 2905396048,
+            "total_rss_bytes": 2424832000
+          },
+          "memory_after": {
+            "processes": {
+              "97812": {
+                "rss_bytes": 2488270848,
+                "physical_footprint_bytes": 3039171456,
+                "lifetime_peak_physical_footprint_bytes": 3039269760
+              }
+            },
+            "total_physical_footprint_bytes": 3039171456,
+            "total_rss_bytes": 2488270848
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    26967.\nPages active:                                1475049.\nPages inactive:                               911792.\nPages speculative:                               628.\nPages throttled:                                   0.\nPages wired down:                             964910.\nPages purgeable:                               23222.\n\"Translation faults\":                    27326301374.\nPages copy-on-write:                      1577607325.\nPages zero filled:                       36510607264.\nPages reactivated:                        1908590301.\nPages purged:                              282350986.\nFile-backed pages:                            338521.\nAnonymous pages:                             2048948.\nPages stored in compressor:                  1238384.\nPages occupied by compressor:                 771021.\nDecompressions:                           2098946943.\nCompressions:                             2314509604.\nPageins:                                   533189085.\nPageouts:                                     883329.\nSwapins:                                    63270971.\nSwapouts:                                   77213203.\nPages tagged:                                 203760.\nPages tagged resident:                        167867.\nPages tagged compressed:                       35893.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16225.\nPages tag-storage free:                          127.\nPages tag-storage non-tag pageable:           114608.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5854400.\nTagged compressions:                        31151931.\nTagged decompressions:                      29358545.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     8440.\nPages active:                                 560352.\nPages inactive:                               575042.\nPages speculative:                               432.\nPages throttled:                                   0.\nPages wired down:                            2236451.\nPages purgeable:                               11254.\n\"Translation faults\":                    27326376383.\nPages copy-on-write:                      1577608260.\nPages zero filled:                       36510649001.\nPages reactivated:                        1908596929.\nPages purged:                              282354926.\nFile-backed pages:                            336499.\nAnonymous pages:                              799327.\nPages stored in compressor:                  1239791.\nPages occupied by compressor:                 769650.\nDecompressions:                           2098965391.\nCompressions:                             2314530250.\nPageins:                                   533189456.\nPageouts:                                     883329.\nSwapins:                                    63271003.\nSwapouts:                                   77213203.\nPages tagged:                                 203698.\nPages tagged resident:                        167459.\nPages tagged compressed:                       36239.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16219.\nPages tag-storage free:                          136.\nPages tag-storage non-tag pageable:           114564.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    5930368.\nTagged compressions:                        31152305.\nTagged decompressions:                      29358573.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 3039269760,
+          "response": {
+            "model": "vllm-d3-lite",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9995970571485829,
+                  "shipping": 0.0004029428514169398
+                },
+                "confidence": 0.9948747516869821
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 96,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 3,
+          "input_tokens": 4096,
+          "seconds": 0.37895016599213704,
+          "input_tokens_per_second": 10808.809093080035,
+          "memory_before": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 173096960,
+                "physical_footprint_bytes": 437274376,
+                "lifetime_peak_physical_footprint_bytes": 437339912
+              },
+              "46070": {
+                "rss_bytes": 780795904,
+                "physical_footprint_bytes": 1826588592,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2263862968,
+            "total_rss_bytes": 953892864
+          },
+          "memory_after": {
+            "processes": {
+              "46063": {
+                "rss_bytes": 173195264,
+                "physical_footprint_bytes": 437339912,
+                "lifetime_peak_physical_footprint_bytes": 437339912
+              },
+              "46070": {
+                "rss_bytes": 781189120,
+                "physical_footprint_bytes": 1890011056,
+                "lifetime_peak_physical_footprint_bytes": 1890289584
+              }
+            },
+            "total_physical_footprint_bytes": 2327350968,
+            "total_rss_bytes": 954384384
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    39499.\nPages active:                                1278025.\nPages inactive:                              1090315.\nPages speculative:                               547.\nPages throttled:                                   0.\nPages wired down:                             970622.\nPages purgeable:                               16785.\n\"Translation faults\":                    27326512006.\nPages copy-on-write:                      1577615005.\nPages zero filled:                       36510743151.\nPages reactivated:                        1908613025.\nPages purged:                              282360051.\nFile-backed pages:                            335977.\nAnonymous pages:                             2032910.\nPages stored in compressor:                  1246710.\nPages occupied by compressor:                 771359.\nDecompressions:                           2098985724.\nCompressions:                             2314557915.\nPageins:                                   533190007.\nPageouts:                                     883329.\nSwapins:                                    63271059.\nSwapouts:                                   77213203.\nPages tagged:                                 203722.\nPages tagged resident:                        166973.\nPages tagged compressed:                       36749.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16188.\nPages tag-storage free:                          359.\nPages tag-storage non-tag pageable:           114393.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6025216.\nTagged compressions:                        31152899.\nTagged decompressions:                      29358655.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    39697.\nPages active:                                1263031.\nPages inactive:                              1101585.\nPages speculative:                               547.\nPages throttled:                                   0.\nPages wired down:                             974165.\nPages purgeable:                               14149.\n\"Translation faults\":                    27326514854.\nPages copy-on-write:                      1577615484.\nPages zero filled:                       36510748655.\nPages reactivated:                        1908613025.\nPages purged:                              282360051.\nFile-backed pages:                            335977.\nAnonymous pages:                             2029186.\nPages stored in compressor:                  1246627.\nPages occupied by compressor:                 771342.\nDecompressions:                           2098985815.\nCompressions:                             2314557915.\nPageins:                                   533190009.\nPageouts:                                     883329.\nSwapins:                                    63271059.\nSwapouts:                                   77213203.\nPages tagged:                                 203711.\nPages tagged resident:                        166962.\nPages tagged compressed:                       36749.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16188.\nPages tag-storage free:                          325.\nPages tag-storage non-tag pageable:           114427.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6025216.\nTagged compressions:                        31152899.\nTagged decompressions:                      29358655.\n",
+            "swap": "total = 24576.00M  used = 23538.44M  free = 1037.56M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 2327350968,
+          "response": {
+            "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9994465565689653,
+                  "shipping": 0.0005534434310348097
+                },
+                "confidence": 0.9932139133791084
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        }
+      ],
+      "command": [
+        "sh",
+        "d3litesplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "1",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 139825472,
+          "kv_bytes": 135168,
+          "state_bytes": 0,
+          "allocated_bytes": 1659920704,
+          "peak_allocated_bytes": 1659920704,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "768e94d99129b0d02a404443",
+          "pid": 46063,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346890.994459
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "summary": [
+        {
+          "engine": "lmstudio",
+          "input_tokens": 4096,
+          "mean_seconds": 1.0997810976308149,
+          "mean_tokens_per_second": 3724.886200706638
+        },
+        {
+          "engine": "splash",
+          "input_tokens": 4096,
+          "mean_seconds": 0.3856529859864774,
+          "mean_tokens_per_second": 10622.75560001404
+        }
+      ],
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 1519960064,
+          "quantized_weight_bytes": 0,
+          "auxiliary_weight_bytes": 1519960064,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 242499904,
+          "kv_bytes": 2244608,
+          "state_bytes": 0,
+          "allocated_bytes": 1764704576,
+          "peak_allocated_bytes": 1764704576,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 5,
+          "submission_batches": 5,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 1.8342
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 1.8979116239934228
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.0005156259867362678
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 3.179104533046484e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 4,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.024576665950007737
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "768e94d99129b0d02a404443",
+          "pid": 46063,
+          "model": "ggml-org/vllm-d3-lite-GGUF:BF16",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346890.994459
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "splash_exit": 0
+    },
+    "mini": {
+      "cases": [],
+      "samples": [
+        {
+          "engine": "lmstudio",
+          "round": 1,
+          "input_tokens": 4096,
+          "seconds": 3.7427536249742843,
+          "input_tokens_per_second": 1094.3814128369572,
+          "memory_before": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 3922395136,
+                "physical_footprint_bytes": 5088337576,
+                "lifetime_peak_physical_footprint_bytes": 5167685288
+              }
+            },
+            "total_physical_footprint_bytes": 5088337576,
+            "total_rss_bytes": 3922395136
+          },
+          "memory_after": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 4190175232,
+                "physical_footprint_bytes": 5159132840,
+                "lifetime_peak_physical_footprint_bytes": 5167685288
+              }
+            },
+            "total_physical_footprint_bytes": 5159132840,
+            "total_rss_bytes": 4190175232
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    29483.\nPages active:                                1083977.\nPages inactive:                              1095123.\nPages speculative:                              3259.\nPages throttled:                                   0.\nPages wired down:                            1072521.\nPages purgeable:                               19609.\n\"Translation faults\":                    27327817797.\nPages copy-on-write:                      1577645103.\nPages zero filled:                       36511693843.\nPages reactivated:                        1908978615.\nPages purged:                              282425433.\nFile-backed pages:                            259933.\nAnonymous pages:                             1922426.\nPages stored in compressor:                  1463760.\nPages occupied by compressor:                 866004.\nDecompressions:                           2100884052.\nCompressions:                             2316583221.\nPageins:                                   533227363.\nPageouts:                                     883349.\nSwapins:                                    63272729.\nSwapouts:                                   77227691.\nPages tagged:                                 203329.\nPages tagged resident:                        165158.\nPages tagged compressed:                       38171.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16485.\nPages tag-storage free:                           78.\nPages tag-storage non-tag pageable:           114324.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6238464.\nTagged compressions:                        31166324.\nTagged decompressions:                      29370263.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     7501.\nPages active:                                 317054.\nPages inactive:                               330856.\nPages speculative:                              1663.\nPages throttled:                                   0.\nPages wired down:                            2638269.\nPages purgeable:                                8344.\n\"Translation faults\":                    27328017915.\nPages copy-on-write:                      1577648138.\nPages zero filled:                       36511819592.\nPages reactivated:                        1909007982.\nPages purged:                              282452778.\nFile-backed pages:                            243914.\nAnonymous pages:                              405656.\nPages stored in compressor:                  1439827.\nPages occupied by compressor:                 854967.\nDecompressions:                           2100955618.\nCompressions:                             2316621772.\nPageins:                                   533230121.\nPageouts:                                     883351.\nSwapins:                                    63272841.\nSwapouts:                                   77227691.\nPages tagged:                                 202725.\nPages tagged resident:                        165309.\nPages tagged compressed:                       37416.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16584.\nPages tag-storage free:                           26.\nPages tag-storage non-tag pageable:           113750.\nPages tag-storage non-tag wired:                  13.\nBytes of compressed tags:                    6105920.\nTagged compressions:                        31167242.\nTagged decompressions:                      29371341.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5159689896,
+          "response": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.999713532640732,
+                  "shipping": 0.00028646735926796005
+                },
+                "confidence": 0.9962152419505963
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 97,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 1,
+          "input_tokens": 4096,
+          "seconds": 1.7805193329695612,
+          "input_tokens_per_second": 2300.452415289794,
+          "memory_before": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 37355520,
+                "physical_footprint_bytes": 149030568,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 869728256,
+                "physical_footprint_bytes": 3591834816,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3740865384,
+            "total_rss_bytes": 907083776
+          },
+          "memory_after": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 46612480,
+                "physical_footprint_bytes": 149145256,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 870744064,
+                "physical_footprint_bytes": 3655486656,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3804631912,
+            "total_rss_bytes": 917356544
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    10166.\nPages active:                                1534979.\nPages inactive:                               641496.\nPages speculative:                              1906.\nPages throttled:                                   0.\nPages wired down:                            1098903.\nPages purgeable:                               36038.\n\"Translation faults\":                    27328165380.\nPages copy-on-write:                      1577655200.\nPages zero filled:                       36511945740.\nPages reactivated:                        1909021607.\nPages purged:                              282461942.\nFile-backed pages:                            227724.\nAnonymous pages:                             1950657.\nPages stored in compressor:                  1452170.\nPages occupied by compressor:                 862917.\nDecompressions:                           2100975133.\nCompressions:                             2316652663.\nPageins:                                   533231883.\nPageouts:                                     883355.\nSwapins:                                    63272877.\nSwapouts:                                   77227691.\nPages tagged:                                 202694.\nPages tagged resident:                        164830.\nPages tagged compressed:                       37864.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16486.\nPages tag-storage free:                          118.\nPages tag-storage non-tag pageable:           114190.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6198400.\nTagged compressions:                        31167988.\nTagged decompressions:                      29371635.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    25404.\nPages active:                                1096425.\nPages inactive:                              1088527.\nPages speculative:                              1666.\nPages throttled:                                   0.\nPages wired down:                            1074216.\nPages purgeable:                               28201.\n\"Translation faults\":                    27328248398.\nPages copy-on-write:                      1577656936.\nPages zero filled:                       36511994610.\nPages reactivated:                        1909048346.\nPages purged:                              282461954.\nFile-backed pages:                            227734.\nAnonymous pages:                             1958884.\nPages stored in compressor:                  1458823.\nPages occupied by compressor:                 864129.\nDecompressions:                           2100992338.\nCompressions:                             2316684264.\nPageins:                                   533232474.\nPageouts:                                     883355.\nSwapins:                                    63272889.\nSwapouts:                                   77227691.\nPages tagged:                                 202478.\nPages tagged resident:                        163931.\nPages tagged compressed:                       38547.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16381.\nPages tag-storage free:                          106.\nPages tag-storage non-tag pageable:           114238.\nPages tag-storage non-tag wired:                  13.\nBytes of compressed tags:                    6347776.\nTagged compressions:                        31168727.\nTagged decompressions:                      29371691.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 3804615528,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997965346135235,
+                  "shipping": 0.00020346538647641766
+                },
+                "confidence": 0.9972114097730423
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 2,
+          "input_tokens": 4096,
+          "seconds": 1.807907999958843,
+          "input_tokens_per_second": 2265.602010773361,
+          "memory_before": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 46612480,
+                "physical_footprint_bytes": 149145256,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 870318080,
+                "physical_footprint_bytes": 3591883968,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3741029224,
+            "total_rss_bytes": 916930560
+          },
+          "memory_after": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 46694400,
+                "physical_footprint_bytes": 149161640,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 870825984,
+                "physical_footprint_bytes": 3655470272,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3804631912,
+            "total_rss_bytes": 917520384
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    29202.\nPages active:                                1086064.\nPages inactive:                              1100700.\nPages speculative:                               948.\nPages throttled:                                   0.\nPages wired down:                            1100090.\nPages purgeable:                               14826.\n\"Translation faults\":                    27328568095.\nPages copy-on-write:                      1577664124.\nPages zero filled:                       36512089028.\nPages reactivated:                        1909090353.\nPages purged:                              282467882.\nFile-backed pages:                            225909.\nAnonymous pages:                             1961803.\nPages stored in compressor:                  1378539.\nPages occupied by compressor:                 833363.\nDecompressions:                           2101105144.\nCompressions:                             2316743805.\nPageins:                                   533233986.\nPageouts:                                     883355.\nSwapins:                                    63272937.\nSwapouts:                                   77227691.\nPages tagged:                                 202510.\nPages tagged resident:                        163609.\nPages tagged compressed:                       38901.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16305.\nPages tag-storage free:                          233.\nPages tag-storage non-tag pageable:           114074.\nPages tag-storage non-tag wired:                  13.\nBytes of compressed tags:                    6438528.\nTagged compressions:                        31169195.\nTagged decompressions:                      29371803.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    33044.\nPages active:                                1106046.\nPages inactive:                              1114793.\nPages speculative:                               883.\nPages throttled:                                   0.\nPages wired down:                            1072270.\nPages purgeable:                               14865.\n\"Translation faults\":                    27328629571.\nPages copy-on-write:                      1577665785.\nPages zero filled:                       36512122145.\nPages reactivated:                        1909090354.\nPages purged:                              282467889.\nFile-backed pages:                            225862.\nAnonymous pages:                             1995860.\nPages stored in compressor:                  1363271.\nPages occupied by compressor:                 823331.\nDecompressions:                           2101120649.\nCompressions:                             2316745341.\nPageins:                                   533234508.\nPageouts:                                     883355.\nSwapins:                                    63272977.\nSwapouts:                                   77227691.\nPages tagged:                                 202418.\nPages tagged resident:                        163791.\nPages tagged compressed:                       38627.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16302.\nPages tag-storage free:                          144.\nPages tag-storage non-tag pageable:           114330.\nPages tag-storage non-tag wired:                  13.\nBytes of compressed tags:                    6380800.\nTagged compressions:                        31169195.\nTagged decompressions:                      29372077.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 3804631912,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997593933765327,
+                  "shipping": 0.0002406066234672297
+                },
+                "confidence": 0.9967605788930354
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "lmstudio",
+          "round": 2,
+          "input_tokens": 4096,
+          "seconds": 3.742910750035662,
+          "input_tokens_per_second": 1094.3354713870679,
+          "memory_before": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 3975938048,
+                "physical_footprint_bytes": 5088140968,
+                "lifetime_peak_physical_footprint_bytes": 5167685288
+              }
+            },
+            "total_physical_footprint_bytes": 5088140968,
+            "total_rss_bytes": 3975938048
+          },
+          "memory_after": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 4099866624,
+                "physical_footprint_bytes": 5226815192,
+                "lifetime_peak_physical_footprint_bytes": 5227323096
+              }
+            },
+            "total_physical_footprint_bytes": 5226815192,
+            "total_rss_bytes": 4099866624
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    28328.\nPages active:                                1098009.\nPages inactive:                              1113126.\nPages speculative:                              1239.\nPages throttled:                                   0.\nPages wired down:                            1096998.\nPages purgeable:                               10285.\n\"Translation faults\":                    27328767238.\nPages copy-on-write:                      1577672992.\nPages zero filled:                       36512208350.\nPages reactivated:                        1909090487.\nPages purged:                              282468281.\nFile-backed pages:                            226623.\nAnonymous pages:                             1985751.\nPages stored in compressor:                  1344440.\nPages occupied by compressor:                 812667.\nDecompressions:                           2101138691.\nCompressions:                             2316756933.\nPageins:                                   533235631.\nPageouts:                                     883355.\nSwapins:                                    63273017.\nSwapouts:                                   77227691.\nPages tagged:                                 202556.\nPages tagged resident:                        164784.\nPages tagged compressed:                       37772.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16304.\nPages tag-storage free:                           97.\nPages tag-storage non-tag pageable:           114451.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6203840.\nTagged compressions:                        31169195.\nTagged decompressions:                      29372930.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    12368.\nPages active:                                 357499.\nPages inactive:                               363039.\nPages speculative:                              1480.\nPages throttled:                                   0.\nPages wired down:                            2590383.\nPages purgeable:                                7694.\n\"Translation faults\":                    27328971968.\nPages copy-on-write:                      1577678369.\nPages zero filled:                       36512329605.\nPages reactivated:                        1909184876.\nPages purged:                              282497014.\nFile-backed pages:                            228762.\nAnonymous pages:                              493256.\nPages stored in compressor:                  1386519.\nPages occupied by compressor:                 825126.\nDecompressions:                           2101257096.\nCompressions:                             2316882587.\nPageins:                                   533238456.\nPageouts:                                     883355.\nSwapins:                                    63273057.\nSwapouts:                                   77227691.\nPages tagged:                                 202260.\nPages tagged resident:                        164748.\nPages tagged compressed:                       37512.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16336.\nPages tag-storage free:                          207.\nPages tag-storage non-tag pageable:           114190.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6130368.\nTagged compressions:                        31170168.\nTagged decompressions:                      29374160.\n",
+            "swap": "total = 24576.00M  used = 23732.81M  free = 843.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5227323096,
+          "response": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997668192396655,
+                  "shipping": 0.00023318076033441358
+                },
+                "confidence": 0.996850009972643
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 97,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "lmstudio",
+          "round": 3,
+          "input_tokens": 4096,
+          "seconds": 3.450820957950782,
+          "input_tokens_per_second": 1186.9639282683468,
+          "memory_before": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 4087185408,
+                "physical_footprint_bytes": 5155872472,
+                "lifetime_peak_physical_footprint_bytes": 5227323096
+              }
+            },
+            "total_physical_footprint_bytes": 5155872472,
+            "total_rss_bytes": 4087185408
+          },
+          "memory_after": {
+            "processes": {
+              "39768": {
+                "rss_bytes": 4127621120,
+                "physical_footprint_bytes": 5290106632,
+                "lifetime_peak_physical_footprint_bytes": 5290614536
+              }
+            },
+            "total_physical_footprint_bytes": 5290106632,
+            "total_rss_bytes": 4127621120
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    47615.\nPages active:                                1353157.\nPages inactive:                               862661.\nPages speculative:                              1224.\nPages throttled:                                   0.\nPages wired down:                            1049390.\nPages purgeable:                               22908.\n\"Translation faults\":                    27329115991.\nPages copy-on-write:                      1577686385.\nPages zero filled:                       36512443245.\nPages reactivated:                        1909228838.\nPages purged:                              282504159.\nFile-backed pages:                            228339.\nAnonymous pages:                             1988703.\nPages stored in compressor:                  1405553.\nPages occupied by compressor:                 836320.\nDecompressions:                           2101277406.\nCompressions:                             2316923963.\nPageins:                                   533239263.\nPageouts:                                     883355.\nSwapins:                                    63273089.\nSwapouts:                                   77227691.\nPages tagged:                                 202132.\nPages tagged resident:                        164057.\nPages tagged compressed:                       38075.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16264.\nPages tag-storage free:                          216.\nPages tag-storage non-tag pageable:           114455.\nPages tag-storage non-tag wired:                  12.\nBytes of compressed tags:                    6250944.\nTagged compressions:                        31171686.\nTagged decompressions:                      29375112.\n",
+            "swap": "total = 24576.00M  used = 23724.81M  free = 851.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     8134.\nPages active:                                 338362.\nPages inactive:                               343823.\nPages speculative:                              7377.\nPages throttled:                                   0.\nPages wired down:                            2618309.\nPages purgeable:                               17161.\n\"Translation faults\":                    27329361260.\nPages copy-on-write:                      1577688909.\nPages zero filled:                       36512578644.\nPages reactivated:                        1909297129.\nPages purged:                              282528739.\nFile-backed pages:                            237275.\nAnonymous pages:                              452287.\nPages stored in compressor:                  1404587.\nPages occupied by compressor:                 834362.\nDecompressions:                           2101376594.\nCompressions:                             2317025344.\nPageins:                                   533249420.\nPageouts:                                     883355.\nSwapins:                                    63274562.\nSwapouts:                                   77227691.\nPages tagged:                                 201873.\nPages tagged resident:                        163609.\nPages tagged compressed:                       38264.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16173.\nPages tag-storage free:                           68.\nPages tag-storage non-tag pageable:           114697.\nPages tag-storage non-tag wired:                  25.\nBytes of compressed tags:                    6277568.\nTagged compressions:                        31175155.\nTagged decompressions:                      29378176.\n",
+            "swap": "total = 24576.00M  used = 23724.81M  free = 851.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 5290614536,
+          "response": {
+            "model": "vllm-d3-mini",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9997769574943385,
+                  "shipping": 0.0002230425056614948
+                },
+                "confidence": 0.9969726601645879
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 99,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        },
+        {
+          "engine": "splash",
+          "round": 3,
+          "input_tokens": 4096,
+          "seconds": 1.7316406249883585,
+          "input_tokens_per_second": 2365.386871209225,
+          "memory_before": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 42319872,
+                "physical_footprint_bytes": 149112488,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 868335616,
+                "physical_footprint_bytes": 3591883968,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3740996456,
+            "total_rss_bytes": 910655488
+          },
+          "memory_after": {
+            "processes": {
+              "46500": {
+                "rss_bytes": 46317568,
+                "physical_footprint_bytes": 149178024,
+                "lifetime_peak_physical_footprint_bytes": 433538824
+              },
+              "46510": {
+                "rss_bytes": 870367232,
+                "physical_footprint_bytes": 3655470272,
+                "lifetime_peak_physical_footprint_bytes": 3655535808
+              }
+            },
+            "total_physical_footprint_bytes": 3804648296,
+            "total_rss_bytes": 916684800
+          },
+          "host_memory_before": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    27393.\nPages active:                                1496775.\nPages inactive:                               730010.\nPages speculative:                              3464.\nPages throttled:                                   0.\nPages wired down:                            1061783.\nPages purgeable:                               13763.\n\"Translation faults\":                    27329548909.\nPages copy-on-write:                      1577694248.\nPages zero filled:                       36512655900.\nPages reactivated:                        1909348958.\nPages purged:                              282546373.\nFile-backed pages:                            234168.\nAnonymous pages:                             1996081.\nPages stored in compressor:                  1389690.\nPages occupied by compressor:                 830942.\nDecompressions:                           2101446168.\nCompressions:                             2317089243.\nPageins:                                   533250785.\nPageouts:                                     883355.\nSwapins:                                    63274698.\nSwapouts:                                   77227691.\nPages tagged:                                 201914.\nPages tagged resident:                        162994.\nPages tagged compressed:                       38920.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                16097.\nPages tag-storage free:                          150.\nPages tag-storage non-tag pageable:           114710.\nPages tag-storage non-tag wired:                  15.\nBytes of compressed tags:                    6439616.\nTagged compressions:                        31177529.\nTagged decompressions:                      29379818.\n",
+            "swap": "total = 24576.00M  used = 23708.81M  free = 867.19M  (encrypted)"
+          },
+          "host_memory_after": {
+            "vm_stat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    34404.\nPages active:                                1098178.\nPages inactive:                              1110353.\nPages speculative:                              2347.\nPages throttled:                                   0.\nPages wired down:                            1064409.\nPages purgeable:                               23375.\n\"Translation faults\":                    27329632059.\nPages copy-on-write:                      1577696113.\nPages zero filled:                       36512713942.\nPages reactivated:                        1909354111.\nPages purged:                              282548955.\nFile-backed pages:                            233415.\nAnonymous pages:                             1977463.\nPages stored in compressor:                  1407879.\nPages occupied by compressor:                 840676.\nDecompressions:                           2101471185.\nCompressions:                             2317139630.\nPageins:                                   533251840.\nPageouts:                                     883355.\nSwapins:                                    63274792.\nSwapouts:                                   77227691.\nPages tagged:                                 201881.\nPages tagged resident:                        162778.\nPages tagged compressed:                       39103.\nPages tag-storage:                            131072.\nPages tag-storage holding tags:                15951.\nPages tag-storage free:                           93.\nPages tag-storage non-tag pageable:           114869.\nPages tag-storage non-tag wired:                  20.\nBytes of compressed tags:                    6494976.\nTagged compressions:                        31178771.\nTagged decompressions:                      29380876.\n",
+            "swap": "total = 24576.00M  used = 23700.81M  free = 875.19M  (encrypted)"
+          },
+          "sampled_peak_footprint_bytes": 3804648296,
+          "response": {
+            "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+            "answers": {
+              "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {
+                  "billing": 0.9998201969899672,
+                  "shipping": 0.00017980301003276043
+                },
+                "confidence": 0.9975036400841419
+              }
+            },
+            "usage": {
+              "input_tokens": 4096,
+              "output_tokens": 0
+            }
+          },
+          "isolation_after": {
+            "gpu_utilization_percent": 98,
+            "servers": [
+              {
+                "pid": 52762,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 53800,
+                "cpu_percent": 0.0,
+                "processing": null,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 54165,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              },
+              {
+                "pid": 55998,
+                "cpu_percent": 0.1,
+                "processing": false,
+                "authorized_concurrent_inference": false,
+                "busy": false
+              }
+            ],
+            "busy_pids": []
+          }
+        }
+      ],
+      "command": [
+        "sh",
+        "d3minisplash.sh",
+        "--port",
+        "18145",
+        "--binary",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "--max-context",
+        "262144",
+        "--max-memory",
+        "40G",
+        "--kv-format",
+        "q4h",
+        "--queue-size",
+        "1",
+        "--encoder-option-queries",
+        "on"
+      ],
+      "status_before": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 272928928,
+          "kv_bytes": 270336,
+          "state_bytes": 0,
+          "allocated_bytes": 3312267424,
+          "peak_allocated_bytes": 3312267424,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 0,
+          "submission_batches": 0,
+          "maximum_submission_batch": 0,
+          "total_prefill_gpu_seconds": 0
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "ad6ec46a4d18e7b1ae6aa6c3",
+          "pid": 46500,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346922.558632
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "summary": [
+        {
+          "engine": "lmstudio",
+          "input_tokens": 4096,
+          "mean_seconds": 3.6454951109869094,
+          "mean_tokens_per_second": 1125.2269374974574
+        },
+        {
+          "engine": "splash",
+          "input_tokens": 4096,
+          "mean_seconds": 1.7733559859722543,
+          "mean_tokens_per_second": 2310.480432424127
+        }
+      ],
+      "status_after": {
+        "schema_version": 6,
+        "healthy": true,
+        "ready": true,
+        "active_requests": 0,
+        "model_kind": "vllm-d3",
+        "weights": {
+          "release_supported": false,
+          "released": false,
+          "restoring": false
+        },
+        "memory": {
+          "loaded_weight_bytes": 3039068160,
+          "quantized_weight_bytes": 3017971040,
+          "auxiliary_weight_bytes": 21097120,
+          "fp16_weight_cache_bytes": 0,
+          "workspace_bytes": 485310624,
+          "kv_bytes": 4472832,
+          "state_bytes": 0,
+          "allocated_bytes": 3528851616,
+          "peak_allocated_bytes": 3528851616,
+          "max_memory_bytes": 42949672960
+        },
+        "telemetry": {
+          "completed_requests": 5,
+          "submission_batches": 5,
+          "maximum_submission_batch": 1,
+          "total_prefill_gpu_seconds": 8.89503
+        },
+        "features": {
+          "drafter": "none",
+          "ane": "off",
+          "compact_draft_head": "off",
+          "fast_topk": "off",
+          "prompt_lookup": "off",
+          "encoder_option_queries": true,
+          "encoder_submit_batch_limit": 4,
+          "causal_prefix_cache": false
+        },
+        "ane_ffn": {
+          "state": "off",
+          "share": 0,
+          "minimum_rows": 0,
+          "reason": "GPU encoder"
+        },
+        "identity": {
+          "kv": {
+            "format": "q4h"
+          },
+          "cache": {
+            "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+          }
+        },
+        "memory_governor": {
+          "limit_bytes": 42949672960
+        },
+        "warmup": {
+          "detail": "typed encoder full/selected-head numerical check"
+        },
+        "startup_features": {
+          "drafter": "none",
+          "draft_layers": 0,
+          "draft_block_size": 0,
+          "draft_tokens": 0,
+          "prefill_token_budget": 2048,
+          "ffn_cache_bytes": 0,
+          "optional": {
+            "prompt_lookup": false,
+            "fast_topk": false,
+            "compact_draft_head": false,
+            "compact_capacity": 0,
+            "compact_validation_maximum_error": 0,
+            "compact_coverage_fallbacks": 0,
+            "compact_request_fallbacks": 0
+          }
+        },
+        "transport": {
+          "ready": true,
+          "recovering": false,
+          "stopped": false,
+          "pending": 0,
+          "pending_limit": 1,
+          "restarts": 0,
+          "last_crash_trace": null,
+          "status_stale": false,
+          "status_age_ms": 0.0
+        },
+        "vision": false,
+        "decision_model": {
+          "type": "vllm-d3",
+          "architecture": "qwen35",
+          "generation": false,
+          "readout": "last token, selected vocabulary code rows",
+          "answer_codes": 255,
+          "attention": "noncausal full attention; causal GDN",
+          "temperatures": {
+            "choice": 1.0,
+            "noul": 1.0,
+            "score": 1.0
+          }
+        },
+        "input_modalities": [
+          "text"
+        ],
+        "chat_template": {
+          "later_system": "patched"
+        },
+        "frontend": {
+          "preparation_capacity": 4,
+          "active": 0,
+          "waiting": 0
+        },
+        "grammar_cache": {
+          "enabled": false
+        },
+        "response_store": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 67108864,
+          "evictions": 0,
+          "hits": 0,
+          "misses": 0
+        },
+        "image_cache": {
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 268435456,
+          "request_bytes": 0,
+          "request_budget_bytes": 268435456
+        },
+        "tokenizer_cache": {
+          "enabled": true,
+          "entries": 0,
+          "bytes": 0,
+          "budget_bytes": 8388608,
+          "capacity": 4,
+          "hits": 0,
+          "reused_tokens": 0
+        },
+        "latency": {
+          "http_request": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 8.980630001984537
+          },
+          "upload": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.00038254004903137684
+          },
+          "preparation_queue": {
+            "buckets": {
+              "0.001": 5,
+              "0.005": 5,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 1.4167104382067919e-05
+          },
+          "preparation": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 4,
+              "0.01": 5,
+              "0.025": 5,
+              "0.05": 5,
+              "0.1": 5,
+              "0.25": 5,
+              "0.5": 5,
+              "1": 5,
+              "2.5": 5,
+              "5": 5,
+              "10": 5,
+              "30": 5,
+              "60": 5,
+              "120": 5,
+              "300": 5,
+              "900": 5,
+              "1800": 5,
+              "+Inf": 5
+            },
+            "count": 5,
+            "sum": 0.023729208041913807
+          },
+          "template": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "tokenization": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "grammar": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "images": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "native_queue": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "http_ttft": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          },
+          "output_interval": {
+            "buckets": {
+              "0.001": 0,
+              "0.005": 0,
+              "0.01": 0,
+              "0.025": 0,
+              "0.05": 0,
+              "0.1": 0,
+              "0.25": 0,
+              "0.5": 0,
+              "1": 0,
+              "2.5": 0,
+              "5": 0,
+              "10": 0,
+              "30": 0,
+              "60": 0,
+              "120": 0,
+              "300": 0,
+              "900": 0,
+              "1800": 0,
+              "+Inf": 0
+            },
+            "count": 0,
+            "sum": 0.0
+          }
+        },
+        "instance": {
+          "id": "ad6ec46a4d18e7b1ae6aa6c3",
+          "pid": 46500,
+          "model": "ggml-org/vllm-d3-mini-GGUF:Q4_K_M",
+          "host": "127.0.0.1",
+          "port": 18145,
+          "started_at": 1792346922.558632
+        },
+        "http": {
+          "requests": {
+            "active": 0,
+            "capacity": 1
+          },
+          "request_body_bytes": {
+            "active": 0,
+            "capacity": 536870912
+          },
+          "max_request_bytes": 134217728,
+          "token_counts": {
+            "active": 0,
+            "capacity": 1
+          },
+          "connections": {
+            "active": 1,
+            "capacity": 65
+          }
+        }
+      },
+      "splash_exit": 0
+    }
+  },
+  "status": "passed",
+  "isolation": [
+    {
+      "at": 1792346895.580113,
+      "gpu_utilization_percent": 99,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346896.6915221,
+      "gpu_utilization_percent": 66,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346897.798505,
+      "gpu_utilization_percent": 69,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346900.120789,
+      "gpu_utilization_percent": 37,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346901.238774,
+      "gpu_utilization_percent": 62,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346902.3381498,
+      "gpu_utilization_percent": 69,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346903.9531908,
+      "gpu_utilization_percent": 41,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346905.057318,
+      "gpu_utilization_percent": 66,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346906.158593,
+      "gpu_utilization_percent": 70,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346907.765456,
+      "gpu_utilization_percent": 38,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346908.876628,
+      "gpu_utilization_percent": 66,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346909.987593,
+      "gpu_utilization_percent": 73,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346912.308245,
+      "gpu_utilization_percent": 37,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346913.429271,
+      "gpu_utilization_percent": 66,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346914.531968,
+      "gpu_utilization_percent": 70,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346916.8748858,
+      "gpu_utilization_percent": 36,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346917.983107,
+      "gpu_utilization_percent": 62,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346919.085136,
+      "gpu_utilization_percent": 65,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346937.699417,
+      "gpu_utilization_percent": 99,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346938.798811,
+      "gpu_utilization_percent": 63,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346939.899881,
+      "gpu_utilization_percent": 67,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346944.865579,
+      "gpu_utilization_percent": 47,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346945.9655979,
+      "gpu_utilization_percent": 58,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346947.084882,
+      "gpu_utilization_percent": 51,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346950.084662,
+      "gpu_utilization_percent": 32,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346951.177515,
+      "gpu_utilization_percent": 57,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346952.2752829,
+      "gpu_utilization_percent": 68,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346955.27454,
+      "gpu_utilization_percent": 39,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346956.366064,
+      "gpu_utilization_percent": 56,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.0,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346957.463383,
+      "gpu_utilization_percent": 63,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346962.44206,
+      "gpu_utilization_percent": 42,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346963.5405838,
+      "gpu_utilization_percent": 67,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346964.647342,
+      "gpu_utilization_percent": 65,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346969.296772,
+      "gpu_utilization_percent": 33,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346970.392381,
+      "gpu_utilization_percent": 51,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    },
+    {
+      "at": 1792346971.503104,
+      "gpu_utilization_percent": 52,
+      "servers": [
+        {
+          "pid": 52762,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 53800,
+          "cpu_percent": 0.0,
+          "processing": null,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 54165,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        },
+        {
+          "pid": 55998,
+          "cpu_percent": 0.1,
+          "processing": false,
+          "authorized_concurrent_inference": false,
+          "busy": false
+        }
+      ],
+      "busy_pids": []
+    }
+  ],
+  "lmstudio_models": [
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-mini",
+      "display_name": "Vllm D3 Mini",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits_per_weight": 4
+      },
+      "size_bytes": 4383092800,
+      "params_string": "4.8B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-lite",
+      "display_name": "Vllm D3 Lite",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "BF16",
+        "bits_per_weight": 16
+      },
+      "size_bytes": 2232652096,
+      "params_string": "1.0B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    }
+  ]
+}

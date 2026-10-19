@@ -1,0 +1,323 @@
+{
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "branch": "ghost",
+  "uncommitted": true,
+  "created_at": "2026-10-19T11:51:25.286512+08:00",
+  "runtime_change": "Only added maximum_context_tokens sourced from the effective encoder context. No arithmetic or concurrency changes.",
+  "source_files_sha256": {
+    "runtime/encoder/Service.cpp": "33d0bf3116c3ed31ae284ee2885a9549192e4315fd00b65fd15b082a88ce04c3",
+    "dev/tests/decision_control_real.py": "cf9d9808f501d5bb0efeed060b29e8f1251d532384b45a78968eeb525c652852",
+    "docs/d3-capacity-gmd-2026-10-19.md": "de5386b7af90cf6754e52e3bf4e7b529e2949115aba4f7653b6a68eb20a36f7b"
+  },
+  "deployment": {
+    "deployed_at": 1792381341.845303,
+    "old_binary_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+    "new_binary_sha256": "311ead4c092fb33eb0eb0fe1d6d91934ef8d1e43b45f31814f3049cad7b2148a",
+    "metallib_unchanged": true,
+    "new_identity": {
+      "build_id": "src-aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30",
+      "schema_version": 1,
+      "source_sha256": "aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30"
+    },
+    "architecture": "arm64"
+  },
+  "commands": [
+    {
+      "command": "node --input-type=module (original Launcher createModelAdapters().probe)",
+      "target": "vllm-d3-mini-q4-k-m",
+      "stage": "before",
+      "exit": 1
+    },
+    {
+      "command": ".venv/bin/python -u -m dev.tests.decision_control_real --binary build/splash --model-root install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f --context 32768 --output build/d3-capacity-20261019/native-before.json",
+      "stage": "before",
+      "exit": 1
+    },
+    {
+      "command": "make -j4 BUILD=build/d3-capacity-20261019/engine all BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "exit": 0
+    }
+  ],
+  "native_regressions": [
+    {
+      "name": "lite-32768",
+      "command": [
+        "build/d3-capacity-20261019/engine/splash",
+        "serve-d3-native",
+        "install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+        "32768",
+        "42949672960",
+        "--kv-format",
+        "q4h"
+      ],
+      "exit": 0,
+      "checks": [
+        "status context matches configured and native Ready capacity",
+        "four distinct requests and mixed types match serial at the existing 1e-3 bound",
+        "invalid position fails one request and the same process remains usable",
+        "status during work, cancellation, no leaked scores and subsequent request",
+        "unsupported encoder release preserves usable weights"
+      ],
+      "harness_command": [
+        ".venv/bin/python",
+        "-u",
+        "-m",
+        "dev.tests.decision_control_real",
+        "--binary",
+        "build/d3-capacity-20261019/engine/splash",
+        "--model-root",
+        "install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+        "--context",
+        "32768",
+        "--output",
+        "build/d3-capacity-20261019/lite-32768.json"
+      ]
+    },
+    {
+      "name": "lite-4096",
+      "command": [
+        "build/d3-capacity-20261019/engine/splash",
+        "serve-d3-native",
+        "install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+        "4096",
+        "42949672960",
+        "--kv-format",
+        "q4h"
+      ],
+      "exit": 0,
+      "checks": [
+        "status context matches configured and native Ready capacity",
+        "four distinct requests and mixed types match serial at the existing 1e-3 bound",
+        "invalid position fails one request and the same process remains usable",
+        "status during work, cancellation, no leaked scores and subsequent request",
+        "unsupported encoder release preserves usable weights"
+      ],
+      "harness_command": [
+        ".venv/bin/python",
+        "-u",
+        "-m",
+        "dev.tests.decision_control_real",
+        "--binary",
+        "build/d3-capacity-20261019/engine/splash",
+        "--model-root",
+        "install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+        "--context",
+        "4096",
+        "--output",
+        "build/d3-capacity-20261019/lite-4096.json"
+      ]
+    },
+    {
+      "name": "mini-32768",
+      "command": [
+        "build/d3-capacity-20261019/engine/splash",
+        "serve-d3-native",
+        "install/models-local/.resolved/308afd49fc9c39a21c91daa588d509e81640338d7b83a48ea93123822f27afaa",
+        "32768",
+        "42949672960",
+        "--kv-format",
+        "q4h"
+      ],
+      "exit": 0,
+      "checks": [
+        "status context matches configured and native Ready capacity",
+        "four distinct requests and mixed types match serial at the existing 1e-3 bound",
+        "invalid position fails one request and the same process remains usable",
+        "status during work, cancellation, no leaked scores and subsequent request",
+        "unsupported encoder release preserves usable weights"
+      ],
+      "harness_command": [
+        ".venv/bin/python",
+        "-u",
+        "-m",
+        "dev.tests.decision_control_real",
+        "--binary",
+        "build/d3-capacity-20261019/engine/splash",
+        "--model-root",
+        "install/models-local/.resolved/308afd49fc9c39a21c91daa588d509e81640338d7b83a48ea93123822f27afaa",
+        "--context",
+        "32768",
+        "--output",
+        "build/d3-capacity-20261019/mini-32768.json"
+      ]
+    }
+  ],
+  "launcher_single_exits": {
+    "lite": 0,
+    "mini": 0
+  },
+  "launcher_four_concurrent_exit": 0,
+  "launcher_four_concurrent_results": [
+    {
+      "model": "vllm-d3-lite-bf16",
+      "results": [
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        }
+      ]
+    },
+    {
+      "model": "vllm-d3-mini-q4-k-m",
+      "results": [
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        },
+        {
+          "ok": true,
+          "target": "jev",
+          "context": {
+            "status": "ready",
+            "source": "ghost-model-deck",
+            "contextLength": 32768,
+            "maxInputTokens": 32768,
+            "maxConcurrentRequests": 4
+          }
+        }
+      ]
+    }
+  ],
+  "final_checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--config",
+        "dev/ruff.toml",
+        "dev/tests/decision_control_real.py"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--config",
+        "dev/ruff.toml",
+        "dev/tests/decision_control_real.py"
+      ],
+      "exit": 0,
+      "stdout": "1 file already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "py_compile",
+        "dev/tests/decision_control_real.py"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "dev/tools/check_architecture.py"
+      ],
+      "exit": 0,
+      "stdout": "backend architecture: PASS\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "gmd_source_modified": false,
+  "launcher_source_modified": false,
+  "performance_tests_run": false,
+  "concurrency_semantics": {
+    "http_admission": 32,
+    "native_ready_admission": 4,
+    "short_submission_limit": 4,
+    "long_submission_limit": 1,
+    "launcher_limit": 4,
+    "memory_plan_fabricated": false
+  },
+  "evidence_dir": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-capacity-20261019"
+}

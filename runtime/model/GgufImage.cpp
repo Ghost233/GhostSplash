@@ -74,6 +74,29 @@ public:
     image_.repack(std::move(repack));
   }
 
+  // D3 scores answer codes, never the rest of the vocabulary. Padding is zero.
+  void decisionCodes(std::span<const uint32_t> tokens) {
+    const auto *t = find("output.weight", quantizedType);
+    if (!t) return;
+    if (t->rows() != geometry_.vocabularySize || t->columns() != geometry_.hiddenSize ||
+        tokens.size() < 2 || tokens.size() > 255)
+      throw GgufError("invalid D3 code head shape");
+    const uint32_t format = imageFormat(t->type);
+    auto repack = image_.planes(format, 256, geometry_.hiddenSize, t->name);
+    std::set<uint32_t> seen;
+    for (uint32_t token : tokens) {
+      if (token >= geometry_.vocabularySize || !seen.insert(token).second)
+        throw GgufError("invalid or repeated D3 answer code");
+      auto row = tensorRows(*t, t->rows(), ggufRowBytes(kQuantFormats[format], geometry_.hiddenSize));
+      row.first = token;
+      row.rows = 1;
+      repack.sources.push_back(std::move(row));
+    }
+    image_.repack(std::move(repack));
+    // The common target reader keeps a decision-bias section. D3 has none.
+    static_cast<void>(image_.section(256 * sizeof(float)));
+  }
+
   // The routed experts' gate and up tensors, of `experts` * width rows each:
   // ffn_gate_exps and ffn_up_exps, or llama.cpp's fused ffn_gate_up_exps
   // (create_tensor_gate_up_exps), each expert's gate rows then its up rows,
@@ -414,7 +437,12 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
   if (metadata.architecture() != arch)
     throw GgufError("GGUF architecture is " + metadata.architecture() + ", but the model's target is " + arch);
   const auto decision = metadata.stringValue(arch + ".decision.type");
-  if (geometry.decisionHeadSize) {
+  if (geometry.decisionHeadSize == 256) {
+    if (decision != "vllm-d3" || metadata.unsignedValue(arch + ".attention.causal") != 0 ||
+        !((geometry.hiddenSize == 1024 && geometry.layers == 24) ||
+          (geometry.hiddenSize == 2560 && geometry.layers == 32)))
+      throw GgufError("GGUF metadata does not match a noncausal D3 layout");
+  } else if (geometry.decisionHeadSize) {
     if (!((geometry.hiddenSize == 2560 && geometry.layers == 32) ||
           (geometry.hiddenSize == 1024 && geometry.layers == 24)) || geometry.decisionHeadSize != 512 ||
         (!decision || *decision != "kev") ||
@@ -474,7 +502,8 @@ void requireMetadata(const GgufMetadata &metadata, const QwenTargetDimensions &g
   if (!mismatched.empty()) throw GgufError("GGUF metadata does not match the target: " + mismatched);
 }
 
-std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &geometry) {
+std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &geometry,
+                             std::span<const uint32_t> headTokens) {
   requireMetadata(file.metadata(), geometry);
   std::vector<std::string> problems;
   std::vector<Image> images;
@@ -484,7 +513,9 @@ std::vector<Image> planImages(const GgufFile &file, const QwenTargetDimensions &
   head.floatNorm("output_norm.weight", geometry.hiddenSize);
   const std::string output = geometry.tiedWordEmbeddings && !file.find("output.weight")
       ? "token_embd.weight" : "output.weight";
-  if (geometry.decisionHeadSize) {
+  if (geometry.decisionHeadSize == 256) {
+    head.decisionCodes(headTokens);
+  } else if (geometry.decisionHeadSize) {
     head.quantized("cls.output.weight", geometry.decisionHeadSize, geometry.hiddenSize);
     head.floatNorm("cls.output.bias", geometry.decisionHeadSize);
   } else {

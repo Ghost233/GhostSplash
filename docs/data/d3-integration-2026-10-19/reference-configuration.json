@@ -1,0 +1,188 @@
+{
+  "before": [
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-mini",
+      "display_name": "Vllm D3 Mini",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits_per_weight": 4
+      },
+      "size_bytes": 4383092800,
+      "params_string": "4.8B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 2048,
+            "physical_batch_size": 512,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-lite",
+      "display_name": "Vllm D3 Lite",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "BF16",
+        "bits_per_weight": 16
+      },
+      "size_bytes": 2232652096,
+      "params_string": "1.0B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 2048,
+            "physical_batch_size": 512,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    }
+  ],
+  "loads": [
+    {
+      "model": "vllm-d3-lite",
+      "unload": {
+        "instance_id": "vllm-d3-lite"
+      },
+      "request": {
+        "model": "vllm-d3-lite",
+        "context_length": 262144,
+        "eval_batch_size": 32768,
+        "physical_batch_size": 32768,
+        "parallel": 4,
+        "flash_attention": true,
+        "offload_kv_cache_to_gpu": true,
+        "echo_load_config": true
+      },
+      "response": {
+        "type": "decision",
+        "instance_id": "vllm-d3-lite",
+        "load_time_seconds": 17.15,
+        "status": "loaded",
+        "load_config": {
+          "context_length": 262144,
+          "eval_batch_size": 32768,
+          "physical_batch_size": 32768,
+          "parallel": 4,
+          "flash_attention": true,
+          "offload_kv_cache_to_gpu": true
+        }
+      }
+    },
+    {
+      "model": "vllm-d3-mini",
+      "unload": {
+        "instance_id": "vllm-d3-mini"
+      },
+      "request": {
+        "model": "vllm-d3-mini",
+        "context_length": 262144,
+        "eval_batch_size": 32768,
+        "physical_batch_size": 32768,
+        "parallel": 4,
+        "flash_attention": true,
+        "offload_kv_cache_to_gpu": true,
+        "echo_load_config": true
+      },
+      "response": {
+        "type": "decision",
+        "instance_id": "vllm-d3-mini",
+        "load_time_seconds": 5.593,
+        "status": "loaded",
+        "load_config": {
+          "context_length": 262144,
+          "eval_batch_size": 32768,
+          "physical_batch_size": 32768,
+          "parallel": 4,
+          "flash_attention": true,
+          "offload_kv_cache_to_gpu": true
+        }
+      }
+    }
+  ],
+  "after": [
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-mini",
+      "display_name": "Vllm D3 Mini",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "Q4_K_M",
+        "bits_per_weight": 4
+      },
+      "size_bytes": 4383092800,
+      "params_string": "4.8B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "decision",
+      "publisher": "ggml-org",
+      "key": "vllm-d3-lite",
+      "display_name": "Vllm D3 Lite",
+      "architecture": "qwen35",
+      "quantization": {
+        "name": "BF16",
+        "bits_per_weight": 16
+      },
+      "size_bytes": 2232652096,
+      "params_string": "1.0B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "decision_type": "vllm-d3",
+      "has_vision_adapter": true,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite",
+          "config": {
+            "context_length": 262144,
+            "eval_batch_size": 32768,
+            "physical_batch_size": 32768,
+            "parallel": 4,
+            "flash_attention": true,
+            "offload_kv_cache_to_gpu": true
+          }
+        }
+      ]
+    }
+  ]
+}

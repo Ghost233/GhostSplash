@@ -76,6 +76,15 @@ FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）�
 启动器回归测试使用 `.venv/bin/python -m unittest dev.tests.install.test_local_launchers`，
 覆盖 GGUF 首次安装、已有安装复用、错误模型记录拒绝、模板适配和服务参数。
 
+### D3 决策模型
+
+新增 [d3litesplash.sh](d3litesplash.sh) 和 [d3minisplash.sh](d3minisplash.sh)，
+加载本地 D3 lite BF16 和 D3 mini Q4_K_M。默认上下文容量 262144、Q4H KV，
+通过 `/v1/systemone` 返回决策概率。此路径支持 D3 lite 的完整 BF16 GGUF，
+使用非因果 attention 和因果 GDN，不启用 drafter 或生成专用功能。
+默认端口分别为 8016 和 8017，监听 `127.0.0.1`。
+实现边界、验证及性能记录见 [D3 接入说明](docs/d3-integration-2026-10-19.md)。
+
 ### 模板与 draft 适配
 
 - **Tiel MiniPlus**：启动时生成独立 tokenizer 副本，将原模板的 JSON 工具调用
@@ -111,11 +120,26 @@ FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）�
 
 ```bash
 git switch ghost
-make install-environment
-make -j4
+sh build-local.sh
 # 按本机修改模型路径和监听配置，并准备对应模型与 draft 后启动：
 sh tielminiplus35ba3bsplash.sh
 ```
+
+`build-local.sh` 是标准本地构建入口。脚本定位到自身所在的仓库，
+准备 Python 环境，以 4 个并行任务编译，并核对构建身份。
+草稿块固定为 8，环境和产物统一保存在当前仓库：
+
+| 内容 | 固定路径 |
+| --- | --- |
+| Python 环境 | `.venv/bin/python` |
+| 原生引擎 | `build/splash` |
+| Metal 算子库 | `build/splash.metallib` |
+| 构建身份 | `build/engine/build-identity.json` |
+
+更新源码后，重跑同一个命令即可。模型安装和服务启动使用各自的启动器。
+GhostModelDeck 的 `Splash (source checkout)` 应登记当前仓库根目录，
+本机路径为 `/Users/ghost233/Ghost233Code/GhostSplash`。
+引用已删除 worktree 或指向旧 worktree 的 `.tooling` 条目，需要更新为这个目录。
 
 运行检查使用 `make check test-sanitizers`，详细构建和模型准备方式见
 [DEVELOPMENT.md](DEVELOPMENT.md)。下方保留上游使用说明；其中 Homebrew 安装命令

@@ -1,0 +1,23 @@
+EE
+======================================================================
+ERROR: test_llama_reference_preserves_recorded_lmstudio_settings (dev.tests.test_d3_benchmark.D3BenchmarkIsolationTests.test_llama_reference_preserves_recorded_lmstudio_settings) (model='lite')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/tests/test_d3_benchmark.py", line 14, in test_llama_reference_preserves_recorded_lmstudio_settings
+    command = d3_models.llama_command(args, name)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dev.benchmarks.d3_models' has no attribute 'llama_command'
+
+======================================================================
+ERROR: test_llama_reference_preserves_recorded_lmstudio_settings (dev.tests.test_d3_benchmark.D3BenchmarkIsolationTests.test_llama_reference_preserves_recorded_lmstudio_settings) (model='mini')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/tests/test_d3_benchmark.py", line 14, in test_llama_reference_preserves_recorded_lmstudio_settings
+    command = d3_models.llama_command(args, name)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'dev.benchmarks.d3_models' has no attribute 'llama_command'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=2)

@@ -1,0 +1,11 @@
+{
+  "status": "deliberately_cancelled",
+  "input_tokens": 32768,
+  "reason": "Exact 32768 boundary exceeds several minutes in ggml_metal_synchronize; adjacent 32767 succeeded. Not a successful timing sample.",
+  "observed_at": 1792349626.376344,
+  "native_pid": 75678,
+  "driver_pid": 75542,
+  "native_elapsed": "04:44",
+  "stack_evidence": "llama-32768-sample.txt",
+  "next_input_tokens": 32767
+}

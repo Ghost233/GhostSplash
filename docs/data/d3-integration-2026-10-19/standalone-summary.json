@@ -1,0 +1,136 @@
+{
+  "reference": "standalone LM Studio runtime 2.60.0, not LM Studio public API",
+  "context_configured_total": 262144,
+  "reference_slots": 4,
+  "reference_context_per_slot": 65536,
+  "splash_max_context_per_request": 262144,
+  "active_requests": 1,
+  "input_tokens": [
+    4096,
+    32767
+  ],
+  "desktop_load_accepted": true,
+  "comparisons": [
+    {
+      "model": "lite",
+      "input_tokens": 4096,
+      "splash": {
+        "mean_seconds": 0.5810228890040889,
+        "aggregate_tokens_per_second": 7049.636214884426,
+        "seconds_range": [
+          0.5719736670143902,
+          0.5883240000111982
+        ],
+        "sampled_peak_footprint_bytes": 2225393432,
+        "rounds": 3
+      },
+      "llama": {
+        "mean_seconds": 1.1628253193533358,
+        "aggregate_tokens_per_second": 3522.4551201532536,
+        "seconds_range": [
+          1.1277247500256635,
+          1.1835679580108263
+        ],
+        "sampled_peak_footprint_bytes": 2799063792,
+        "rounds": 3
+      },
+      "speedup": 2.0013416706293516,
+      "paired_speedups": [
+        2.0009097878058877,
+        1.9716375334413625,
+        2.0309314602783624
+      ]
+    },
+    {
+      "model": "lite",
+      "input_tokens": 32767,
+      "splash": {
+        "mean_seconds": 10.785325596982148,
+        "aggregate_tokens_per_second": 3038.1094854631524,
+        "seconds_range": [
+          10.71994799998356,
+          10.819310749997385
+        ],
+        "sampled_peak_footprint_bytes": 2817020176,
+        "rounds": 3
+      },
+      "llama": {
+        "mean_seconds": 19.167371611343697,
+        "aggregate_tokens_per_second": 1709.5197330346393,
+        "seconds_range": [
+          18.93336691701552,
+          19.470998500008136
+        ],
+        "sampled_peak_footprint_bytes": 7761551448,
+        "rounds": 3
+      },
+      "speedup": 1.777171346288047,
+      "paired_speedups": [
+        1.7996523946789162,
+        1.750379999303886,
+        1.7815151171476507
+      ]
+    },
+    {
+      "model": "mini",
+      "input_tokens": 4096,
+      "splash": {
+        "mean_seconds": 3.3896636803401634,
+        "aggregate_tokens_per_second": 1208.3794695493075,
+        "seconds_range": [
+          3.3239283749717288,
+          3.4955532080493867
+        ],
+        "sampled_peak_footprint_bytes": 3932640320,
+        "rounds": 3
+      },
+      "llama": {
+        "mean_seconds": 5.509037166659255,
+        "aggregate_tokens_per_second": 743.5056029008174,
+        "seconds_range": [
+          5.416140165994875,
+          5.655967583996244
+        ],
+        "sampled_peak_footprint_bytes": 5085633952,
+        "rounds": 3
+      },
+      "speedup": 1.625245949505647,
+      "paired_speedups": [
+        1.6885957943747654,
+        1.6294394929737142,
+        1.5605552040876198
+      ]
+    },
+    {
+      "model": "mini",
+      "input_tokens": 32767,
+      "splash": {
+        "mean_seconds": 41.45627880532993,
+        "aggregate_tokens_per_second": 790.3989683653717,
+        "seconds_range": [
+          24.753623124968726,
+          51.209132832998876
+        ],
+        "sampled_peak_footprint_bytes": 5387655264,
+        "rounds": 3
+      },
+      "llama": {
+        "mean_seconds": 54.37868127799205,
+        "aggregate_tokens_per_second": 602.5706992137256,
+        "seconds_range": [
+          40.92114541702904,
+          65.61549954197835
+        ],
+        "sampled_peak_footprint_bytes": 11107446280,
+        "rounds": 3
+      },
+      "speedup": 1.3117115873651621,
+      "paired_speedups": [
+        1.2813241684049002,
+        1.1692621740785607,
+        1.6531376118331662
+      ]
+    }
+  ],
+  "status": "passed"
+}

@@ -23,7 +23,7 @@ class GgufTargetLoader final {
 public:
   // Plans every image from the GGUF's metadata once.
   GgufTargetLoader(metal::MetalBackend &backend, WeightImages &images, const std::filesystem::path &path,
-                   const QwenTargetDimensions &geometry);
+                   const QwenTargetDimensions &geometry, std::span<const uint32_t> headTokens = {});
   GgufTargetLoader(const GgufTargetLoader &) = delete;
   GgufTargetLoader &operator=(const GgufTargetLoader &) = delete;
 

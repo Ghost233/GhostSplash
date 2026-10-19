@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import collections
 import contextlib
+import itertools
 import math
+import string
 import struct
 from pathlib import Path
 
@@ -344,6 +346,40 @@ def decision_config(metadata):
     kind = metadata.values.get(arch + ".decision.type")
     if kind is None:
         return None
+    if kind == "vllm-d3" and arch == "qwen35":
+        if metadata.values.get(arch + ".attention.causal") is not False:
+            raise ModelError("D3 requires explicit noncausal attention")
+        tokens = metadata.require("tokenizer.ggml.tokens", list)
+        vocabulary = {token: index for index, token in enumerate(tokens)}
+        codes = []
+        for length in (1, 2, 3):
+            for letters in itertools.product(string.ascii_uppercase, repeat=length):
+                code = "".join(letters)
+                if code in vocabulary:
+                    codes.append(code)
+                    if len(codes) == 255:
+                        break
+            if len(codes) == 255:
+                break
+        if len(codes) < 2:
+            raise ModelError("D3 vocabulary has fewer than two answer codes")
+        temperatures = {}
+        for question in ("choice", "score", "noul"):
+            value = metadata.require(arch + ".decision.temperature." + question, float)
+            if not math.isfinite(value) or value <= 0:
+                raise ModelError("invalid D3 decision temperature: " + question)
+            temperatures[question] = value
+        template = metadata.require("tokenizer.chat_template.systemone", str)
+        if not template.strip():
+            raise ModelError("D3 systemone template is empty")
+        return {
+            "type": kind,
+            "head_size": 256,
+            "codes": codes,
+            "token_ids": [vocabulary[code] for code in codes],
+            "temperatures": temperatures,
+            "chat_template": template,
+        }
     if kind == "laya" and arch == "modern-bert":
         temperatures = {}
         for key, value in metadata.values.items():
@@ -638,7 +674,8 @@ def loaded_tensors(metadata):
         }
     period = metadata.positive(arch + ".full_attention_interval")
     tensors = dict(MODEL_TENSORS)
-    if decision_config(metadata) is not None:
+    decision = decision_config(metadata)
+    if decision is not None and decision["type"] == "kev":
         tensors.pop("output.weight", None)
         tensors.update({"cls.output.weight": FORMAT_TYPES, "cls.output.bias": F32})
     if (
@@ -646,6 +683,7 @@ def loaded_tensors(metadata):
         and metadata.values.get(arch + ".embedding_length") == 2560
         and loaded_layers(metadata, arch) == 32
         and "output.weight" not in metadata.tensors
+        and decision is None
     ):
         tensors.pop("output.weight", None)
     for layer in range(loaded_layers(metadata, arch)):
@@ -717,7 +755,15 @@ def require_loadable(metadata):
             if TENSOR_TYPES.get(metadata.tensors.get(name)) not in types:
                 raise ModelError("unsupported ModernBERT tensor type: " + name)
         return
-    if decision_config(metadata) is not None:
+    decision = decision_config(metadata)
+    if decision is not None and decision["type"] == "vllm-d3":
+        expected = (
+            metadata.positive("qwen35.embedding_length"),
+            len(metadata.require("tokenizer.ggml.tokens", list)),
+        )
+        if metadata.shapes.get("output.weight") != expected:
+            raise ModelError("unexpected D3 output.weight shape")
+    if decision is not None and decision["type"] == "kev":
         for name, shape in (
             ("cls.output.weight", (metadata.positive("qwen35.embedding_length"), 512)),
             ("cls.output.bias", (512,)),
@@ -733,7 +779,9 @@ def require_loadable(metadata):
         for name, types in loaded.items()
         if types == FORMAT_TYPES and name != "token_embd.weight"
     }
-    if weights <= UNQUANTIZED_TYPES:
+    if weights <= UNQUANTIZED_TYPES and not (
+        decision is not None and decision["type"] == "vllm-d3"
+    ):
         raise ModelError(
             "this GGUF stores every projection and expert unquantized (BF16, F16 "
             "or F32): Splash loads quantized GGUFs, not whole-BF16 or F16 models; "

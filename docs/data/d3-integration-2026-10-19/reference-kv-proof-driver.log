@@ -1,0 +1,27 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+lite exit 0
+0.00.076.504 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.228.539 I llama_kv_cache:       MTL0 KV buffer size =     0.00 MiB
+0.00.228.541 I llama_kv_cache: size =  864.00 MiB ( 65536 cells,   6 layers,  4/4 seqs), K (q4_0):  432.00 MiB, V (q4_0):  432.00 MiB
+0.00.314.927 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.540.131 I llama_kv_cache:       MTL0 KV buffer size =   864.00 MiB
+0.00.581.009 I llama_kv_cache: size =  864.00 MiB ( 65536 cells,   6 layers,  4/4 seqs), K (q4_0):  432.00 MiB, V (q4_0):  432.00 MiB
+0.00.653.149 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_set_rows_f32_i64_q4_0', name = 'kernel_set_rows_f32_i64_q4_0'
+0.00.653.183 D ggml_metal_library_compile_pipeline: loaded kernel_set_rows_f32_i64_q4_0                 0x7766b93800 | th_max = 1024 | th_width =   32
+0.00.653.222 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_flash_attn_ext_vec_q4_0_dk256_dv256', name = 'kernel_flash_attn_ext_vec_q4_0_dk256_dv256_mask=1_sink=0_bias=0_scap=0_kvpad=0_sparse=0_ns10=16_ns20=16_nsg=1_nwg=32'
+0.00.653.559 D ggml_metal_library_compile_pipeline: loaded kernel_flash_attn_ext_vec_q4_0_dk256_dv256_mask=1_sink=0_bias=0_scap=0_kvpad=0_sparse=0_ns10=16_ns20=16_nsg=1_nwg=32     0x7766bb4000 | th_max = 1024 | th_width =   32
+0.02.598.852 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_flash_attn_ext_kv_q4_0_f16', name = 'kernel_flash_attn_ext_kv_q4_0_f16'
+0.02.599.086 D ggml_metal_library_compile_pipeline: loaded kernel_flash_attn_ext_kv_q4_0_f16            0x7766bb5180 | th_max = 1024 | th_width =   32
+mini exit 0
+0.00.086.556 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.244.170 I llama_kv_cache:       MTL0 KV buffer size =     0.00 MiB
+0.00.244.172 I llama_kv_cache: size = 2304.00 MiB ( 65536 cells,   8 layers,  4/4 seqs), K (q4_0): 1152.00 MiB, V (q4_0): 1152.00 MiB
+0.00.343.396 I llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+0.00.584.215 I llama_kv_cache:       MTL0 KV buffer size =  2304.00 MiB
+0.00.691.422 I llama_kv_cache: size = 2304.00 MiB ( 65536 cells,   8 layers,  4/4 seqs), K (q4_0): 1152.00 MiB, V (q4_0): 1152.00 MiB
+0.00.862.351 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_set_rows_f32_i64_q4_0', name = 'kernel_set_rows_f32_i64_q4_0'
+0.00.862.392 D ggml_metal_library_compile_pipeline: loaded kernel_set_rows_f32_i64_q4_0                 0x7904a7ca80 | th_max = 1024 | th_width =   32
+0.00.862.477 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_flash_attn_ext_vec_q4_0_dk256_dv256', name = 'kernel_flash_attn_ext_vec_q4_0_dk256_dv256_mask=1_sink=0_bias=0_scap=0_kvpad=0_sparse=0_ns10=32_ns20=32_nsg=1_nwg=32'
+0.00.862.564 D ggml_metal_library_compile_pipeline: loaded kernel_flash_attn_ext_vec_q4_0_dk256_dv256_mask=1_sink=0_bias=0_scap=0_kvpad=0_sparse=0_ns10=32_ns20=32_nsg=1_nwg=32     0x7904a7d180 | th_max = 1024 | th_width =   32
+0.02.103.351 D ggml_metal_library_compile_pipeline: compiling pipeline: base = 'kernel_flash_attn_ext_kv_q4_0_f16', name = 'kernel_flash_attn_ext_kv_q4_0_f16'
+0.02.103.439 D ggml_metal_library_compile_pipeline: loaded kernel_flash_attn_ext_kv_q4_0_f16            0x7904a7e680 | th_max = 1024 | th_width =   32

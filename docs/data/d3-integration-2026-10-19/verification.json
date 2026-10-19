@@ -1,0 +1,429 @@
+{
+  "created_at": "2026-10-19T03:20:03.324178+08:00",
+  "source_head": "16f15a4ff3e005973938335531443c8582ec9450",
+  "branch": "ghost",
+  "uncommitted": true,
+  "pre_existing_dirty_paths_preserved": [
+    "README.md",
+    "dev/tests/install/test_local_launchers.py",
+    "build-local.sh",
+    "qwen38efficientthinkv3splash.sh"
+  ],
+  "source_files_sha256": {
+    "Makefile": "287cce67130a20968314ead1537e97ae02b52e9a1fc47c335f83193e2724c5ed",
+    "README.md": "f97757a7f548aee6098e79e007d412b110989972bbe362e31e2a71a2d1583860",
+    "build-local.sh": "51fe4b68782f9957b2e8369865dd5a6f775ff941f794eb2ac44690951adcbd18",
+    "d3litesplash.sh": "18243ce69e578f929a23272acd47c94a714332272f79e432ec42f9f1befd2d06",
+    "d3minisplash.sh": "f85642b773129dc1b2720bc9ebbab6c88cf639f2b72d2b70b43b2f9a596bfc95",
+    "dev/benchmarks/d3_models.py": "6e4b6913ee0c56c8a7e81c7eb76a68972f944e864a954fd687d9e74eefadf92f",
+    "dev/native.mk": "d3db8d5c57b20d6adcfa2b0d204fddbefdc4b6a3a9f79ce499339f4b25976cc2",
+    "dev/tests/decision_control_real.py": "a7f96a6faccf1cb3d9a4a737e19ad2f2e8b15c518844cab24baa0fd5f895f6e8",
+    "dev/tests/engine/d3_attention_test.mm": "d1d710a3072896c5174fbb4a457e828ce6a45603a19de1e51a5ecafc2cd23710",
+    "dev/tests/engine/d3_head_test.mm": "6a6b73ba42970ee07c6b4b1ce51d78d9ce78dcbc3186166fde78935cb02636fc",
+    "dev/tests/install/test_d3_metadata.py": "148eb46e744d6684821f5ae9d6ebefe891df68eadae12cfcb24ce8fe653b6acf",
+    "dev/tests/install/test_local_launchers.py": "6411d9404ed3310b7bb0a9271aa6f434a6bbe331406e9a7910ff05de76c3b175",
+    "dev/tests/server/test_d3.py": "4d9142c6843b040fd47d2f8fe78902ddd25a6b7c5d766723e068daffb42ee39b",
+    "dev/tests/test_d3_benchmark.py": "dedd9e008c174bb3ab6cba1bfafbb06c4113c724ec8d4df95e6e270837754565",
+    "dev/tools/package.py": "972d91ccf753b5b1d3cab5a1c45b2470899989ab119e74401324d7d4eec2b513",
+    "docs/d3-integration-2026-10-19.md": "659696c9667f02f126e7f2f1fa8c55cc596696905d559a2831cfe61c51dc776d",
+    "install/assembly.py": "b2911d13b8135e6dc446e2008e1b0332c79fab8e7f05944079176df4b44ffd25",
+    "install/families.py": "9a41354db5161945cb3685fa12c1754c807f605f9218b9b39c43c1374122d988",
+    "install/gguf.py": "2ac1691662b8d010e764ae9c9bc0027535560c1dacf1886f043659be90fe3725",
+    "qwen38efficientthinkv3splash.sh": "cabaef3a8df73e9ad59c949843b5709c634ece5a7fe71440b33853616d6218ce",
+    "runtime/encoder/Service.cpp": "6fd706be75d8865e6761998970bd3422b148c3db888d9b9608b6c0bec5f5ced8",
+    "runtime/encoder/Service.hpp": "f55a68e36402cbd9fb9207a3b236613516707c05007242fcabaaffc001549d48",
+    "runtime/main.mm": "43ab9bcf303b3374e16b35d0c20df99c2caf415bad8116083e9e5f265327f835",
+    "runtime/metal/abi/D3.h": "dd7a61d80eb96af7dffc4e5ae2ea2a632ce6e528510e1f5f9b5c5ef8576dccc5",
+    "runtime/metal/kernels/shared/d3.metal": "92ace9d60428d97e31f6f3b305a9f1a3c14c607e5e1a7cdfaac0e553b96bdd74",
+    "runtime/model/D3.hpp": "ef875f2cdd7365283c189361e34f26c3cc212f691bcb5ec57c0b3529ca9e0db1",
+    "runtime/model/D3.mm": "cb74c79c5e57a2e831b683975c974b8b455829d42ff67bd724636628d537ad19",
+    "runtime/model/GgufImage.cpp": "03f2536b97c6beb0bde154048b8638fac112143b0293a3aa246b6c0b7652113d",
+    "runtime/model/GgufImage.hpp": "29a61a7d55d59bfae664b15e48931bcbf923b9aa0e71b19bfc0394513103d3ca",
+    "runtime/model/GgufTarget.cpp": "3327fe0e4fd0b4aa9d690b3d81598d2f7c038d4db8376f16ade98ea6bf86a6bb",
+    "runtime/model/GgufTarget.hpp": "09863be7cefb41d4cc7213c183259e9ae5e555b8921a3b4f5db40e24174630f9",
+    "runtime/model/ModelDescriptor.mm": "134cf0685698447ca6fcbcd71bcc82b2d04f4753344977bebf4c7e8afb166db2",
+    "runtime/ops/D3.cpp": "0e0bbd4e0cec9686c926169fe3e2d5b3ffb310516bfd07bfdb300ac38d9fda6d",
+    "runtime/ops/D3.hpp": "1b6229c978035bc55a91bfe88bf12fc7455b707b3925cd31c229d6a2f028c9cd",
+    "server/d3.py": "88e5f93b29c0729275d8ffc131ea67761dea5d92c789d8f0eb25e8aa4e0d85c1",
+    "server/frontend.py": "e2dfc5b1c243507a846db3c263cbd0d1621f009a900c418425bf28b0f99945ae",
+    "server/server.py": "24e627e91ac1f501333351aad3533a73082ece8463c8d9f725854ef086c61e4c"
+  },
+  "source_patch_path": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/source-state.patch",
+  "source_patch_sha256": "37e2d4709a8be42bbd9f474edcd408525286ea05f2e7061ab0935a510a7e4646",
+  "engine_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+  "metallib_sha256": "a7c2fa56c60f24d5227114bb82a5cc97e5b34a7c9305788b34453bfe5f200e34",
+  "build_identity": {
+    "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903",
+    "schema_version": 1,
+    "source_sha256": "c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+  },
+  "source_models": [
+    {
+      "path": "/Users/ghost233/.lmstudio/models/ggml-org/vllm-d3-lite-GGUF/vllm-d3-lite-BF16.gguf",
+      "bytes": 2025305632,
+      "mtime_ns": 1792339416061662166,
+      "sha256": "f78c5d7679a9a2e832f6d978ef7bd16c74345fa3736442936c18499ad3434241"
+    },
+    {
+      "path": "/Users/ghost233/.lmstudio/models/ggml-org/vllm-d3-mini-GGUF/vllm-d3-mini-Q4_K_M.gguf",
+      "bytes": 3707523520,
+      "mtime_ns": 1792339754583681421,
+      "sha256": "fa2c5f047d717f7a9cab0b93c7ce8da83f0d46f67c92c3043131d5274e8a7a96"
+    }
+  ],
+  "gates": {
+    "production_build": {
+      "log": "build11.log",
+      "exit": 0
+    },
+    "native_build_and_sanitizers": {
+      "command": "make -j4 check-native-build test-sanitizers BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "log": "native-build-sanitizers1.log",
+      "exit": 0
+    },
+    "source_and_metal": {
+      "command": "make check-source check-native-metal BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "log": "metal-gates1.log",
+      "exit": 0
+    },
+    "python_suite_and_checks": {
+      "log": "python-gates2.log",
+      "tests": 1412,
+      "skipped": 4,
+      "exit": 0
+    },
+    "api_correctness_types": {
+      "report": "api-correctness-types-final/results.json",
+      "exit": 0
+    },
+    "api_correctness_32k": {
+      "report": "api-correctness-32k-final/results.json",
+      "exit": 0
+    },
+    "lite_real_model": {
+      "log": "lite-model-final.log",
+      "exit": 0
+    },
+    "mini_real_model": {
+      "log": "mini-model-final.log",
+      "exit": 0
+    },
+    "lite_protocol": {
+      "report": "lite-protocol.json",
+      "exit": 0
+    },
+    "mini_protocol": {
+      "report": "mini-protocol.json",
+      "exit": 0
+    },
+    "server_after_unicode_fix": {
+      "command": ".venv/bin/python -m unittest discover -s dev/tests/server -t . -p 'test_*.py'",
+      "log": "server-final.log",
+      "tests": 930,
+      "exit": 0
+    },
+    "unicode_api_correctness": {
+      "command": ".venv/bin/python -u -m build.d3-integration-20261019.unicode-check",
+      "report": "unicode-api-correctness.json",
+      "exit": 0
+    },
+    "unicode_regression_red": {
+      "command": ".venv/bin/python -m unittest dev.tests.server.test_d3.D3Tests.test_structured_unicode_matches_model_json_template",
+      "log": "unicode-red.log",
+      "exit": 1,
+      "meaning": "expected pre-fix reproducer failure"
+    },
+    "unicode_regression_green": {
+      "command": ".venv/bin/python -m unittest dev.tests.server.test_d3",
+      "log": "unicode-green.log",
+      "tests": 3,
+      "exit": 0
+    },
+    "measurement_isolation": {
+      "command": ".venv/bin/python -m unittest dev.tests.test_d3_benchmark",
+      "tests": 2,
+      "exit": 0
+    },
+    "standalone_correctness": {
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+        "-u",
+        "-m",
+        "dev.benchmarks.d3_models",
+        "--reference-mode",
+        "llama",
+        "--models",
+        "lite",
+        "mini",
+        "--lengths",
+        "4096",
+        "32767",
+        "--accept-desktop-load",
+        "--phase",
+        "correctness",
+        "--output",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k"
+      ],
+      "exit": 0,
+      "report": "standalone-correctness.json"
+    },
+    "standalone_performance": {
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+        "-u",
+        "-m",
+        "dev.benchmarks.d3_models",
+        "--reference-mode",
+        "llama",
+        "--models",
+        "lite",
+        "mini",
+        "--lengths",
+        "4096",
+        "32767",
+        "--accept-desktop-load",
+        "--phase",
+        "performance",
+        "--output",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-performance-near32k",
+        "--rounds",
+        "3",
+        "--correctness-report",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/llama-correctness-near32k/results.json"
+      ],
+      "exit": 0,
+      "report": "standalone-performance.json",
+      "samples": 24,
+      "input_tokens": [
+        4096,
+        32767
+      ]
+    },
+    "reference_effective_kv": {
+      "command": ".venv/bin/python -u -m build.d3-integration-20261019.reference-kv-proof",
+      "exit": 0,
+      "report": "reference-kv-proof.json",
+      "effective_k": "q4_0",
+      "effective_v": "q4_0"
+    },
+    "benchmark_tool_tests": {
+      "command": ".venv/bin/python -m unittest dev.tests.test_d3_benchmark",
+      "tests": 4,
+      "exit": 0
+    }
+  },
+  "final_source_checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "dev.tests.test_d3_benchmark",
+        "dev.tests.server.test_d3",
+        "dev.tests.install.test_d3_metadata"
+      ],
+      "exit": 0,
+      "stdout": "WAIT external inference [123]\n",
+      "stderr": "[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.\n........\n----------------------------------------------------------------------\nRan 8 tests in 1.040s\n\nOK\n"
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "compileall",
+        "-q",
+        "server",
+        "install",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--config",
+        "dev/ruff.toml",
+        "server",
+        "install",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--config",
+        "dev/ruff.toml",
+        "server",
+        "install",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit": 0,
+      "stdout": "191 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "dev/tools/check_architecture.py"
+      ],
+      "exit": 0,
+      "stdout": "backend architecture: PASS\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "d3litesplash.sh"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sh",
+        "-n",
+        "d3minisplash.sh"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "performance_job_exits": [
+    {
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+        "-u",
+        "-m",
+        "dev.benchmarks.d3_models",
+        "--phase",
+        "performance",
+        "--rounds",
+        "3",
+        "--accept-desktop-load",
+        "--output",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/performance-4k-desktop",
+        "--lengths",
+        "4096",
+        "--lmstudio-key-file",
+        "/private/tmp/splash-d3-lmstudio-i8pnk85n",
+        "--lmstudio-lite-port",
+        "53179",
+        "--lmstudio-mini-port",
+        "56317",
+        "--correctness-report",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/api-correctness-types-final/results.json"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+        "-u",
+        "-m",
+        "dev.benchmarks.d3_models",
+        "--phase",
+        "performance",
+        "--rounds",
+        "3",
+        "--accept-desktop-load",
+        "--output",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/performance-32k-desktop",
+        "--reference-mode",
+        "none",
+        "--lengths",
+        "32768",
+        "--correctness-report",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/api-correctness-32k-final/results.json"
+      ],
+      "exit": 0
+    }
+  ],
+  "lmstudio_32k": "both HTTP504 after 30000ms; not a successful throughput comparison",
+  "features": {
+    "context_capacity": 262144,
+    "kv": "q4h",
+    "noncausal_full_attention": true,
+    "causal_gdn": true,
+    "selected_final_query": true,
+    "generation": false,
+    "drafter": "none",
+    "compact": false,
+    "lookup": false,
+    "fast_topk": false,
+    "ane": false,
+    "resident_ffn_fp16_cache_bytes": 0
+  },
+  "cleanup": {
+    "owned_test_ports": {
+      "18144": "released",
+      "18145": "released"
+    },
+    "lmstudio_d3_models": "unloaded by user; not reloaded",
+    "standalone_correctness_exit": 0,
+    "standalone_performance_exit": 0,
+    "reference_kv_proof_exits": [
+      0,
+      0
+    ],
+    "temporary_credentials": "deleted; no private LM Studio credential was read"
+  },
+  "raw_evidence_directory": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019",
+  "performance_frontend_provenance": {
+    "d3_py_sha256": "bc1bc1e1f5c4cfb2e5631ad1f0f9e37c45968e74ea97704863f9a6f4c8a26023",
+    "source_patch": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/source-state-before-unicode-fix.patch",
+    "source_patch_sha256": "3dbc6604a4e6ad83173055d5ea64b42e6337d1255f75312f63b3d44b96bdbd7f",
+    "post_fix_english_performance_fixture_probability_delta": {
+      "lite": 0.0,
+      "mini": 0.0
+    },
+    "reuse_reason": "Fix only changes structured JSON serialization. Performance inputs are strings; runtime, binary, metallib and English fixture probabilities are unchanged."
+  },
+  "reference_binary": {
+    "path": "/Users/ghost233/.lmstudio/extensions/backends/llama.cpp-mac-arm64-apple-metal-advsimd-2.60.0/llama-server",
+    "sha256": "653cba8f82e16eec339a8b1843ccdcdcc015996e4ffa3e01f1c225f3e242fe25"
+  },
+  "latest_reference": "User changed comparator to standalone LM Studio runtime 2.60.0, with its recorded parameters.",
+  "known_reference_issue": {
+    "exact_input_tokens": 32768,
+    "status": "diagnostic deliberately cancelled, not a passing sample",
+    "driver_exit": 1,
+    "native_exit": "not captured by the pre-fix cancellation harness",
+    "evidence": [
+      "exact-32768-cancellation.json",
+      "exact-32768-results.json",
+      "llama-32768-sample.txt"
+    ],
+    "scope": "Formal long-input comparison uses 32767, within the user requested approximately 32768."
+  }
+}

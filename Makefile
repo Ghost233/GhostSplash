@@ -245,6 +245,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/ops/GgufPrefillCache.cpp \
 	runtime/ops/SingleTokenLinear.cpp \
 	runtime/ops/ModernBert.cpp \
+	runtime/ops/D3.cpp \
 	runtime/ops/Linear.cpp \
 	runtime/ops/LinearGguf.cpp \
 	runtime/ops/MoE.cpp \
@@ -306,6 +307,7 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/Runtime.cpp \
 	runtime/model/RuntimeArenas.cpp
 ENGINE_MM_SOURCES := \
+	runtime/model/D3.mm \
 	runtime/ane/Handoff.mm \
 	runtime/ane/Power.mm \
 	runtime/ane/Program.mm \

@@ -1,0 +1,194 @@
+{
+  "source": "ghost-model-deck",
+  "models": [
+    {
+      "key": "qwen3-5-4b-ud-q4-k-xl",
+      "type": "llm",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "qwen3-5-4b-ud-q4-k-xl",
+          "config": {
+            "context_length": 262144,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "embeddinggemma-2-f16",
+      "type": "embedding",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "embeddinggemma-2-f16",
+          "config": {
+            "context_length": 8192,
+            "max_concurrent_requests": 1
+          }
+        }
+      ]
+    },
+    {
+      "key": "vllm-d3-lite-bf16",
+      "type": "llm",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite-bf16",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "vllm-d3-mini-q4-k-m",
+      "type": "llm",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini-q4-k-m",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "fastjev",
+      "type": "llm",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "fastjev",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "longjev",
+      "type": "llm",
+      "source": "ghost-model-deck",
+      "loaded_instances": [
+        {
+          "id": "longjev",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "long",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": true,
+      "loaded_instances": [
+        {
+          "id": "long",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "fast",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": true,
+      "loaded_instances": [
+        {
+          "id": "fast",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "qwen3-5-4b-ud-q4-k-xl",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": false,
+      "loaded_instances": [
+        {
+          "id": "qwen3-5-4b-ud-q4-k-xl",
+          "config": {
+            "context_length": 262144,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "vllm-d3-lite-bf16",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": false,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-lite-bf16",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "vllm-d3-mini-q4-k-m",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": false,
+      "loaded_instances": [
+        {
+          "id": "vllm-d3-mini-q4-k-m",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "fastjev",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": false,
+      "loaded_instances": [
+        {
+          "id": "fastjev",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    },
+    {
+      "key": "longjev",
+      "type": "decision",
+      "source": "ghost-model-deck",
+      "virtual": false,
+      "loaded_instances": [
+        {
+          "id": "longjev",
+          "config": {
+            "context_length": 32768,
+            "max_concurrent_requests": 32
+          }
+        }
+      ]
+    }
+  ]
+}

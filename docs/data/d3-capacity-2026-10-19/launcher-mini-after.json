@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "target": "jev",
+  "context": {
+    "status": "ready",
+    "source": "ghost-model-deck",
+    "contextLength": 32768,
+    "maxInputTokens": 32768,
+    "maxConcurrentRequests": 4
+  }
+}

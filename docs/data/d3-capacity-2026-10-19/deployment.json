@@ -1,0 +1,12 @@
+{
+  "deployed_at": 1792381341.845303,
+  "old_binary_sha256": "c5570f63313ce9f9f57cc2a9fceb54f10e9c5a8839c75408d98bb75014392f3b",
+  "new_binary_sha256": "311ead4c092fb33eb0eb0fe1d6d91934ef8d1e43b45f31814f3049cad7b2148a",
+  "metallib_unchanged": true,
+  "new_identity": {
+    "build_id": "src-aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30",
+    "schema_version": 1,
+    "source_sha256": "aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30"
+  },
+  "architecture": "arm64"
+}

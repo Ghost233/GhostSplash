@@ -1,0 +1,100 @@
+[
+  {
+    "model": "vllm-d3-lite-bf16",
+    "results": [
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      }
+    ]
+  },
+  {
+    "model": "vllm-d3-mini-q4-k-m",
+    "results": [
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      },
+      {
+        "ok": true,
+        "target": "jev",
+        "context": {
+          "status": "ready",
+          "source": "ghost-model-deck",
+          "contextLength": 32768,
+          "maxInputTokens": 32768,
+          "maxConcurrentRequests": 4
+        }
+      }
+    ]
+  }
+]

@@ -186,7 +186,15 @@ def _well_formed(record):
                 source is None
                 and role == "draft"
                 and record["family"]
-                in {"Qwen3.5-4B", "Kev-4B", "Kev-0.8B", "Julia-1", "Laya"}
+                in {
+                    "Qwen3.5-4B",
+                    "Kev-4B",
+                    "Kev-0.8B",
+                    "D3-lite",
+                    "D3-mini",
+                    "Julia-1",
+                    "Laya",
+                }
             )
             or (
                 isinstance(source, dict)

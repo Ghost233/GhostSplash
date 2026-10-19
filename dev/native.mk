@@ -114,6 +114,7 @@ TEST_Q8_STORAGE_TEST := $(ENGINE_TEST_BUILD)/q8-page-storage
 TEST_Q8_ATTENTION_TEST := $(ENGINE_TEST_BUILD)/q8-flash-attention
 TEST_Q8_PREFILL_TEST := $(ENGINE_TEST_BUILD)/q8-chunked-prefill
 TEST_MODERN_BERT := $(ENGINE_TEST_BUILD)/modernbert-kernels
+TEST_D3 := $(ENGINE_TEST_BUILD)/d3-attention
 TEST_GDN_METAL_TEST := $(ENGINE_TEST_BUILD)/gdn-metal
 TEST_OPERATOR_WORKSPACE := $(ENGINE_TEST_BUILD)/operator-workspace
 TEST_EXECUTION_PLANS := $(ENGINE_TEST_BUILD)/execution-plans
@@ -224,7 +225,7 @@ TEST_METAL_TARGETS := $(TEST_COMPACT_PROJECTION) $(TEST_DRAFT_BLOCK_ACCEPTANCE) 
 	$(LIB) $(TEST_METAL_BACKEND_LIB) $(TEST_PRODUCTION_LIB) $(TEST_Q8_LIB) $(TEST_Q8_ATTENTION_LIB) \
 	$(TEST_GGUF_DEQUANT_LIB)
 
-TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY) $(TEST_MODERN_BERT)
+TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY) $(TEST_MODERN_BERT) $(TEST_D3)
 
 # Keep every output that uses a flag set together, including standalone
 # benchmarks, real-model tests and intermediate test AIRs/metallibs.
@@ -571,6 +572,7 @@ test-gguf-iq1s-replay: $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB)
 
 test-engine-metal: test-gguf-iq1s-replay
 test-engine-metal: $(TEST_METAL_TARGETS)
+	$(METAL_TEST_ENV) $(TEST_D3) $(LIB)
 	$(METAL_TEST_ENV) $(TEST_MODERN_BERT) $(LIB)
 	$(METAL_TEST_ENV) $(TEST_COMPACT_PROJECTION) $(TEST_PRODUCTION_LIB)
 	$(METAL_TEST_ENV) $(BUILD_ID_PYTHON) dev/tests/engine/run_draft_preparation.py $(TEST_DRAFT_PREPARATION) $(LIB) \
@@ -750,4 +752,12 @@ test-ane-power-reference: $(TEST_ANE_FFN) $(LIB)
 	$(TEST_ANE_FFN) $(LIB) power-reference
 
 $(TEST_MODERN_BERT): dev/tests/engine/modernbert_kernels_test.mm $(ENGINE_LIBRARY) $(LIB) | $(ENGINE_TEST_BUILD)
+	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -Idev/tests/engine -fobjc-arc $< $(ENGINE_LIBRARY) $(ENGINE_LINKFLAGS) -o $@
+
+$(TEST_D3): dev/tests/engine/d3_attention_test.mm $(ENGINE_LIBRARY) $(LIB) | $(ENGINE_TEST_BUILD)
+	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -Idev/tests/engine -fobjc-arc $< $(ENGINE_LIBRARY) $(ENGINE_LINKFLAGS) -o $@
+
+TEST_D3_HEAD := $(ENGINE_TEST_BUILD)/d3-head
+TEST_CONFIG_TARGETS += $(TEST_D3_HEAD)
+$(TEST_D3_HEAD): dev/tests/engine/d3_head_test.mm $(ENGINE_LIBRARY) $(LIB) | $(ENGINE_TEST_BUILD)
 	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -Idev/tests/engine -fobjc-arc $< $(ENGINE_LIBRARY) $(ENGINE_LINKFLAGS) -o $@

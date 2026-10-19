@@ -829,6 +829,28 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
   @autoreleasepool {
     NSDictionary *target = readObject(config, "upstream model config");
     NSDictionary *text = target[@"text_config"];
+    if ([target[@"decision_config"][@"type"] isEqual:@"vllm-d3"]) {
+      if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufMetadata)
+        throw std::invalid_argument("D3 requires text-only GGUF without a draft");
+      QwenTargetDimensions geometry = [text[@"hidden_size"] doubleValue] == 1024
+          ? static_cast<QwenTargetDimensions>(Qwen3_5_0_8BLayout{})
+          : static_cast<QwenTargetDimensions>(Qwen3_5_4BLayout{});
+      geometry.decisionHeadSize = 256;
+      validateTextConfig(text, geometry, "D3", TargetSource::Gguf);
+      NSDictionary *decision = target[@"decision_config"];
+      requireNumbers(decision, "D3", "decision config", {{"head_size", 256}});
+      NSArray *ids = requireArray(decision, @"token_ids", "D3 answer code IDs");
+      if (ids.count < 2 || ids.count > 255) throw std::invalid_argument("invalid D3 answer code count");
+      std::set<uint64_t> seen;
+      for (id value in ids) {
+        auto token = requireWhole(value, "D3 answer code");
+        if (token >= geometry.vocabularySize || !seen.insert(token).second)
+          throw std::invalid_argument("invalid or repeated D3 answer code");
+      }
+      const auto metadata = readGgufMetadata(*ggufMetadata);
+      gguf::requireMetadata(metadata, geometry);
+      return geometry.hiddenSize == 1024 ? "D3-lite" : "D3-mini";
+    }
     if ([text[@"model_type"] isEqual:@"modernbert_text"]) {
       if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufMetadata)
         throw std::invalid_argument("ModernBERT decisions require text-only GGUF without a draft");

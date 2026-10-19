@@ -66,6 +66,7 @@ class LocalLauncherTests(unittest.TestCase):
             (draft_dir / "model.safetensors").touch()
         if script.name in {
             "qwen38miniplusv3splash.sh",
+            "qwen38efficientthinkv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
         }:
@@ -85,12 +86,14 @@ class LocalLauncherTests(unittest.TestCase):
         if script.name in {
             "coder39027bsplash.sh",
             "qwen38miniplusv3splash.sh",
+            "qwen38efficientthinkv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
         }:
             arguments.append(str(draft_dir))
         if script.name in {
             "qwen38miniplusv3splash.sh",
+            "qwen38efficientthinkv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
         }:
@@ -103,9 +106,12 @@ class LocalLauncherTests(unittest.TestCase):
             "swift1527biq3ssplash.sh",
             "kev4bsplash.sh",
             "kev08bsplash.sh",
+            "d3litesplash.sh",
+            "d3minisplash.sh",
             "julia1splash.sh",
             "layasplash.sh",
             "qwen38miniplusv3splash.sh",
+            "qwen38efficientthinkv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
         }:
@@ -122,6 +128,8 @@ class LocalLauncherTests(unittest.TestCase):
                     "qwen3.54bsplash.sh",
                     "kev4bsplash.sh",
                     "kev08bsplash.sh",
+                    "d3litesplash.sh",
+                    "d3minisplash.sh",
                     "julia1splash.sh",
                     "layasplash.sh",
                 }
@@ -134,12 +142,16 @@ class LocalLauncherTests(unittest.TestCase):
         if script.name in {
             "kev4bsplash.sh",
             "kev08bsplash.sh",
+            "d3litesplash.sh",
+            "d3minisplash.sh",
             "julia1splash.sh",
             "layasplash.sh",
         }:
             record["family"] = {
                 "kev4bsplash.sh": "Kev-4B",
                 "kev08bsplash.sh": "Kev-0.8B",
+                "d3litesplash.sh": "D3-lite",
+                "d3minisplash.sh": "D3-mini",
                 "julia1splash.sh": "Julia-1",
                 "layasplash.sh": "Laya",
             }[script.name]
@@ -362,6 +374,39 @@ class LocalLauncherTests(unittest.TestCase):
             ROOT / "qwen38miniplusv3splash.sh", installed=True, wrong_draft=True
         )
 
+    def test_efficientthink_uses_shared_draft_and_requested_ane_defaults(self):
+        script = ROOT / "qwen38efficientthinkv3splash.sh"
+        parsed = self.launch(script, installed=True)
+        self.assertEqual(parsed.prompt_lookup, "on")
+        self.assertEqual(parsed.fast_topk, "off")
+        self.assertEqual(parsed.compact_draft_head, "off")
+        self.assertIsNone(parsed.compact_draft_ranking)
+        self.assertEqual(parsed.ane_ffn_share, 0.4182)
+        self.assertEqual(parsed.ane_power_reference, "auto")
+        self.assertEqual(parsed.ane_power_recovery, "on")
+        self.assertEqual(parsed.ane_recovery_max_power_percent, 50)
+        self.launch(script, installed=True, wrong_draft=True)
+        parsed = self.launch(
+            script,
+            installed=True,
+            startup_options=(
+                "--disable-ane",
+                "--prompt-lookup",
+                "off",
+                "--ane-ffn-share",
+                "auto",
+                "--ane-power-recovery",
+                "off",
+                "--ane-power-reference",
+                "off",
+            ),
+        )
+        self.assertTrue(parsed.disable_ane)
+        self.assertEqual(parsed.prompt_lookup, "off")
+        self.assertIsNone(parsed.ane_ffn_share)
+        self.assertEqual(parsed.ane_power_reference, "off")
+        self.assertEqual(parsed.ane_power_recovery, "off")
+
     def test_modern_launchers_default_compact_off_and_require_explicit_public_ranking(
         self,
     ):
@@ -369,9 +414,12 @@ class LocalLauncherTests(unittest.TestCase):
             "swift1527biq3ssplash.sh",
             "kev4bsplash.sh",
             "kev08bsplash.sh",
+            "d3litesplash.sh",
+            "d3minisplash.sh",
             "julia1splash.sh",
             "layasplash.sh",
             "qwen38miniplusv3splash.sh",
+            "qwen38efficientthinkv3splash.sh",
             "qwen38valapexminiplusv3splash.sh",
         ):
             with self.subTest(launcher=name):
@@ -416,6 +464,8 @@ class LocalLauncherTests(unittest.TestCase):
                         "qwen3.54bdflashsplash.sh",
                         "kev4bsplash.sh",
                         "kev08bsplash.sh",
+                        "d3litesplash.sh",
+                        "d3minisplash.sh",
                         "julia1splash.sh",
                         "layasplash.sh",
                     }

@@ -1,0 +1,6 @@
+D3 real head FP64 projections=2040 maximum_error=2.6077e-08 PASS
+D3 real full/selected/repeated rows=37 PASS
+D3 real full/selected/repeated rows=129 PASS
+D3 real full/selected/repeated rows=2049 PASS
+D3 real full/selected/repeated rows=4096 PASS
+D3 real full/selected/repeated rows=32768 PASS

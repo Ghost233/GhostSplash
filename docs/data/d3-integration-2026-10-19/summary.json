@@ -1,0 +1,136 @@
+{
+  "measurement": "diagnostic; user accepted current desktop GPU load",
+  "context_capacity": 262144,
+  "splash_kv": "q4h",
+  "lmstudio_kv": "q4_0",
+  "rows": [
+    {
+      "model": "lite",
+      "engine": "lmstudio",
+      "input_tokens": 4096,
+      "rounds": 3,
+      "mean_seconds": 1.0997810976308149,
+      "aggregate_input_tokens_per_second": 3724.3775227849796,
+      "seconds_range": [
+        1.086173333984334,
+        1.1170754169579595
+      ],
+      "peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "model": "lite",
+      "engine": "splash",
+      "input_tokens": 4096,
+      "rounds": 3,
+      "mean_seconds": 0.3856529859864774,
+      "aggregate_input_tokens_per_second": 10620.947195631523,
+      "seconds_range": [
+        0.37895016599213704,
+        0.3910277090035379
+      ],
+      "peak_physical_footprint_bytes": 2327383736
+    },
+    {
+      "model": "mini",
+      "engine": "lmstudio",
+      "input_tokens": 4096,
+      "rounds": 3,
+      "mean_seconds": 3.6454951109869094,
+      "aggregate_input_tokens_per_second": 1123.578519596788,
+      "seconds_range": [
+        3.450820957950782,
+        3.742910750035662
+      ],
+      "peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "model": "mini",
+      "engine": "splash",
+      "input_tokens": 4096,
+      "rounds": 3,
+      "mean_seconds": 1.7733559859722543,
+      "aggregate_input_tokens_per_second": 2309.7449313056795,
+      "seconds_range": [
+        1.7316406249883585,
+        1.807907999958843
+      ],
+      "peak_physical_footprint_bytes": 3804648296
+    },
+    {
+      "model": "lite",
+      "engine": "splash",
+      "input_tokens": 32768,
+      "rounds": 3,
+      "mean_seconds": 7.4663152086626114,
+      "aggregate_input_tokens_per_second": 4388.778009530286,
+      "seconds_range": [
+        7.217565416998696,
+        7.9559870840166695
+      ],
+      "peak_physical_footprint_bytes": 3008172352
+    },
+    {
+      "model": "mini",
+      "engine": "splash",
+      "input_tokens": 32768,
+      "rounds": 3,
+      "mean_seconds": 27.305665750308737,
+      "aggregate_input_tokens_per_second": 1200.043987194471,
+      "seconds_range": [
+        26.85614424996311,
+        28.005150333978236
+      ],
+      "peak_physical_footprint_bytes": 5441918952
+    }
+  ],
+  "reference_32k_retries": [
+    {
+      "model": "vllm-d3-lite",
+      "input_tokens": 32768,
+      "status": "failed",
+      "error": "HTTP 504: {\n    \"error\": {\n        \"message\": \"vllm-d3-lite: Engine protocol systemOne request timed out after 30000ms.\",\n        \"type\": \"engine_error\",\n        \"param\": null,\n        \"code\": \"request_timeout\"\n    }\n}",
+      "seconds": 30.029995500051882,
+      "recovery_unload": {
+        "instance_id": "vllm-d3-lite"
+      },
+      "recovery_load": {
+        "type": "decision",
+        "instance_id": "vllm-d3-lite",
+        "load_time_seconds": 1.794,
+        "status": "loaded",
+        "load_config": {
+          "context_length": 262144,
+          "eval_batch_size": 32768,
+          "physical_batch_size": 32768,
+          "parallel": 4,
+          "flash_attention": true,
+          "offload_kv_cache_to_gpu": true
+        }
+      }
+    },
+    {
+      "model": "vllm-d3-mini",
+      "input_tokens": 32768,
+      "status": "failed",
+      "error": "HTTP 504: {\n    \"error\": {\n        \"message\": \"vllm-d3-mini: Engine protocol systemOne request timed out after 30000ms.\",\n        \"type\": \"engine_error\",\n        \"param\": null,\n        \"code\": \"request_timeout\"\n    }\n}",
+      "seconds": 30.007663374999538,
+      "recovery_unload": {
+        "instance_id": "vllm-d3-mini"
+      },
+      "recovery_load": {
+        "type": "decision",
+        "instance_id": "vllm-d3-mini",
+        "load_time_seconds": 2.294,
+        "status": "loaded",
+        "load_config": {
+          "context_length": 262144,
+          "eval_batch_size": 32768,
+          "physical_batch_size": 32768,
+          "parallel": 4,
+          "flash_attention": true,
+          "offload_kv_cache_to_gpu": true
+        }
+      }
+    }
+  ]
+}

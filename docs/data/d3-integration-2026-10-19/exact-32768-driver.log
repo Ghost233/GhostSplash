@@ -1,0 +1,21 @@
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+CORRECT lite 128
+CORRECT lite 129
+CORRECT lite 2048
+CORRECT lite 2049
+CORRECT lite 4096
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/benchmarks/d3_models.py", line 691, in <module>
+    main()
+    ~~~~^^
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/benchmarks/d3_models.py", line 687, in main
+    run(parser.parse_args())
+    ~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/benchmarks/d3_models.py", line 640, in run
+    standalone.close()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/ghost233/Ghost233Code/GhostSplash/dev/benchmarks/d3_models.py", line 246, in close
+    raise RuntimeError("llama.cpp required forced cleanup") from None
+RuntimeError: llama.cpp required forced cleanup

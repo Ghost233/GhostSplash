@@ -1,0 +1,13 @@
+{
+  "owned_test_ports": {
+    "18144": "released",
+    "18145": "released"
+  },
+  "lmstudio_d3_models": "unloaded by user; not reloaded",
+  "standalone_correctness_exit": 0,
+  "standalone_performance_exit": 0,
+  "reference_kv_proof_exits": [
+    0,
+    0
+  ]
+}

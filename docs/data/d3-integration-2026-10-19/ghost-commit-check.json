@@ -1,0 +1,24 @@
+{
+  "validated_at": "2026-10-19T16:28:08.599998+08:00",
+  "source_base": "16f15a4ff3e005973938335531443c8582ec9450",
+  "branch": "ghost",
+  "command": "make -j4 BUILD=build/d3-capacity-20261019/engine check test-sanitizers BUILD_ID_PYTHON=/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+  "exit_code": 0,
+  "python_summary": [
+    "Ran 1417 tests in 478.508s",
+    "OK (skipped=4)"
+  ],
+  "complete_gates": [
+    "check-source",
+    "check-native-cpu",
+    "check-native-metal",
+    "check-native-build",
+    "check-python",
+    "test-sanitizers"
+  ],
+  "raw_log_sha256": "106289a4fa03123624321b539b0dcf0fb90082ee14ff56845b80228a001a2c88",
+  "raw_log_archive": "ghost-commit-check.log.gz",
+  "canonical_binary_sha256": "311ead4c092fb33eb0eb0fe1d6d91934ef8d1e43b45f31814f3049cad7b2148a",
+  "checked_binary_sha256": "311ead4c092fb33eb0eb0fe1d6d91934ef8d1e43b45f31814f3049cad7b2148a",
+  "build_identity_header": "#pragma once\n#define SPLASH_BUILD_ID \"src-aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30\"\n#define SPLASH_BUILD_SOURCE_SHA256 \"aa0e660dbe4edc1c4dfd65a7512240f10944227ed26fb0939b5df8bc6fea4b30\"\n"
+}

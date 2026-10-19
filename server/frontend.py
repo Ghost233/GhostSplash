@@ -28,6 +28,7 @@ from .chat_templates import (
     render_chat_template,
     template_options,
 )
+from .d3 import D3Scorer
 from .diagnostics import print_status
 from .errors import (
     APIError,
@@ -267,7 +268,9 @@ class Frontend:
         self.tokenizer = tokenizer
         self.decision_scorer = (
             (
-                ModernBertScorer(tokenizer, decision_config)
+                D3Scorer(tokenizer, decision_config)
+                if decision_config.get("type") == "vllm-d3"
+                else ModernBertScorer(tokenizer, decision_config)
                 if decision_config.get("type") == "laya"
                 else kev.KevScorer(tokenizer, decision_config)
             )

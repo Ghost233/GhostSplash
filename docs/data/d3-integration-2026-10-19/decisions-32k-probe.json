@@ -1,0 +1,26 @@
+{
+  "route": "/v1/decisions",
+  "expected_input_tokens": 32768,
+  "basis": "validated +24 token wrapper overhead on the 4096-token control",
+  "started_at": 1792348748.5683599,
+  "status": "failed",
+  "error": "HTTP 504: {\n    \"error\": {\n        \"message\": \"vllm-d3-lite: Engine protocol systemOne request timed out after 30000ms.\",\n        \"type\": \"engine_error\",\n        \"param\": null,\n        \"code\": \"request_timeout\"\n    }\n}",
+  "seconds": 30.0270806250046,
+  "recovery_unload": {
+    "instance_id": "vllm-d3-lite"
+  },
+  "restored_parallel4": {
+    "type": "decision",
+    "instance_id": "vllm-d3-lite",
+    "load_time_seconds": 5.681,
+    "status": "loaded",
+    "load_config": {
+      "context_length": 262144,
+      "eval_batch_size": 32768,
+      "physical_batch_size": 32768,
+      "parallel": 4,
+      "flash_attention": true,
+      "offload_kv_cache_to_gpu": true
+    }
+  }
+}

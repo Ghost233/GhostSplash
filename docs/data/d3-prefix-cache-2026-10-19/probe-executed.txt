@@ -1,0 +1,178 @@
+"""Read-only real D3 prefix-cache capability and request-isolation probe."""
+
+import argparse
+import copy
+import hashlib
+import json
+import math
+import subprocess
+import time
+from dataclasses import asdict
+from datetime import datetime
+from pathlib import Path
+from types import SimpleNamespace
+
+from dev.benchmarks.d3_models import case, scorer
+from install import models
+from server import judgments, protocol as wire
+from server.runtime import GenerationRequest, MultiplexedRuntime
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    repo = Path.cwd()
+    args.binary = args.binary.resolve()
+    result = {
+        "created_at": datetime.now().astimezone().isoformat(),
+        "source_head": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip(),
+        "uncommitted": True,
+        "binary": str(args.binary),
+        "binary_sha256": digest(args.binary),
+        "metallib_sha256": digest(args.binary.with_suffix(".metallib")),
+        "probe_sha256": digest(Path(__file__)),
+        "source_sha256": {
+            str(p): digest(p)
+            for p in map(
+                Path,
+                (
+                    "runtime/encoder/Service.cpp",
+                    "runtime/model/D3.mm",
+                    "runtime/metal/kernels/shared/d3.metal",
+                    "runtime/engine/Cache.cpp",
+                    "server/server.py",
+                ),
+            )
+        },
+        "performance_test": False,
+        "tolerance": "abs(actual-reference) <= 1e-3 * max(1, abs(reference))",
+        "sessions": [],
+        "checks": [],
+    }
+
+    def save():
+        args.output.write_text(json.dumps(result, indent=2) + "\n")
+
+    def compare(actual, reference, label):
+        assert len(actual) == len(reference) == 255
+        errors = [abs(a - b) for a, b in zip(actual, reference)]
+        ratios = [e / (1e-3 * max(1, abs(b))) for e, b in zip(errors, reference)]
+        assert max(ratios) <= 1, (label, max(ratios))
+        result["checks"].append(
+            {"label": label, "maximum_absolute_error": max(errors),
+             "maximum_error_to_tolerance_ratio": max(ratios)}
+        )
+
+    for name in ("lite", "mini"):
+        model_scorer = scorer(SimpleNamespace(repo=repo), name)
+        variant = "BF16" if name == "lite" else "Q4_K_M"
+        model_root = models.Selection.of(
+            repo / "install/models-local",
+            f"ggml-org/vllm-d3-{name}-GGUF:{variant}",
+            language_only=True,
+        ).link.resolve()
+
+        def encode(body):
+            state, specs, errors = judgments.validate_systemone(body)
+            assert not errors
+            qid, spec = specs[0]
+            return tuple(model_scorer.encode(state, spec, body["questions"][qid])[0])
+
+        for length in (4096, 32768):
+            body_a = case(model_scorer, length, 1)
+            body_b = copy.deepcopy(body_a)
+            body_b["state"] = body_b["state"].replace(
+                "charged twice; please refund the extra charge.",
+                "package delayed; please locate the missing delivery.",
+            )
+            a, b = encode(body_a), encode(body_b)
+            common = next(i for i, (x, y) in enumerate(zip(a, b)) if x != y)
+            assert len(a) == len(b) == length and common >= length - 128
+            references = {}
+            for phase in ("repeated_prefix", "fresh_process"):
+                command = [str(args.binary), "serve-d3-native", str(model_root),
+                           "32768", str(40 << 30), "--kv-format", "q4h",
+                           "--encoder-option-queries", "on",
+                           "--encoder-submit-batch-size", "4"]
+                session = {"model": name, "length": length, "phase": phase,
+                           "common_prefix_tokens": common,
+                           "command": command, "requests": []}
+                result["sessions"].append(session)
+                runtime = MultiplexedRuntime(command, startup_timeout=180, pending_limit=4)
+                process = None
+                save()
+                try:
+                    assert runtime.wait_ready(180)
+                    process = runtime._process
+                    session["pid"] = process.pid
+                    session["status_before"] = json.loads(runtime.status(timeout=10).json)
+                    assert session["status_before"]["features"]["causal_prefix_cache"] is False
+                    sequence = [("A_first", a, 0), ("A_repeat", a, 0),
+                                ("B_changed_suffix", b, 0), ("A_after_B", a, 0),
+                                ("A_other_salt", a, 123456789)] if phase == "repeated_prefix" else [("B_fresh", b, 0)]
+                    for label, tokens, salt in sequence:
+                        print(datetime.now().astimezone().isoformat(), name, length, label, "start", flush=True)
+                        starts = []
+
+                        def event(call, message):
+                            if isinstance(message, wire.StartEvent):
+                                starts.append(asdict(message))
+
+                        frame = wire.RequestFrame(
+                            request_id=0, priority=wire.RequestPriority.NORMAL,
+                            absolute_deadline_unix_micros=0, remaining_deadline_micros=0,
+                            logical_max_output_tokens=0, prompt_tokens=tokens,
+                            sampling=wire.SamplingParameters(), seed=1,
+                            constraint=wire.ConstraintMode.NONE, image_spans=(), image_pixels=b"",
+                            score_tokens=tuple(model_scorer.token_ids), generation_prompt_tokens=0,
+                            flags=wire.RequestFlag(0), cache_salt=salt,
+                        )
+                        answer = runtime.submit(
+                            GenerationRequest(frame, time.monotonic() + 600, None, None),
+                            on_event=event,
+                        ).result(600)
+                        assert answer.reason is wire.FinishReason.STOP
+                        assert answer.prompt_tokens == length and answer.completion_tokens == 0
+                        assert answer.decode_micros == 0 and len(starts) == 1
+                        assert len(answer.option_logits) == 255
+                        assert all(math.isfinite(x) for x in answer.option_logits)
+                        assert starts[0]["matched_prompt_tokens"] == 0
+                        assert answer.deduplicated_tokens == 0
+                        record = {"label": label, "cache_salt": salt,
+                                  "input_sha256": hashlib.sha256(json.dumps(tokens).encode()).hexdigest(),
+                                  "start_event": starts[0], "prompt_tokens": answer.prompt_tokens,
+                                  "deduplicated_tokens": answer.deduplicated_tokens,
+                                  "option_logits": list(answer.option_logits)}
+                        session["requests"].append(record)
+                        key = "B" if label.startswith("B") else "A"
+                        if key in references:
+                            compare(answer.option_logits, references[key], f"{name}/{length}/{label}")
+                        else:
+                            references[key] = answer.option_logits
+                        save()
+                        print(datetime.now().astimezone().isoformat(), name, length, label, "PASS, matched=0", flush=True)
+                    session["status_after"] = json.loads(runtime.status(timeout=10).json)
+                    assert session["status_after"]["telemetry"]["completed_requests"] == len(sequence)
+                finally:
+                    runtime.close()
+                    session["engine_exit_code"] = None if process is None else process.returncode
+                    save()
+                assert session["engine_exit_code"] == 0
+    result["status"] = "verified_unavailable"
+    result["correctness_status"] = "passed"
+    result["total_requests"] = sum(len(s["requests"]) for s in result["sessions"])
+    result["completed_at"] = datetime.now().astimezone().isoformat()
+    save()
+    print(json.dumps({k: result[k] for k in ("status", "correctness_status", "total_requests")}), flush=True)
+
+
+if __name__ == "__main__":
+    main()

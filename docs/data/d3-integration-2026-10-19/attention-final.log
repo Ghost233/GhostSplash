@@ -1,0 +1,23 @@
+2026-10-19 01:17:08.011 d3-attention[42444:72900455] Metal GPU Validation Enabled
+D3 FP64 attention n=1 heads=8 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=1 heads=8 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=37 heads=8 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=37 heads=8 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=8 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=8 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=129 heads=8 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=129 heads=8 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=8 selected=0 nonuniform=1 PASS
+D3 FP64 attention n=2049 heads=8 selected=1 nonuniform=0 PASS
+D3 Q4H codes/scales/FP64 inverse H64 heads=8 PASS
+D3 FP64 attention n=1 heads=16 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=1 heads=16 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=37 heads=16 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=37 heads=16 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=16 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=16 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=129 heads=16 selected=0 nonuniform=0 PASS
+D3 FP64 attention n=129 heads=16 selected=1 nonuniform=0 PASS
+D3 FP64 attention n=128 heads=16 selected=0 nonuniform=1 PASS
+D3 FP64 attention n=2049 heads=16 selected=1 nonuniform=0 PASS
+D3 Q4H codes/scales/FP64 inverse H64 heads=16 PASS

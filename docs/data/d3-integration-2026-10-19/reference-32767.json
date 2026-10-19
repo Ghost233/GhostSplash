@@ -1,0 +1,51 @@
+{
+  "model": "vllm-d3-lite",
+  "cases": [
+    {
+      "input_tokens": 4096,
+      "response": {
+        "model": "vllm-d3-lite",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "billing": 0.9997185558017099,
+              "shipping": 0.0002814441982901575
+            },
+            "confidence": 0.9962744231012463
+          }
+        },
+        "usage": {
+          "input_tokens": 4096,
+          "output_tokens": 0
+        }
+      },
+      "status": "passed",
+      "seconds": 1.3350329590030015
+    },
+    {
+      "input_tokens": 32767,
+      "response": {
+        "model": "vllm-d3-lite",
+        "answers": {
+          "team": {
+            "type": "choice",
+            "choice": "billing",
+            "probabilities": {
+              "billing": 0.9996315159403181,
+              "shipping": 0.0003684840596818499
+            },
+            "confidence": 0.9952655180512766
+          }
+        },
+        "usage": {
+          "input_tokens": 32767,
+          "output_tokens": 0
+        }
+      },
+      "status": "passed",
+      "seconds": 16.116128665977158
+    }
+  ]
+}

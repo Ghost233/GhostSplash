@@ -1,0 +1,1652 @@
+{
+  "54941": {
+    "schema_version": 6,
+    "ready": true,
+    "maximum_context_tokens": 262144,
+    "memory_pressure": "normal",
+    "thermal_state": "fair",
+    "admission": {
+      "waiting": 0,
+      "waiting_memory": 0,
+      "waiting_concurrency": 0,
+      "held_behind_refusal": 0,
+      "restoring": 0,
+      "suspended": 0,
+      "draining": false,
+      "oldest_wait_ms": 0
+    },
+    "loop": {
+      "max_tick_ms": 116.22075
+    },
+    "identity": {
+      "cache": {
+        "loaded_model_layout_sha256": "c38e3a0fe7a541b1f49cb6d60e16f286522afab3e4e1242b4453430a783178ba",
+        "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903",
+        "dtype": "q8s8_f32_scale_per_token_head_k_token_major_v_dimension_major",
+        "block_tokens": 32
+      },
+      "kv": {
+        "target_model_sha256": "234c5c340a1054966f68fec42c8a6ec1944fe10ae5861d820a13fd06e0a2fb16",
+        "format": "int8",
+        "quantization": "symmetric_int8",
+        "scale_type": "float32",
+        "key_layout": "token_major",
+        "value_layout": "dimension_major"
+      }
+    },
+    "memory_plan": {
+      "valid": true,
+      "maximum_context_tokens": 262144,
+      "device": {
+        "device_name": "Apple M5 Pro",
+        "macos_version": "27.0.1",
+        "apple_gpu_family": 10,
+        "gpu_core_count": 20,
+        "physical_memory_bytes": 68719476736,
+        "recommended_max_working_set_bytes": 55662788608,
+        "max_buffer_length_bytes": 41747087360,
+        "max_threadgroup_memory_bytes": 32768,
+        "max_threadgroup_width": 1024,
+        "has_unified_memory": true
+      },
+      "model": {
+        "model_name": "local/qwen3-5-4b-ud-q4-k-xl-gguf",
+        "maximum_context_tokens": 262144,
+        "attention_layers": 8,
+        "kv_heads": 4,
+        "head_dimension": 256,
+        "kv_page_tokens": 32,
+        "kv_format": "int8",
+        "kv_elements_per_scale": 256,
+        "kv_page_bytes": 532480,
+        "state_format": "fp32",
+        "memory": {
+          "target_weights_bytes": 7972929536,
+          "draft_weights_bytes": 357892096,
+          "vision_weights_bytes": 0,
+          "lane_state_bytes": 1260650496,
+          "shared_prefill_bytes": 500088832,
+          "shared_decode_bytes": 167887232,
+          "pipeline_reserve_bytes": 268435456,
+          "runtime_overhead_reserve_bytes": 536870912,
+          "ane_ffn_bytes": 0,
+          "state_staging_bytes": 1209139200
+        }
+      },
+      "budget": {
+        "physical_memory_bytes": 68719476736,
+        "recommended_working_set_bytes": 55662788608,
+        "configured_memory_limit_bytes": 0,
+        "working_set_margin_bytes": 1113255772,
+        "hard_budget_bytes": 54549532836,
+        "target_weights_bytes": 7972929536,
+        "draft_weights_bytes": 357892096,
+        "vision_weights_bytes": 0,
+        "maximum_batch_width": 4,
+        "lane_state_bytes": 1260650496,
+        "shared_prefill_bytes": 500088832,
+        "shared_decode_bytes": 167887232,
+        "pipeline_reserve_bytes": 268435456,
+        "runtime_overhead_reserve_bytes": 536870912,
+        "ane_ffn_bytes": 0,
+        "state_staging_bytes": 1209139200,
+        "fixed_runtime_bytes": 11013243264,
+        "dynamic_budget_bytes": 43536289572,
+        "kv_page_tokens": 32,
+        "kv_page_bytes": 532480,
+        "kv_extent_pages": 256,
+        "kv_extent_bytes": 136314880,
+        "kv_capacity_pages": 79360,
+        "kv_capacity_bytes": 42257612800,
+        "kv_capacity_tokens": 2539520,
+        "minimum_dynamic_bytes": 1328807936,
+        "minimum_required_bytes": 12342051200,
+        "deficit_bytes": 0
+      }
+    },
+    "memory_actual": {
+      "allocated_bytes": 3274080640,
+      "current_bytes": 3280306176,
+      "peak_bytes": 15393079296
+    },
+    "memory_governor": {
+      "limit_bytes": 54549532836,
+      "charged_bytes": 4079387008,
+      "headroom_bytes": 50470145828,
+      "growth_allowed": true,
+      "denied_reservations": 0,
+      "system_pressure": "normal",
+      "host_measurement_valid": true,
+      "host_available_bytes": 25952583680,
+      "host_reserve_bytes": 2147483648,
+      "host_spare_bytes": 21268447232,
+      "host_spare_reserve_bytes": 4810363369,
+      "host_headroom_bytes": 16458083863
+    },
+    "memory_audit": {
+      "scope": "startup_warmup",
+      "valid": true,
+      "error": "none",
+      "categorized_bytes": 15386853760,
+      "backend_unclassified_bytes": 0,
+      "device_untracked_bytes": 6225536,
+      "device_peak_deviation_basis_points": 0,
+      "actual_headroom_bytes": 39156453540,
+      "backend_allocated_bytes": 15386853760,
+      "device_current_allocated_bytes": 15393079296,
+      "device_peak_allocated_bytes": 15393079296,
+      "backend_peak_allocated_bytes": 15386853760
+    },
+    "weights": {
+      "idle_release_seconds": 600,
+      "released": true,
+      "restoring": false,
+      "restores": 0,
+      "restore_failures": 0
+    },
+    "ane_ffn": {
+      "state": "off",
+      "share": 0,
+      "minimum_rows": 0,
+      "reason": "no Neural Engine split beat it by enough when this Mac calibrated it",
+      "split_commands": 0,
+      "reruns": 0,
+      "ane_ms": 0,
+      "evaluations": 0
+    },
+    "startup_features": {
+      "drafter": "standard_dflash",
+      "draft_layers": 6,
+      "draft_block_size": 8,
+      "draft_tokens": 7,
+      "prefill_token_budget": 2048,
+      "ffn_cache_bytes": 4529848320,
+      "optional": {
+        "prompt_lookup": false,
+        "lookup_reason": "",
+        "compact_draft_head": false,
+        "compact_validated": false,
+        "compact_capacity": 0,
+        "compact_validation_comparisons": 0,
+        "compact_validation_maximum_error": 0,
+        "compact_coverage_fallbacks": 0,
+        "compact_request_fallbacks": 0,
+        "compact_reason": "",
+        "fast_topk": false,
+        "fast_topk_reason": "",
+        "extra_metal_bytes": 0
+      }
+    },
+    "kv": {
+      "block_tokens": 32,
+      "pages_allocated": 256,
+      "pages_active": 0,
+      "pages_cache": 0,
+      "pages_free": 256,
+      "allocated_bytes": 136314880,
+      "reclaimable_bytes": 136314880,
+      "extent_allocations": 1,
+      "extent_releases": 0,
+      "extent_allocate_max_ms": 2.959875,
+      "extent_release_max_ms": 0,
+      "extent_compactions": 0,
+      "pages_moved": 0,
+      "extent_compact_max_ms": 0
+    },
+    "state": {
+      "entries": 0,
+      "pinned": 0,
+      "in_use": 0,
+      "in_use_evictions": 0,
+      "bytes": 0,
+      "allocated_bytes": 1260650496,
+      "active_lanes": 0,
+      "idle_gdn_cells": 2,
+      "idle_draft_rings": 1,
+      "idle_context_windows": 0,
+      "publications": 0,
+      "evictions": 0,
+      "checkpoint_entries": 0,
+      "checkpoint_bytes": 0,
+      "checkpoint_evictions": 0,
+      "checkpoint_retirements": 0,
+      "disk_hits": 0,
+      "disk_promotions": 0,
+      "disk_promotions_skipped": 0,
+      "disk_bytes": 0,
+      "offloads": 0,
+      "offload_failures": 0,
+      "invalidations": 0
+    },
+    "disk": {
+      "capacity_bytes": 34359738368,
+      "limit_bytes": 31396804608,
+      "used_bytes": 0,
+      "file_bytes": 0,
+      "volume_available_bytes": 136324636672,
+      "writes_gated": "no",
+      "write_budget_bytes": 0,
+      "read_bytes": 0,
+      "written_bytes": 0,
+      "kv_blocks": 0,
+      "kv_bytes": 0,
+      "kv_demotions": 0,
+      "kv_demotion_failures": 0,
+      "kv_demotions_refused": 0,
+      "kv_restores": 0,
+      "kv_restore_failures": 0,
+      "kv_pending_pages": 0,
+      "persistent": false,
+      "kv_copies": 0,
+      "kv_copy_failures": 0,
+      "taken_back": {
+        "states": 0,
+        "kv_blocks": 0,
+        "bytes": 0,
+        "left_behind": 0
+      },
+      "write_behind": {
+        "waiting": 0,
+        "durable": 0,
+        "unneeded": 0,
+        "refused": 0
+      }
+    },
+    "cache": {
+      "probe_hashed_blocks": 0,
+      "hits": 0,
+      "cold_misses": 0,
+      "hit_rate": 0,
+      "kv_hit_tokens": 0,
+      "kv_disk_hit_tokens": 0,
+      "lost_state_misses": 0,
+      "reused_tokens": 0,
+      "deduplicated_kv_tokens": 0,
+      "replay_state_publications": 0,
+      "deduplicated_state_publications": 0,
+      "recycled_state_publications": 0,
+      "disk_state_publications": 0,
+      "state_captures": 0,
+      "capture_cuts": 0,
+      "replay_state_publication_failures": 0,
+      "lazy_junctions": 0,
+      "junction_materializations": 0,
+      "junction_materialization_failures": 0,
+      "checkpoint_publications": 0,
+      "checkpoint_publication_failures": 0,
+      "resource_suspensions": 0,
+      "priority_suspensions": 0,
+      "resource_resumptions": 0,
+      "resource_replay_tokens": 0
+    },
+    "draft_context": {
+      "target_prefill_rows": 2130,
+      "prompt_end_rows": 2130,
+      "materialization_rows": 0,
+      "avoided_rows": 0,
+      "restore_skipped": 0,
+      "resets": 12
+    },
+    "model_timing": {
+      "scope": "model_lifetime",
+      "prefill": {
+        "last_gpu_ms": 23.789375,
+        "last_wall_ms": 24.959584,
+        "total_gpu_ms": 889.3940833,
+        "total_wall_ms": 900.590626
+      },
+      "decode": {
+        "last_gpu_ms": 17.735625,
+        "last_wall_ms": 18.443084,
+        "total_gpu_ms": 122.6382083,
+        "total_wall_ms": 128.325293
+      }
+    },
+    "constraint_masks": {
+      "overlap_batches": 0,
+      "overlap_requests": 0,
+      "last_target_forward_gpu_ms": 0,
+      "total_target_forward_gpu_ms": 0,
+      "last_residual_wait_ms": 0,
+      "total_residual_wait_ms": 0
+    },
+    "images": {
+      "encodes": 0,
+      "embedding_reuses": 0,
+      "arena_bytes": 0,
+      "cached_bytes": 0,
+      "state_held_bytes": 0,
+      "rows_bytes": 0
+    },
+    "scheduler": {
+      "queued": 0,
+      "waiting_resources": 0,
+      "waiting_prefix": 0,
+      "prefilling": 0,
+      "decoding": 0,
+      "waiting_mask": 0,
+      "terminal": 0,
+      "prefill_batches": 0,
+      "prefill_rows": 0,
+      "decode_batches": 0,
+      "decode_batches_by_width": {
+        "b1": 0,
+        "b2": 0,
+        "b3": 0,
+        "b4": 0
+      }
+    },
+    "active_requests": [],
+    "requests": {
+      "submitted": 0,
+      "completed": 0,
+      "cancelled": 0,
+      "failed": 0
+    },
+    "metrics": {
+      "ttft_ms": {
+        "p50": 0,
+        "p95": 0,
+        "samples": 0
+      },
+      "itl_ms": {
+        "p50": 0,
+        "p95": 0,
+        "samples": 0
+      },
+      "prefill_input_tokens": 0,
+      "prefill_wall_ms": 0,
+      "prefill_tokens_per_second": 0,
+      "decode_output_tokens": 0,
+      "decode_wall_ms": 0,
+      "decode_cycle_ms": 0,
+      "decode_tokens_per_second": 0,
+      "drafted_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "draft_acceptance_rate": 0,
+      "capacity_failures": 0,
+      "metal_failures": 0,
+      "current_prefill_batch": {
+        "valid": false,
+        "width": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "drafted_tokens": 0,
+        "accepted_draft_tokens": 0,
+        "wall_ms": 0,
+        "tokens_per_second": 0
+      },
+      "current_decode_batch": {
+        "valid": false,
+        "width": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "drafted_tokens": 0,
+        "accepted_draft_tokens": 0,
+        "wall_ms": 0,
+        "tokens_per_second": 0
+      }
+    },
+    "warmup": {
+      "prefill_2048": true,
+      "decode_b1": true,
+      "decode_b2": true,
+      "decode_b3": true,
+      "decode_b4": true,
+      "composite_state_restore": true,
+      "memory_limited_steps": [],
+      "detail": "real 2048-row KV target+draft prefill [M32]"
+    },
+    "metal": {
+      "healthy": true,
+      "failure_reason": ""
+    },
+    "transport": {
+      "ready": true,
+      "recovering": false,
+      "stopped": false,
+      "pending": 0,
+      "pending_limit": 32,
+      "restarts": 0,
+      "last_crash_trace": null,
+      "status_stale": false,
+      "status_age_ms": 0.0
+    },
+    "vision": false,
+    "input_modalities": [
+      "text"
+    ],
+    "chat_template": {
+      "later_system": "patched"
+    },
+    "frontend": {
+      "preparation_capacity": 4,
+      "active": 0,
+      "waiting": 0
+    },
+    "grammar_cache": {
+      "entries": 0,
+      "capacity": 32,
+      "source_bytes": 0,
+      "source_budget_bytes": 8388608,
+      "hits": 0,
+      "misses": 0
+    },
+    "response_store": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 67108864,
+      "evictions": 0,
+      "hits": 0,
+      "misses": 0
+    },
+    "image_cache": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 268435456,
+      "request_bytes": 0,
+      "request_budget_bytes": 268435456
+    },
+    "tokenizer_cache": {
+      "enabled": true,
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 8388608,
+      "capacity": 4,
+      "hits": 0,
+      "reused_tokens": 0
+    },
+    "latency": {
+      "http_request": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "upload": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "preparation_queue": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "preparation": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "template": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "tokenization": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "grammar": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "images": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "native_queue": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "http_ttft": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "output_interval": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "instance": {
+      "id": "98521aa7db684340da2e64c1",
+      "pid": 7556,
+      "model": "local/qwen3-5-4b-ud-q4-k-xl-gguf",
+      "host": "127.0.0.1",
+      "port": 54941,
+      "started_at": 1792374793.911478
+    },
+    "http": {
+      "requests": {
+        "active": 0,
+        "capacity": 32
+      },
+      "request_body_bytes": {
+        "active": 0,
+        "capacity": 536870912
+      },
+      "max_request_bytes": 134217728,
+      "token_counts": {
+        "active": 0,
+        "capacity": 32
+      },
+      "connections": {
+        "active": 1,
+        "capacity": 96
+      }
+    }
+  },
+  "54968": {
+    "schema_version": 6,
+    "healthy": true,
+    "ready": true,
+    "active_requests": 0,
+    "model_kind": "vllm-d3",
+    "weights": {
+      "release_supported": false,
+      "released": false,
+      "restoring": false
+    },
+    "memory": {
+      "loaded_weight_bytes": 1519960064,
+      "quantized_weight_bytes": 0,
+      "auxiliary_weight_bytes": 1519960064,
+      "fp16_weight_cache_bytes": 0,
+      "workspace_bytes": 139825472,
+      "kv_bytes": 135168,
+      "state_bytes": 0,
+      "allocated_bytes": 1659920704,
+      "peak_allocated_bytes": 1659920704,
+      "max_memory_bytes": 3221225472
+    },
+    "telemetry": {
+      "completed_requests": 0,
+      "submission_batches": 0,
+      "maximum_submission_batch": 0,
+      "total_prefill_gpu_seconds": 0
+    },
+    "features": {
+      "drafter": "none",
+      "ane": "off",
+      "compact_draft_head": "off",
+      "fast_topk": "off",
+      "prompt_lookup": "off",
+      "encoder_option_queries": true,
+      "encoder_submit_batch_limit": 4,
+      "causal_prefix_cache": false
+    },
+    "ane_ffn": {
+      "state": "off",
+      "share": 0,
+      "minimum_rows": 0,
+      "reason": "GPU encoder"
+    },
+    "identity": {
+      "kv": {
+        "format": "q4h"
+      },
+      "cache": {
+        "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+      }
+    },
+    "memory_governor": {
+      "limit_bytes": 3221225472
+    },
+    "warmup": {
+      "detail": "typed encoder full/selected-head numerical check"
+    },
+    "startup_features": {
+      "drafter": "none",
+      "draft_layers": 0,
+      "draft_block_size": 0,
+      "draft_tokens": 0,
+      "prefill_token_budget": 2048,
+      "ffn_cache_bytes": 0,
+      "optional": {
+        "prompt_lookup": false,
+        "fast_topk": false,
+        "compact_draft_head": false,
+        "compact_capacity": 0,
+        "compact_validation_maximum_error": 0,
+        "compact_coverage_fallbacks": 0,
+        "compact_request_fallbacks": 0
+      }
+    },
+    "transport": {
+      "ready": true,
+      "recovering": false,
+      "stopped": false,
+      "pending": 0,
+      "pending_limit": 32,
+      "restarts": 0,
+      "last_crash_trace": null,
+      "status_stale": false,
+      "status_age_ms": 0.0
+    },
+    "vision": false,
+    "decision_model": {
+      "type": "vllm-d3",
+      "architecture": "qwen35",
+      "generation": false,
+      "readout": "last token, selected vocabulary code rows",
+      "answer_codes": 255,
+      "attention": "noncausal full attention; causal GDN",
+      "temperatures": {
+        "choice": 1.0,
+        "noul": 1.0,
+        "score": 1.0
+      }
+    },
+    "input_modalities": [
+      "text"
+    ],
+    "chat_template": {
+      "later_system": "patched"
+    },
+    "frontend": {
+      "preparation_capacity": 4,
+      "active": 0,
+      "waiting": 0
+    },
+    "grammar_cache": {
+      "enabled": false
+    },
+    "response_store": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 67108864,
+      "evictions": 0,
+      "hits": 0,
+      "misses": 0
+    },
+    "image_cache": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 268435456,
+      "request_bytes": 0,
+      "request_budget_bytes": 268435456
+    },
+    "tokenizer_cache": {
+      "enabled": true,
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 8388608,
+      "capacity": 4,
+      "hits": 0,
+      "reused_tokens": 0
+    },
+    "latency": {
+      "http_request": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "upload": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "preparation_queue": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "preparation": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "template": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "tokenization": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "grammar": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "images": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "native_queue": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "http_ttft": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "output_interval": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "instance": {
+      "id": "58ae44aaf3453d6a90cffb62",
+      "pid": 7607,
+      "model": "local/vllm-d3-lite-bf16-gguf",
+      "host": "127.0.0.1",
+      "port": 54968,
+      "started_at": 1792374797.366946
+    },
+    "http": {
+      "requests": {
+        "active": 0,
+        "capacity": 32
+      },
+      "request_body_bytes": {
+        "active": 0,
+        "capacity": 536870912
+      },
+      "max_request_bytes": 134217728,
+      "token_counts": {
+        "active": 0,
+        "capacity": 32
+      },
+      "connections": {
+        "active": 1,
+        "capacity": 96
+      }
+    }
+  },
+  "54987": {
+    "schema_version": 6,
+    "healthy": true,
+    "ready": true,
+    "active_requests": 0,
+    "model_kind": "vllm-d3",
+    "weights": {
+      "release_supported": false,
+      "released": false,
+      "restoring": false
+    },
+    "memory": {
+      "loaded_weight_bytes": 3039068160,
+      "quantized_weight_bytes": 3017971040,
+      "auxiliary_weight_bytes": 21097120,
+      "fp16_weight_cache_bytes": 0,
+      "workspace_bytes": 279779488,
+      "kv_bytes": 405504,
+      "state_bytes": 0,
+      "allocated_bytes": 3319253152,
+      "peak_allocated_bytes": 3319253152,
+      "max_memory_bytes": 6442450944
+    },
+    "telemetry": {
+      "completed_requests": 3,
+      "submission_batches": 3,
+      "maximum_submission_batch": 1,
+      "total_prefill_gpu_seconds": 0.397096
+    },
+    "features": {
+      "drafter": "none",
+      "ane": "off",
+      "compact_draft_head": "off",
+      "fast_topk": "off",
+      "prompt_lookup": "off",
+      "encoder_option_queries": true,
+      "encoder_submit_batch_limit": 4,
+      "causal_prefix_cache": false
+    },
+    "ane_ffn": {
+      "state": "off",
+      "share": 0,
+      "minimum_rows": 0,
+      "reason": "GPU encoder"
+    },
+    "identity": {
+      "kv": {
+        "format": "q4h"
+      },
+      "cache": {
+        "build_id": "src-c1a598fd103a033d882f1e60723725bbd7560d58493c66e86753418d61615903"
+      }
+    },
+    "memory_governor": {
+      "limit_bytes": 6442450944
+    },
+    "warmup": {
+      "detail": "typed encoder full/selected-head numerical check"
+    },
+    "startup_features": {
+      "drafter": "none",
+      "draft_layers": 0,
+      "draft_block_size": 0,
+      "draft_tokens": 0,
+      "prefill_token_budget": 2048,
+      "ffn_cache_bytes": 0,
+      "optional": {
+        "prompt_lookup": false,
+        "fast_topk": false,
+        "compact_draft_head": false,
+        "compact_capacity": 0,
+        "compact_validation_maximum_error": 0,
+        "compact_coverage_fallbacks": 0,
+        "compact_request_fallbacks": 0
+      }
+    },
+    "transport": {
+      "ready": true,
+      "recovering": false,
+      "stopped": false,
+      "pending": 0,
+      "pending_limit": 32,
+      "restarts": 0,
+      "last_crash_trace": null,
+      "status_stale": false,
+      "status_age_ms": 0.0
+    },
+    "vision": false,
+    "decision_model": {
+      "type": "vllm-d3",
+      "architecture": "qwen35",
+      "generation": false,
+      "readout": "last token, selected vocabulary code rows",
+      "answer_codes": 255,
+      "attention": "noncausal full attention; causal GDN",
+      "temperatures": {
+        "choice": 1.0,
+        "noul": 1.0,
+        "score": 1.0
+      }
+    },
+    "input_modalities": [
+      "text"
+    ],
+    "chat_template": {
+      "later_system": "patched"
+    },
+    "frontend": {
+      "preparation_capacity": 4,
+      "active": 0,
+      "waiting": 0
+    },
+    "grammar_cache": {
+      "enabled": false
+    },
+    "response_store": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 67108864,
+      "evictions": 0,
+      "hits": 0,
+      "misses": 0
+    },
+    "image_cache": {
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 268435456,
+      "request_bytes": 0,
+      "request_budget_bytes": 268435456
+    },
+    "tokenizer_cache": {
+      "enabled": true,
+      "entries": 0,
+      "bytes": 0,
+      "budget_bytes": 8388608,
+      "capacity": 4,
+      "hits": 0,
+      "reused_tokens": 0
+    },
+    "latency": {
+      "http_request": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 2,
+          "1": 2,
+          "2.5": 2,
+          "5": 2,
+          "10": 2,
+          "30": 2,
+          "60": 2,
+          "120": 2,
+          "300": 2,
+          "900": 2,
+          "1800": 2,
+          "+Inf": 2
+        },
+        "count": 2,
+        "sum": 0.7093595420001293
+      },
+      "upload": {
+        "buckets": {
+          "0.001": 2,
+          "0.005": 2,
+          "0.01": 2,
+          "0.025": 2,
+          "0.05": 2,
+          "0.1": 2,
+          "0.25": 2,
+          "0.5": 2,
+          "1": 2,
+          "2.5": 2,
+          "5": 2,
+          "10": 2,
+          "30": 2,
+          "60": 2,
+          "120": 2,
+          "300": 2,
+          "900": 2,
+          "1800": 2,
+          "+Inf": 2
+        },
+        "count": 2,
+        "sum": 0.00017054199997801334
+      },
+      "preparation_queue": {
+        "buckets": {
+          "0.001": 2,
+          "0.005": 2,
+          "0.01": 2,
+          "0.025": 2,
+          "0.05": 2,
+          "0.1": 2,
+          "0.25": 2,
+          "0.5": 2,
+          "1": 2,
+          "2.5": 2,
+          "5": 2,
+          "10": 2,
+          "30": 2,
+          "60": 2,
+          "120": 2,
+          "300": 2,
+          "900": 2,
+          "1800": 2,
+          "+Inf": 2
+        },
+        "count": 2,
+        "sum": 1.6709000192349777e-05
+      },
+      "preparation": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 2,
+          "0.01": 2,
+          "0.025": 2,
+          "0.05": 2,
+          "0.1": 2,
+          "0.25": 2,
+          "0.5": 2,
+          "1": 2,
+          "2.5": 2,
+          "5": 2,
+          "10": 2,
+          "30": 2,
+          "60": 2,
+          "120": 2,
+          "300": 2,
+          "900": 2,
+          "1800": 2,
+          "+Inf": 2
+        },
+        "count": 2,
+        "sum": 0.007689750001190987
+      },
+      "template": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "tokenization": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "grammar": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "images": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "native_queue": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "http_ttft": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      },
+      "output_interval": {
+        "buckets": {
+          "0.001": 0,
+          "0.005": 0,
+          "0.01": 0,
+          "0.025": 0,
+          "0.05": 0,
+          "0.1": 0,
+          "0.25": 0,
+          "0.5": 0,
+          "1": 0,
+          "2.5": 0,
+          "5": 0,
+          "10": 0,
+          "30": 0,
+          "60": 0,
+          "120": 0,
+          "300": 0,
+          "900": 0,
+          "1800": 0,
+          "+Inf": 0
+        },
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "instance": {
+      "id": "1e827b1cd2c6550b2bb14c19",
+      "pid": 7609,
+      "model": "local/vllm-d3-mini-q4-k-m-gguf",
+      "host": "127.0.0.1",
+      "port": 54987,
+      "started_at": 1792374798.539839
+    },
+    "http": {
+      "requests": {
+        "active": 0,
+        "capacity": 32
+      },
+      "request_body_bytes": {
+        "active": 0,
+        "capacity": 536870912
+      },
+      "max_request_bytes": 134217728,
+      "token_counts": {
+        "active": 0,
+        "capacity": 32
+      },
+      "connections": {
+        "active": 1,
+        "capacity": 96
+      }
+    }
+  }
+}

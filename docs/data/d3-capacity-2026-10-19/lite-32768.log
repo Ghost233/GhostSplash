@@ -1,0 +1,2 @@
+11:34:54 D3: native weights=1519960064; workspace=139825472; KV=q4h; FP16 cache=0; selected option queries=on; numerical check passed
+{"status": "passed", "checks": 5, "exit": 0}

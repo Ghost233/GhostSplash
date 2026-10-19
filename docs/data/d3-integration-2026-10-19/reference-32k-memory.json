@@ -1,0 +1,5026 @@
+{
+  "pids": {
+    "lite": 97812,
+    "mini": 39768
+  },
+  "scope": "observed LM Studio native footprint during each 32K retry window; includes nearby setup time",
+  "samples": [
+    {
+      "at": 1792347187.611994,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347187.7164009,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347187.821832,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347187.926416,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.0280309,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.1295621,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.235044,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.338302,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.443713,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.544846,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.649706,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.7513092,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.854042,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347188.957448,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347189.062403,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347189.167776,
+      "model": "lite",
+      "rss_bytes": 2027470848,
+      "physical_footprint_bytes": 2968032128,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347189.27316,
+      "model": "lite",
+      "rss_bytes": 2043183104,
+      "physical_footprint_bytes": 2971407232,
+      "lifetime_peak_physical_footprint_bytes": 3039269760
+    },
+    {
+      "at": 1792347189.377984,
+      "model": "lite",
+      "rss_bytes": 2342207488,
+      "physical_footprint_bytes": 3057652656,
+      "lifetime_peak_physical_footprint_bytes": 3057554352
+    },
+    {
+      "at": 1792347189.483387,
+      "model": "lite",
+      "rss_bytes": 2652831744,
+      "physical_footprint_bytes": 3368424608,
+      "lifetime_peak_physical_footprint_bytes": 3368408224
+    },
+    {
+      "at": 1792347189.588829,
+      "model": "lite",
+      "rss_bytes": 2968403968,
+      "physical_footprint_bytes": 3684144504,
+      "lifetime_peak_physical_footprint_bytes": 3684062584
+    },
+    {
+      "at": 1792347189.694188,
+      "model": "lite",
+      "rss_bytes": 3277963264,
+      "physical_footprint_bytes": 3993835088,
+      "lifetime_peak_physical_footprint_bytes": 3993736784
+    },
+    {
+      "at": 1792347189.795469,
+      "model": "lite",
+      "rss_bytes": 3546038272,
+      "physical_footprint_bytes": 4262041360,
+      "lifetime_peak_physical_footprint_bytes": 4262041360
+    },
+    {
+      "at": 1792347189.900865,
+      "model": "lite",
+      "rss_bytes": 3831971840,
+      "physical_footprint_bytes": 4548122600,
+      "lifetime_peak_physical_footprint_bytes": 4548089832
+    },
+    {
+      "at": 1792347190.005496,
+      "model": "lite",
+      "rss_bytes": 4129243136,
+      "physical_footprint_bytes": 4845541568,
+      "lifetime_peak_physical_footprint_bytes": 4845541568
+    },
+    {
+      "at": 1792347190.11152,
+      "model": "lite",
+      "rss_bytes": 4443832320,
+      "physical_footprint_bytes": 5160278424,
+      "lifetime_peak_physical_footprint_bytes": 5160278424
+    },
+    {
+      "at": 1792347190.214619,
+      "model": "lite",
+      "rss_bytes": 4748492800,
+      "physical_footprint_bytes": 5465086576,
+      "lifetime_peak_physical_footprint_bytes": 5465086576
+    },
+    {
+      "at": 1792347190.318482,
+      "model": "lite",
+      "rss_bytes": 5062000640,
+      "physical_footprint_bytes": 5778758496,
+      "lifetime_peak_physical_footprint_bytes": 5778660192
+    },
+    {
+      "at": 1792347190.421955,
+      "model": "lite",
+      "rss_bytes": 6109528064,
+      "physical_footprint_bytes": 6590012688,
+      "lifetime_peak_physical_footprint_bytes": 6589914384
+    },
+    {
+      "at": 1792347190.527693,
+      "model": "lite",
+      "rss_bytes": 7280099328,
+      "physical_footprint_bytes": 7761158232,
+      "lifetime_peak_physical_footprint_bytes": 7761010776
+    },
+    {
+      "at": 1792347190.629626,
+      "model": "lite",
+      "rss_bytes": 8258387968,
+      "physical_footprint_bytes": 8739922704,
+      "lifetime_peak_physical_footprint_bytes": 8739873552
+    },
+    {
+      "at": 1792347190.735289,
+      "model": "lite",
+      "rss_bytes": 8851111936,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347190.839183,
+      "model": "lite",
+      "rss_bytes": 8851111936,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347190.940288,
+      "model": "lite",
+      "rss_bytes": 8851111936,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.04691,
+      "model": "lite",
+      "rss_bytes": 8851013632,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.1488771,
+      "model": "lite",
+      "rss_bytes": 8850636800,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.2521799,
+      "model": "lite",
+      "rss_bytes": 8850423808,
+      "physical_footprint_bytes": 9398543552,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.3555431,
+      "model": "lite",
+      "rss_bytes": 7882391552,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.460109,
+      "model": "lite",
+      "rss_bytes": 6797606912,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.562907,
+      "model": "lite",
+      "rss_bytes": 6797443072,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.667486,
+      "model": "lite",
+      "rss_bytes": 6797443072,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.771483,
+      "model": "lite",
+      "rss_bytes": 6797443072,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.877399,
+      "model": "lite",
+      "rss_bytes": 6797443072,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347191.982833,
+      "model": "lite",
+      "rss_bytes": 6797443072,
+      "physical_footprint_bytes": 9378473152,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.088628,
+      "model": "lite",
+      "rss_bytes": 6797721600,
+      "physical_footprint_bytes": 9378817216,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.191628,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.295437,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.4000452,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.505984,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.6084979,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.711914,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.8168828,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347192.921202,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.022754,
+      "model": "lite",
+      "rss_bytes": 6797705216,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.129285,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.235003,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.338837,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.439905,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.543672,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.6492999,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.754808,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.858121,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347193.96262,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.068546,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.171412,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.276974,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.3828921,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.485109,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.588314,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.690942,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.796604,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347194.8980322,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.002722,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.105686,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.211072,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.3148968,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.4206002,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.523478,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.62563,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.726285,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.827938,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347195.933536,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.0348952,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.140447,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.245534,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.349518,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.452735,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.5581372,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.6635368,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.768085,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.869278,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347196.974991,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.079137,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.1803598,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.2850292,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.390368,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.4957209,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.6005602,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.70178,
+      "model": "lite",
+      "rss_bytes": 6793396224,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.805265,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347197.910671,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.012842,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.1153228,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.217462,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.3209631,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.426333,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.531965,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.632698,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.737451,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.8409011,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347198.942328,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.0447612,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.147756,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.250401,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.3563552,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.4622562,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.565484,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.667296,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.77037,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.872006,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347199.976347,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.079366,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.182852,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.283796,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.387052,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.488658,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.5923011,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.6972249,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.800009,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347200.904448,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.006525,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.10911,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.214978,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.3166552,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.4204202,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.525121,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.630934,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.736177,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.840671,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347201.945527,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.046839,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.150147,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.254368,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.356509,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.458352,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.564072,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.66548,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.77046,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.872758,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347202.978106,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.080449,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.1861582,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.2880561,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.391347,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.4965382,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.5998778,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.7024949,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.803222,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347203.908831,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.013972,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.117179,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.220939,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.3230772,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.42415,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.528555,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.6338859,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.7352262,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.840769,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347204.9428859,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.048355,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.150172,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.252717,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.353733,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.45888,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.564793,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.6655622,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.7704241,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.8723462,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347205.975144,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.079594,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.182153,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.2868679,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.392332,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.496195,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.601349,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.707415,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.813098,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347206.9152231,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.020839,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.124825,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.2296379,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.334402,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.440093,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.544447,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.648708,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.752796,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.8550441,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347207.9608269,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.064321,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.1654668,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.2704508,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.375464,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.477466,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.5801752,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.683427,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.78801,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.891517,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347208.995671,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.101356,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.204869,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.307192,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.4081762,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.513325,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.614381,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.718904,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.821326,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347209.92528,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.0274491,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.1306171,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.236307,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.3400562,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.4438841,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.549438,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.65281,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.758708,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.864414,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347210.969551,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.073282,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.177461,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.279607,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.381183,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.482229,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.583812,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.6869981,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.79283,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347211.897773,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.003093,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.1075652,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.21293,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.316043,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.420071,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.524054,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.629743,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.732918,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.833955,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347212.939164,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.04254,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.145944,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.251868,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.355863,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.4613252,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.5652092,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.668546,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.774395,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.878981,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347213.9830558,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.0874329,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.1911612,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.29235,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.3977668,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.502335,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.6046999,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.710582,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.812267,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347214.916895,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.0212018,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.125708,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.2301052,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.332132,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.437459,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.538232,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.63928,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.741429,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.846841,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347215.950001,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.052285,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.157604,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.259545,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.361826,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.4656582,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.570024,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.675491,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.7813592,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.8863978,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347216.990777,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.094622,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.200351,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.304267,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.406686,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.5114791,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.617505,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.7209852,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.825691,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347217.9300742,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.035616,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.137268,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.242226,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.345238,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.447755,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.549772,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.655189,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.760575,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.8657439,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347218.9715068,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347219.073948,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347219.179775,
+      "model": "lite",
+      "rss_bytes": 6793166848,
+      "physical_footprint_bytes": 9379030208,
+      "lifetime_peak_physical_footprint_bytes": 9398543552
+    },
+    {
+      "at": 1792347219.280575,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.386409,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.491793,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.592818,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.697794,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.803576,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347219.907347,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.011501,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.1158469,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.221749,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.32754,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.428561,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.531359,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.637008,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.738657,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.842196,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347220.947009,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.0529861,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.158752,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.263882,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.369736,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.47513,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.579194,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.684572,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.787138,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.8918731,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347221.993345,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.09444,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.199347,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.301044,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.406754,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.509655,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.615175,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.718595,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.821357,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347222.9227939,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.027967,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.129229,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.22991,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.335049,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.4379451,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.5399601,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.642689,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.74809,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.852175,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347223.9580128,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.0591009,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.1635358,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.2688158,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.374858,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.478457,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.582243,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.686922,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.790704,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347224.895199,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.000855,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.102069,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.207911,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.3090932,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.410256,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.512624,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.617486,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.722902,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.825703,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347225.931484,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.037376,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.142148,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.245193,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.350858,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.4555142,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.5587468,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.6641479,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.767235,
+      "model": "mini",
+      "rss_bytes": 4109156352,
+      "physical_footprint_bytes": 5219147528,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.8726149,
+      "model": "mini",
+      "rss_bytes": 4227055616,
+      "physical_footprint_bytes": 5234106168,
+      "lifetime_peak_physical_footprint_bytes": 5290614536
+    },
+    {
+      "at": 1792347226.9759738,
+      "model": "mini",
+      "rss_bytes": 4522737664,
+      "physical_footprint_bytes": 5515894800,
+      "lifetime_peak_physical_footprint_bytes": 5515878416
+    },
+    {
+      "at": 1792347227.0811892,
+      "model": "mini",
+      "rss_bytes": 4832116736,
+      "physical_footprint_bytes": 5825454312,
+      "lifetime_peak_physical_footprint_bytes": 5825405160
+    },
+    {
+      "at": 1792347227.1845682,
+      "model": "mini",
+      "rss_bytes": 5127569408,
+      "physical_footprint_bytes": 6121021888,
+      "lifetime_peak_physical_footprint_bytes": 6120972736
+    },
+    {
+      "at": 1792347227.289779,
+      "model": "mini",
+      "rss_bytes": 5314134016,
+      "physical_footprint_bytes": 6421750424,
+      "lifetime_peak_physical_footprint_bytes": 6421701272
+    },
+    {
+      "at": 1792347227.39488,
+      "model": "mini",
+      "rss_bytes": 5521375232,
+      "physical_footprint_bytes": 6691709784,
+      "lifetime_peak_physical_footprint_bytes": 6691627864
+    },
+    {
+      "at": 1792347227.5007842,
+      "model": "mini",
+      "rss_bytes": 5700468736,
+      "physical_footprint_bytes": 6954787864,
+      "lifetime_peak_physical_footprint_bytes": 6954787864
+    },
+    {
+      "at": 1792347227.603004,
+      "model": "mini",
+      "rss_bytes": 5930418176,
+      "physical_footprint_bytes": 7184852136,
+      "lifetime_peak_physical_footprint_bytes": 7184770216
+    },
+    {
+      "at": 1792347227.704706,
+      "model": "mini",
+      "rss_bytes": 6209060864,
+      "physical_footprint_bytes": 7463626112,
+      "lifetime_peak_physical_footprint_bytes": 7463626112
+    },
+    {
+      "at": 1792347227.8076448,
+      "model": "mini",
+      "rss_bytes": 6489767936,
+      "physical_footprint_bytes": 7744464448,
+      "lifetime_peak_physical_footprint_bytes": 7744464448
+    },
+    {
+      "at": 1792347227.9127848,
+      "model": "mini",
+      "rss_bytes": 6784253952,
+      "physical_footprint_bytes": 8039098136,
+      "lifetime_peak_physical_footprint_bytes": 8039098136
+    },
+    {
+      "at": 1792347228.018492,
+      "model": "mini",
+      "rss_bytes": 7599013888,
+      "physical_footprint_bytes": 8758044944,
+      "lifetime_peak_physical_footprint_bytes": 8758044944
+    },
+    {
+      "at": 1792347228.1212769,
+      "model": "mini",
+      "rss_bytes": 8413544448,
+      "physical_footprint_bytes": 9489214192,
+      "lifetime_peak_physical_footprint_bytes": 9488984816
+    },
+    {
+      "at": 1792347228.225858,
+      "model": "mini",
+      "rss_bytes": 8657977344,
+      "physical_footprint_bytes": 10021694528,
+      "lifetime_peak_physical_footprint_bytes": 10021694528
+    },
+    {
+      "at": 1792347228.32794,
+      "model": "mini",
+      "rss_bytes": 9742188544,
+      "physical_footprint_bytes": 10725895736,
+      "lifetime_peak_physical_footprint_bytes": 10725781048
+    },
+    {
+      "at": 1792347228.4293802,
+      "model": "mini",
+      "rss_bytes": 10543595520,
+      "physical_footprint_bytes": 11446005832,
+      "lifetime_peak_physical_footprint_bytes": 11445907528
+    },
+    {
+      "at": 1792347228.534864,
+      "model": "mini",
+      "rss_bytes": 11291443200,
+      "physical_footprint_bytes": 12194296408,
+      "lifetime_peak_physical_footprint_bytes": 12194230872
+    },
+    {
+      "at": 1792347228.6402938,
+      "model": "mini",
+      "rss_bytes": 11740643328,
+      "physical_footprint_bytes": 12709376912,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347228.745434,
+      "model": "mini",
+      "rss_bytes": 11740528640,
+      "physical_footprint_bytes": 12709376912,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347228.850724,
+      "model": "mini",
+      "rss_bytes": 11740495872,
+      "physical_footprint_bytes": 12709376912,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347228.9521742,
+      "model": "mini",
+      "rss_bytes": 11739758592,
+      "physical_footprint_bytes": 12709376912,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.057867,
+      "model": "mini",
+      "rss_bytes": 11499749376,
+      "physical_footprint_bytes": 12699005840,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.1599932,
+      "model": "mini",
+      "rss_bytes": 10858790912,
+      "physical_footprint_bytes": 12663141264,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.2650828,
+      "model": "mini",
+      "rss_bytes": 10263543808,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.367038,
+      "model": "mini",
+      "rss_bytes": 10254254080,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.470922,
+      "model": "mini",
+      "rss_bytes": 10251157504,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.575853,
+      "model": "mini",
+      "rss_bytes": 10248060928,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.6801322,
+      "model": "mini",
+      "rss_bytes": 10244964352,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.784012,
+      "model": "mini",
+      "rss_bytes": 10241867776,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.889018,
+      "model": "mini",
+      "rss_bytes": 10241867776,
+      "physical_footprint_bytes": 12662879120,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347229.991366,
+      "model": "mini",
+      "rss_bytes": 10241933312,
+      "physical_footprint_bytes": 12663190416,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.097142,
+      "model": "mini",
+      "rss_bytes": 10235740160,
+      "physical_footprint_bytes": 12663190416,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.200893,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.3063092,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.409811,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.512168,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.612818,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.7184792,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.823937,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347230.9284139,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.034137,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.137124,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.242333,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.347662,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.450976,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.554421,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.656338,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.759871,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.862242,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347231.968226,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.070694,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.1728609,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.277236,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.3799381,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.485527,
+      "model": "mini",
+      "rss_bytes": 10229612544,
+      "physical_footprint_bytes": 12663419792,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.586647,
+      "model": "mini",
+      "rss_bytes": 10093756416,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.688668,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.79174,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347232.8963861,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.0004659,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.104686,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.2085052,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.313428,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.418335,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.522579,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.623979,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.726953,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.830109,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347233.9355361,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.040019,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.143008,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.2478368,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.351258,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.452628,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.553856,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.658282,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.7625659,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.866685,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347234.970863,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.075289,
+      "model": "mini",
+      "rss_bytes": 10039345152,
+      "physical_footprint_bytes": 12663321488,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.179453,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.282288,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.386869,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.48979,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.593602,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.694773,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.7970219,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347235.902673,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.007838,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.113715,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.217005,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.3222752,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.426792,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.532448,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.634898,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.739178,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.843814,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347236.9496331,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.054091,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.155749,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.260997,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.366873,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.4723158,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.573739,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.67666,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.7783942,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.883342,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347237.987274,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.092272,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.195606,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.301228,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.403583,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.5086012,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.61101,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.71513,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.8209229,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347238.926733,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.0315268,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.137357,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.242634,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.345612,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.451099,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.555679,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.661433,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.766032,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.8688588,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347239.9748201,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.076001,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.1811259,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.285728,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.387009,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.4914901,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.5951,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.700747,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.803383,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347240.90935,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.013469,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.117229,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.221474,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.326272,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.4318662,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.537079,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.637682,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.743571,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.84873,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347241.954611,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.055178,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.160161,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.261207,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.365985,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.470863,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.574285,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.678766,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.7833269,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.889046,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347242.993227,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.099205,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.204292,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.309259,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.414371,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.5170088,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.6188412,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.7225118,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.8251572,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347243.927199,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.030695,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.1357079,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.241251,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.347201,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.452232,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.556274,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.6614022,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.766337,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.868099,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347244.972715,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.076868,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.1809049,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.282304,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.388055,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.493292,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.597899,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.701074,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.805726,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347245.910651,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.013269,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.115155,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.2211578,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.327044,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.4329338,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.5387142,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.6439931,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.745903,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.849067,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347246.952482,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.057664,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.1586392,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.2600372,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.365739,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.470315,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.573285,
+      "model": "mini",
+      "rss_bytes": 10039361536,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.675488,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.780234,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.882637,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347247.985868,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.091475,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.195612,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.3012538,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.402841,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.50429,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.607362,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.712756,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.815124,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347248.918755,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.023181,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.1272051,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.233096,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.3371341,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.441683,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.542537,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.645979,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.7492108,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.8511848,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347249.953559,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.0588422,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.161768,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.263924,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.3692942,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.4749131,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.576886,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.678617,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.7843251,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.887418,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347250.993073,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.0986822,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.204593,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.3090482,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.414887,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.5201411,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.621223,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.725693,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.8289468,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347251.931534,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.037142,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.141186,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.24366,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.3491561,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.453132,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.5587661,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.66203,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.767691,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.873439,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347252.976237,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.079131,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.18308,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.28861,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.39324,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.4980748,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.601624,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.7062988,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.809658,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347253.9147289,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.020577,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.124224,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.2275012,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.328523,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.432575,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.53843,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.6436381,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.749367,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.85503,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347254.9576461,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.063404,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.1651578,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.270893,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.37495,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.479409,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.583421,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.687479,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.791193,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.8920279,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347255.996651,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.102018,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.207399,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.311519,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.412239,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.515867,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.621255,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.727276,
+      "model": "mini",
+      "rss_bytes": 9994485760,
+      "physical_footprint_bytes": 12663305104,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.831806,
+      "model": "mini",
+      "rss_bytes": 9994764288,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347256.9371352,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.039828,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.1451619,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.248678,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.351849,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.457372,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.561132,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.666493,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.76961,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.873918,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347257.9796,
+      "model": "mini",
+      "rss_bytes": 9995091968,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.082238,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.183455,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.2860029,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.39136,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.4959848,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.5989308,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.704282,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.80781,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347258.913193,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.0146592,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.118422,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.221312,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.326574,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.429282,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.531591,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.63693,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.737847,
+      "model": "mini",
+      "rss_bytes": 9984065536,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.8397472,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347259.941167,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.045332,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.149096,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.254137,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.35919,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.461674,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.5665212,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.668192,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.770551,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.874377,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347260.9769511,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.081177,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.18525,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.291111,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.3948212,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.4997609,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.6026099,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.707048,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 12663337872,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.811588,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 0,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    },
+    {
+      "at": 1792347261.916022,
+      "model": "mini",
+      "rss_bytes": 9984081920,
+      "physical_footprint_bytes": 0,
+      "lifetime_peak_physical_footprint_bytes": 12709376912
+    }
+  ],
+  "peak_bytes": {
+    "lite": 9398543552,
+    "mini": 12709376912
+  },
+  "status": "completed"
+}

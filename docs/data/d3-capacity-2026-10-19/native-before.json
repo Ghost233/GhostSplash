@@ -1,0 +1,15 @@
+{
+  "command": [
+    "build/splash",
+    "serve-d3-native",
+    "install/models-local/.resolved/caad7d562ae47f6c3bcfb710ff37ed7ceefe4f65df5346bf89343150342d226f",
+    "32768",
+    "42949672960",
+    "--kv-format",
+    "q4h"
+  ],
+  "checks": [],
+  "performance_test": false,
+  "pid": 61492,
+  "exit": 0
+}

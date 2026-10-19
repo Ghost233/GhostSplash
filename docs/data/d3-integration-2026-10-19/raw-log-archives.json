@@ -1,0 +1,21 @@
+{
+  "note": "Raw reference-engine logs are stored as lossless gzip captures, preserving trailing whitespace and ANSI bytes. The original uncompressed build logs are untouched.",
+  "files": [
+    {
+      "original_name": "lite-reference-kv-proof.log",
+      "archive": "lite-reference-kv-proof.log.gz",
+      "original_uncompressed_path": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/lite-reference-kv-proof.log",
+      "uncompressed_sha256": "36b9300367bb1ee7ca1b180ef5bfb9ea83c34b756d68ffc20bd4fc642ec320b4",
+      "compressed_sha256": "4f772599789b77958c6a88745b4b5dcd352619ea2746dc47c7553ad98c72907f",
+      "uncompressed_bytes": 398044
+    },
+    {
+      "original_name": "mini-reference-kv-proof.log",
+      "archive": "mini-reference-kv-proof.log.gz",
+      "original_uncompressed_path": "/Users/ghost233/Ghost233Code/GhostSplash/build/d3-integration-20261019/mini-reference-kv-proof.log",
+      "uncompressed_sha256": "1173a714ac8ae9edf376322107cb8d618adcb01c1c2a8c3d9146f187969f951f",
+      "compressed_sha256": "53540d1e2f7dfd6be485c558389c237bd493f3ef1f86036bdaa317bc1062cba9",
+      "uncompressed_bytes": 523424
+    }
+  ]
+}

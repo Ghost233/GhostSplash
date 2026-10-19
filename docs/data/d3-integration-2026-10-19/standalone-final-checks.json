@@ -1,0 +1,107 @@
+[
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "unittest",
+      "dev.tests.test_d3_benchmark",
+      "dev.tests.server.test_d3",
+      "dev.tests.install.test_d3_metadata"
+    ],
+    "exit": 0,
+    "stdout": "WAIT external inference [123]\n",
+    "stderr": "[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.\n........\n----------------------------------------------------------------------\nRan 8 tests in 1.040s\n\nOK\n"
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "compileall",
+      "-q",
+      "server",
+      "install",
+      "dev/tools",
+      "dev/tests",
+      "dev/benchmarks"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "ruff",
+      "check",
+      "--config",
+      "dev/ruff.toml",
+      "server",
+      "install",
+      "dev/tools",
+      "dev/tests",
+      "dev/benchmarks"
+    ],
+    "exit": 0,
+    "stdout": "All checks passed!\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      "--config",
+      "dev/ruff.toml",
+      "server",
+      "install",
+      "dev/tools",
+      "dev/tests",
+      "dev/benchmarks"
+    ],
+    "exit": 0,
+    "stdout": "191 files already formatted\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "dev/tools/check_architecture.py"
+    ],
+    "exit": 0,
+    "stdout": "backend architecture: PASS\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "sh",
+      "-n",
+      "d3litesplash.sh"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "sh",
+      "-n",
+      "d3minisplash.sh"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]
