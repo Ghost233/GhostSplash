@@ -1,0 +1,3 @@
+START build/engine-tests/model-configuration dev/tests/fixtures/model-configs log=build/upstream-140-merge-20261021/observed-runs-final/model-configuration-87fa60839ff7-20261021T074337.678101Z.log
+model configuration: every family, sources, one rule per value, quantization, vision, the installer's check, YaRN PASS
+END exit=0 passed=True elapsed=0.160s result=build/upstream-140-merge-20261021/observed-runs-final/model-configuration-87fa60839ff7-20261021T074337.678101Z.json

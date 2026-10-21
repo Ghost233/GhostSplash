@@ -1,0 +1,5494 @@
+{
+  "scope": "native correctness checks; pipeline creation timings are diagnostic, not model speed tests",
+  "system_cache_state": "uncontrolled; timing differences do not identify internal system cache hits",
+  "before_fixture_stderr_fix": [
+    {
+      "command": [
+        "build/engine-tests/gguf-iq1s-replay",
+        "build/engine-tests/production-and-test.metallib",
+        "dev/tests/fixtures/iq1s_spread_rng.txt",
+        "128"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.733507875003852,
+      "fingerprint": "aa04873f7360f5c6d9b47121f3767e70028a0f0ac31ea627e9afa0fc63a488fa",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-iq1s-replay-aa04873f7360-20261021T075404.515430Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-iq1s-replay-aa04873f7360-20261021T075404.515430Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/d3-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.3807511250051903,
+      "fingerprint": "538112446038a7826f1fbdfec4856b60e357ef110c80297df413843d95b1a6e4",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/d3-attention-538112446038-20261021T075535.059735Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/d3-attention-538112446038-20261021T075535.059735Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/modernbert-kernels",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.6003700830042362,
+      "fingerprint": "f4d928428e4677a04f84afb0fc58b6abeca57cf4f1707a733615ffaced88d8b3",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/modernbert-kernels-f4d928428e46-20261021T075538.133139Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/modernbert-kernels-f4d928428e46-20261021T075538.133139Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/compact-projection",
+        "build/engine-tests/production-and-test.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.9825911669904599,
+      "fingerprint": "77f519c97064775dc7232f2e3e8535385272fb0936f0156ae77acb46171a1ec5",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/compact-projection-77f519c97064-20261021T075539.481900Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/compact-projection-77f519c97064-20261021T075539.481900Z.log"
+    },
+    {
+      "command": [
+        "python3",
+        "dev/tests/engine/run_draft_preparation.py",
+        "build/engine-tests/draft-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.5121319169993512,
+      "fingerprint": "128aa5a0f562814027e24ac096d2f0373f5f0d53bc0ddfca1330f675e2f7e641",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-128aa5a0f562-20261021T075541.115245Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-128aa5a0f562-20261021T075541.115245Z.log"
+    },
+    {
+      "command": [
+        "python3",
+        "dev/tests/engine/run_draft_preparation.py",
+        "build/engine-tests/draft-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json",
+        "--standard"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.122091459008516,
+      "fingerprint": "5d1dca1af66b73891e91a331a0839acc42c70368ac9a8c161c4c836264e708b7",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-5d1dca1af66b-20261021T075543.338405Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-5d1dca1af66b-20261021T075543.338405Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json",
+        "dev/tests/fixtures/mlx-quantization/fixture.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.798504499995033,
+      "fingerprint": "bf6597002e1147a8b81f74089f9266bf88abdf11770beeb2196d1db7af129cc5",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 46,
+      "creation_api_seconds": 0.035556331999999996,
+      "backend_cache_hits": 1698,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          12.246041
+        ],
+        [
+          "gguf_embed_f32_iq1m",
+          "ok",
+          0.855791
+        ],
+        [
+          "gguf_embed_f32_af2g32",
+          "ok",
+          0.833542
+        ],
+        [
+          "gguf_embed_f32_iq2xxs",
+          "ok",
+          0.757583
+        ],
+        [
+          "gguf_embed_f32_f16",
+          "ok",
+          0.71825
+        ],
+        [
+          "gguf_embed_f32_iq1s",
+          "ok",
+          0.661584
+        ],
+        [
+          "gguf_embed_f32_pq20",
+          "ok",
+          0.622709
+        ],
+        [
+          "gguf_embed_f32_q2k",
+          "ok",
+          0.588792
+        ],
+        [
+          "gguf_embed_f32_iq4xs",
+          "ok",
+          0.582958
+        ],
+        [
+          "gguf_embed_f32_iq3xxs",
+          "ok",
+          0.567583
+        ],
+        [
+          "gguf_embed_f32_af4g32",
+          "ok",
+          0.564208
+        ],
+        [
+          "gguf_embed_f32_iq2s",
+          "ok",
+          0.564167
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-preparation-bf6597002e11-20261021T075547.989600Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-preparation-bf6597002e11-20261021T075547.989600Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-dequant",
+        "build/engine-tests/gguf-dequant.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.4932489579950925,
+      "fingerprint": "0aff76f79a8056a4faa5fb35fb18434995d8aef3c46585aa9566fd8a7e81e86b",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 45,
+      "creation_api_seconds": 0.09834008300000001,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "gguf_test_dequant_q20",
+          "ok",
+          67.414917
+        ],
+        [
+          "residency_kick",
+          "ok",
+          12.562166
+        ],
+        [
+          "gguf_test_dequant_iq2s",
+          "ok",
+          0.663625
+        ],
+        [
+          "gguf_test_dequant_f16",
+          "ok",
+          0.63775
+        ],
+        [
+          "gguf_test_dequant_af3g128",
+          "ok",
+          0.629833
+        ],
+        [
+          "gguf_test_dequant_iq1s",
+          "ok",
+          0.593334
+        ],
+        [
+          "gguf_test_dequant_af6g128",
+          "ok",
+          0.563541
+        ],
+        [
+          "gguf_test_dequant_af8g128",
+          "ok",
+          0.543042
+        ],
+        [
+          "gguf_test_dequant_af6g32",
+          "ok",
+          0.535792
+        ],
+        [
+          "gguf_test_dequant_af4g32",
+          "ok",
+          0.531334
+        ],
+        [
+          "gguf_test_dequant_q80",
+          "ok",
+          0.522416
+        ],
+        [
+          "gguf_test_dequant_iq1m",
+          "ok",
+          0.490334
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-dequant-0aff76f79a80-20261021T075553.331728Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-dequant-0aff76f79a80-20261021T075553.331728Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-rotation",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.436567583004944,
+      "fingerprint": "c5e7265d810ae7530209267b490fcc8d28c93f512d114147ff1b21aec8f750d2",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.075601167,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "gguf_rotate",
+          "ok",
+          62.757167
+        ],
+        [
+          "residency_kick",
+          "ok",
+          12.244917
+        ],
+        [
+          "gguf_embed_rotated_pq20",
+          "ok",
+          0.599083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-rotation-c5e7265d810a-20261021T075554.325770Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-rotation-c5e7265d810a-20261021T075554.325770Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-projection",
+        "build/engine-tests/production-and-test.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 101.28339329198934,
+      "fingerprint": "759205c606cf613ed2766ed99fa44245b6772eb83e4094bb157fa3a79a8ee855",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1576,
+      "creation_api_seconds": 47.438434584,
+      "backend_cache_hits": 82892,
+      "slowest_creation_ms": [
+        [
+          "gguf_decode_iq3s_m32_r",
+          "ok",
+          553.259083
+        ],
+        [
+          "gguf_decode_q6k_m32_r",
+          "ok",
+          545.265666
+        ],
+        [
+          "gguf_decode_q6k_m32_g",
+          "ok",
+          535.674625
+        ],
+        [
+          "gguf_decode_iq4xs_m32_g",
+          "ok",
+          530.931167
+        ],
+        [
+          "gguf_decode_q4k_m32_g",
+          "ok",
+          528.299375
+        ],
+        [
+          "gguf_decode_q3k_m32_r",
+          "ok",
+          528.041208
+        ],
+        [
+          "gguf_decode_q80_m32_g",
+          "ok",
+          521.306542
+        ],
+        [
+          "gguf_decode_iq4nl_m32_g",
+          "ok",
+          520.333125
+        ],
+        [
+          "gguf_decode_iq4xs_m32_r",
+          "ok",
+          518.7935
+        ],
+        [
+          "gguf_decode_q2k_m32_r",
+          "ok",
+          518.01175
+        ],
+        [
+          "gguf_decode_iq3s_m32_g",
+          "ok",
+          511.743708
+        ],
+        [
+          "gguf_decode_q4k_m32_r",
+          "ok",
+          511.1185
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-projection-759205c606cf-20261021T075555.235203Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-projection-759205c606cf-20261021T075555.235203Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-single-token",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.4150878340005875,
+      "fingerprint": "4a7c986acd1ee012a26ea6293b4c43f1e6530be0a5710d1019ce0a4088bae371",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "0",
+        "MTL_DEBUG_LAYER": "1"
+      },
+      "creation_api_calls": 456,
+      "creation_api_seconds": 0.079654535,
+      "backend_cache_hits": 7065,
+      "slowest_creation_ms": [
+        [
+          "prefill_gdn_prepare_vh32",
+          "ok",
+          4.400042
+        ],
+        [
+          "residency_kick",
+          "ok",
+          3.3895
+        ],
+        [
+          "gguf_single_q4k_a",
+          "ok",
+          0.685791
+        ],
+        [
+          "gguf_single_q4k_g",
+          "ok",
+          0.573834
+        ],
+        [
+          "gguf_single_q4k_r",
+          "ok",
+          0.567042
+        ],
+        [
+          "gguf_single_q80_a_f32",
+          "ok",
+          0.520209
+        ],
+        [
+          "gguf_single_q80_n64_partial",
+          "ok",
+          0.506833
+        ],
+        [
+          "gdn_single_vh32_f32",
+          "ok",
+          0.489792
+        ],
+        [
+          "gguf_single_q5k_a",
+          "ok",
+          0.4865
+        ],
+        [
+          "gguf_single_iq4xs_a",
+          "ok",
+          0.482333
+        ],
+        [
+          "gguf_single_af6g128_n64_a_f32",
+          "ok",
+          0.460834
+        ],
+        [
+          "gguf_single_q80_a",
+          "ok",
+          0.448375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-single-token-4a7c986acd1e-20261021T075737.005683Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-single-token-4a7c986acd1e-20261021T075737.005683Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-prefill-cache",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 19.12111045900383,
+      "fingerprint": "ef8ecb9f823cf043c09d0f34851a5ba017a98778ba25b2b1e40027233aaf3150",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "0",
+        "MTL_DEBUG_LAYER": "1"
+      },
+      "creation_api_calls": 24,
+      "creation_api_seconds": 0.017341917,
+      "backend_cache_hits": 367,
+      "slowest_creation_ms": [
+        [
+          "gguf_prefill_q80_a",
+          "ok",
+          2.57125
+        ],
+        [
+          "gguf_prefill_q5k_a",
+          "ok",
+          2.4745
+        ],
+        [
+          "residency_kick",
+          "ok",
+          1.911583
+        ],
+        [
+          "gguf_prefill_q6k_r",
+          "ok",
+          1.00425
+        ],
+        [
+          "gguf_prefill_q5k_r",
+          "ok",
+          0.746041
+        ],
+        [
+          "gguf_prefill_q4k_a",
+          "ok",
+          0.704917
+        ],
+        [
+          "gguf_prefill_iq4xs_r",
+          "ok",
+          0.687084
+        ],
+        [
+          "gguf_prefill_q4k_r",
+          "ok",
+          0.643375
+        ],
+        [
+          "gguf_half_prefill_a",
+          "ok",
+          0.618167
+        ],
+        [
+          "gguf_prefill_q80_r",
+          "ok",
+          0.599042
+        ],
+        [
+          "gguf_prefill_q5k_g",
+          "ok",
+          0.509375
+        ],
+        [
+          "gguf_prefill_iq4xs_g",
+          "ok",
+          0.485292
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-prefill-cache-ef8ecb9f823c-20261021T075739.925204Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-prefill-cache-ef8ecb9f823c-20261021T075739.925204Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "kernels"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.29979433301196,
+      "fingerprint": "f79f836d70bb58127d015366daceb994bb2638b8ff7e69fce811cc693aea5432",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 8,
+      "creation_api_seconds": 30.375466085,
+      "backend_cache_hits": 181,
+      "slowest_creation_ms": [
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          17214.436542
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          9541.181792
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          2272.352792
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          1260.76475
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          74.236
+        ],
+        [
+          "residency_kick",
+          "ok",
+          11.630167
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.551
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.313042
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-f79f836d70bb-20261021T075759.537523Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-f79f836d70bb-20261021T075759.537523Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "split"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 5.274832166993292,
+      "fingerprint": "ffad52c7657cd6da044eec53a2c2c2ce9ee87c83f50f20bb9b42185ccf7d204b",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 22,
+      "creation_api_seconds": 0.0055124580000000005,
+      "backend_cache_hits": 1691,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.644084
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.683208
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          0.679083
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.593083
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          0.435375
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.259416
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.207
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.183416
+        ],
+        [
+          "gguf_prefill_q5k_r_leading_inputs",
+          "ok",
+          0.136292
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.129292
+        ],
+        [
+          "gguf_prefill_q4k_a",
+          "ok",
+          0.127916
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.078834
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-ffad52c7657c-20261021T075831.378297Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-ffad52c7657c-20261021T075831.378297Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "recovery"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.4640197080007056,
+      "fingerprint": "957770bbab7526e6d773e947204a4d8043f31719fd761a0e962d90d8942823f4",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.002721207,
+      "backend_cache_hits": 1368,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.529
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.220791
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.218792
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          0.214166
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          0.198958
+        ],
+        [
+          "gguf_prefill_af4g64_r",
+          "ok",
+          0.12
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.04875
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.042
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.03775
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.032542
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.029958
+        ],
+        [
+          "gguf_prefill_af4g64_r_leading_inputs",
+          "ok",
+          0.0285
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-957770bbab75-20261021T075837.212667Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-957770bbab75-20261021T075837.212667Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "faults"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 72.4387545829959,
+      "fingerprint": "8f2fd470c1ea0e5d5f9fd34f0d77abb89b16d105cc72c860e3e866161f8a29d1",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.002648751,
+      "backend_cache_hits": 3391,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.504583
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          0.220917
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.211667
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.199292
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          0.189042
+        ],
+        [
+          "gguf_prefill_af4g64_r",
+          "ok",
+          0.0935
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.047458
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.046042
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.038583
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.033667
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.033417
+        ],
+        [
+          "gguf_prefill_af4g64_r_leading_inputs",
+          "ok",
+          0.030583
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-8f2fd470c1ea-20261021T075840.236623Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-8f2fd470c1ea-20261021T075840.236623Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "program"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.24147879201336764,
+      "fingerprint": "8ea68ed7d469287b4e9cd47bb0531b1c546f0d0a7adafb05dd6250def0fb6ede",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.002007375,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          2.007375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-8ea68ed7d469-20261021T075953.199920Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-8ea68ed7d469-20261021T075953.199920Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-program-faults",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.9872045419906499,
+      "fingerprint": "2721e4b5a5ff3c38385a48b3dd2a6ca14a6fa72ebb15ed8aa524dea64a300835",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.001735458,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.735458
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-program-faults-2721e4b5a5ff-20261021T075954.249535Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-program-faults-2721e4b5a5ff-20261021T075954.249535Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-moe",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1357.8589158329996,
+      "fingerprint": "1e46a6dd63c615cab3f981d22ab6eb6eaf6eb44a589ffa4d03de2d3507b69be5",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 44,
+      "creation_api_seconds": 782.6828821720001,
+      "backend_cache_hits": 58605,
+      "slowest_creation_ms": [
+        [
+          "moe_expert_gguf_m32_g",
+          "ok",
+          189659.170333
+        ],
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          182777.054792
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up",
+          "ok",
+          153425.472042
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up_mixed",
+          "ok",
+          152517.87425
+        ],
+        [
+          "moe_expert_gguf_m8_a",
+          "ok",
+          23602.798125
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up",
+          "ok",
+          23238.725667
+        ],
+        [
+          "moe_expert_gguf_m8_g",
+          "ok",
+          23179.299167
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up_mixed",
+          "ok",
+          20199.207084
+        ],
+        [
+          "moe_expert_gguf_sg_g",
+          "ok",
+          7418.7735
+        ],
+        [
+          "moe_expert_gguf_sg_a",
+          "ok",
+          5299.773167
+        ],
+        [
+          "gguf_float_na_f32_bf16",
+          "ok",
+          272.255417
+        ],
+        [
+          "gguf_float_na_f32_f32",
+          "ok",
+          271.798209
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-1e46a6dd63c6-20261021T075956.752990Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-1e46a6dd63c6-20261021T075956.752990Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-moe-e512",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 514.8180994169961,
+      "fingerprint": "e55be26883caf8afc1392d4e850079be115bf6e35a8f5d9648d4803cf28ecbd1",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 44,
+      "creation_api_seconds": 0.24245220699999998,
+      "backend_cache_hits": 58605,
+      "slowest_creation_ms": [
+        [
+          "moe_route_select_f32_e512",
+          "ok",
+          84.238208
+        ],
+        [
+          "moe_group_routes_verified_e512",
+          "ok",
+          69.218875
+        ],
+        [
+          "moe_group_routes_e512",
+          "ok",
+          58.6655
+        ],
+        [
+          "residency_kick",
+          "ok",
+          7.658208
+        ],
+        [
+          "moe_expert_gguf_m32_g",
+          "ok",
+          1.3715
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up",
+          "ok",
+          1.355292
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up_mixed",
+          "ok",
+          1.251292
+        ],
+        [
+          "gguf_decode_sg_fused_l3",
+          "ok",
+          1.192167
+        ],
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          1.116834
+        ],
+        [
+          "gguf_decode_sg_fused_l4",
+          "ok",
+          1.092583
+        ],
+        [
+          "gguf_decode_sg_fused_l2",
+          "ok",
+          0.926209
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up",
+          "ok",
+          0.876542
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-e512-e55be26883ca-20261021T082235.835409Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-e512-e55be26883ca-20261021T082235.835409Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/expert-store",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 30.895030457992107,
+      "fingerprint": "37913b60c6cf88a8461f1c38b852b478f268cc6670605dd9ec3f92e188702f4f",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 104,
+      "creation_api_seconds": 3.111480837,
+      "backend_cache_hits": 8876,
+      "slowest_creation_ms": [
+        [
+          "moe_expert_load",
+          "ok",
+          2999.672375
+        ],
+        [
+          "moe_group_routes",
+          "ok",
+          93.763208
+        ],
+        [
+          "residency_kick",
+          "ok",
+          7.799875
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up",
+          "ok",
+          1.265625
+        ],
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          1.249875
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up",
+          "ok",
+          0.734542
+        ],
+        [
+          "moe_expert_gguf_m8_a",
+          "ok",
+          0.661
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.452583
+        ],
+        [
+          "moe_group_routes_e512",
+          "ok",
+          0.439833
+        ],
+        [
+          "gguf_float_f32_f32",
+          "ok",
+          0.366458
+        ],
+        [
+          "moe_route_select_f32",
+          "ok",
+          0.361125
+        ],
+        [
+          "moe_gather_rows",
+          "ok",
+          0.267667
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/expert-store-37913b60c6cf-20261021T083111.887352Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/expert-store-37913b60c6cf-20261021T083111.887352Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-block-cache",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.5572944999876199,
+      "fingerprint": "52cf8b74d4c07d2c93a34d8e738a2c63d5873da26b7b620e71f6132d96fc3845",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 19,
+      "creation_api_seconds": 0.014472334,
+      "backend_cache_hits": 36,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.74
+        ],
+        [
+          "verify_attention_q8_store_kv2_vt",
+          "ok",
+          0.805458
+        ],
+        [
+          "verify_attention_bf16_sparse_located_kv2_g12",
+          "ok",
+          0.800125
+        ],
+        [
+          "verify_attention_q8_sparse_kv2_g12",
+          "ok",
+          0.76825
+        ],
+        [
+          "attention_block_lists",
+          "ok",
+          0.708875
+        ],
+        [
+          "verify_attention_q8_sparse_located_kv2_g12",
+          "ok",
+          0.696125
+        ],
+        [
+          "verify_attention_bf16_sparse_kv2_g12",
+          "ok",
+          0.694792
+        ],
+        [
+          "verify_attention_bf16_store_kv2_vt",
+          "ok",
+          0.394084
+        ],
+        [
+          "verify_attention_sparse_reduce_kv2_g12",
+          "ok",
+          0.202459
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.192333
+        ],
+        [
+          "attention_block_lists",
+          "ok",
+          0.082833
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.073375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-block-cache-52cf8b74d4c0-20261021T083143.885420Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-block-cache-52cf8b74d4c0-20261021T083143.885420Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-history-stream",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.336411374999443,
+      "fingerprint": "6d8bab04eb95cf0ffab0cca2311015e2a4a10c7a44165bcdb6afce7b0cfd3f92",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.010877333,
+      "backend_cache_hits": 77,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.213166
+        ],
+        [
+          "paged_kv_stage_layer",
+          "ok",
+          2.664167
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-history-stream-6d8bab04eb95-20261021T083144.964287Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-history-stream-6d8bab04eb95-20261021T083144.964287Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen4-kernels",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.284234207996633,
+      "fingerprint": "a0ac9cc1931624786ebeeed5b96995039d9190c1d0901dd93d7bbe0c49d2b8b4",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 23,
+      "creation_api_seconds": 0.120669876,
+      "backend_cache_hits": 3067,
+      "slowest_creation_ms": [
+        [
+          "hyper_connection_stream_mean",
+          "ok",
+          61.47925
+        ],
+        [
+          "ngram_embedding_hash",
+          "ok",
+          41.008709
+        ],
+        [
+          "residency_kick",
+          "ok",
+          9.741292
+        ],
+        [
+          "block_indexer_score",
+          "ok",
+          0.984708
+        ],
+        [
+          "hyper_connection_norm_quarters",
+          "ok",
+          0.821
+        ],
+        [
+          "hyper_connection_norm_loaded",
+          "ok",
+          0.788959
+        ],
+        [
+          "block_indexer_pool",
+          "ok",
+          0.631125
+        ],
+        [
+          "hyper_connection_init",
+          "ok",
+          0.62225
+        ],
+        [
+          "rope_build_tables",
+          "ok",
+          0.524875
+        ],
+        [
+          "ngram_embedding_commit",
+          "ok",
+          0.485917
+        ],
+        [
+          "hyper_connection_low_table16",
+          "ok",
+          0.383416
+        ],
+        [
+          "block_indexer_pending",
+          "ok",
+          0.342167
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-a0ac9cc19316-20261021T083146.804877Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-a0ac9cc19316-20261021T083146.804877Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen4-kernels",
+        "build/splash.metallib",
+        "bitwise"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.1111180829902878,
+      "fingerprint": "4670af867fce337807d7fe5b3532b367accf825886f4506901c0c140334323e9",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.003422459,
+      "backend_cache_hits": 34,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          2.80275
+        ],
+        [
+          "hyper_connection_norm_quarters",
+          "ok",
+          0.450334
+        ],
+        [
+          "hyper_connection_norm_loaded",
+          "ok",
+          0.169375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-4670af867fce-20261021T083149.657076Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-4670af867fce-20261021T083149.657076Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/paged-attention-plan",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 144.19332450001093,
+      "fingerprint": "eb613289c4bb16df34088bc74837df3616ead7fb64d1f30ec749eb3aeaefd13f",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 129,
+      "creation_api_seconds": 3.905692532,
+      "backend_cache_hits": 5830,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_q8_sparse_kv2_g12",
+          "ok",
+          388.636416
+        ],
+        [
+          "prefill_attention_q4_0_split_kv4_g4_r16",
+          "ok",
+          273.093375
+        ],
+        [
+          "verify_attention_q4_0_split_kv2_g8",
+          "ok",
+          261.247417
+        ],
+        [
+          "prefill_attention_q4_0_split_kv2_g8",
+          "ok",
+          259.475792
+        ],
+        [
+          "prefill_attention_q4_0_split",
+          "ok",
+          254.884625
+        ],
+        [
+          "prefill_attention_q4h_split_kv2_g4",
+          "ok",
+          245.613875
+        ],
+        [
+          "verify_attention_q4_0_split",
+          "ok",
+          229.262791
+        ],
+        [
+          "verify_attention_q4h_split_kv4_g4",
+          "ok",
+          219.032542
+        ],
+        [
+          "verify_attention_q4h_split_kv2_g4",
+          "ok",
+          212.84975
+        ],
+        [
+          "prefill_attention_q4_0_split_kv2_g4",
+          "ok",
+          204.664541
+        ],
+        [
+          "prefill_attention_q4_0_split_kv4_g4",
+          "ok",
+          203.70275
+        ],
+        [
+          "verify_attention_q4_0_split_kv2_g4",
+          "ok",
+          193.839458
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/paged-attention-plan-eb613289c4bb-20261021T083150.266859Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/paged-attention-plan-eb613289c4bb-20261021T083150.266859Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/linear-plan",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.552914875006536,
+      "fingerprint": "a724f9f03fcc3cdeaed3fc0e8ce7b0a28bb2ee1418ab8955bcf2d50c78ad6936",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.011103458,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.103458
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/linear-plan-a724f9f03fcc-20261021T083414.964634Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/linear-plan-a724f9f03fcc-20261021T083414.964634Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/runtime-resources",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 15.023136916992371,
+      "fingerprint": "c0a6c1451a75860bd8c8f0600174ced10388ff5c31745a7328c3e1809e52831a",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 228,
+      "creation_api_seconds": 1.341412634,
+      "backend_cache_hits": 1269,
+      "slowest_creation_ms": [
+        [
+          "decode_sample_vocabulary_search",
+          "ok",
+          342.653834
+        ],
+        [
+          "norm_rms_table16_decode",
+          "ok",
+          338.367542
+        ],
+        [
+          "norm_rms",
+          "ok",
+          266.762542
+        ],
+        [
+          "draft_select_dflash",
+          "ok",
+          86.84175
+        ],
+        [
+          "decode_sample_mass_sharded",
+          "ok",
+          46.482416
+        ],
+        [
+          "prefill_gdn_gate",
+          "ok",
+          29.843791
+        ],
+        [
+          "draft_conv",
+          "ok",
+          29.361667
+        ],
+        [
+          "norm_rms_staged",
+          "ok",
+          29.21075
+        ],
+        [
+          "copy_rows_bf16",
+          "ok",
+          29.006208
+        ],
+        [
+          "decode_sample_argmax_reduce",
+          "ok",
+          27.974458
+        ],
+        [
+          "compact_gather_plane",
+          "ok",
+          27.143417
+        ],
+        [
+          "prefill_attention_gate",
+          "ok",
+          24.258083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/runtime-resources-c0a6c1451a75-20261021T083416.075999Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/runtime-resources-c0a6c1451a75-20261021T083416.075999Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-page-tier",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.8294797090056818,
+      "fingerprint": "f7ea4798047fe6b1ab094014ac9c1525f9be0431bdeacfc90d7fa94638f19f60",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.010896333999999999,
+      "backend_cache_hits": 258,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.457542
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          0.721583
+        ],
+        [
+          "addressed_check_u32",
+          "ok",
+          0.717209
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-page-tier-f7ea4798047f-20261021T083432.233287Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-page-tier-f7ea4798047f-20261021T083432.233287Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/model-loading",
+        "build/engine-tests/metal-backend.metallib",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.0912249170069117,
+      "fingerprint": "ce0c652083ee96b159c6aa0239f93fb47c41f9e87e7e881741ddd0a26bda4bab",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 6,
+      "creation_api_seconds": 0.065212666,
+      "backend_cache_hits": 437,
+      "slowest_creation_ms": [
+        [
+          "test_copy_u32",
+          "ok",
+          54.241083
+        ],
+        [
+          "residency_kick",
+          "ok",
+          9.828625
+        ],
+        [
+          "gguf_embed_f32_af4g64",
+          "ok",
+          0.497542
+        ],
+        [
+          "gguf_repack",
+          "ok",
+          0.351792
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.174541
+        ],
+        [
+          "gguf_embed_f32_af8g64",
+          "ok",
+          0.119083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/model-loading-ce0c652083ee-20261021T083433.576985Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/model-loading-ce0c652083ee-20261021T083433.576985Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen-state-storage",
+        "build/engine-tests/q8-paged-kv.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.6783335829968564,
+      "fingerprint": "417d1fcfdadd583f404099105460b202b8abcba6bd7592281d07c896f5048397",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.009634541,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.634541
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen-state-storage-417d1fcfdadd-20261021T083435.167097Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen-state-storage-417d1fcfdadd-20261021T083435.167097Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-paged-kv-metal",
+        "build/engine-tests/q8-paged-kv.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.39497550000669435,
+      "fingerprint": "0323fd48c6dea4b405ab81a46ab22141f28de0921d8ba49e9f63ef40c46df8a9",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.009756876,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "splash_q8_quantize_kv_page",
+          "ok",
+          8.811584
+        ],
+        [
+          "splash_q8_dequantize_kv_page",
+          "ok",
+          0.672459
+        ],
+        [
+          "splash_q8_gather_logical_kv_page",
+          "ok",
+          0.272833
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-paged-kv-metal-0323fd48c6de-20261021T083439.423015Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-paged-kv-metal-0323fd48c6de-20261021T083439.423015Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-page-storage",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.44509116699919105,
+      "fingerprint": "c35a601489b3c7ad1601a63e970b191a80ebbdc8a845c396cb5ab84d5e55a91a",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.009002875,
+      "backend_cache_hits": 3,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.598083
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          0.31775
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.087042
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-page-storage-c35a601489b3-20261021T083440.277922Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-page-storage-c35a601489b3-20261021T083440.277922Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-flash-attention",
+        "build/engine-tests/q8-attention.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 478.9046180000005,
+      "fingerprint": "3c224e3ccad8b8bf7a0c71f5169d6cceb8ff241acd8548ae638df955baca4a6d",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 90,
+      "creation_api_seconds": 1.5593277829999999,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_q8_sparse_kv2_g12",
+          "ok",
+          368.838375
+        ],
+        [
+          "verify_attention_q8_sparse_kv2_g12",
+          "ok",
+          361.406666
+        ],
+        [
+          "prefill_attention_q8_split_kv4_g4",
+          "ok",
+          232.777542
+        ],
+        [
+          "prefill_attention_q8_split_kv2_g4",
+          "ok",
+          203.791541
+        ],
+        [
+          "verify_attention_q8_split_kv2_g4",
+          "ok",
+          199.715
+        ],
+        [
+          "prefill_attention_sparse_reduce_kv2_g12",
+          "ok",
+          49.71925
+        ],
+        [
+          "verify_attention_sparse_reduce_kv2_g12",
+          "ok",
+          44.58025
+        ],
+        [
+          "prefill_attention_reduce_kv2_g4",
+          "ok",
+          40.43375
+        ],
+        [
+          "verify_attention_reduce_kv2_g4",
+          "ok",
+          38.820708
+        ],
+        [
+          "verify_attention_reduce",
+          "ok",
+          9.644916
+        ],
+        [
+          "verify_attention_q8_split_kv4_g4",
+          "ok",
+          1.245291
+        ],
+        [
+          "verify_attention_reduce_kv4_g4",
+          "ok",
+          0.808083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-flash-attention-3c224e3ccad8-20261021T083441.254999Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-flash-attention-3c224e3ccad8-20261021T083441.254999Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-chunked-prefill",
+        "build/engine-tests/q8-attention.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 48.25283783400664,
+      "fingerprint": "0a5c579365c587eb8b0d015ee3d7d381e21053cc7ab8482ca3501a89caad3703",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 4,
+      "creation_api_seconds": 0.013974374,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_q8_store",
+          "ok",
+          13.09025
+        ],
+        [
+          "verify_attention_q8_store",
+          "ok",
+          0.512916
+        ],
+        [
+          "prefill_attention_q8_split",
+          "ok",
+          0.212833
+        ],
+        [
+          "prefill_attention_reduce",
+          "ok",
+          0.158375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-chunked-prefill-0a5c579365c5-20261021T084241.371938Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-chunked-prefill-0a5c579365c5-20261021T084241.371938Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gdn-metal",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 11.740218125007232,
+      "fingerprint": "c4846ccbde98ff850e58d7a5e90018eca18468ca524a451beb510898b8c6d179",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 21,
+      "creation_api_seconds": 0.023038791,
+      "backend_cache_hits": 784,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          12.744542
+        ],
+        [
+          "gdn_single_vh32_f32",
+          "ok",
+          1.047667
+        ],
+        [
+          "prefill_gdn_gate_f32",
+          "ok",
+          0.939958
+        ],
+        [
+          "gdn_single_vh32",
+          "ok",
+          0.78275
+        ],
+        [
+          "prefill_gdn_scan_bf16_state",
+          "ok",
+          0.7815
+        ],
+        [
+          "prefill_gdn_prepare_vh16",
+          "ok",
+          0.772458
+        ],
+        [
+          "prefill_gdn_prepare_p16512",
+          "ok",
+          0.673
+        ],
+        [
+          "prefill_gdn_gate_vh32_f32",
+          "ok",
+          0.633333
+        ],
+        [
+          "prefill_gdn_prepare_vh32",
+          "ok",
+          0.576125
+        ],
+        [
+          "prefill_gdn_gate_vh16_f32",
+          "ok",
+          0.566916
+        ],
+        [
+          "prefill_gdn_gate_vh16",
+          "ok",
+          0.554375
+        ],
+        [
+          "prefill_gdn_scan_vh32_bf16_state",
+          "ok",
+          0.52375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-metal-c4846ccbde98-20261021T084331.012169Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-metal-c4846ccbde98-20261021T084331.012169Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/dflash-batch-control",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.46280033299990464,
+      "fingerprint": "a89eb2ce02a845e8dd36743e208ad4206dd2cc11e7a5fda571d9a74391f871e2",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.008955042,
+      "backend_cache_hits": 12,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.46925
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          0.300667
+        ],
+        [
+          "copy_rows_bf16",
+          "ok",
+          0.185125
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-batch-control-a89eb2ce02a8-20261021T084343.374102Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-batch-control-a89eb2ce02a8-20261021T084343.374102Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/draft-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.74787349998951,
+      "fingerprint": "220b7fd95dbc1c54f17c722a39268c7c271d11eb6bc6ddff9fe7302add440020",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 10,
+      "creation_api_seconds": 0.013234125,
+      "backend_cache_hits": 145,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.443667
+        ],
+        [
+          "prefill_draft_context_load",
+          "ok",
+          0.552583
+        ],
+        [
+          "draft_conv",
+          "ok",
+          0.419791
+        ],
+        [
+          "draft_attention_bf16_split",
+          "ok",
+          0.398458
+        ],
+        [
+          "prefill_draft_context_store",
+          "ok",
+          0.307208
+        ],
+        [
+          "draft_context_kv_commit",
+          "ok",
+          0.290042
+        ],
+        [
+          "prefill_draft_context_kv",
+          "ok",
+          0.2835
+        ],
+        [
+          "draft_attention_qkv",
+          "ok",
+          0.230834
+        ],
+        [
+          "draft_attention_bf16_reduce",
+          "ok",
+          0.188042
+        ],
+        [
+          "draft_attention_reorder",
+          "ok",
+          0.12
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-attention-220b7fd95dbc-20261021T084344.423251Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-attention-220b7fd95dbc-20261021T084344.423251Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/dflash-standard",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.0314349580003181,
+      "fingerprint": "30e2e7fa45cb6060fe7be59fd54967e64d9bce850f946a3f92d7a0a3e34f41a3",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 11,
+      "creation_api_seconds": 0.011946666,
+      "backend_cache_hits": 18,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.87025
+        ],
+        [
+          "norm_rms_2560",
+          "ok",
+          0.859417
+        ],
+        [
+          "draft_standard_residual_add",
+          "ok",
+          0.603542
+        ],
+        [
+          "gguf_decode_af4g64_m8_a",
+          "ok",
+          0.29575
+        ],
+        [
+          "draft_attention_bf16_split",
+          "ok",
+          0.238541
+        ],
+        [
+          "gguf_decode_af4g64_m8_gate_up",
+          "ok",
+          0.213083
+        ],
+        [
+          "norm_rms_table16_decode",
+          "ok",
+          0.207625
+        ],
+        [
+          "draft_attention_qkv",
+          "ok",
+          0.185625
+        ],
+        [
+          "gguf_decode_sg_af4g64_l1_a_f32",
+          "ok",
+          0.178166
+        ],
+        [
+          "draft_attention_bf16_reduce",
+          "ok",
+          0.156792
+        ],
+        [
+          "draft_attention_reorder",
+          "ok",
+          0.137875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-standard-30e2e7fa45cb-20261021T084349.789019Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-standard-30e2e7fa45cb-20261021T084349.789019Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gdn-decode",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 32.3600267090078,
+      "fingerprint": "288662824fcab367e1299674a1586330bf91ab39e8cad558b88bfcc6e8e026a4",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 37,
+      "creation_api_seconds": 2.693423042,
+      "backend_cache_hits": 3300,
+      "slowest_creation_ms": [
+        [
+          "verify_gdn_fused_f32_bf16_state",
+          "ok",
+          314.278
+        ],
+        [
+          "verify_gdn_fused_table16_vh32_f32_bf16_state",
+          "ok",
+          282.436209
+        ],
+        [
+          "verify_gdn_fused_table16_vh32_bf16_state",
+          "ok",
+          270.840292
+        ],
+        [
+          "verify_gdn_fused_table16_f32_bf16_state",
+          "ok",
+          267.086333
+        ],
+        [
+          "verify_gdn_fused_table16_p16512_bf16_state",
+          "ok",
+          259.683375
+        ],
+        [
+          "verify_gdn_fused_vh32_bf16_state",
+          "ok",
+          259.669
+        ],
+        [
+          "verify_gdn_fused_table16_p16512_f32_bf16_state",
+          "ok",
+          259.137875
+        ],
+        [
+          "verify_gdn_fused_p16512_f32_bf16_state",
+          "ok",
+          247.130458
+        ],
+        [
+          "verify_gdn_fused_vh32_f32_bf16_state",
+          "ok",
+          245.845
+        ],
+        [
+          "verify_gdn_fused_p16512_bf16_state",
+          "ok",
+          242.384583
+        ],
+        [
+          "residency_kick",
+          "ok",
+          10.378166
+        ],
+        [
+          "verify_gdn_fused_table16_p16512_f32",
+          "ok",
+          4.599417
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-decode-288662824fca-20261021T084351.384787Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-decode-288662824fca-20261021T084351.384787Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/draft-selector",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.854513500002213,
+      "fingerprint": "1c3fa0bd3484b4e2b036bb2c184081e3c33ea1b9be94ce7fe81d5c31913efe2d",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 9,
+      "creation_api_seconds": 0.135676542,
+      "backend_cache_hits": 657,
+      "slowest_creation_ms": [
+        [
+          "draft_select_dflash",
+          "ok",
+          121.847333
+        ],
+        [
+          "residency_kick",
+          "ok",
+          10.933417
+        ],
+        [
+          "draft_select_argmax_sharded",
+          "ok",
+          0.679792
+        ],
+        [
+          "draft_select_unary_merge",
+          "ok",
+          0.434209
+        ],
+        [
+          "draft_select_unary",
+          "ok",
+          0.390042
+        ],
+        [
+          "draft_select_top16_sharded",
+          "ok",
+          0.367583
+        ],
+        [
+          "draft_select_edges",
+          "ok",
+          0.34475
+        ],
+        [
+          "draft_select_argmax_merge",
+          "ok",
+          0.340125
+        ],
+        [
+          "draft_verify_rows",
+          "ok",
+          0.339291
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-selector-1c3fa0bd3484-20261021T084424.356827Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-selector-1c3fa0bd3484-20261021T084424.356827Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/target-sampling",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 24.628295999995316,
+      "fingerprint": "54dc197dcece7d7ee4687f4ecaa72f726d92908df79912589dc70e10725df340",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.012306416,
+      "backend_cache_hits": 3954,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.274292
+        ],
+        [
+          "decode_sample_thinking_cutoff",
+          "ok",
+          0.30025
+        ],
+        [
+          "decode_draft_thinking_cutoff",
+          "ok",
+          0.260375
+        ],
+        [
+          "decode_sample_penalize_verify",
+          "ok",
+          0.252875
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          0.225583
+        ],
+        [
+          "verify_input_tokens",
+          "ok",
+          0.211125
+        ],
+        [
+          "decode_sample_penalize",
+          "ok",
+          0.192041
+        ],
+        [
+          "decode_sample_mass_sharded",
+          "ok",
+          0.155292
+        ],
+        [
+          "decode_sample_vocabulary_draw",
+          "ok",
+          0.144541
+        ],
+        [
+          "decode_sample_vocabulary_search",
+          "ok",
+          0.135417
+        ],
+        [
+          "decode_sample_argmax_sharded",
+          "ok",
+          0.088083
+        ],
+        [
+          "decode_sample_argmax_reduce",
+          "ok",
+          0.066542
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-54dc197dcece-20261021T084428.867210Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-54dc197dcece-20261021T084428.867210Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/target-sampling",
+        "build/splash.metallib",
+        "--fast-topk",
+        "--correctness-only"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 25.04892104200553,
+      "fingerprint": "1f91a5d3978828c46819a947cbac85d3fc8544ad6a34f48b4a607c5b9ce219f2",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 14,
+      "creation_api_seconds": 0.013289332000000001,
+      "backend_cache_hits": 4465,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.44475
+        ],
+        [
+          "decode_sample_topk32_sharded",
+          "ok",
+          0.964916
+        ],
+        [
+          "decode_sample_topk32_merge",
+          "ok",
+          0.630792
+        ],
+        [
+          "decode_draft_thinking_cutoff",
+          "ok",
+          0.319791
+        ],
+        [
+          "decode_sample_vocabulary_search",
+          "ok",
+          0.314917
+        ],
+        [
+          "decode_sample_penalize_verify",
+          "ok",
+          0.263292
+        ],
+        [
+          "decode_sample_thinking_cutoff",
+          "ok",
+          0.234333
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          0.221125
+        ],
+        [
+          "decode_sample_mass_sharded",
+          "ok",
+          0.217708
+        ],
+        [
+          "decode_sample_penalize",
+          "ok",
+          0.175875
+        ],
+        [
+          "decode_sample_vocabulary_draw",
+          "ok",
+          0.17475
+        ],
+        [
+          "verify_input_tokens",
+          "ok",
+          0.152291
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-1f91a5d39788-20261021T084454.015300Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-1f91a5d39788-20261021T084454.015300Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/vision-metal",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.37091129200416617,
+      "fingerprint": "a35b3ca096934b92949d47720acf7d061dfb58e749b1ab452f19f10018d93535",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.009222958,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.222958
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-metal-a35b3ca09693-20261021T084519.641831Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-metal-a35b3ca09693-20261021T084519.641831Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/vision-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 6.171462291997159,
+      "fingerprint": "6ca7cae91d380b83f5c996f197f8a989ed23a1fce6bb370c5ed36c35e71eac0e",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.011771292000000001,
+      "backend_cache_hits": 26,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.968042
+        ],
+        [
+          "vision_attention",
+          "ok",
+          0.80325
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-attention-6ca7cae91d38-20261021T084520.580851Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-attention-6ca7cae91d38-20261021T084520.580851Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/metal-backend",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 16.835766375006642,
+      "fingerprint": "194ead4765615da94f13995b82e7636086982f760663459aefc3070883565f83",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 99,
+      "creation_api_seconds": 0.019410671,
+      "backend_cache_hits": 20389,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          12.098042
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.601459
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.434791
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          0.248708
+        ],
+        [
+          "addressed_check_u32",
+          "ok",
+          0.172834
+        ],
+        [
+          "test_copy_u32",
+          "ok",
+          0.16
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.133542
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.131125
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.124625
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.124292
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.121625
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.120125
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/metal-backend-194ead476561-20261021T084527.708260Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/metal-backend-194ead476561-20261021T084527.708260Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/handoff",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.466319334009313,
+      "fingerprint": "2445cb4d75438e1086470757c91648198319fdd55d52cabf50a8eb2a9a650773",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.0091945,
+      "backend_cache_hits": 1033,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.045292
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.149208
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/handoff-2445cb4d7543-20261021T084545.178424Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/handoff-2445cb4d7543-20261021T084545.178424Z.log"
+    }
+  ],
+  "final_fresh_run": [
+    {
+      "command": [
+        "build/engine-tests/gguf-iq1s-replay",
+        "build/engine-tests/production-and-test.metallib",
+        "dev/tests/fixtures/iq1s_spread_rng.txt",
+        "128"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.4737042909982847,
+      "fingerprint": "9f7147f7a08053cb9a33de4292f5dec20003f1a6a71d564e11e3b09461f8c7c0",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-iq1s-replay-9f7147f7a080-20261021T085241.983032Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-iq1s-replay-9f7147f7a080-20261021T085241.983032Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/d3-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.0707810829917435,
+      "fingerprint": "43f147cd0b7edb7cb6b238be0e453692fa9c2f2c794aee5b9ab26fcd8db6a473",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/d3-attention-43f147cd0b7e-20261021T085244.241158Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/d3-attention-43f147cd0b7e-20261021T085244.241158Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/modernbert-kernels",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.23337212500337046,
+      "fingerprint": "26d45f2f22c9d867d6e3d91395fa3391f2c533040dd13d9042eb2439578cd1b6",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/modernbert-kernels-26d45f2f22c9-20261021T085246.962282Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/modernbert-kernels-26d45f2f22c9-20261021T085246.962282Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/compact-projection",
+        "build/engine-tests/production-and-test.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.6278847080102423,
+      "fingerprint": "479ebb39da09976c059208e89015142102448949ed667c06c47f5c819e34f5fc",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 0,
+      "creation_api_seconds": 0.0,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/compact-projection-479ebb39da09-20261021T085247.724652Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/compact-projection-479ebb39da09-20261021T085247.724652Z.log"
+    },
+    {
+      "command": [
+        "python3",
+        "dev/tests/engine/run_draft_preparation.py",
+        "build/engine-tests/draft-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.151160624998738,
+      "fingerprint": "87f3e4d3c032b97925408c40dd72895caaabb0f6b202c926e4b41023086bec85",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.0148865,
+      "backend_cache_hits": 47,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          12.565958
+        ],
+        [
+          "gguf_repack",
+          "ok",
+          2.320542
+        ]
+      ],
+      "fixture_child_exits": [
+        0
+      ],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-87f3e4d3c032-20261021T085248.988487Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-87f3e4d3c032-20261021T085248.988487Z.log"
+    },
+    {
+      "command": [
+        "python3",
+        "dev/tests/engine/run_draft_preparation.py",
+        "build/engine-tests/draft-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json",
+        "--standard"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.108292707998771,
+      "fingerprint": "31c658e8cdda332efad37725b5a941fa00308012e3f2b7bcb0530df3b17ede47",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.013808292,
+      "backend_cache_hits": 92,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          13.26425
+        ],
+        [
+          "gguf_repack",
+          "ok",
+          0.544042
+        ]
+      ],
+      "fixture_child_exits": [
+        0
+      ],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-31c658e8cdda-20261021T085250.709666Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/python3-31c658e8cdda-20261021T085250.709666Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-preparation",
+        "build/splash.metallib",
+        "dev/tests/fixtures/weight-goldens/goldens.json",
+        "dev/tests/fixtures/mlx-quantization/fixture.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.694992208998883,
+      "fingerprint": "4dc84845d10c003406de4212ff4d18a4c3695cda0c7d70f4ab6ebc45520d1a2d",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 46,
+      "creation_api_seconds": 0.144037707,
+      "backend_cache_hits": 1698,
+      "slowest_creation_ms": [
+        [
+          "gguf_embed_f32_pq20",
+          "ok",
+          75.859292
+        ],
+        [
+          "gguf_embed_f32_q20",
+          "ok",
+          30.474917
+        ],
+        [
+          "residency_kick",
+          "ok",
+          11.629375
+        ],
+        [
+          "gguf_embed_f32_af3g32",
+          "ok",
+          2.399709
+        ],
+        [
+          "gguf_embed_f32_iq2s",
+          "ok",
+          1.874625
+        ],
+        [
+          "gguf_embed_f32_af2g128",
+          "ok",
+          1.358
+        ],
+        [
+          "gguf_embed_f32_iq3s",
+          "ok",
+          1.3435
+        ],
+        [
+          "gguf_embed_f32_iq1m",
+          "ok",
+          0.72475
+        ],
+        [
+          "gguf_embed_f32_iq1s",
+          "ok",
+          0.6625
+        ],
+        [
+          "gguf_embed_f32_q80",
+          "ok",
+          0.620792
+        ],
+        [
+          "gguf_embed_f32_q4k",
+          "ok",
+          0.59675
+        ],
+        [
+          "gguf_embed_f32_iq2xs",
+          "ok",
+          0.595
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-preparation-4dc84845d10c-20261021T085255.402704Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-preparation-4dc84845d10c-20261021T085255.402704Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-dequant",
+        "build/engine-tests/gguf-dequant.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.7754575419967296,
+      "fingerprint": "038739ac15866fa825396067c3ef24a63152f60836085e505186f73cec87543e",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 45,
+      "creation_api_seconds": 1.6162124610000002,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "gguf_test_dequant_q4k",
+          "ok",
+          72.081208
+        ],
+        [
+          "gguf_test_dequant_af4g64",
+          "ok",
+          64.044458
+        ],
+        [
+          "gguf_test_dequant_af4g128",
+          "ok",
+          59.279459
+        ],
+        [
+          "gguf_test_dequant_nvfp4",
+          "ok",
+          43.509208
+        ],
+        [
+          "gguf_test_dequant_iq2s",
+          "ok",
+          43.3235
+        ],
+        [
+          "gguf_test_dequant_af3g64",
+          "ok",
+          42.468292
+        ],
+        [
+          "gguf_test_dequant_iq4nl",
+          "ok",
+          40.203917
+        ],
+        [
+          "gguf_test_dequant_q6k",
+          "ok",
+          39.756375
+        ],
+        [
+          "gguf_test_dequant_iq1s",
+          "ok",
+          39.722667
+        ],
+        [
+          "gguf_test_dequant_iq4xs",
+          "ok",
+          38.744208
+        ],
+        [
+          "gguf_test_dequant_f16",
+          "ok",
+          37.649667
+        ],
+        [
+          "gguf_test_dequant_iq1m",
+          "ok",
+          37.331708
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-dequant-038739ac1586-20261021T085300.753093Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-dequant-038739ac1586-20261021T085300.753093Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-rotation",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.09583950000524055,
+      "fingerprint": "6485daa6dec7bf9a1ca8dd7dafbf85eda0b5d9be605b11aa10382bd108ba6760",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.013137042,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.76375
+        ],
+        [
+          "gguf_rotate",
+          "ok",
+          0.736625
+        ],
+        [
+          "gguf_embed_rotated_pq20",
+          "ok",
+          0.636667
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-rotation-6485daa6dec7-20261021T085303.230207Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-rotation-6485daa6dec7-20261021T085303.230207Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-projection",
+        "build/engine-tests/production-and-test.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 115.2956912919908,
+      "fingerprint": "1570b2d7571b746a9e2970dda8e5f91e3ee4ab9bd0f92e15d0f06844d63b1bd4",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1576,
+      "creation_api_seconds": 49.436883558,
+      "backend_cache_hits": 82892,
+      "slowest_creation_ms": [
+        [
+          "gguf_decode_q4k_m32_g",
+          "ok",
+          625.221459
+        ],
+        [
+          "gguf_decode_q6k_m32_r",
+          "ok",
+          615.542667
+        ],
+        [
+          "gguf_decode_q4k_m32_r",
+          "ok",
+          600.2935
+        ],
+        [
+          "gguf_decode_iq4nl_m32_g",
+          "ok",
+          597.526666
+        ],
+        [
+          "gguf_decode_q6k_m32_g",
+          "ok",
+          578.904792
+        ],
+        [
+          "gguf_decode_q2k_m32_r",
+          "ok",
+          576.01725
+        ],
+        [
+          "gguf_decode_iq4xs_m32_r",
+          "ok",
+          575.244375
+        ],
+        [
+          "gguf_decode_q5k_m32_r",
+          "ok",
+          570.589083
+        ],
+        [
+          "gguf_decode_q5k_m32_g",
+          "ok",
+          570.245459
+        ],
+        [
+          "gguf_prefill_af8g128_r_leading_inputs",
+          "ok",
+          565.326959
+        ],
+        [
+          "gguf_decode_iq3s_m32_g",
+          "ok",
+          555.963458
+        ],
+        [
+          "gguf_decode_q80_m32_r",
+          "ok",
+          554.427875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-projection-1570b2d7571b-20261021T085303.933454Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-projection-1570b2d7571b-20261021T085303.933454Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-single-token",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.9251682500034804,
+      "fingerprint": "9d6e0b81eee88ff8aebfd40a7609d0a686aa303abc821c1cf14bc5f7eb4d23d9",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "0",
+        "MTL_DEBUG_LAYER": "1"
+      },
+      "creation_api_calls": 456,
+      "creation_api_seconds": 0.099095285,
+      "backend_cache_hits": 7065,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          3.31675
+        ],
+        [
+          "gguf_single_af5g128_n64_a",
+          "ok",
+          1.136
+        ],
+        [
+          "gdn_single_vh32_f32",
+          "ok",
+          0.983042
+        ],
+        [
+          "gguf_single_q80_n64_partial",
+          "ok",
+          0.788
+        ],
+        [
+          "gguf_single_q4k_a",
+          "ok",
+          0.781709
+        ],
+        [
+          "gguf_single_q3k_n64_r",
+          "ok",
+          0.749709
+        ],
+        [
+          "gguf_single_q4k_g",
+          "ok",
+          0.656708
+        ],
+        [
+          "prefill_gdn_prepare_vh32",
+          "ok",
+          0.646416
+        ],
+        [
+          "gguf_single_q4k_r",
+          "ok",
+          0.628167
+        ],
+        [
+          "gguf_single_iq4xs_a",
+          "ok",
+          0.582916
+        ],
+        [
+          "gguf_single_q4k_a_f32",
+          "ok",
+          0.567125
+        ],
+        [
+          "gguf_single_q80_a",
+          "ok",
+          0.545334
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-single-token-9d6e0b81eee8-20261021T085500.433420Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-single-token-9d6e0b81eee8-20261021T085500.433420Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-prefill-cache",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 18.635479624994332,
+      "fingerprint": "be0f38e21bd7775b72eefd5f6115b99565023dd6c3cf45a6372c7705de71218f",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "0",
+        "MTL_DEBUG_LAYER": "1"
+      },
+      "creation_api_calls": 24,
+      "creation_api_seconds": 0.012974041,
+      "backend_cache_hits": 367,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          2.050625
+        ],
+        [
+          "gguf_prefill_q6k_r",
+          "ok",
+          0.827459
+        ],
+        [
+          "gguf_prefill_q5k_r",
+          "ok",
+          0.780541
+        ],
+        [
+          "gguf_prefill_q4k_a",
+          "ok",
+          0.667625
+        ],
+        [
+          "gguf_prefill_q80_r",
+          "ok",
+          0.655833
+        ],
+        [
+          "gguf_prefill_iq4xs_r",
+          "ok",
+          0.620792
+        ],
+        [
+          "gguf_prefill_q5k_a",
+          "ok",
+          0.614625
+        ],
+        [
+          "gguf_prefill_q80_a",
+          "ok",
+          0.613875
+        ],
+        [
+          "gguf_prefill_q5k_g",
+          "ok",
+          0.588209
+        ],
+        [
+          "gguf_prefill_q4k_r",
+          "ok",
+          0.5395
+        ],
+        [
+          "gguf_half_prefill_a",
+          "ok",
+          0.525458
+        ],
+        [
+          "gguf_prefill_q4k_g",
+          "ok",
+          0.519083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-prefill-cache-be0f38e21bd7-20261021T085502.881299Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-prefill-cache-be0f38e21bd7-20261021T085502.881299Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "kernels"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 31.518180000013672,
+      "fingerprint": "b4a43bd63f3a203b5def17caddfdd486ae7e6b27122f7f2cb39da5110c035b40",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 8,
+      "creation_api_seconds": 30.906681668,
+      "backend_cache_hits": 181,
+      "slowest_creation_ms": [
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          18394.328917
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          8947.010292
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          2012.532292
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          1452.822417
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          81.860958
+        ],
+        [
+          "residency_kick",
+          "ok",
+          17.054667
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.536375
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.53575
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-b4a43bd63f3a-20261021T085522.115215Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-b4a43bd63f3a-20261021T085522.115215Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "split"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 5.905149333993904,
+      "fingerprint": "f51a6e8f9017e05da88570bf4d6074ce08ed363c991b6dd3fca125b071c1399d",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 22,
+      "creation_api_seconds": 0.00921346,
+      "backend_cache_hits": 1691,
+      "slowest_creation_ms": [
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          2.417417
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          2.180666
+        ],
+        [
+          "residency_kick",
+          "ok",
+          1.66325
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.692917
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.588875
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.261209
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.252708
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.214167
+        ],
+        [
+          "gguf_prefill_q5k_r_leading_inputs",
+          "ok",
+          0.161875
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.139583
+        ],
+        [
+          "gguf_prefill_q4k_a",
+          "ok",
+          0.137417
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.085792
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-f51a6e8f9017-20261021T085554.172607Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-f51a6e8f9017-20261021T085554.172607Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "recovery"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.7437599999975646,
+      "fingerprint": "1ce98df1a7f68c8d6b3b8f4321cc4330a7cf4f9f2954b6e1c312b88130db5f88",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.003467585,
+      "backend_cache_hits": 1368,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.952709
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.283292
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          0.270125
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.23675
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          0.218042
+        ],
+        [
+          "gguf_prefill_af4g64_r",
+          "ok",
+          0.143
+        ],
+        [
+          "gguf_prefill_af4g64_r_leading_inputs",
+          "ok",
+          0.099042
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.067083
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.061084
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.0545
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.044875
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.037083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-1ce98df1a7f6-20261021T085600.693360Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-1ce98df1a7f6-20261021T085600.693360Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "faults"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 72.52656474999094,
+      "fingerprint": "339ba7bc6cd3897d0979b5a2e48d0cf315e3b67dd4c8d165529f4be1628683d0",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.003377248,
+      "backend_cache_hits": 3391,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.591666
+        ],
+        [
+          "ane_ffn_row_scale_gguf_intermediate",
+          "ok",
+          0.389667
+        ],
+        [
+          "ane_ffn_weights_gguf_intermediate",
+          "ok",
+          0.388791
+        ],
+        [
+          "ane_ffn_weights_gguf_inputs",
+          "ok",
+          0.253
+        ],
+        [
+          "ane_ffn_row_scale_gguf_inputs",
+          "ok",
+          0.230792
+        ],
+        [
+          "gguf_prefill_af4g64_r",
+          "ok",
+          0.143083
+        ],
+        [
+          "ane_ffn_rotate",
+          "ok",
+          0.093875
+        ],
+        [
+          "gguf_prefill_af4g64_g",
+          "ok",
+          0.086667
+        ],
+        [
+          "gguf_prefill_af4g64_a",
+          "ok",
+          0.062916
+        ],
+        [
+          "ane_ffn_pack",
+          "ok",
+          0.050583
+        ],
+        [
+          "ane_ffn_join",
+          "ok",
+          0.044333
+        ],
+        [
+          "gguf_prefill_af4g64_r_leading_inputs",
+          "ok",
+          0.041875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-339ba7bc6cd3-20261021T085604.003748Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-339ba7bc6cd3-20261021T085604.003748Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-ffn",
+        "build/splash.metallib",
+        "program"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.20904383400920779,
+      "fingerprint": "25cd0d14857e5f367c738b31cc63200d3e1df02aa70efba50460584640e1a2d1",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.001826333,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.826333
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-25cd0d14857e-20261021T085717.722120Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-ffn-25cd0d14857e-20261021T085717.722120Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/ane-program-faults",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.4672675830079243,
+      "fingerprint": "b991d830768c6fa10c33c58f570e8dc1602aa2c48c7552e3370e43288ccbc95b",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.001655917,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          1.655917
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-program-faults-b991d830768c-20261021T085718.427583Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/ane-program-faults-b991d830768c-20261021T085718.427583Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-moe",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1467.163667249988,
+      "fingerprint": "aee463827f8ff7a00ba7f6aa4ee06952eb9da12fe720fc130aff5a528d14fd38",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 44,
+      "creation_api_seconds": 894.216750211,
+      "backend_cache_hits": 58605,
+      "slowest_creation_ms": [
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          218550.985167
+        ],
+        [
+          "moe_expert_gguf_m32_g",
+          "ok",
+          191363.565917
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up_mixed",
+          "ok",
+          189231.162042
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up",
+          "ok",
+          163753.026375
+        ],
+        [
+          "moe_expert_gguf_m8_a",
+          "ok",
+          31074.719542
+        ],
+        [
+          "moe_expert_gguf_m8_g",
+          "ok",
+          29634.973542
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up_mixed",
+          "ok",
+          26392.557833
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up",
+          "ok",
+          23631.213125
+        ],
+        [
+          "moe_expert_gguf_sg_g",
+          "ok",
+          10089.376333
+        ],
+        [
+          "moe_expert_gguf_sg_a",
+          "ok",
+          9026.654167
+        ],
+        [
+          "gguf_float_na_f32_f32",
+          "ok",
+          260.919167
+        ],
+        [
+          "gguf_float_na_f32_bf16",
+          "ok",
+          252.003833
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-aee463827f8f-20261021T085720.474434Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-aee463827f8f-20261021T085720.474434Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gguf-moe-e512",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 515.279780708006,
+      "fingerprint": "5ab341fcc628f1ac15bd8da0552eddc48b95a3d279672b914b652cfc665fc2fc",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 44,
+      "creation_api_seconds": 0.30468050199999996,
+      "backend_cache_hits": 58605,
+      "slowest_creation_ms": [
+        [
+          "moe_route_select_f32_e512",
+          "ok",
+          96.2725
+        ],
+        [
+          "moe_group_routes_verified_e512",
+          "ok",
+          77.439958
+        ],
+        [
+          "moe_group_routes_e512",
+          "ok",
+          60.062834
+        ],
+        [
+          "residency_kick",
+          "ok",
+          8.36075
+        ],
+        [
+          "moe_expert_gguf_m8_g",
+          "ok",
+          5.468875
+        ],
+        [
+          "gguf_decode_sg_q4k_l1_a",
+          "ok",
+          4.412792
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up_mixed",
+          "ok",
+          4.133625
+        ],
+        [
+          "moe_expert_gguf_m32_g",
+          "ok",
+          3.863083
+        ],
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          3.735791
+        ],
+        [
+          "gguf_decode_sg_fused_l3",
+          "ok",
+          3.608458
+        ],
+        [
+          "gguf_decode_sg_fused_l4",
+          "ok",
+          3.590667
+        ],
+        [
+          "gguf_decode_sg_fused_l2",
+          "ok",
+          2.694417
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-e512-5ab341fcc628-20261021T092148.864240Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gguf-moe-e512-5ab341fcc628-20261021T092148.864240Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/expert-store",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 29.75201825000113,
+      "fingerprint": "ea6961112908285e57b1e53bd05a0d4c6072c3f11b3deb250a49b8fbd3622b54",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 104,
+      "creation_api_seconds": 3.2032727420000002,
+      "backend_cache_hits": 8876,
+      "slowest_creation_ms": [
+        [
+          "moe_expert_load",
+          "ok",
+          3069.553625
+        ],
+        [
+          "moe_group_routes",
+          "ok",
+          101.971833
+        ],
+        [
+          "residency_kick",
+          "ok",
+          10.280708
+        ],
+        [
+          "moe_expert_gguf_m32_a",
+          "ok",
+          4.050834
+        ],
+        [
+          "moe_route_select_f32_e512",
+          "ok",
+          3.283667
+        ],
+        [
+          "moe_expert_gguf_m8_gate_up",
+          "ok",
+          2.3835
+        ],
+        [
+          "moe_expert_gguf_m8_a",
+          "ok",
+          2.144083
+        ],
+        [
+          "moe_group_routes_e512",
+          "ok",
+          1.945333
+        ],
+        [
+          "moe_expert_gguf_m32_gate_up",
+          "ok",
+          1.49625
+        ],
+        [
+          "gguf_float_f32_f32",
+          "ok",
+          0.798792
+        ],
+        [
+          "moe_route_select_f32",
+          "ok",
+          0.393125
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.372958
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/expert-store-ea6961112908-20261021T093025.411516Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/expert-store-ea6961112908-20261021T093025.411516Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-block-cache",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.0478937500010943,
+      "fingerprint": "eb976832457b5a9cc925dc278c2ef4fa7daf03ca60163ae87da248289ad93b49",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 19,
+      "creation_api_seconds": 1.805654251,
+      "backend_cache_hits": 36,
+      "slowest_creation_ms": [
+        [
+          "verify_attention_q8_sparse_kv2_g12",
+          "ok",
+          448.880875
+        ],
+        [
+          "verify_attention_q8_sparse_located_kv2_g12",
+          "ok",
+          396.631292
+        ],
+        [
+          "verify_attention_bf16_sparse_located_kv2_g12",
+          "ok",
+          390.125167
+        ],
+        [
+          "verify_attention_bf16_sparse_kv2_g12",
+          "ok",
+          351.456042
+        ],
+        [
+          "attention_block_lists",
+          "ok",
+          87.989958
+        ],
+        [
+          "verify_attention_q8_store_kv2_vt",
+          "ok",
+          46.523
+        ],
+        [
+          "verify_attention_sparse_reduce_kv2_g12",
+          "ok",
+          42.947958
+        ],
+        [
+          "verify_attention_bf16_store_kv2_vt",
+          "ok",
+          31.565334
+        ],
+        [
+          "residency_kick",
+          "ok",
+          8.542625
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.353417
+        ],
+        [
+          "attention_block_lists",
+          "ok",
+          0.135958
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.102875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-block-cache-eb976832457b-20261021T093055.697833Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-block-cache-eb976832457b-20261021T093055.697833Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-history-stream",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.6491191670065746,
+      "fingerprint": "fdfda5114bd5d7fc58c6ff45f5a5470259d40522be0fc07d6344039251eef1cb",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.081602125,
+      "backend_cache_hits": 77,
+      "slowest_creation_ms": [
+        [
+          "paged_kv_stage_layer",
+          "ok",
+          72.518042
+        ],
+        [
+          "residency_kick",
+          "ok",
+          9.084083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-history-stream-fdfda5114bd5-20261021T093058.274055Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-history-stream-fdfda5114bd5-20261021T093058.274055Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen4-kernels",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.831911166998907,
+      "fingerprint": "b99f920de03ada30d0159746dc881540a9097fa95d8e153272549b50939520b7",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 23,
+      "creation_api_seconds": 0.970226376,
+      "backend_cache_hits": 3067,
+      "slowest_creation_ms": [
+        [
+          "hyper_connection_norm_loaded",
+          "ok",
+          167.502917
+        ],
+        [
+          "hyper_connection_norm_quarters",
+          "ok",
+          144.365292
+        ],
+        [
+          "block_indexer_score",
+          "ok",
+          84.921792
+        ],
+        [
+          "block_indexer_select",
+          "ok",
+          52.317458
+        ],
+        [
+          "ngram_embedding_gate",
+          "ok",
+          51.825083
+        ],
+        [
+          "block_indexer_pool",
+          "ok",
+          47.702667
+        ],
+        [
+          "hyper_connection_low_table16",
+          "ok",
+          37.850167
+        ],
+        [
+          "hyper_connection_mix_table16",
+          "ok",
+          37.122292
+        ],
+        [
+          "block_indexer_project",
+          "ok",
+          36.062416
+        ],
+        [
+          "ngram_embedding_conv",
+          "ok",
+          35.777917
+        ],
+        [
+          "rope_build_tables",
+          "ok",
+          35.437
+        ],
+        [
+          "ngram_embedding_history",
+          "ok",
+          31.0195
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-b99f920de03a-20261021T093059.481178Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-b99f920de03a-20261021T093059.481178Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen4-kernels",
+        "build/splash.metallib",
+        "bitwise"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.1137801250006305,
+      "fingerprint": "8bdcd9f22e8481df43d2317f2d9d7347a5f7b5864f35ff1a005b55b4cfe9ff26",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {},
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.007525708,
+      "backend_cache_hits": 34,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          7.031042
+        ],
+        [
+          "hyper_connection_norm_quarters",
+          "ok",
+          0.326583
+        ],
+        [
+          "hyper_connection_norm_loaded",
+          "ok",
+          0.168083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-8bdcd9f22e84-20261021T093102.888280Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen4-kernels-8bdcd9f22e84-20261021T093102.888280Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/paged-attention-plan",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 151.83276966700214,
+      "fingerprint": "7be6d16df2d7c598c09d30a70140f332a1050e750438ec8a331bf97fe173e61c",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 129,
+      "creation_api_seconds": 9.299765714,
+      "backend_cache_hits": 5830,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_bf16_sparse_kv2_g12",
+          "ok",
+          324.48175
+        ],
+        [
+          "prefill_attention_q4h_split_kv4_g4_r16",
+          "ok",
+          309.368208
+        ],
+        [
+          "prefill_attention_q4h_split_kv2_g8",
+          "ok",
+          308.667959
+        ],
+        [
+          "verify_attention_q4h_split_kv2_g8",
+          "ok",
+          275.360875
+        ],
+        [
+          "verify_attention_q8_split_kv2_g8",
+          "ok",
+          266.431
+        ],
+        [
+          "prefill_attention_q8_split_kv2_g8",
+          "ok",
+          261.691917
+        ],
+        [
+          "verify_attention_q4h_split",
+          "ok",
+          260.669834
+        ],
+        [
+          "prefill_attention_q4h_split",
+          "ok",
+          257.171208
+        ],
+        [
+          "prefill_attention_q8_split",
+          "ok",
+          255.968958
+        ],
+        [
+          "prefill_attention_q8_split_kv4_g4_r16",
+          "ok",
+          253.493167
+        ],
+        [
+          "prefill_attention_bf16_split_kv2_g8",
+          "ok",
+          249.484542
+        ],
+        [
+          "verify_attention_bf16_split_kv2_g8",
+          "ok",
+          244.73875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/paged-attention-plan-7be6d16df2d7-20261021T093103.522846Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/paged-attention-plan-7be6d16df2d7-20261021T093103.522846Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/linear-plan",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.5759295830066549,
+      "fingerprint": "5e6480d99a9dd9990fd2438d76e8c0727f7e84b8d83db596fb72aab52e18510e",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.01100075,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.00075
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/linear-plan-5e6480d99a9d-20261021T093336.614385Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/linear-plan-5e6480d99a9d-20261021T093336.614385Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/runtime-resources",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.406524457997875,
+      "fingerprint": "b0688330162cb1729b36e9f6d2e3c78422342142b0b44403ebe9928db941a527",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 228,
+      "creation_api_seconds": 0.194488081,
+      "backend_cache_hits": 1269,
+      "slowest_creation_ms": [
+        [
+          "norm_rms_staged",
+          "ok",
+          79.256375
+        ],
+        [
+          "draft_conv",
+          "ok",
+          34.431625
+        ],
+        [
+          "verify_attention_gate",
+          "ok",
+          27.520292
+        ],
+        [
+          "residency_kick",
+          "ok",
+          13.417084
+        ],
+        [
+          "gguf_decode_fused_m8",
+          "ok",
+          5.724334
+        ],
+        [
+          "verify_gdn_fused",
+          "ok",
+          1.829042
+        ],
+        [
+          "gguf_decode_af4g64_m8_r",
+          "ok",
+          1.76575
+        ],
+        [
+          "compact_gather_plane",
+          "ok",
+          1.337542
+        ],
+        [
+          "draft_attention_bf16_reduce",
+          "ok",
+          1.303625
+        ],
+        [
+          "gguf_decode_af4g64_m8_g",
+          "ok",
+          0.895708
+        ],
+        [
+          "gguf_decode_af4g64_m8_a",
+          "ok",
+          0.853333
+        ],
+        [
+          "decode_sample_penalize",
+          "ok",
+          0.853
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/runtime-resources-b0688330162c-20261021T093337.851229Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/runtime-resources-b0688330162c-20261021T093337.851229Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/kv-page-tier",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.5716792080056621,
+      "fingerprint": "0b827254164a78e4a720cfd7696db4b626ce742837b4b2415b7fa159ac5f5672",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.012977833000000001,
+      "backend_cache_hits": 258,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.256833
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          0.873917
+        ],
+        [
+          "addressed_check_u32",
+          "ok",
+          0.847083
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-page-tier-0b827254164a-20261021T093351.386679Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/kv-page-tier-0b827254164a-20261021T093351.386679Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/model-loading",
+        "build/engine-tests/metal-backend.metallib",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.8069213749986375,
+      "fingerprint": "bc52ee98fc2d6991aad5c9fe871a87b9590f5b41c3513c97c8c5be4dc57b3ebb",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 6,
+      "creation_api_seconds": 0.013613,
+      "backend_cache_hits": 437,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.546292
+        ],
+        [
+          "gguf_repack",
+          "ok",
+          0.679541
+        ],
+        [
+          "gguf_embed_f32_af4g64",
+          "ok",
+          0.615375
+        ],
+        [
+          "test_copy_u32",
+          "ok",
+          0.424125
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.181917
+        ],
+        [
+          "gguf_embed_f32_af8g64",
+          "ok",
+          0.16575
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/model-loading-bc52ee98fc2d-20261021T093352.534364Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/model-loading-bc52ee98fc2d-20261021T093352.534364Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/qwen-state-storage",
+        "build/engine-tests/q8-paged-kv.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.4721028749918332,
+      "fingerprint": "478cac46e54a72069c077b63b3cde05b051560beba4f24d2ef4f6d3014dfd384",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.013626167,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          13.626167
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen-state-storage-478cac46e54a-20261021T093353.884124Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/qwen-state-storage-478cac46e54a-20261021T093353.884124Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-paged-kv-metal",
+        "build/engine-tests/q8-paged-kv.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.06876491699949838,
+      "fingerprint": "d85cfd68199632cf547b72fa098c1e7f0d581376b61592270534309f04f64b97",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.014723542999999999,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "splash_q8_quantize_kv_page",
+          "ok",
+          13.773417
+        ],
+        [
+          "splash_q8_dequantize_kv_page",
+          "ok",
+          0.616709
+        ],
+        [
+          "splash_q8_gather_logical_kv_page",
+          "ok",
+          0.333417
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-paged-kv-metal-d85cfd681996-20261021T093358.063432Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-paged-kv-metal-d85cfd681996-20261021T093358.063432Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-page-storage",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.2877057089935988,
+      "fingerprint": "917b67e9ede69f6b439223670f532312f2b57dde7b9ce67b8dd8f5f6af8b759c",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.014717457,
+      "backend_cache_hits": 3,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          13.822458
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          0.790416
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.104583
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-page-storage-917b67e9ede6-20261021T093358.795088Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-page-storage-917b67e9ede6-20261021T093358.795088Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-flash-attention",
+        "build/engine-tests/q8-attention.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 471.0725477500091,
+      "fingerprint": "40399541f62e291b709a151662b6740630dff8aff788925006662b87bb37b3ff",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 90,
+      "creation_api_seconds": 0.895741165,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_q8_sparse_kv2_g12",
+          "ok",
+          393.052958
+        ],
+        [
+          "verify_attention_q8_sparse_kv2_g12",
+          "ok",
+          387.390834
+        ],
+        [
+          "prefill_attention_sparse_reduce_kv2_g12",
+          "ok",
+          83.174167
+        ],
+        [
+          "verify_attention_reduce",
+          "ok",
+          15.758666
+        ],
+        [
+          "verify_attention_q8_split",
+          "ok",
+          1.034458
+        ],
+        [
+          "prefill_attention_reduce",
+          "ok",
+          0.896042
+        ],
+        [
+          "verify_attention_reduce_kv2_g4",
+          "ok",
+          0.838125
+        ],
+        [
+          "verify_attention_reduce_kv4_g4",
+          "ok",
+          0.795875
+        ],
+        [
+          "prefill_attention_q8_split_kv2_g4",
+          "ok",
+          0.783833
+        ],
+        [
+          "prefill_attention_q8_split_kv4_g4",
+          "ok",
+          0.719875
+        ],
+        [
+          "verify_attention_reduce_kv2_g8",
+          "ok",
+          0.693083
+        ],
+        [
+          "verify_attention_q8_split_kv2_g4",
+          "ok",
+          0.633625
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-flash-attention-40399541f62e-20261021T093359.907629Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-flash-attention-40399541f62e-20261021T093359.907629Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/q8-chunked-prefill",
+        "build/engine-tests/q8-attention.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 38.78385775000788,
+      "fingerprint": "bb3a816dc59cca4ad496e31882d87838bf59b4bbb1bc4f55db2107a2114309ad",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 4,
+      "creation_api_seconds": 0.013652291,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "prefill_attention_q8_store",
+          "ok",
+          12.252708
+        ],
+        [
+          "prefill_attention_q8_split",
+          "ok",
+          0.591917
+        ],
+        [
+          "prefill_attention_reduce",
+          "ok",
+          0.483958
+        ],
+        [
+          "verify_attention_q8_store",
+          "ok",
+          0.323708
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-chunked-prefill-bb3a816dc59c-20261021T094152.113233Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/q8-chunked-prefill-bb3a816dc59c-20261021T094152.113233Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gdn-metal",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 9.1372985420021,
+      "fingerprint": "dd728b473b8f5b8b7703a94bfcf4c7e69dd10d44c0befe32e77f66600b1069eb",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 21,
+      "creation_api_seconds": 0.024744,
+      "backend_cache_hits": 784,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.247833
+        ],
+        [
+          "prefill_gdn_scan_vh16_bf16_state",
+          "ok",
+          3.734333
+        ],
+        [
+          "prefill_gdn_gate_f32",
+          "ok",
+          1.661209
+        ],
+        [
+          "gdn_single_vh32_f32",
+          "ok",
+          0.939584
+        ],
+        [
+          "gdn_single_vh32",
+          "ok",
+          0.801375
+        ],
+        [
+          "prefill_gdn_prepare_p16512",
+          "ok",
+          0.784125
+        ],
+        [
+          "prefill_gdn_prepare_vh16",
+          "ok",
+          0.685916
+        ],
+        [
+          "prefill_gdn_scan_bf16_state",
+          "ok",
+          0.645459
+        ],
+        [
+          "prefill_gdn_prepare",
+          "ok",
+          0.643792
+        ],
+        [
+          "prefill_gdn_prepare_vh32",
+          "ok",
+          0.585459
+        ],
+        [
+          "prefill_gdn_gate_vh16_f32",
+          "ok",
+          0.579875
+        ],
+        [
+          "prefill_gdn_gate_p16512_f32",
+          "ok",
+          0.558791
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-metal-dd728b473b8f-20261021T094231.483180Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-metal-dd728b473b8f-20261021T094231.483180Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/dflash-batch-control",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.08958995899592992,
+      "fingerprint": "a1226cb3104f500afe430ac086b93c614a11f9d97660c375870aa609af0b874b",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 3,
+      "creation_api_seconds": 0.012026501,
+      "backend_cache_hits": 12,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.262334
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          2.457792
+        ],
+        [
+          "copy_rows_bf16",
+          "ok",
+          0.306375
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-batch-control-a1226cb3104f-20261021T094241.217343Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-batch-control-a1226cb3104f-20261021T094241.217343Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/draft-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.8492469169868855,
+      "fingerprint": "c2b37f3837e89178bd577c61659712ae4831b415e573885c6db6e6f9c59d5855",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 10,
+      "creation_api_seconds": 0.016298413,
+      "backend_cache_hits": 145,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.516916
+        ],
+        [
+          "draft_conv",
+          "ok",
+          1.998791
+        ],
+        [
+          "prefill_draft_context_kv",
+          "ok",
+          0.892792
+        ],
+        [
+          "draft_attention_bf16_split",
+          "ok",
+          0.690291
+        ],
+        [
+          "prefill_draft_context_store",
+          "ok",
+          0.60825
+        ],
+        [
+          "draft_context_kv_commit",
+          "ok",
+          0.515083
+        ],
+        [
+          "draft_attention_qkv",
+          "ok",
+          0.302541
+        ],
+        [
+          "draft_attention_reorder",
+          "ok",
+          0.292958
+        ],
+        [
+          "prefill_draft_context_load",
+          "ok",
+          0.278166
+        ],
+        [
+          "draft_attention_bf16_reduce",
+          "ok",
+          0.202625
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-attention-c2b37f3837e8-20261021T094241.831615Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-attention-c2b37f3837e8-20261021T094241.831615Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/dflash-standard",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.6550584159995196,
+      "fingerprint": "74717d8de2dedbb8c51e0766851d7a29759b90ee86526fdd946c291c9ac8d0b3",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 11,
+      "creation_api_seconds": 0.018069542,
+      "backend_cache_hits": 18,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          14.219625
+        ],
+        [
+          "norm_rms_2560",
+          "ok",
+          0.808459
+        ],
+        [
+          "gguf_decode_af4g64_m8_a",
+          "ok",
+          0.728584
+        ],
+        [
+          "norm_rms_table16_decode",
+          "ok",
+          0.580041
+        ],
+        [
+          "gguf_decode_sg_af4g64_l1_a_f32",
+          "ok",
+          0.492209
+        ],
+        [
+          "gguf_decode_af4g64_m8_gate_up",
+          "ok",
+          0.440583
+        ],
+        [
+          "draft_standard_residual_add",
+          "ok",
+          0.337708
+        ],
+        [
+          "draft_attention_bf16_split",
+          "ok",
+          0.154041
+        ],
+        [
+          "draft_attention_qkv",
+          "ok",
+          0.137875
+        ],
+        [
+          "draft_attention_bf16_reduce",
+          "ok",
+          0.096917
+        ],
+        [
+          "draft_attention_reorder",
+          "ok",
+          0.0735
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-standard-74717d8de2de-20261021T094246.143257Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/dflash-standard-74717d8de2de-20261021T094246.143257Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/gdn-decode",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 29.202192541997647,
+      "fingerprint": "2d1ca05c2ae4d9b80ca785b0fb82bf35bd1fd4bf5a695921381198075132cb48",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 37,
+      "creation_api_seconds": 1.686655625,
+      "backend_cache_hits": 3300,
+      "slowest_creation_ms": [
+        [
+          "verify_gdn_fused_vh32_f32_bf16_state",
+          "ok",
+          330.067916
+        ],
+        [
+          "verify_gdn_fused_p16512_f32_bf16_state",
+          "ok",
+          282.83625
+        ],
+        [
+          "verify_gdn_fused_table16_p16512_f32_bf16_state",
+          "ok",
+          270.560625
+        ],
+        [
+          "verify_gdn_fused_table16_vh32_f32_bf16_state",
+          "ok",
+          257.473958
+        ],
+        [
+          "verify_gdn_fused_p16512_bf16_state",
+          "ok",
+          257.427625
+        ],
+        [
+          "verify_gdn_fused_table16_p16512_bf16_state",
+          "ok",
+          253.111917
+        ],
+        [
+          "residency_kick",
+          "ok",
+          12.148542
+        ],
+        [
+          "verify_gdn_fused_f32_bf16_state",
+          "ok",
+          2.937208
+        ],
+        [
+          "verify_gdn_fused_vh32_bf16_state",
+          "ok",
+          2.592292
+        ],
+        [
+          "verify_gdn_fused_table16_vh32",
+          "ok",
+          2.309083
+        ],
+        [
+          "verify_gdn_fused_table16_f32",
+          "ok",
+          1.062333
+        ],
+        [
+          "verify_gdn_fused_f32",
+          "ok",
+          1.024791
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-decode-2d1ca05c2ae4-20261021T094247.286829Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/gdn-decode-2d1ca05c2ae4-20261021T094247.286829Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/draft-selector",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.321842541001388,
+      "fingerprint": "7b8f46f571ac41bcdbd9474a29c370ac298f837358723eb762fbe70b9e3d7cad",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 9,
+      "creation_api_seconds": 0.020810918,
+      "backend_cache_hits": 657,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          13.862333
+        ],
+        [
+          "draft_select_unary_merge",
+          "ok",
+          2.26325
+        ],
+        [
+          "draft_select_unary",
+          "ok",
+          0.921542
+        ],
+        [
+          "draft_select_top16_sharded",
+          "ok",
+          0.810292
+        ],
+        [
+          "draft_select_dflash",
+          "ok",
+          0.747584
+        ],
+        [
+          "draft_select_argmax_sharded",
+          "ok",
+          0.7005
+        ],
+        [
+          "draft_select_edges",
+          "ok",
+          0.606542
+        ],
+        [
+          "draft_select_argmax_merge",
+          "ok",
+          0.566417
+        ],
+        [
+          "draft_verify_rows",
+          "ok",
+          0.332458
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-selector-7b8f46f571ac-20261021T094317.027601Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/draft-selector-7b8f46f571ac-20261021T094317.027601Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/target-sampling",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 24.0383599170018,
+      "fingerprint": "430960d337c8ea7280d70ba200bbf10ada330af6d4a6f56ab590920a13f1a6fc",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 12,
+      "creation_api_seconds": 0.014166417,
+      "backend_cache_hits": 3954,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.535
+        ],
+        [
+          "decode_sample_penalize",
+          "ok",
+          0.701208
+        ],
+        [
+          "decode_sample_vocabulary_search",
+          "ok",
+          0.613042
+        ],
+        [
+          "decode_sample_thinking_cutoff",
+          "ok",
+          0.5195
+        ],
+        [
+          "decode_sample_vocabulary_draw",
+          "ok",
+          0.511375
+        ],
+        [
+          "decode_draft_thinking_cutoff",
+          "ok",
+          0.419167
+        ],
+        [
+          "verify_input_tokens",
+          "ok",
+          0.395083
+        ],
+        [
+          "decode_sample_argmax_sharded",
+          "ok",
+          0.355542
+        ],
+        [
+          "decode_sample_penalize_verify",
+          "ok",
+          0.325542
+        ],
+        [
+          "decode_sample_argmax_reduce",
+          "ok",
+          0.3125
+        ],
+        [
+          "decode_sample_mass_sharded",
+          "ok",
+          0.301208
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          0.17725
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-430960d337c8-20261021T094320.854986Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-430960d337c8-20261021T094320.854986Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/target-sampling",
+        "build/splash.metallib",
+        "--fast-topk",
+        "--correctness-only"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 24.13149012500071,
+      "fingerprint": "41c7e5914791228b043dfbf7e183ed81df48f54f0cbdef2fc6f9f2b52215fcf9",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 14,
+      "creation_api_seconds": 0.013012292,
+      "backend_cache_hits": 4465,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          9.960958
+        ],
+        [
+          "decode_sample_topk32_sharded",
+          "ok",
+          0.672083
+        ],
+        [
+          "decode_sample_mass_sharded",
+          "ok",
+          0.326833
+        ],
+        [
+          "decode_sample_penalize",
+          "ok",
+          0.269917
+        ],
+        [
+          "decode_sample_vocabulary_search",
+          "ok",
+          0.230542
+        ],
+        [
+          "decode_draft_thinking_cutoff",
+          "ok",
+          0.217583
+        ],
+        [
+          "decode_sample_penalize_verify",
+          "ok",
+          0.209625
+        ],
+        [
+          "decode_accept_dflash",
+          "ok",
+          0.203541
+        ],
+        [
+          "decode_sample_thinking_cutoff",
+          "ok",
+          0.201542
+        ],
+        [
+          "decode_sample_argmax_reduce",
+          "ok",
+          0.177834
+        ],
+        [
+          "decode_sample_topk32_merge",
+          "ok",
+          0.157792
+        ],
+        [
+          "decode_sample_vocabulary_draw",
+          "ok",
+          0.138875
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-41c7e5914791-20261021T094345.384706Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/target-sampling-41c7e5914791-20261021T094345.384706Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/vision-metal",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.08624287499696948,
+      "fingerprint": "31d794a9ab2012c327021fa960804b8c983abbfdf9e051f0c0de388c2c2e789b",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 1,
+      "creation_api_seconds": 0.008968916,
+      "backend_cache_hits": 0,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          8.968916
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-metal-31d794a9ab20-20261021T094410.023738Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-metal-31d794a9ab20-20261021T094410.023738Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/vision-attention",
+        "build/splash.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.806823374994565,
+      "fingerprint": "af68c74b5659a5372d0c538f6cd64abe31d29956bbe7023a89125889e6b38ee2",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.011750333,
+      "backend_cache_hits": 26,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.798625
+        ],
+        [
+          "vision_attention",
+          "ok",
+          0.951708
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-attention-af68c74b5659-20261021T094410.672431Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/vision-attention-af68c74b5659-20261021T094410.672431Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/metal-backend",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 16.763344042003155,
+      "fingerprint": "b1f43c9675f70bcd685c2307e32d3346cffedbe4eb9c35f9c4a73fca13768e41",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 99,
+      "creation_api_seconds": 0.021668456,
+      "backend_cache_hits": 20389,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          10.468875
+        ],
+        [
+          "addressed_write_u32",
+          "ok",
+          2.33225
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.79125
+        ],
+        [
+          "addressed_check_u32",
+          "ok",
+          0.59975
+        ],
+        [
+          "test_copy_u32",
+          "ok",
+          0.594209
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.503291
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.177667
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.17125
+        ],
+        [
+          "host_step_wait",
+          "ok",
+          0.156625
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.143958
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.137583
+        ],
+        [
+          "residency_kick",
+          "ok",
+          0.131541
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/metal-backend-b1f43c9675f7-20261021T094416.249231Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/metal-backend-b1f43c9675f7-20261021T094416.249231Z.log"
+    },
+    {
+      "command": [
+        "build/engine-tests/handoff",
+        "build/engine-tests/metal-backend.metallib"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 3.1873546660062857,
+      "fingerprint": "0a42d42baa12ad56e829897881955737d9b552e5b6dd4d5eff59f2508c875abb",
+      "source_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+      "source_dirty": true,
+      "inputs_unchanged": true,
+      "validation": {
+        "MTL_SHADER_VALIDATION": "1"
+      },
+      "creation_api_calls": 2,
+      "creation_api_seconds": 0.011230582999999999,
+      "backend_cache_hits": 1033,
+      "slowest_creation_ms": [
+        [
+          "residency_kick",
+          "ok",
+          11.076917
+        ],
+        [
+          "test_add_u32",
+          "ok",
+          0.153666
+        ]
+      ],
+      "fixture_child_exits": [],
+      "raw_result": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/handoff-0a42d42baa12-20261021T094434.040506Z.json",
+      "raw_log": "/Users/ghost233/Ghost233Code/GhostSplash/build/test-runs/handoff-0a42d42baa12-20261021T094434.040506Z.log"
+    }
+  ]
+}

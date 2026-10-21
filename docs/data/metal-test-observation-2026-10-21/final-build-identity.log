@@ -1,0 +1,4 @@
+python3 dev/tools/build_identity.py check --root . \
+		--header build/engine/BuildIdentity.hpp --stamp build/engine/build-identity.json \
+		--constant 'runtime=qwen-hybrid-dflash8' --constant 'engine_cxxflags=-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -mmacosx-version-min=26.4' --constant 'engine_objcxxflags=-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -mmacosx-version-min=26.4 -fobjc-arc' --constant 'engine_linkflags=-framework Foundation -framework Metal -framework IOKit -framework IOSurface' --constant 'production_metalflags=-std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime -mmacosx-version-min=26.4' --binary build/splash
+{"build_id": "src-a8c316e962b098e9c1ba06f49945af855bb82d0773c7bf0424169b220c5382d5", "verified": true}

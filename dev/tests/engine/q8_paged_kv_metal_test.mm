@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
+#include "metal/PipelineObservation.hpp"
 
 #include "Q8PageFormatReference.hpp"
 
@@ -32,6 +33,7 @@ id<MTLComputePipelineState> pipeline(id<MTLDevice> device,
     id<MTLFunction> function = [library newFunctionWithName:functionName];
     if (!function) throw std::runtime_error(std::string("missing kernel: ") + name);
     NSError *error = nil;
+    splash::metal::PipelineObservation observation(name);
     id<MTLComputePipelineState> result =
         [device newComputePipelineStateWithFunction:function error:&error];
     if (!result) {

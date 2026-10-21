@@ -1,0 +1,130 @@
+[
+  {
+    "process": 1,
+    "scope": "pipeline creation and lookup only; no workload dispatches",
+    "rows": [
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.665834,
+        "state": "new_backend_first_lookup",
+        "creation_ms": 0.625584
+      },
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 1,
+        "total_creations": 1,
+        "backend_cache_hit": true,
+        "lookup_total_ms": 0.000125,
+        "state": "same_backend_repeat",
+        "creation_ms": 0
+      },
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.062792,
+        "state": "second_backend_first_lookup",
+        "creation_ms": 0.045333
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.764042,
+        "state": "new_backend_first_lookup",
+        "creation_ms": 0.7404580000000001
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 1,
+        "total_creations": 1,
+        "backend_cache_hit": true,
+        "lookup_total_ms": 0.00029099999999999997,
+        "state": "same_backend_repeat",
+        "creation_ms": 0
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.066875,
+        "state": "second_backend_first_lookup",
+        "creation_ms": 0.048209
+      }
+    ],
+    "gpu": "Apple M5 Pro",
+    "gpu_family": 10,
+    "gpu_cores": 20,
+    "system_cache_state": "uncontrolled; no system cache was purged; timings cannot prove system cache hits"
+  },
+  {
+    "process": 2,
+    "scope": "pipeline creation and lookup only; no workload dispatches",
+    "rows": [
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.205459,
+        "state": "new_backend_first_lookup",
+        "creation_ms": 0.166667
+      },
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 1,
+        "total_creations": 1,
+        "backend_cache_hit": true,
+        "lookup_total_ms": 0.00020800000000000001,
+        "state": "same_backend_repeat",
+        "creation_ms": 0
+      },
+      {
+        "kernel": "prefill_attention_q8_split",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.056666999999999995,
+        "state": "second_backend_first_lookup",
+        "creation_ms": 0.040333
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.2795,
+        "state": "new_backend_first_lookup",
+        "creation_ms": 0.255708
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 1,
+        "total_creations": 1,
+        "backend_cache_hit": true,
+        "lookup_total_ms": 0.000166,
+        "state": "same_backend_repeat",
+        "creation_ms": 0
+      },
+      {
+        "kernel": "decode_sample_topk32_sharded",
+        "total_cache_hits": 0,
+        "total_creations": 1,
+        "backend_cache_hit": false,
+        "lookup_total_ms": 0.062,
+        "state": "second_backend_first_lookup",
+        "creation_ms": 0.046208
+      }
+    ],
+    "gpu": "Apple M5 Pro",
+    "gpu_family": 10,
+    "gpu_cores": 20,
+    "system_cache_state": "uncontrolled; no system cache was purged; timings cannot prove system cache hits"
+  }
+]

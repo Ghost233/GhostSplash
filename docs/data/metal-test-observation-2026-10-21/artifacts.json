@@ -1,0 +1,87 @@
+[
+  {
+    "file": "final-build-identity.log",
+    "bytes": 742,
+    "sha256": "7a82c47217d7dfc86f2bd60d35f68a6ef8ef2df9ce2071e1dfb99daa8f671d23"
+  },
+  {
+    "file": "fixture-forwarding-integration.log",
+    "bytes": 31,
+    "sha256": "25f7d9dc1f5e26cb59078579a533c22a8e6b6c397471ab7610096e547441d916"
+  },
+  {
+    "file": "fixture-forwarding-results.json",
+    "bytes": 1106,
+    "sha256": "49a6f7e02ef982eb479299d41922902dbe118c4529dc14c7e1b25770f25bbec6"
+  },
+  {
+    "file": "full-run-comparison.json",
+    "bytes": 149338,
+    "sha256": "ffc4f856b538015cbf0716afb22ccfa28bed153e1b8210540a540e16dcd17bf1"
+  },
+  {
+    "file": "full-validation-raw.tar.gz",
+    "bytes": 3675350,
+    "sha256": "614ed76a4b94eb7ee4a9024f0f539a5cc6fe2608d24cd212a31b02b2249c92cc"
+  },
+  {
+    "file": "observation-build-contract-tests.log",
+    "bytes": 113,
+    "sha256": "b597ac4d69f2580fd9c294fe00edec3c06502215c5e62480295e756dc0151b0f"
+  },
+  {
+    "file": "observation-integration-2.log",
+    "bytes": 225,
+    "sha256": "287e45ba57bbf3ccce5cbc424dd327b43cb3fc783c779e3a861847c8aeeef995"
+  },
+  {
+    "file": "observation-integration-results-final.json",
+    "bytes": 1658,
+    "sha256": "cc88e1d72d59e79d41627e856ee72d305594de0d3b774344257384207827d5a1"
+  },
+  {
+    "file": "observation-runner-unit-4.log",
+    "bytes": 106,
+    "sha256": "df9c92d002860fdc43deb41460a55a43446601ef83e29c26f2019e2363cb76f4"
+  },
+  {
+    "file": "observation-runner-unit-6.log",
+    "bytes": 109,
+    "sha256": "a18f1be22de04851395ea3ad9f9f97f36071ca9eab49271767cb6fea49162532"
+  },
+  {
+    "file": "observed-pre-fixture-fix.json",
+    "bytes": 7067,
+    "sha256": "c00381f7550ab51d7e691b4bc32f5819dd2fe3c619a5e457e2cf3e1e75c68399"
+  },
+  {
+    "file": "pipeline-process-comparison.json",
+    "bytes": 3932,
+    "sha256": "a8382a407f052982c41e6e7fcdb75f9026af0faabb163e7d84eb6c3da6fc7a05"
+  },
+  {
+    "file": "probe-process-1-final.log",
+    "bytes": 4659,
+    "sha256": "b3e625e3e12bafae1142c7437a0557ebe25d4a7eac96eed75da36ebf326556dc"
+  },
+  {
+    "file": "probe-process-2-final.log",
+    "bytes": 4644,
+    "sha256": "e505178164914f82ce26d87f3a83b62c8fb2afa761d7185d90a3d3b8894def8e"
+  },
+  {
+    "file": "reuse-first-final.log",
+    "bytes": 477,
+    "sha256": "ac107e7687ed7d7e392cf4b4a559f6c7a4fdc51e89eee71421eb35c6ba6ecc02"
+  },
+  {
+    "file": "reuse-second-final.log",
+    "bytes": 242,
+    "sha256": "7d4729fa30cec6bd4449df49c6809b7919e7295d0ede9bd7f0ae6d95da9c55ce"
+  },
+  {
+    "file": "verification.json",
+    "bytes": 1791,
+    "sha256": "3a7dcc1ac7f69f3659054fa41c787b55b359b3d0751d6af36dc23b949cd1dfca"
+  }
+]

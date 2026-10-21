@@ -151,8 +151,14 @@ def main():
         ]
         if args.standard:
             command.append("--standard")
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
-        assert result.returncode == 0, result.stdout + result.stderr
+        # Pipeline creation logs go straight to the enclosing test runner.
+        result = subprocess.run(command, stdout=subprocess.PIPE, text=True, check=False)
+        print(
+            f"FIXTURE_CHILD_END exit={result.returncode}", file=sys.stderr, flush=True
+        )
+        assert result.returncode == 0, (
+            f"native draft-preparation exit={result.returncode}\n{result.stdout}"
+        )
         print(result.stdout.splitlines()[-1])
 
 

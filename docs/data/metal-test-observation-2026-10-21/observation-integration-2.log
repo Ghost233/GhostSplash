@@ -1,0 +1,9 @@
+START probe-process-1
+END probe-process-1 0
+START probe-process-2
+END probe-process-2 0
+START reuse-first
+END reuse-first 0
+START reuse-second
+END reuse-second 0
+Probe counters, process repeats and verified result reuse PASS

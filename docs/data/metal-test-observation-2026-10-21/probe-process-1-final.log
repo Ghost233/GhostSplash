@@ -1,0 +1,32 @@
+START build/engine-tests/pipeline-probe build/splash.metallib prefill_attention_q8_split decode_sample_topk32_sharded log=build/upstream-140-merge-20261021/observed-runs-final/pipeline-probe-f1b9968c8758-20261021T074335.898751Z.log
+2026-10-21 15:43:36.496 pipeline-probe[42333:11178668] Metal GPU Validation Enabled
+PIPELINE_BEGIN kernel=residency_kick cache=miss system_cache=unknown start_unix_ms=1792568616542
+PIPELINE_END kernel=residency_kick status=ok end_unix_ms=1792568616554 elapsed_ms=12.002000
+PIPELINE_BEGIN kernel=prefill_attention_q8_split cache=miss system_cache=unknown start_unix_ms=1792568616554
+PIPELINE_END kernel=prefill_attention_q8_split status=ok end_unix_ms=1792568616555 elapsed_ms=0.625584
+PIPELINE_CACHE kernel=prefill_attention_q8_split hits=1 creations=1 failures=0 creation_ms=0.625584
+PIPELINE_CACHE kernel=residency_kick hits=0 creations=1 failures=0 creation_ms=12.002000
+PIPELINE_BEGIN kernel=residency_kick cache=miss system_cache=unknown start_unix_ms=1792568616576
+PIPELINE_END kernel=residency_kick status=ok end_unix_ms=1792568616576 elapsed_ms=0.080375
+PIPELINE_BEGIN kernel=prefill_attention_q8_split cache=miss system_cache=unknown start_unix_ms=1792568616576
+PIPELINE_END kernel=prefill_attention_q8_split status=ok end_unix_ms=1792568616576 elapsed_ms=0.045333
+PIPELINE_CACHE kernel=prefill_attention_q8_split hits=0 creations=1 failures=0 creation_ms=0.045333
+PIPELINE_CACHE kernel=residency_kick hits=0 creations=1 failures=0 creation_ms=0.080375
+PIPELINE_BEGIN kernel=residency_kick cache=miss system_cache=unknown start_unix_ms=1792568616594
+PIPELINE_END kernel=residency_kick status=ok end_unix_ms=1792568616594 elapsed_ms=0.071000
+PIPELINE_BEGIN kernel=decode_sample_topk32_sharded cache=miss system_cache=unknown start_unix_ms=1792568616594
+PIPELINE_END kernel=decode_sample_topk32_sharded status=ok end_unix_ms=1792568616595 elapsed_ms=0.740458
+PIPELINE_CACHE kernel=decode_sample_topk32_sharded hits=1 creations=1 failures=0 creation_ms=0.740458
+PIPELINE_CACHE kernel=residency_kick hits=0 creations=1 failures=0 creation_ms=0.071000
+PIPELINE_BEGIN kernel=residency_kick cache=miss system_cache=unknown start_unix_ms=1792568616614
+PIPELINE_END kernel=residency_kick status=ok end_unix_ms=1792568616614 elapsed_ms=0.070416
+PIPELINE_BEGIN kernel=decode_sample_topk32_sharded cache=miss system_cache=unknown start_unix_ms=1792568616614
+PIPELINE_END kernel=decode_sample_topk32_sharded status=ok end_unix_ms=1792568616614 elapsed_ms=0.048209
+PIPELINE_CACHE kernel=decode_sample_topk32_sharded hits=0 creations=1 failures=0 creation_ms=0.048209
+PIPELINE_CACHE kernel=residency_kick hits=0 creations=1 failures=0 creation_ms=0.070416
+PIPELINE_BEGIN kernel=residency_kick cache=miss system_cache=unknown start_unix_ms=1792568616632
+PIPELINE_END kernel=residency_kick status=ok end_unix_ms=1792568616632 elapsed_ms=0.067417
+PIPELINE_PROBE {"scope":"pipeline creation and lookup only; no workload dispatches","rows":[{"kernel":"prefill_attention_q8_split","total_cache_hits":0,"total_creations":1,"backend_cache_hit":false,"lookup_total_ms":0.66583400000000004,"state":"new_backend_first_lookup","creation_ms":0.62558400000000003},{"kernel":"prefill_attention_q8_split","total_cache_hits":1,"total_creations":1,"backend_cache_hit":true,"lookup_total_ms":0.000125,"state":"same_backend_repeat","creation_ms":0},{"kernel":"prefill_attention_q8_split","total_cache_hits":0,"total_creations":1,"backend_cache_hit":false,"lookup_total_ms":0.062792000000000001,"state":"second_backend_first_lookup","creation_ms":0.045332999999999998},{"kernel":"decode_sample_topk32_sharded","total_cache_hits":0,"total_creations":1,"backend_cache_hit":false,"lookup_total_ms":0.764042,"state":"new_backend_first_lookup","creation_ms":0.74045800000000006},{"kernel":"decode_sample_topk32_sharded","total_cache_hits":1,"total_creations":1,"backend_cache_hit":true,"lookup_total_ms":0.00029099999999999997,"state":"same_backend_repeat","creation_ms":0},{"kernel":"decode_sample_topk32_sharded","total_cache_hits":0,"total_creations":1,"backend_cache_hit":false,"lookup_total_ms":0.066875000000000004,"state":"second_backend_first_lookup","creation_ms":0.048209000000000002}],"gpu":"Apple M5 Pro","gpu_family":10,"gpu_cores":20,"system_cache_state":"uncontrolled; no system cache was purged; timings cannot prove system cache hits"}
+pipeline probe: cache counters and no-dispatch assertion PASS
+PIPELINE_CACHE kernel=residency_kick hits=0 creations=1 failures=0 creation_ms=0.067417
+END exit=0 passed=True elapsed=0.699s result=build/upstream-140-merge-20261021/observed-runs-final/pipeline-probe-f1b9968c8758-20261021T074335.898751Z.json

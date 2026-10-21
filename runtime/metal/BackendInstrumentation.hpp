@@ -16,6 +16,14 @@ struct DispatchTiming {
   double gpuSeconds = 0.0;
 };
 
+struct PipelineStatistics {
+  std::string kernel;
+  uint64_t cacheHits = 0;
+  uint64_t creations = 0;
+  uint64_t failures = 0;
+  double creationSeconds = 0;
+};
+
 // What tests and benchmarks observe of a MetalBackend beyond its serving
 // API. Only the instrumented build of MetalBackend.mm
 // (SPLASH_BACKEND_INSTRUMENTATION) defines these; production binaries never
@@ -25,6 +33,9 @@ public:
   // Commands that passed the submission gate since construction.
   [[nodiscard]] static uint64_t submittedCommands(const MetalBackend &backend);
   [[nodiscard]] static size_t cachedPipelines(const MetalBackend &backend);
+  // These diagnostics require MetalBackendObserved.o, never the serving object.
+  static void preparePipeline(MetalBackend &backend, std::string_view kernel);
+  [[nodiscard]] static std::vector<PipelineStatistics> pipelineStatistics(const MetalBackend &backend);
   // The Metal command buffers the last command submitted takes: one, and one
   // more per buffer its event steps add, which the queue holds 512 of.
   [[nodiscard]] static uint64_t lastCommandBuffers(const MetalBackend &backend);

@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
+#include "metal/PipelineObservation.hpp"
 
 #include "HostKvExtents.hpp"
 #include "TestChecks.hpp"
@@ -69,6 +70,7 @@ id<MTLComputePipelineState> makePipeline(id<MTLDevice> device,
   if (!function)
     throw std::runtime_error(std::string("missing Metal kernel: ") + name);
   NSError *error = nil;
+  splash::metal::PipelineObservation observation(name);
   id<MTLComputePipelineState> result =
       [device newComputePipelineStateWithFunction:function error:&error];
   if (!result)

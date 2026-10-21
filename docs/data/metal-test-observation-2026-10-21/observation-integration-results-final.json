@@ -1,0 +1,67 @@
+[
+  {
+    "name": "probe-process-1",
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/observed-runs-final",
+      "--",
+      "build/engine-tests/pipeline-probe",
+      "build/splash.metallib",
+      "prefill_attention_q8_split",
+      "decode_sample_topk32_sharded"
+    ],
+    "exit_code": 0,
+    "log": "probe-process-1-final.log"
+  },
+  {
+    "name": "probe-process-2",
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/observed-runs-final",
+      "--",
+      "build/engine-tests/pipeline-probe",
+      "build/splash.metallib",
+      "prefill_attention_q8_split",
+      "decode_sample_topk32_sharded"
+    ],
+    "exit_code": 0,
+    "log": "probe-process-2-final.log"
+  },
+  {
+    "name": "reuse-first",
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/observed-runs-final",
+      "--",
+      "build/engine-tests/model-configuration",
+      "dev/tests/fixtures/model-configs"
+    ],
+    "exit_code": 0,
+    "log": "reuse-first-final.log"
+  },
+  {
+    "name": "reuse-second",
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/observed-runs-final",
+      "--reuse",
+      "--",
+      "build/engine-tests/model-configuration",
+      "dev/tests/fixtures/model-configs"
+    ],
+    "exit_code": 0,
+    "log": "reuse-second-final.log"
+  }
+]

@@ -6,6 +6,9 @@
 #ifdef SPLASH_BACKEND_INSTRUMENTATION
 #include "BackendInstrumentation.hpp"
 #endif
+#ifdef SPLASH_TEST_PIPELINE_TRACE
+#include "PipelineObservation.hpp"
+#endif
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
@@ -917,6 +920,18 @@ struct MetalBackend::Impl {
     explicit Impl(double commandTimeoutSeconds)
         : asyncState(std::make_shared<BackendAsyncState>(commandTimeoutSeconds)) {}
 
+#ifdef SPLASH_TEST_PIPELINE_TRACE
+    std::unordered_map<std::string, PipelineStatistics> pipelineStatistics;
+    ~Impl() {
+        for (const auto &[name, stats] : pipelineStatistics)
+            std::fprintf(stderr, "PIPELINE_CACHE kernel=%s hits=%llu creations=%llu failures=%llu creation_ms=%.6f\n",
+                         name.c_str(), static_cast<unsigned long long>(stats.cacheHits),
+                         static_cast<unsigned long long>(stats.creations),
+                         static_cast<unsigned long long>(stats.failures), stats.creationSeconds * 1000);
+        std::fflush(stderr);
+    }
+#endif
+
     // One dispatch of a command, validated and resolved to its pipeline.
     struct PreparedDispatch {
         const ComputeDispatch *source = nullptr;
@@ -1007,8 +1022,12 @@ struct MetalBackend::Impl {
         if (name.empty()) {
             throw MetalBackendError("Metal pipeline name must not be empty");
         }
-        if (const auto cached = pipelines.find(name); cached != pipelines.end())
+        if (const auto cached = pipelines.find(name); cached != pipelines.end()) {
+#ifdef SPLASH_TEST_PIPELINE_TRACE
+            ++pipelineStatistics.at(std::string(name)).cacheHits;
+#endif
             return cached->second;
+        }
         id<MTLComputePipelineState> result = newPipeline(library, name);
         pipelines.emplace(name, result);
         sampleDeviceMemory();
@@ -1023,6 +1042,15 @@ struct MetalBackend::Impl {
                 "missing Metal function: " + std::string(name));
         }
         NSError *error = nil;
+#ifdef SPLASH_TEST_PIPELINE_TRACE
+        PipelineObservation observation(name, [this, kernel = std::string(name)](double seconds, bool success) {
+            auto &stats = pipelineStatistics[kernel];
+            stats.kernel = kernel;
+            ++stats.creations;
+            stats.failures += !success;
+            stats.creationSeconds += seconds;
+        });
+#endif
         id<MTLComputePipelineState> result =
             [device newComputePipelineStateWithFunction:function error:&error];
         if (!result) {
@@ -2048,6 +2076,22 @@ std::string MetalBackend::unhealthyReason() const {
 }
 
 #ifdef SPLASH_BACKEND_INSTRUMENTATION
+#ifdef SPLASH_TEST_PIPELINE_TRACE
+void BackendInstrumentation::preparePipeline(MetalBackend &backend, std::string_view kernel) {
+    std::lock_guard lock(backend.impl_->asyncState->gateMutex);
+    (void)backend.impl_->pipeline(kernel);
+}
+
+std::vector<PipelineStatistics> BackendInstrumentation::pipelineStatistics(const MetalBackend &backend) {
+    std::lock_guard lock(backend.impl_->asyncState->gateMutex);
+    std::vector<PipelineStatistics> result;
+    for (const auto &[name, stats] : backend.impl_->pipelineStatistics) {
+        (void)name;
+        result.push_back(stats);
+    }
+    return result;
+}
+#endif
 uint64_t BackendInstrumentation::submittedCommands(
     const MetalBackend &backend) {
     std::lock_guard lock(backend.impl_->asyncState->gateMutex);

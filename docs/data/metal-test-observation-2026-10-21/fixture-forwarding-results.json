@@ -1,0 +1,39 @@
+[
+  {
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/fixture-forwarding-runs",
+      "--",
+      ".venv/bin/python",
+      "dev/tests/engine/run_draft_preparation.py",
+      "build/engine-tests/draft-preparation",
+      "build/splash.metallib",
+      "dev/tests/fixtures/weight-goldens/goldens.json"
+    ],
+    "exit_code": 0,
+    "log": "build/upstream-140-merge-20261021/fixture-forwarded-dflash2.log",
+    "pipeline_events": 2
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-u",
+      "dev/tools/run_native_test.py",
+      "--directory",
+      "build/upstream-140-merge-20261021/fixture-forwarding-runs",
+      "--",
+      ".venv/bin/python",
+      "dev/tests/engine/run_draft_preparation.py",
+      "build/engine-tests/draft-preparation",
+      "build/splash.metallib",
+      "dev/tests/fixtures/weight-goldens/goldens.json",
+      "--standard"
+    ],
+    "exit_code": 0,
+    "log": "build/upstream-140-merge-20261021/fixture-forwarded-standard.log",
+    "pipeline_events": 2
+  }
+]

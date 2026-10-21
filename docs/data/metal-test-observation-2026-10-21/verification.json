@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "parent_commit": "044404dec282cb565550c9c4894fbc0a9b4dedb4",
+  "operator_changes": false,
+  "persistent_pipeline_cache_added": false,
+  "shader_validation_unchanged": true,
+  "numeric_and_business_assertions_unchanged": true,
+  "unit_tests": {
+    "command": ".venv/bin/python -m unittest dev.tests.tools.test_run_native_test",
+    "count": 10,
+    "exit_code": 0
+  },
+  "build_contract_tests": {
+    "count": 13,
+    "exit_code": 0,
+    "note": "earlier focused set; final full suite covers all new tests"
+  },
+  "native_build_exit": 0,
+  "architecture_exit": 0,
+  "serving_binary_trace_hooks_absent": true,
+  "integration": {
+    "exit_code": 0,
+    "actual_reuse_confirmed": true,
+    "two_processes": "pipeline-process-comparison.json",
+    "system_cache_state": "uncontrolled; cannot infer system hits from timings"
+  },
+  "final_gate": {
+    "command": "make -j4 check test-sanitizers NATIVE_TEST_ARGS=",
+    "exit_code": 0,
+    "fresh_execution": true,
+    "metal_commands": 47,
+    "python_tests": 1476,
+    "python_skipped": 4,
+    "raw_archive": "full-validation-raw.tar.gz"
+  },
+  "model_performance_test": false,
+  "diagnostic_pipeline_timing": true,
+  "fixture_stderr_forwarding": {
+    "real_dflash2_exit": 0,
+    "real_standard_exit": 0,
+    "child_pipeline_logs_visible": true
+  },
+  "raw_archive_sha256": "614ed76a4b94eb7ee4a9024f0f539a5cc6fe2608d24cd212a31b02b2249c92cc",
+  "final_build_identity": {
+    "build_id": "src-a8c316e962b098e9c1ba06f49945af855bb82d0773c7bf0424169b220c5382d5",
+    "schema_version": 1,
+    "source_sha256": "a8c316e962b098e9c1ba06f49945af855bb82d0773c7bf0424169b220c5382d5"
+  },
+  "build_identity_check": {
+    "command": "make all verify-build-identity",
+    "exit_code": 0,
+    "log": "final-build-identity.log"
+  }
+}
