@@ -2,7 +2,7 @@
 
 ## 适用范围和版本
 
-更新日期：2026-10-13。
+更新日期：2026-10-21。
 
 这份文档按 Dense（稠密）和 MoE（混合专家）记录基准。
 Dense 分别保存 Qwen3.5-4B 和 Swift 27B 的已验证配置，MoE 以 Tiel MiniPlus 35B-A3B 为依据。
@@ -162,10 +162,13 @@ compact 还需要 `--compact-draft-ranking FILE`。未设置时，引擎读取�
 这是完整 payload 中的参数对象。驱动还要提供 `model_root`、`metallib`、源码与权重身份、实际输入 token ID 和事实断言。
 原生入口为 [qwen4b_matrix_native.mm](dev/benchmarks/qwen4b_matrix_native.mm)，正确性驱动为 [qwen_optional_features.py](dev/benchmarks/qwen_optional_features.py)。
 
-普通 `serve-native` 支持功能环境变量、`--kv-format q4h` 和 `--ane on|off`。
-固定 FFN 权重策略、ANE share／最小行数和历史 splits 当前由测试入口配置，普通服务 CLI 尚不能完整表达这套配置。
+普通 `serve-native` 支持功能启动参数、`--kv-format q4h` 和 `--ane on|off`。
+正式服务可用 `--experimental-quantized-ffn on` 启用 `quantized / baseline`，仅支持普通生成的 Qwen3.5-4B，可带 Standard DFlash 或不带 drafter。
+默认 `off` 保留原 FFN 缓存策略，不创建新的环境变量。27B、MoE、Kev 和编码器模型拒绝开启此实验。
+开关同时用于内存预算和权重加载，Ready 后核对 `startup_features.experimental_quantized_ffn=true`、`ffn_cache_bytes=0`。
+限额缓存、自定义 FFN 算子变体和历史 splits 仍需测试入口；这个开关不修改 ANE、KV 或 drafter 设置。
 `--decode-share` 设置引擎调度份额，不能用它设置 ANE share。
-服务端需显式设置 `RuntimeResourcesConfig.ffnLoading`。
+正式启动流程将此开关传入 `RuntimeResourcesConfig.ffnLoading`。
 固定 ANE 参数需设置 `RuntimeResourcesConfig.aneFfn`，历史 splits 还要接入对应规划。
 配置完成后核对实际路径。
 本次只记录选定参数。代码中的三个可选功能默认仍关闭。

@@ -124,6 +124,17 @@ def effective_lines(status, readiness, args=None):
     )
     yield f"  Prefill block = {features.get('prefill_token_budget', 'unknown')} tokens (compiled)"
     yield f"  Prefill warmup geometry = {_text(status.get('warmup', {}).get('detail', 'unknown'))}"
+    quantized_ffn = features.get("experimental_quantized_ffn")
+    yield (
+        "  Experimental quantized FFN = "
+        + (
+            "on"
+            if quantized_ffn is True
+            else "off"
+            if quantized_ffn is False
+            else "unknown"
+        )
+    )
     yield f"  FFN FP16 cache = {features.get('ffn_cache_bytes', 'unknown')} bytes"
     optional = features.get("optional", {})
     for label, key, reason in (

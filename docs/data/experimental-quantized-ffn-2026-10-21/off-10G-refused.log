@@ -1,0 +1,1 @@
+error: runtime bootstrap failed [resource_assembly/memory_planning]: model weights with the runtime reserves, one lane's state, the KV runway and any SSD cache state staging require 11675123712 bytes but the Metal memory budget is 10737418240 bytes

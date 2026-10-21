@@ -437,6 +437,16 @@ SERVE_OPTIONS = (
         ),
     ),
     ServeOption(
+        "--experimental-quantized-ffn",
+        "memory",
+        dict(
+            choices=("on", "off"),
+            default="off",
+            help="experimental Qwen3.5-4B generation only: retain quantized FFN "
+            "weights without a resident full FP16 FFN cache (default: off)",
+        ),
+    ),
+    ServeOption(
         "--max-context",
         "memory",
         dict(

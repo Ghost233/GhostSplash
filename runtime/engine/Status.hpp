@@ -288,6 +288,7 @@ struct RuntimeFeatureSnapshot final {
   std::string drafter = "none";
   uint32_t draftLayers = 0, draftBlockSize = 0, draftTokens = 0;
   uint64_t ffnCacheBytes = 0;
+  bool experimentalQuantizedFfn = false;
   model::OptionalFeatureReport optional;
 };
 

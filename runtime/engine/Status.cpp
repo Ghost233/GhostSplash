@@ -218,6 +218,7 @@ std::string runtimeStatusJson(
         << ",\"draft_tokens\":" << f.draftTokens
         << ",\"prefill_token_budget\":" << model::ExecutionLimits::prefillTokenBudget
         << ",\"ffn_cache_bytes\":" << f.ffnCacheBytes
+        << ",\"experimental_quantized_ffn\":" << boolean(f.experimentalQuantizedFfn)
         << ",\"optional\":{\"prompt_lookup\":" << boolean(o.configured.promptLookup)
         << ",\"lookup_reason\":" << json::quote(o.lookupReason)
         << ",\"compact_draft_head\":" << boolean(o.configured.compactDraftHead)

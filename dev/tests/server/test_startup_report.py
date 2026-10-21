@@ -89,8 +89,28 @@ class StartupReportTests(unittest.TestCase):
                 self.assertIn("ANE = unknown", text)
                 self.assertIn("Compact = unknown", text)
                 self.assertIn("Drafter = unknown", text)
+                self.assertIn("Experimental quantized FFN = unknown", text)
                 self.assertIn("Context = 8192", text)
                 self.assertIn("Vision = on", text)
+
+    def test_quantized_ffn_reports_loaded_state_not_requested_flag(self):
+        readiness = SimpleNamespace(
+            max_context_tokens=8192, max_concurrent_requests=1, vision=False
+        )
+        args = main_args(experimental_quantized_ffn="on")
+        for enabled, cache_bytes in ((True, 0), (False, 4529848320)):
+            status = {
+                "ready": True,
+                "startup_features": {
+                    "experimental_quantized_ffn": enabled,
+                    "ffn_cache_bytes": cache_bytes,
+                },
+            }
+            text = "\n".join(startup_report.effective_lines(status, readiness, args))
+            self.assertIn(
+                f"Experimental quantized FFN = {'on' if enabled else 'off'}", text
+            )
+            self.assertIn(f"FFN FP16 cache = {cache_bytes} bytes", text)
 
     def test_log_values_cannot_inject_additional_lines(self):
         text = "\n".join(

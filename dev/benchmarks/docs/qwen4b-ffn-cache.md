@@ -16,6 +16,33 @@ ANE 的 `leadingRows`、`leadingInputs` 视图不继承 FP16 缓存。因此，A
 
 当前模型的 FFN 包含 Q4_K 56 个、Q5_K 15 个、Q6_K 15 个、IQ4_XS 10 个矩阵。量化计算在 threadgroup 内生成有限的 FP16 tile，不生成完整矩阵的常驻副本。
 
+## 正式服务的实验开关
+
+正式服务可使用 `--experimental-quantized-ffn on`，直接复用 `quantized / baseline`。
+默认 `off` 保留原 FFN 缓存策略。开关同时传入内存规划和权重加载，不读取环境变量。
+
+```sh
+./splash serve --model OWNER/REPO --experimental-quantized-ffn on
+```
+
+`OWNER/REPO` 应替换为实际模型选择。GMD 的服务启动参数也使用同名开关。
+只有普通生成的 Qwen3.5-4B 支持开启，可配 Standard DFlash 或不带 drafter。
+27B、MoE、Kev、D3 和 ModernBERT 拒绝开启，不静默忽略。
+此开关不改变 ANE、KV、上下文、drafter、采样或其他实验算子。
+
+启动清单先列出请求值，Ready 后显示实际状态。
+`/status.startup_features.experimental_quantized_ffn` 为 `true` 时，`ffn_cache_bytes` 必须为 `0`。
+旧引擎未报告状态字段时显示 `unknown`，不能按请求参数认定已经启用。
+关闭只需使用 `--experimental-quantized-ffn off` 并重启。
+
+此前固定 ANE 对照中，全量缓存额外占用 4.21875 GiB，计算未命中这份缓存。
+这个结论只适用于当时的模型和路径，不保证所有配置下的速度相同。
+
+2026-10-21 的接入验证使用真实 4B 权重，比较 64／1024 输入、固定 32 输出的 token。
+另检查权重释放恢复和 10 GiB 预算、262,144 上下文容量的启动行为。
+本轮不重跑原 32K 长轨迹和性能测试。
+命令、退出码和状态证据见[验证记录](../../../docs/data/experimental-quantized-ffn-2026-10-21/verification.json)。
+
 ## 独立实验 profile
 
 每个 profile 只改变表中的一项策略。先完成前一项的数值与性能分析，再选择下一项，不把全部 profile 展开成笛卡尔积。

@@ -134,6 +134,9 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
           : value == "q4h" ? kv::Format::Int4Hadamard
           : value == "q4_0" ? kv::Format::Q4_0Hadamard
           : value == "q4_0_unrotated" ? kv::Format::Q4_0Unrotated : kv::Format::BFloat16;
+    } else if (option == "--experimental-quantized-ffn") {
+      result.ffnLoading.mode = parseSwitch(option, value)
+          ? model::FfnWeightMode::Quantized : model::FfnWeightMode::FullFp16;
     } else if (option == "--state-format") {
       if (value != "fp32" && value != "bf16")
         throw UsageError("--state-format requires fp32 or bf16");
@@ -219,6 +222,9 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--cache-dir requires --persistent-cache on");
   result.modelRoot = requireModelRoot(argv[2]);
   result.model = model::inspectModelRoot(result.modelRoot);
+  if (result.ffnLoading.mode == model::FfnWeightMode::Quantized &&
+      result.model.family() != model::Qwen3_5_4BLayout::family)
+    throw UsageError("--experimental-quantized-ffn only supports Qwen3.5-4B generation");
   if (result.model.hasDraft() && !std::filesystem::is_directory(result.modelRoot / "draft"))
     throw UsageError("MODEL_DIRECTORY must hold the model's draft/ directory for this model");
   result.maxContext = parseMaxContext(argv[3], result.model.capabilities);

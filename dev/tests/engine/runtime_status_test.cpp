@@ -91,8 +91,16 @@ void testStartupFeaturesStatus() {
           json.find("\"compact_coverage_fallbacks\":2") != std::string::npos &&
           json.find("\"compact_request_fallbacks\":1") != std::string::npos &&
           json.find("\"fast_topk\":false") != std::string::npos &&
+          json.find("\"experimental_quantized_ffn\":false") != std::string::npos &&
           json.find("history coverage insufficient") != std::string::npos,
           "startup feature status lost actual drafter or compact validation/fallback state");
+  features.experimentalQuantizedFfn = true;
+  features.ffnCacheBytes = 0;
+  const auto quantized = runtimeStatusJson(plan(), {}, {}, {}, {}, {}, {}, {}, {},
+      true, {}, {}, {}, {}, {}, ThermalState::Nominal, features);
+  require(quantized.find("\"experimental_quantized_ffn\":true") != std::string::npos &&
+          quantized.find("\"ffn_cache_bytes\":0") != std::string::npos,
+          "status lost the loaded quantized FFN state or cache allocation");
 }
 
 void testCleanRuntimeStatus(const char *goldenPath) {

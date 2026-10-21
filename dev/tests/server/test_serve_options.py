@@ -34,6 +34,11 @@ def values(flag, accepted, refused, repeatable=False):
 # Every shared option: accepted arguments with the value they parse to, and
 # refused arguments.
 OPTIONS = {
+    "--experimental-quantized-ffn": values(
+        "--experimental-quantized-ffn",
+        {"off": "off", "on": "on"},
+        ("auto", "quantized", "1", ""),
+    ),
     "--encoder-option-queries": values(
         "--encoder-option-queries", {"on": "on", "off": "off"}, ("auto", "")
     ),
@@ -549,6 +554,31 @@ class ServeOptionsTests(unittest.TestCase):
                     ),
                     [args.binary, "serve-native", args.model_root, *arguments],
                 )
+
+    def test_experimental_quantized_ffn_reaches_native_and_relaunch(self):
+        for parse, required in PARSERS:
+            self.assertEqual(parse(required).experimental_quantized_ffn, "off")
+        for setting in ("off", "on"):
+            args = api.parse_args(
+                [*SERVER_ARGS, "--experimental-quantized-ffn", setting]
+            )
+            for context in (None, 61433):
+                command = api._native_command(args, context)
+                if setting == "on":
+                    index = command.index("--experimental-quantized-ffn")
+                    self.assertEqual(command[index + 1], "on")
+                else:
+                    self.assertNotIn("--experimental-quantized-ffn", command)
+            for decision_type in ("laya", "vllm-d3"):
+                args.decision_type = decision_type
+                args.kv_format = "q4h"
+                if setting == "on":
+                    with self.assertRaisesRegex(ValueError, "only supports Qwen3.5-4B"):
+                        api._native_command(args)
+                else:
+                    self.assertNotIn(
+                        "--experimental-quantized-ffn", api._native_command(args)
+                    )
 
 
 if __name__ == "__main__":

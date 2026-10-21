@@ -1668,6 +1668,10 @@ def _native_command(args, relaunch_context=None):
     context the first engine served: without --max-context the relaunch keeps
     it, where its own would follow a Neural Engine split calibrated anew."""
     if getattr(args, "decision_type", None) in ("laya", "vllm-d3"):
+        if args.experimental_quantized_ffn == "on":
+            raise ValueError(
+                "--experimental-quantized-ffn only supports Qwen3.5-4B generation"
+            )
         if any(
             getattr(args, key) == "on"
             for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
@@ -1723,6 +1727,7 @@ def _native_command(args, relaunch_context=None):
     if args.disable_ane:
         command.extend(("--ane", "off"))
     for flag, default in (
+        ("experimental-quantized-ffn", "off"),
         ("ane-ffn-share", None),
         ("ane-ffn-minimum-rows", None),
         ("ane-power-recovery", "off"),

@@ -1,0 +1,249 @@
+{
+  "date": "2026-10-21T11:11:47.904028+08:00",
+  "result": "passed",
+  "feature": "--experimental-quantized-ffn on|off",
+  "default": "off",
+  "supported": "Qwen3.5-4B generation with Standard DFlash or without a drafter",
+  "source": {
+    "commit": "2e6216a0873a816495957191d9ce33640065c0b5",
+    "uncommitted_changes": true,
+    "production_and_test_diff_sha256": "3a0f14229bcb9b5ce3b1a874f66cf62a4e739215c7bbff8299204b46b65eb779",
+    "modified_file_sha256": {
+      "INFERENCE_PARAMETERS.md": "956d8c45e923d30628c356ade3bbead1adf0e97ac1b741ddc02fd2af4f394011",
+      "dev/benchmarks/docs/qwen4b-ffn-cache.md": "22f436875d6c900cbeda67306ffbff6a6b7347fd2ff9ff94a5572c6b9ce88e8d",
+      "dev/tests/engine/native_arguments_test.cpp": "4174f48e6bac0ff1f800e2e81f58d4d69901e113256f85c13a48e5d2eb4cebb7",
+      "dev/tests/engine/runtime_status_test.cpp": "473a12aabe6cc5d57f7aa05e03af7f7d7b6cccb467b5931e92177b081b67cf8b",
+      "dev/tests/server/test_serve_options.py": "7827b75e9b5cda080a2953c34af1510a21fb7ca05bf98972c444ec988fd0bfbd",
+      "dev/tests/server/test_startup_report.py": "2f23ccedf86ec6cf160df9f194dbe29b970065716d4ce96387b18bf530a58047",
+      "dev/tests/server_fixtures.py": "2d887d4f5b07b99a671b1e0ba2f3b4cd3fd08379fee563164d04e90de0b13499",
+      "runtime/engine/Bootstrap.mm": "130939d56c7f3b513e3dbb3e7aa43429c45dfe20c1ac4f781c3975ad7bad7a0f",
+      "runtime/engine/NativeArguments.cpp": "6f262d79ef9a803c85c2454b1ae42ec7ee72f4d25a2cb7d172a27361a3223230",
+      "runtime/engine/NativeArguments.hpp": "7526dd93729c9f8e57326d1596e8a648460a0340f62731039fa97c5cfb7eb81c",
+      "runtime/engine/Status.cpp": "f48a28fd629b0d332d4e6ce8970c47dcbb9ea6ad9bedb7e9c847ae00af388f9c",
+      "runtime/engine/Status.hpp": "76a2e5b127ed317577c34e90d8341d38ae72d15059a713fae2cfbcb53af181b5",
+      "runtime/main.mm": "582a18785898606762242db0d0b1f902dc1dbf652fb2d7e82160247894fbcab7",
+      "server/serve_options.py": "fdf0a39a39095bfb8f4e0f9df8396e0956008a3dda9d1a078c10acab592ce54a",
+      "server/server.py": "2797efea4990be901fad5a2e42c3018bc491aaa375556c112bd0e532b6f20c15",
+      "server/startup_report.py": "fd54652132783b138ea12bbc9e9ee010dc189d836c97b040eb905463d71cf4b7"
+    }
+  },
+  "binary": {
+    "path": "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+    "sha256": "7b86c4374d76c7d0156cb05741964c88841b356da14ca2b8e145282964c34875",
+    "metallib_sha256": "a7c2fa56c60f24d5227114bb82a5cc97e5b34a7c9305788b34453bfe5f200e34"
+  },
+  "python": {
+    "total_unique_tests": 1419,
+    "passed": 1415,
+    "skipped": 4,
+    "skips": "Existing installed-client integration tests require explicitly selected Codex (2), OpenCode (1), and Pi (1) binaries."
+  },
+  "checks": [
+    {
+      "name": "production_build",
+      "command": [
+        "make",
+        "-j4",
+        "METAL=xcrun -sdk macosx /private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.u57haV/Metal.xctoolchain/usr/bin/metal",
+        "METALLIB=xcrun -sdk macosx /private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.u57haV/Metal.xctoolchain/usr/bin/metallib",
+        "all"
+      ],
+      "exit_code": 0,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/build-explicit-metal-retry.log"
+    },
+    {
+      "name": "source_native_cpu_all_native_builds_sanitizers",
+      "command": [
+        "make",
+        "-j4",
+        "METAL=xcrun -sdk macosx /private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.u57haV/Metal.xctoolchain/usr/bin/metal",
+        "METALLIB=xcrun -sdk macosx /private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.u57haV/Metal.xctoolchain/usr/bin/metallib",
+        "check-source",
+        "check-native-cpu",
+        "check-native-build",
+        "test-sanitizers"
+      ],
+      "exit_code": 0,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/native-checks.log"
+    },
+    {
+      "name": "python_server",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "dev/tests/server",
+        "-t",
+        "."
+      ],
+      "exit_code": 0,
+      "tests": 932,
+      "skipped": 0,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/server-tests.log"
+    },
+    {
+      "name": "python_build_identity_targeted",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "dev.tests.tools.test_build_identity.CompileConfigurationTests.test_actual_flag_changes_and_reversions"
+      ],
+      "exit_code": 0,
+      "tests": 1,
+      "included_in_module_count": true,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/build-identity-targeted-retry.log"
+    },
+    {
+      "name": "python_build_identity_module",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "unittest",
+        "dev.tests.tools.test_build_identity"
+      ],
+      "exit_code": 0,
+      "tests": 10,
+      "skipped": 0,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/build-identity-module-retry.log"
+    },
+    {
+      "name": "python_final_remainder",
+      "command": "unittest discover dev/tests, excluding unchanged verified dev.tests.server and dev.tests.tools.test_build_identity suites",
+      "exit_code": 0,
+      "tests": 477,
+      "skipped": 4,
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/python-final-remainder.log"
+    },
+    {
+      "name": "python_compileall",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "compileall",
+        "-q",
+        "server",
+        "install/*.py",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "ruff_check",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "--config",
+        "dev/ruff.toml",
+        "server",
+        "install/*.py",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "ruff_format",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "--config",
+        "dev/ruff.toml",
+        "server",
+        "install/*.py",
+        "dev/tools",
+        "dev/tests",
+        "dev/benchmarks"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "real_gguf_ffn_policy",
+      "command": [
+        "build/engine-tests/ffn-policy",
+        "/Users/ghost233/Library/Application Support/GhostModelDeck/splash-models/85bfa9adf6950dc0a01ad747e8e06d4bd8dfbc886fafec2037c7fc795e31d810"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "real_correctness",
+      "command": [
+        ".venv/bin/python",
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/verify_real.py"
+      ],
+      "exit_code": 0,
+      "report": "real-correctness.json",
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/real-attempt-2.log"
+    },
+    {
+      "name": "git_diff_check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "correctness_scope": {
+    "input_tokens": [
+      64,
+      1024
+    ],
+    "actual_output_tokens": 32,
+    "cache_modes_token_equal": true,
+    "weight_release_restore_equal": true,
+    "full_fp16_cache_bytes": 4529848320,
+    "quantized_fp16_cache_bytes": 0,
+    "context_capacity": 262144,
+    "quantized_10GiB_ready": true,
+    "default_10GiB_expected_native_exit": 70,
+    "kv": "q4h",
+    "ane_share": 0.5,
+    "ane_minimum_rows": 512,
+    "draft": "z-lab/Qwen3.5-4B-DFlash"
+  },
+  "not_run": [
+    "performance benchmark",
+    "32K input long-output correctness remeasurement"
+  ],
+  "retained_failed_attempts": [
+    {
+      "kind": "build_environment",
+      "exit_code": 2,
+      "reason": "Missing Metal Toolchain, followed by denied Xcode module-cache access; compiler installed and build rerun with required access.",
+      "logs": [
+        "targeted-build.log",
+        "build-explicit-metal.log"
+      ]
+    },
+    {
+      "kind": "verification_harness",
+      "exit_code": 1,
+      "reason": "Custom process factory used buffered stdin; corrected to bufsize=0 as in the production runtime; assertions unchanged.",
+      "directory": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/real-attempt-1-buffered-harness"
+    },
+    {
+      "kind": "python_test_environment",
+      "exit_code": 1,
+      "reason": "Two build-identity subtests denied module-cache writes; targeted test and entire module passed with required cache access.",
+      "log": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/remaining-python-tests.log"
+    }
+  ],
+  "previous_build_preserved": "/Users/ghost233/Ghost233Code/GhostSplash/build/experimental-quantized-ffn-20261021/retained-build.json",
+  "gmd": {
+    "thread_id": "01a15717-3179-7bf2-8ef4-dcd0af35a859",
+    "implementation_requested": true,
+    "interface_and_real_evidence_sent": true
+  }
+}

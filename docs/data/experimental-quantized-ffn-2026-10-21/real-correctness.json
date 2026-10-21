@@ -1,0 +1,255 @@
+{
+  "kind": "correctness_only",
+  "records": [
+    {
+      "name": "off-20G",
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "serve-native",
+        "/Users/ghost233/Library/Application Support/GhostModelDeck/splash-models/85bfa9adf6950dc0a01ad747e8e06d4bd8dfbc886fafec2037c7fc795e31d810",
+        "262144",
+        "21474836480",
+        "10737418240",
+        "--kv-format",
+        "q4h",
+        "--ane-ffn-share",
+        "0.5",
+        "--ane-ffn-minimum-rows",
+        "512"
+      ],
+      "passed": true,
+      "pid": 73821,
+      "ready": {
+        "experimental_quantized_ffn": false,
+        "ffn_cache_bytes": 4529848320
+      },
+      "outputs": [
+        {
+          "input_tokens": 64,
+          "tokens": [
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            271,
+            248068,
+            271,
+            248069,
+            271,
+            1206,
+            10033,
+            1204,
+            2972,
+            29456,
+            1452,
+            5979,
+            44896,
+            332,
+            72346,
+            2972,
+            3938,
+            27477,
+            321,
+            33887,
+            93868,
+            567,
+            1902,
+            1118,
+            3418,
+            279,
+            34780
+          ]
+        },
+        {
+          "input_tokens": 1024,
+          "tokens": [
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346,
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            220,
+            79091,
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346,
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            220,
+            79091,
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346
+          ]
+        }
+      ],
+      "native_exit_codes": [
+        0
+      ]
+    },
+    {
+      "name": "on-20G",
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "serve-native",
+        "/Users/ghost233/Library/Application Support/GhostModelDeck/splash-models/85bfa9adf6950dc0a01ad747e8e06d4bd8dfbc886fafec2037c7fc795e31d810",
+        "262144",
+        "21474836480",
+        "10737418240",
+        "--kv-format",
+        "q4h",
+        "--experimental-quantized-ffn",
+        "on",
+        "--ane-ffn-share",
+        "0.5",
+        "--ane-ffn-minimum-rows",
+        "512"
+      ],
+      "passed": true,
+      "pid": 76543,
+      "ready": {
+        "experimental_quantized_ffn": true,
+        "ffn_cache_bytes": 0
+      },
+      "outputs": [
+        {
+          "input_tokens": 64,
+          "tokens": [
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            271,
+            248068,
+            271,
+            248069,
+            271,
+            1206,
+            10033,
+            1204,
+            2972,
+            29456,
+            1452,
+            5979,
+            44896,
+            332,
+            72346,
+            2972,
+            3938,
+            27477,
+            321,
+            33887,
+            93868,
+            567,
+            1902,
+            1118,
+            3418,
+            279,
+            34780
+          ]
+        },
+        {
+          "input_tokens": 1024,
+          "tokens": [
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346,
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            220,
+            79091,
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346,
+            1809,
+            27477,
+            321,
+            33887,
+            13,
+            220,
+            79091,
+            1204,
+            9966,
+            1452,
+            5979,
+            44896,
+            72346
+          ]
+        }
+      ],
+      "release_confirmed": true,
+      "restored": {
+        "experimental_quantized_ffn": true,
+        "ffn_cache_bytes": 0
+      },
+      "restore_confirmed": true,
+      "native_exit_codes": [
+        0
+      ]
+    },
+    {
+      "name": "on-10G",
+      "command": [
+        "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+        "serve-native",
+        "/Users/ghost233/Library/Application Support/GhostModelDeck/splash-models/85bfa9adf6950dc0a01ad747e8e06d4bd8dfbc886fafec2037c7fc795e31d810",
+        "262144",
+        "10737418240",
+        "10737418240",
+        "--kv-format",
+        "q4h",
+        "--experimental-quantized-ffn",
+        "on",
+        "--ane-ffn-share",
+        "0.5",
+        "--ane-ffn-minimum-rows",
+        "512"
+      ],
+      "passed": true,
+      "pid": 78772,
+      "ready": {
+        "experimental_quantized_ffn": true,
+        "ffn_cache_bytes": 0
+      },
+      "outputs": [],
+      "native_exit_codes": [
+        0
+      ]
+    }
+  ],
+  "source_commit": "2e6216a0873a816495957191d9ce33640065c0b5",
+  "diff_sha256": "84c866a370e8bb5ac87817d5e3314ab38dd004f56fc61a49c8147e5a923ad074",
+  "binary_sha256": "7b86c4374d76c7d0156cb05741964c88841b356da14ca2b8e145282964c34875",
+  "cache_modes_token_equal": true,
+  "off_10G_refusal": {
+    "exit_code": 70,
+    "stderr": "error: runtime bootstrap failed [resource_assembly/memory_planning]: model weights with the runtime reserves, one lane's state, the KV runway and any SSD cache state staging require 11675123712 bytes but the Metal memory budget is 10737418240 bytes\n"
+  },
+  "passed": true
+}

@@ -42,6 +42,8 @@ struct NativeArguments final {
   std::filesystem::path cacheRoot;
   kv::Format kvFormat = kv::Format::Int8;
   ops::GdnStateFormat stateFormat = ops::GdnStateFormat::Float32;
+  // --experimental-quantized-ffn on skips the Qwen3.5-4B FP16 FFN cache.
+  model::FfnLoadOptions ffnLoading;
   double decodeShare = EngineConfig{}.decodeShare;
   uint32_t maxImagePatches = ops::kMaximumImagePatches;
   // --idle-release SECONDS|off, infinite for off.

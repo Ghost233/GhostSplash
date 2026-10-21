@@ -822,6 +822,7 @@ def main_args(**overrides):
             "binary": "splash",
             "kv_format": "int8",
             "state_format": "fp32",
+            "experimental_quantized_ffn": "off",
             **overrides,
         }
     )

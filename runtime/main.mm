@@ -157,6 +157,7 @@ void printUsage(std::string_view executable) {
       " [--kv-format int8|bf16|q4h|q4_0|q4_0_unrotated] [--state-format fp32|bf16] [--decode-share SHARE]"
       " [--max-image-patches PATCHES] [--persistent-cache on|off] [--cache-dir DIRECTORY]"
       " [--max-cache-disk-writes BYTES]"
+      " [--experimental-quantized-ffn on|off]"
       " [--idle-release SECONDS|off] [--idle-sleep prevent|allow] [--ane on|off]"
       " [--ane-ffn-share auto|SHARE] [--ane-ffn-minimum-rows ROWS]"
       " [--ane-power-recovery on|off] [--ane-power-reference off|auto|WATTS]"
@@ -213,6 +214,7 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
     config.resources.cacheRoot = caches / "prefix-cache";
   config.resources.kvFormat = arguments.kvFormat;
   config.resources.stateFormat = arguments.stateFormat;
+  config.resources.ffnLoading = arguments.ffnLoading;
   config.resources.maximumImagePatches = arguments.maxImagePatches;
   config.resources.idleReleaseSeconds = arguments.idleReleaseSeconds;
   config.resources.aneFfn = arguments.aneFfn;

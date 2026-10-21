@@ -106,6 +106,36 @@ void testTargetOnlyModelDirectory() {
   require(arguments.model.family() == "Qwen3.5-4B" && !arguments.model.hasDraft() &&
               arguments.maxContext == 33792 && !std::filesystem::exists(root.path() / "draft"),
           "ordinary 4B startup must accept its real assembly without a draft directory");
+  require(arguments.ffnLoading.mode == model::FfnWeightMode::FullFp16,
+          "ordinary startup changed the existing FFN cache default");
+  for (const char *setting : {"on", "off"}) {
+    const auto read = parseCommand({"serve-native", root.path().string(), "auto", "auto",
+                                   "--experimental-quantized-ffn", setting});
+    require(read.ffnLoading.mode == (std::string_view(setting) == "on"
+                ? model::FfnWeightMode::Quantized : model::FfnWeightMode::FullFp16) &&
+            read.ffnLoading.variant == ops::FfnPrefillVariant::Baseline &&
+            read.ffnLoading.budgetBytes == 0 && !read.ffnLoading.trace,
+            "experimental FFN switch lost its mode or enabled another experiment");
+  }
+  std::filesystem::create_directory(root.path() / "draft");
+  std::filesystem::copy_file(modelConfigs / "qwen3.5-4b/draft/config.json",
+                             root.path() / "draft/config.json");
+  test::writeFile(root.path() / "model.json",
+      R"({"version":1,"model":"local/qwen4b","target_format":"gguf","vision_format":"none"})");
+  const auto draft = parseCommand({"serve-native", root.path().string(), "auto", "auto",
+                                  "--experimental-quantized-ffn", "on"});
+  require(draft.model.hasDraft() && draft.ffnLoading.mode == model::FfnWeightMode::Quantized,
+          "experimental FFN did not support 4B with Standard DFlash");
+  std::filesystem::remove_all(root.path() / "draft");
+  test::writeFile(root.path() / "model.json",
+      R"({"version":1,"model":"local/qwen4b","target_format":"gguf","vision_format":"none","sources":{"draft":null}})");
+  test::writeFile(root.path() / "config.json",
+      R"({"text_config":{"model_type":"qwen3_5_text","hidden_size":2560,"max_position_embeddings":262144,"num_attention_heads":16,"num_key_value_heads":4,"head_dim":256,"num_hidden_layers":32,"vocab_size":248320},)"
+      R"("decision_config":{"type":"kev","head_size":512,"temperatures":{"choice":1,"score":1,"noul":1},"chat_template":"test"}})");
+  rejects([&] {
+    static_cast<void>(parseCommand({"serve-native", root.path().string(), "auto", "auto",
+                                    "--experimental-quantized-ffn", "on"}));
+  }, "only supports Qwen3.5-4B generation", "experimental FFN accepted a Kev decision model");
 }
 
 void testServerCommandLines(const char *path) {
@@ -202,6 +232,7 @@ void testServerCommandLines(const char *path) {
            read.maxCacheDiskWritesBytes == meant.maxCacheDiskWritesBytes &&
            read.persistentCache == meant.persistentCache && read.cacheRoot == meant.cacheRoot &&
            read.kvFormat == meant.kvFormat && read.stateFormat == meant.stateFormat &&
+           read.ffnLoading.mode == meant.ffnLoading.mode &&
            read.decodeShare == meant.decodeShare &&
            read.maxImagePatches == meant.maxImagePatches &&
            read.idleReleaseSeconds == meant.idleReleaseSeconds &&
@@ -274,10 +305,16 @@ void testRefusals() {
   refuses({"auto", "auto", "--idle-sleep", "never"},
           "--idle-sleep requires prevent or allow");
   refuses({"auto", "auto", "--ane", "gpu"}, "--ane requires on or off");
-  for (const char *option : {"--ane-power-recovery", "--prompt-lookup", "--compact-draft-head", "--fast-topk"}) {
+  for (const char *option : {"--ane-power-recovery", "--prompt-lookup", "--compact-draft-head", "--fast-topk",
+                              "--experimental-quantized-ffn"}) {
     refuses({"auto", "auto", option, "1"}, std::string(option) + " requires on or off");
     refuses({"auto", "auto", option}, std::string(option) + " requires on or off");
   }
+  refuses({"auto", "auto", "--experimental-quantized-ffn", "on"},
+          "only supports Qwen3.5-4B generation");
+  require(parse(model, {"auto", "auto", "--experimental-quantized-ffn", "off"}).ffnLoading.mode ==
+              model::FfnWeightMode::FullFp16,
+          "experimental FFN off rejected the existing 27B path");
   for (const char *option : {"--ane-ffn-share", "--ane-recovery-idle-watts", "--ane-recovery-max-power-percent"})
     for (const char *value : {"-1", "nan", "inf", "bad", ""})
       refuses({"auto", "auto", option, value}, option);

@@ -140,6 +140,7 @@ std::string RuntimeBootstrap::statusJson(const RuntimeMetricsSnapshot &metrics,
     features.draftTokens = descriptor.draft.proposalTokens();
   }
   features.ffnCacheBytes = context.model.targetFfnCacheAllocatedBytes();
+  features.experimentalQuantizedFfn = context.model.ffnOptions.mode == model::FfnWeightMode::Quantized;
   features.optional = model_->optionalFeatureReport();
   return runtimeStatusJson(
       resources_->memoryPlan(), nativeLoop_->statusSnapshot(), backend.memoryStats(),
