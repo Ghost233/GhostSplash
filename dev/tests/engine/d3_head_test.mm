@@ -15,14 +15,16 @@ int main(int argc,char **argv) {
     NSData *data=[NSData dataWithContentsOfFile:[NSString stringWithUTF8String:(root/"config.json").c_str()]];
     NSDictionary *config=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
     std::vector<uint32_t> ids;for(NSNumber *id in config[@"decision_config"][@"token_ids"])ids.push_back(id.unsignedIntValue);
-    auto path=model::findTargetGguf(root/"target");model::WeightSource source(path);model::GgufFile file(source);
+    const auto paths=model::findTargetGgufs(root/"target");
+    test::require(paths.size()==1,"D3 head reference requires a single GGUF target");
+    auto path=paths.front();model::WeightSource source(path);model::GgufFile file(source);
     model::QwenTargetDimensions geometry=file.metadata().unsignedValue("qwen35.embedding_length")==1024
       ?static_cast<model::QwenTargetDimensions>(model::Qwen3_5_0_8BLayout{})
       :static_cast<model::QwenTargetDimensions>(model::Qwen3_5_4BLayout{});
     geometry.decisionHeadSize=256;
     // Exercise arbitrary row order, including a distant code ID, not a contiguous slice.
     std::swap(ids.front(),ids.back());std::swap(ids[1],ids[128]);
-    model::WeightImages images(backend,"d3-head-test");model::GgufTargetLoader loader(backend,images,path,geometry,ids);
+    model::WeightImages images(backend,"d3-head-test");model::GgufTargetLoader loader(backend,images,paths,"qwen35",geometry,{},{},ids);
     auto head=loader.head();static_cast<void>(model::readNorm(head,geometry.hiddenSize,true,"norm"));
     auto projection=model::readBlockProjection(head,256,geometry.hiddenSize,"D3 head");projection.destination=ops::FloatOutput::Float32;
     auto bias=head.section(256*4,"zero bias");head.finish();

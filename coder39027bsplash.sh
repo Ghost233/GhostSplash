@@ -42,35 +42,24 @@ from pathlib import Path
 repo, model_dir, draft_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, upstream
+from install import paths
+from install.local import prepare_local_model
 
 # Check the address before the first-run draft download.
+paths.BINARY = repo / "build/splash"
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((host, int(port)))
 
-selection = models.Selection.of(
-    repo / "install/models-local", model_id,
-    language_only=True, draft_model=draft_dir,
+root = prepare_local_model(
+    Path(model_dir) / "Qwen3.8-27B-Coder390-EfficientThink-Q4LynnStyle-MTP.gguf", draft=draft_dir, language_only=True,
+    models_dir=repo / "install/models-local",
 )
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None)
-else:
-    record = assembly.verify(selection.link)
-    if record["sources"]["target"] != {"repo": model_dir, "revision": None}:
-        raise models.ModelError("Prepared target does not match the local Coder390 directory")
-    if record["sources"]["draft"] != {"repo": draft_dir, "revision": None}:
-        raise models.ModelError("Prepared draft does not match the converted Coder390 draft")
-
-# Hold the verified assembly until the server exits, as the official launcher does.
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
 print(f"Coder390 Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 print(f"Draft: {draft_dir} (author's FP8 weights dequantized to BF16)", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root), "--tokenizer", str(root / "tokenizer"),
+    str(root),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,

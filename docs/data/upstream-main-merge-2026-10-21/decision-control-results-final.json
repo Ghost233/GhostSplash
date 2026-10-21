@@ -1,0 +1,36 @@
+[
+  {
+    "name": "d3-lite",
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-m",
+      "dev.tests.decision_control_real",
+      "--binary",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+      "--model-root",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-140-merge-20261021/decision-models/.resolved/e57a06718e8bc453ca9fbfa9e86d114aa2bf8fc2ad1758833db847951c4bacc7",
+      "--context",
+      "262144",
+      "--output",
+      "build/upstream-140-merge-20261021/d3-lite-control.json"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "d3-mini",
+    "command": [
+      "/Users/ghost233/Ghost233Code/GhostSplash/.venv/bin/python",
+      "-m",
+      "dev.tests.decision_control_real",
+      "--binary",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/splash",
+      "--model-root",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-140-merge-20261021/decision-models/.resolved/0bd8e191a8ef5c3491eb03bb33071c29b600b7476d4cbb985f884b67052708d3",
+      "--context",
+      "262144",
+      "--output",
+      "build/upstream-140-merge-20261021/d3-mini-control.json"
+    ],
+    "exit_code": 0
+  }
+]

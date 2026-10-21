@@ -1,0 +1,26 @@
+2026-10-21 15:15:38.167 gdn-decode[37887:10913007] Metal GPU Validation Enabled
+bf16 state vh48 lanes 1 plain: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 Table16 f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 plain: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 Table16 f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 1 plain: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 1 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 1 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 1 Table16 f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 4 plain: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 4 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 4 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh32 lanes 4 Table16 f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 plain: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 1 Table16 f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 plain: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 Table16: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 plain f32 norm: the fp32 decode's rows and its state rounded
+bf16 state vh48 lanes 4 Table16 f32 norm: the fp32 decode's rows and its state rounded
+gdn_decode_metal_test: PASS

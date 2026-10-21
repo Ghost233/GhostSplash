@@ -6,32 +6,41 @@ namespace splash::model {
 
 Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &backend, Qwen3_5_0_8BLayout layout,
                                           const QwenTargetFiles &files) {
-  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
+  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const BlockTargetFormat &format, uint32_t) {
     layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
     layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
     layer.downProjection = format.projection(file, layout.hiddenSize, layout.intermediateSize, "mlp-down");
   };
-  return loadQwenTarget<Qwen3_5_0_8BWeights>(backend, layout, files, readFfn);
+  return loadQwenTarget<Qwen3_5_0_8BWeights>(
+      backend, layout, files, [&](auto &loader, const BlockTargetFormat &format, const MoeExperts &) {
+        return readQwenTargetWeights<Qwen3_5_0_8BWeights>(layout, loader, format, readFfn);
+      });
 }
 
 Qwen3_5_4BWeights loadQwen3_5_4BWeights(metal::MetalBackend &backend, Qwen3_5_4BLayout layout,
                                       const QwenTargetFiles &files) {
-  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
+  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const BlockTargetFormat &format, uint32_t) {
     layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
     layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
     layer.downProjection = format.projection(file, layout.hiddenSize, layout.intermediateSize, "mlp-down");
   };
-  return loadQwenTarget<Qwen3_5_4BWeights>(backend, layout, files, readFfn);
+  return loadQwenTarget<Qwen3_5_4BWeights>(
+      backend, layout, files, [&](auto &loader, const BlockTargetFormat &format, const MoeExperts &) {
+        return readQwenTargetWeights<Qwen3_5_4BWeights>(layout, loader, format, readFfn);
+      });
 }
 
 Qwen3_5_4BDFlashWeights loadQwen3_5_4BDFlashWeights(metal::MetalBackend &backend,
     Qwen3_5_4BDFlashLayout layout, const QwenTargetFiles &files) {
-  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const auto &format) {
+  const auto readFfn = [&](WeightFile &file, Qwen3_8LayerWeights &layer, const BlockTargetFormat &format, uint32_t) {
     layer.gateProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-gate");
     layer.upProjection = format.projection(file, layout.intermediateSize, layout.hiddenSize, "mlp-up");
     layer.downProjection = format.projection(file, layout.hiddenSize, layout.intermediateSize, "mlp-down");
   };
-  return loadQwenTarget<Qwen3_5_4BDFlashWeights>(backend, layout, files, readFfn);
+  return loadQwenTarget<Qwen3_5_4BDFlashWeights>(
+      backend, layout, files, [&](auto &loader, const BlockTargetFormat &format, const MoeExperts &) {
+        return readQwenTargetWeights<Qwen3_5_4BDFlashWeights>(layout, loader, format, readFfn);
+      });
 }
 
 template <class Weights>

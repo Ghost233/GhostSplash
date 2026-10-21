@@ -37,25 +37,22 @@ draft_dir = repo / "install/models-local/drafts/qwen35-4b-dflash/source"
 if not (draft_dir / "model.safetensors").is_file():
     raise SystemExit(f"Pinned 4B DFlash checkpoint is missing: {draft_dir}")
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, upstream
+from install import paths
+from install.local import prepare_local_model
 
+paths.BINARY = Path(binary)
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((host, int(port)))
 
-selection = models.Selection.of(repo / "install/models-local", model_id, language_only=True, draft_model=str(draft_dir))
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None, draft=hub.Repository.local_directory(draft_dir))
-record = assembly.verify(selection.link)
-if record["sources"] != {"target": {"repo": model_dir, "revision": None}, "draft": {"repo": str(draft_dir), "revision": None}}:
-    raise models.ModelError("Prepared 4B/DFlash target does not match the pinned local sources")
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
+root = prepare_local_model(
+    Path(model_dir) / "Qwen3.5-4B-UD-Q4_K_XL.gguf", draft=draft_dir, language_only=True,
+    models_dir=repo / "install/models-local",
+)
 print(f"Qwen3.5-4B + DFlash: http://{host}:{port}/v1; model root: {root}", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server", str(root),
-    "--tokenizer", str(root / "tokenizer"), "--model", model_id,
+    "--model", model_id,
     "--binary", binary, "--host", host, "--port", str(port),
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--disable-ane", "--no-webui",

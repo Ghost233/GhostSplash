@@ -2,7 +2,7 @@
 #include "metal/abi/OptionalFeatures.h"
 #include "metal/abi/QuantFormat.h"
 
-// The source and destination use [tile][unit][256 rows][unit bytes].
+// The source and destination use [tile][unit][QUANT_TILE_ROWS rows][unit bytes].
 // Copy the codes and scale metadata byte-for-byte, including lookup formats.
 kernel void compact_gather_plane(device const uchar *source [[buffer(0)]],
                                  device uchar *destination [[buffer(1)]],

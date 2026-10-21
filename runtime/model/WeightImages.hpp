@@ -31,7 +31,8 @@ using ImageWriter = std::function<void(std::span<uint8_t> bytes, const metal::Me
 
 // An image of a model's weights as its loader plans it: the component it is
 // (such as target/layer-0.bin), the header its file starts with, its size and
-// its writer.
+// its writer, and the size its record declares when not that one
+// (gguf::Image::residentBytes: a layer whose routed experts stream).
 struct ImagePlan final {
   std::string component;
   std::string magic;
@@ -39,6 +40,7 @@ struct ImagePlan final {
   uint32_t type = 0;
   uint64_t bytes = 0;
   ImageWriter write;
+  uint64_t declaredBytes = 0;
 };
 
 // A model's weights in memory: each image in a buffer of its own, written
@@ -59,6 +61,8 @@ public:
   // A derived raw weight buffer, restored after the source images loaded
   // before it. Its writer may bind those images through their stable views.
   [[nodiscard]] metal::MetalBuffer loadAuxiliary(std::string component, uint64_t bytes, ImageWriter write);
+  // What every image's file records the sources hold.
+  [[nodiscard]] const std::string &contentIdentity() const noexcept { return contentIdentity_; }
   [[nodiscard]] bool released() const noexcept override { return released_; }
   void release() override;
   [[nodiscard]] bool restore(const metal::AllocationAdmission &admit) override;

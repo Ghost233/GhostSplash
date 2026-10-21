@@ -90,7 +90,7 @@ class AdapterTests(unittest.TestCase):
         result = adapter.stamp_variants(
             self.root, self.variant_root, self.standard, self.off
         )
-        self.assertEqual(result["stamped_block_sizes"], [2, 4, 8, 16])
+        self.assertEqual(result["stamped_block_sizes"], [8])
         return adapter.capabilities(
             self.root, self.variant_root, self.standard, self.off
         )
@@ -183,7 +183,7 @@ class AdapterTests(unittest.TestCase):
         with mock.patch.object(adapter.subprocess, "run") as native:
             caps = self.stamp()
             native.assert_not_called()
-        self.assertEqual(caps["supported_block_sizes"], [2, 4, 8, 16])
+        self.assertEqual(caps["supported_block_sizes"], [8])
         self.assertEqual(
             caps["identity"]["weight_sha256"]["target"],
             adapter.sha_file(self.root / "target.gguf"),
@@ -205,20 +205,31 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(caps["status"], "unsupported")
         self.assertEqual(caps["supported_block_sizes"], [])
         self.assertIsNone(caps["identity"])
-        self.assertEqual(len(caps["unsupported_variants"]), 4)
+        self.assertEqual(len(caps["unsupported_variants"]), 1)
 
-    def test_artifact_and_macro_drift_invalidate_capability(self):
+    def test_artifact_and_config_drift_invalidate_capability(self):
         self.stamp()
-        artifact = self.variant_root / "block-4/engine-tests/qwen4b-matrix-native"
+        artifact = self.variant_root / "block-8/engine-tests/qwen4b-matrix-native"
         artifact.write_bytes(b"changed artifact")
-        config = self.variant_root / "block-2/engine-tests/qwen4b-matrix-native.config"
-        config.write_text(adapter.expected_configuration(self.root, 8)["test"] + "\n")
         caps = adapter.capabilities(
             self.root, self.variant_root, self.standard, self.off
         )
-        self.assertEqual(caps["supported_block_sizes"], [8, 16])
-        self.assertIn("stale", caps["unsupported_variants"]["2"])
-        self.assertIn("stale", caps["unsupported_variants"]["4"])
+        self.assertEqual(caps["supported_block_sizes"], [])
+        self.assertIn("stale", caps["unsupported_variants"]["8"])
+
+    def test_historical_non_eight_variants_cannot_become_current_capabilities(self):
+        self.stamp()
+        for block in (2, 4, 16):
+            shutil.copytree(
+                self.variant_root / "block-8", self.variant_root / f"block-{block}"
+            )
+            with self.assertRaisesRegex(ValueError, "fixed at 8"):
+                adapter.expected_configuration(self.root, block)
+        caps = adapter.capabilities(
+            self.root, self.variant_root, self.standard, self.off
+        )
+        self.assertEqual(caps["supported_block_sizes"], [8])
+        self.assertEqual(caps["drafter_states"], ["off", 8])
 
     def test_stamping_cannot_pair_old_artifacts_with_new_override(self):
         source = self.root / "dev/benchmarks/qwen4b_matrix_attention.py"
@@ -244,15 +255,15 @@ class AdapterTests(unittest.TestCase):
         self.assertIn("build identity", result["unsupported_variants"]["8"])
 
     def test_stale_attention_snapshot_is_rejected(self):
-        path = self.variant_root / "block-16/engine-tests/matrix-PagedAttention.cpp"
+        path = self.variant_root / "block-8/engine-tests/matrix-PagedAttention.cpp"
         path.write_text(
             path.read_text().replace("matrixTailSplits()", "notTheMatrixTail()", 1)
         )
         result = adapter.stamp_variants(
             self.root, self.variant_root, self.standard, self.off
         )
-        self.assertNotIn(16, result["stamped_block_sizes"])
-        self.assertIn("attention source snapshot", result["unsupported_variants"]["16"])
+        self.assertNotIn(8, result["stamped_block_sizes"])
+        self.assertIn("attention source snapshot", result["unsupported_variants"]["8"])
 
     def test_weight_changes_require_restamping_and_real_hash_match(self):
         self.stamp()

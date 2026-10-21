@@ -117,7 +117,10 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
     try {
       metal::MetalBackend backend(metallib.string());
       backend.setOperationGuard([] { if (stopping) throw std::runtime_error("encoder shutdown requested"); });
-      const auto modelPath=model::findTargetGguf(std::filesystem::path(argv[2]) / "target");
+      const auto modelPaths=model::findTargetGgufs(std::filesystem::path(argv[2]) / "target");
+      if (modelPaths.size() != 1)
+        throw std::invalid_argument("decision models require a single GGUF target");
+      const auto &modelPath=modelPaths.front();
       auto owner=[&] {
         if constexpr(d3)return std::make_unique<Model>(backend,modelPath,context,maximum,q4h);
         else return std::make_unique<Model>(backend,modelPath,context,maximum);

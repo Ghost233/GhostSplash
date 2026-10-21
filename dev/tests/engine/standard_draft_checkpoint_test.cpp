@@ -25,7 +25,8 @@ int main(int argc, char **argv) {
     layout.kind = DraftKind::Standard;
     layout.layers = 6;
     layout.hiddenSize = 2560;
-    layout.targetHiddenSize = 20480;
+    layout.targetLayerCount = 8;
+    for (uint32_t index = 0; index < layout.targetLayerCount; ++index) layout.targetLayers[index] = 1 + 4 * index;
     layout.attentionSize = 4096;
     layout.qkvSize = 6144;
     layout.kvHeads = 8;
@@ -35,7 +36,6 @@ int main(int argc, char **argv) {
     layout.rotaryTheta = 10'000'000;
     if (tiny) {
       layout.hiddenSize = 256;
-      layout.targetHiddenSize = 2048;
       layout.attentionSize = 512;
       layout.qkvSize = 768;
       layout.kvHeads = 2;
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
       expected[p + "mlp.up_proj.weight"] = {ffn, hidden};
       expected[p + "mlp.down_proj.weight"] = {hidden, ffn};
     }
-    expected["fc.weight"] = {hidden, layout.targetHiddenSize};
+    expected["fc.weight"] = {hidden, layout.targetHiddenSize()};
     expected["hidden_norm.weight"] = {hidden};
     expected["norm.weight"] = {hidden};
     // Header-only planning checks the real release geometry without reading

@@ -4,6 +4,7 @@
 #include "WeightStore.hpp"
 #include "metal/abi/DraftAttention.h"
 #include "metal/abi/ExecutionGeometry.h"
+#include "metal/abi/PagedAttention.h"
 
 #import <Foundation/Foundation.h>
 
@@ -13,6 +14,7 @@
 #include <fnmatch.h>
 #include <initializer_list>
 #include <iterator>
+#include <optional>
 #include <regex>
 #include <span>
 #include <stdexcept>
@@ -162,18 +164,6 @@ void requireNumbers(NSDictionary *object, std::string_view source, std::string_v
                   std::string(where) + " " + field.key);
 }
 
-// The numbers of an array, in order.
-void requireNumbers(NSArray *values, std::span<const uint32_t> expected,
-                    std::string_view source, std::string_view label) {
-  if (values.count != expected.size())
-    throw std::invalid_argument(std::string(label) + " count mismatch: " + std::string(source) +
-                                " " + std::to_string(values.count) + ", runtime " +
-                                std::to_string(expected.size()));
-  for (size_t index = 0; index < expected.size(); ++index)
-    requireNumber(values[index], expected[index], source,
-                  std::string(label) + " " + std::to_string(index));
-}
-
 // The JSON booleans, never numbers, object holds at the keys.
 void requireBooleans(NSDictionary *object, std::string_view where,
                      std::initializer_list<std::pair<const char *, bool>> fields) {
@@ -205,25 +195,24 @@ void requireLayerTypes(NSArray *types, const QwenTargetDimensions &target,
   }
 }
 
+// Calls `use` with each family's layout, in TargetLayout's order.
+template <class Use> constexpr void forEachFamily(Use use) {
+  [&]<size_t... Family>(std::index_sequence<Family...>) {
+    (use(std::variant_alternative_t<Family, TargetLayout>{}), ...);
+  }(std::make_index_sequence<std::variant_size_v<TargetLayout>>{});
+}
+
 // Each family's native window, which its config's max_position_embeddings
-// states, fits the runtime's KV ceiling.
-static_assert(Qwen3_8Layout{}.maximumContextTokens <= kv::kMaximumLogicalTokens &&
-                  Qwen3_6MoeLayout{}.maximumContextTokens <= kv::kMaximumLogicalTokens,
-              "a family's native window exceeds the runtime's KV ceiling");
-
-ModelDescriptor qwen38Descriptor(std::string name, TargetSource targetSource,
-                                 VisionSource visionSource) {
-  return makeModelDescriptor(std::move(name), Qwen3_8Layout{},
-                             kQwen3_8DraftLayout, kQwen3_8VisionLayout,
-                             targetSource, visionSource);
+// states, and the window YaRN stretches it to fit the runtime's KV ceiling.
+template <class Layout> constexpr bool fitsKvCeiling(const Layout &layout) {
+  return layout.nativeContextTokens <= kv::kMaximumLogicalTokens &&
+         layout.yarnContextTokens <= kv::kMaximumLogicalTokens;
 }
-
-ModelDescriptor qwen36Descriptor(std::string name, TargetSource targetSource,
-                                 VisionSource visionSource) {
-  return makeModelDescriptor(std::move(name), Qwen3_6MoeLayout{},
-                             kQwen3_6MoeDraftLayout, kQwen3_6MoeVisionLayout,
-                             targetSource, visionSource);
-}
+static_assert([] {
+  bool fits = true;
+  forEachFamily([&](const auto &layout) { fits = fits && fitsKvCeiling(layout); });
+  return fits;
+}(), "a family's window exceeds the runtime's KV ceiling");
 
 // The name errors give an upstream target's source: its format, safetensors
 // for MLX, Model Optimizer and compressed-tensors checkpoints alike.
@@ -234,9 +223,13 @@ std::string_view sourceName(TargetSource source) {
 // The refusal of a model of none of the families Splash serves: what tells it
 // from the family its config's model type names, or that it names none.
 std::invalid_argument unsupportedModel(const std::string &difference) {
+  std::string supported;
+  forEachFamily([&](const auto &layout) {
+    if (supported.find(layout.family) == std::string::npos)
+      supported += (supported.empty() ? "" : ", ") + std::string(layout.family);
+  });
   return std::invalid_argument("no supported model has this architecture (" + difference + "); supported: " +
-                               std::string(Qwen3_8Layout::family) + ", " + std::string(Qwen3_6MoeLayout::family) +
-                               ", " + std::string(Qwen3_5_4BLayout::family));
+                               supported);
 }
 
 // The target's text configuration, of the family its model type names. Every
@@ -252,7 +245,7 @@ void validateTextConfig(NSDictionary *text, const QwenTargetDimensions &target, 
            {"hidden_size", target.hiddenSize},
            {"num_hidden_layers", target.layers},
            {"vocab_size", target.vocabularySize},
-           {"max_position_embeddings", target.maximumContextTokens},
+           {"max_position_embeddings", target.nativeContextTokens},
            {"num_attention_heads", target.attentionQueryHeads},
            {"num_key_value_heads", target.attentionKvHeads},
            {"head_dim", target.attentionHeadDimension}}) {
@@ -543,15 +536,13 @@ void requireQuantization(NSDictionary *config, const QwenTargetDimensions &geome
       "nvfp4), an NVFP4 or FP8 checkpoint of Model Optimizer or compressed-tensors, or a supported GGUF");
 }
 
-// A DFlash2 checkpoint's config: the draft's layout; the block, window,
-// convolutions and selector the draft kernels are built for; and the target's
-// mask token and the layers the draft reads.
-void validateDraftConfig(NSDictionary *draft, const DFlashDraftLayout &layout,
-                         uint32_t maskToken,
-                         std::span<const uint32_t> captureLayers) {
-  if (!layout.supportsExecutionBlock())
-    throw std::invalid_argument("DFlash2 requires an eight-row draft build");
-  if (layout.kind == DraftKind::Standard) {
+// A DFlash2 checkpoint's config: the draft's layout. Its attention widths,
+// block, window, convolutions and selector must be those the draft kernels
+// are built for; its hidden size, vocabulary and mask token the target's;
+// and the target layers it reads (target_layer_ids) some of the target's,
+// ascending. Its layers, intermediate size and rotary base are its own.
+DFlashDraftLayout readStandardDraftLayout(NSDictionary *draft, const QwenTargetDimensions &target) {
+  const DFlashDraftLayout layout = kQwen3_5_4BDFlashDraftLayout;
     NSArray *architectures = requireArray(draft, @"architectures", "draft architectures");
     if (architectures.count != 1 || ![architectures[0] isEqual:@"DFlashDraftModel"])
       throw std::invalid_argument("draft is not a standard DFlash model");
@@ -585,25 +576,33 @@ void validateDraftConfig(NSDictionary *draft, const DFlashDraftLayout &layout,
         throw std::invalid_argument(label + " final_logit_softcapping must be absent or null");
     }
     // The trained checkpoint records 16; serving uses the supported 8-row block.
-    requireNumbers(flash, "checkpoint", "standard dflash_config", {{"block_size", 16}, {"mask_token_id", maskToken}});
-    requireNumbers(requireArray(flash, @"target_layer_ids", "standard target_layer_ids"), captureLayers,
-                   "checkpoint", "standard target_layer_ids");
-    return;
-  }
+    requireNumbers(flash, "checkpoint", "standard dflash_config", {{"block_size", 16}, {"mask_token_id", target.maskToken}});
+    NSArray *ids = requireArray(flash, @"target_layer_ids", "standard target_layer_ids");
+    if (ids.count != layout.targetLayerCount)
+      throw std::invalid_argument("checkpoint standard target_layer_ids has the wrong size");
+    for (uint32_t index = 0; index < layout.targetLayerCount; ++index)
+      if (requireWhole(ids[index], "standard target_layer_ids") != layout.targetLayers[index])
+        throw std::invalid_argument("checkpoint standard target_layer_ids " + std::to_string(index) + " mismatch");
+  if (target.hiddenSize != layout.hiddenSize || target.vocabularySize != layout.vocabularySize || target.layers != 32)
+    throw std::invalid_argument("standard DFlash requires Qwen3.5-4B");
+  return layout;
+}
+
+DFlashDraftLayout readDraftLayout(NSDictionary *draft, const QwenTargetDimensions &target) {
+  NSArray *kinds = requireArray(draft, @"architectures", "draft architectures");
+  if (kinds.count == 1 && [kinds[0] isEqual:@"DFlashDraftModel"])
+    return readStandardDraftLayout(draft, target);
   NSArray *architectures =
       requireArray(draft, @"architectures", "draft architectures");
   if (architectures.count != 1 ||
       ![architectures[0] isEqual:@"DFlash2DraftModel"])
     throw std::invalid_argument("draft is not a DFlash2 model");
   requireNumbers(draft, "checkpoint", "draft config",
-                 {{"num_hidden_layers", layout.layers},
-                  {"hidden_size", layout.hiddenSize},
-                  {"vocab_size", layout.vocabularySize},
-                  {"intermediate_size", layout.intermediateSize},
-                  {"num_attention_heads",
-                   layout.attentionSize / layout.attentionHeadDimension},
-                  {"num_key_value_heads", layout.kvHeads},
-                  {"head_dim", layout.attentionHeadDimension},
+                 {{"hidden_size", target.hiddenSize},
+                  {"vocab_size", target.vocabularySize},
+                  {"num_attention_heads", SPLASH_DRAFT_QUERY_HEADS},
+                  {"num_key_value_heads", SPLASH_DRAFT_KV_HEADS},
+                  {"head_dim", SPLASH_DRAFT_HEAD_DIMENSION},
                   {"sliding_window", ExecutionLimits::draftContextTokens},
                   {"rms_norm_eps", SPLASH_RMS_EPSILON}});
   requireBooleans(draft, "draft config",
@@ -617,20 +616,39 @@ void validateDraftConfig(NSDictionary *draft, const DFlashDraftLayout &layout,
   requireEqual(requireString(rope, @"rope_type",
                              "draft config rope_parameters rope_type"),
                "default", "checkpoint", "draft config rope_parameters rope_type");
-  requireNumbers(rope, "checkpoint", "draft config rope_parameters",
-                 {{"rope_theta", layout.rotaryTheta}});
   NSDictionary *flash =
       requireObject(draft, @"dflash_config", "draft config dflash_config");
   requireNumbers(flash, "checkpoint", "draft config dflash_config",
                  {{"block_size", ExecutionLimits::draftQueryRows},
                   {"conv_group_size", SPLASH_DRAFT_CONVOLUTION_GROUP},
                   {"conv_kernel_size", SPLASH_DRAFT_CONVOLUTION_TAPS},
-                  {"selector_rank", layout.selectorRank},
+                  {"selector_rank", SPLASH_DRAFT_SELECTOR_RANK},
                   {"selector_top_k", SPLASH_DRAFT_CANDIDATES},
-                  {"mask_token_id", maskToken}});
-  requireNumbers(requireArray(flash, @"target_layer_ids",
-                              "draft config target_layer_ids"),
-                 captureLayers, "checkpoint", "draft config target_layer_ids");
+                  {"mask_token_id", target.maskToken}});
+  // How a target layer's output row becomes the hidden values the draft reads
+  // of it, as the draft was trained (target_hidden_reduction): a
+  // hyper-connected target's streams by their mean (Qwen4ExpTarget's
+  // capture), another's row as it is. A config without it states its
+  // target's.
+  const std::string_view reduction = target.hyperConnected() ? "stream_mean" : "none";
+  if (flash[@"target_hidden_reduction"])
+    requireEqual(requireString(flash, @"target_hidden_reduction", "draft config target_hidden_reduction"),
+                 reduction, "checkpoint", "draft config dflash_config target_hidden_reduction");
+  NSArray *ids = requireArray(flash, @"target_layer_ids", "draft config target_layer_ids");
+  std::vector<uint32_t> targetLayers;
+  for (id value : ids) {
+    targetLayers.push_back(
+        requireWhole(value, "draft config target_layer_ids " + std::to_string(targetLayers.size())));
+    if (targetLayers.back() >= target.layers)
+      throw std::invalid_argument("draft config target_layer_ids names a layer past the target's");
+  }
+  const DFlashDraftLayout layout =
+      draftLayout(target.hiddenSize, target.vocabularySize,
+                  requireWhole(draft[@"num_hidden_layers"], "draft config num_hidden_layers"),
+                  requireWhole(draft[@"intermediate_size"], "draft config intermediate_size"),
+                  requireNumber(rope[@"rope_theta"], "draft config rope_parameters rope_theta").floatValue,
+                  targetLayers);
+  return layout;
 }
 
 // The vision tower's config, config.json's vision_config, which the
@@ -657,16 +675,24 @@ void validateVisionConfig(NSDictionary *vision, const ops::VisionLayout &layout,
 
 // The descriptor, named name, of an upstream model of the family its text
 // config's model type names, from the source formats its record names, with
-// each config checked: the target's, as those formats require, and the
-// draft's unless draft is nil.
+// each config checked: the target's, as those formats require, its vision
+// tower's, and its DFlash2 draft's, whose layout it reads (readDraftLayout),
+// unless draft is nil.
 ModelDescriptor describeSourceModel(std::string name, std::string_view targetFormat,
                                     std::string_view visionFormat, NSDictionary *config,
                                     NSDictionary *draft) {
   NSDictionary *text = config[@"text_config"];
   if (![text isKindOfClass:[NSDictionary class]]) throw unsupportedModel("its config has no text_config");
   const auto type = requireString(text, @"model_type", "text model type");
-  const bool moe = type == "qwen3_5_moe_text";
-  if (!moe && type != "qwen3_5_text") throw unsupportedModel("text model type " + type);
+  std::optional<TargetLayout> target;
+  forEachFamily([&](const auto &layout) {
+    using Layout = std::remove_cvref_t<decltype(layout)>;
+    if constexpr (!std::is_same_v<Layout, Qwen3_5_4BLayout> &&
+                  !std::is_same_v<Layout, Qwen3_5_4BDFlashLayout> &&
+                  !std::is_same_v<Layout, Qwen3_5_0_8BLayout>)
+      if (layout.modelType == type) target = layout;
+  });
+  if (!target) throw unsupportedModel("text model type " + type);
   TargetSource targetSource;
   // "mlx-affine" names every safetensors target, as installations record it.
   if (targetFormat == "mlx-affine") targetSource = TargetSource::Safetensors;
@@ -677,24 +703,18 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   else if (visionFormat == "safetensors") visionSource = VisionSource::Safetensors;
   else if (visionFormat == "gguf") visionSource = VisionSource::Gguf;
   else throw std::invalid_argument("unsupported vision source format: " + std::string(visionFormat));
-  ModelDescriptor result = moe ? qwen36Descriptor(std::move(name), targetSource, visionSource)
-                               : qwen38Descriptor(std::move(name), targetSource, visionSource);
-  const bool smallDense = !moe && targetSource == TargetSource::Gguf &&
+  const bool smallDense = type == Qwen3_5_4BLayout::modelType && targetSource == TargetSource::Gguf &&
       [text[@"hidden_size"] doubleValue] == 2560 && [text[@"num_hidden_layers"] doubleValue] == 32;
+  const bool kev08 = type == Qwen3_5_0_8BLayout::modelType && targetSource == TargetSource::Gguf &&
+      config[@"decision_config"] && [text[@"hidden_size"] doubleValue] == 1024 &&
+      [text[@"num_hidden_layers"] doubleValue] == 24;
   if (smallDense) {
     if (visionSource != VisionSource::None)
       throw std::invalid_argument("Qwen3.5-4B currently requires a text-only target");
-    if (draft)
-      result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BDFlashLayout{},
-                                   kQwen3_5_4BDFlashDraftLayout, {}, targetSource, visionSource);
-    else
-      result = makeModelDescriptor(std::move(result.name), Qwen3_5_4BLayout{}, {}, {},
-                                   targetSource, visionSource);
+    if (draft) target = Qwen3_5_4BDFlashLayout{};
+    else target = Qwen3_5_4BLayout{};
   }
-  const bool kev08 = !moe && targetSource == TargetSource::Gguf && config[@"decision_config"] &&
-      [text[@"hidden_size"] doubleValue] == 1024 && [text[@"num_hidden_layers"] doubleValue] == 24;
-  if (kev08)
-    result = makeModelDescriptor(std::move(result.name), Qwen3_5_0_8BLayout{}, {}, {}, targetSource, visionSource);
+  if (kev08) target = Qwen3_5_0_8BLayout{};
   if (config[@"decision_config"]) {
     NSDictionary *decision = requireObject(config, @"decision_config", "decision config");
     if ((!smallDense && !kev08) || draft || visionSource != VisionSource::None ||
@@ -707,16 +727,20 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
         throw std::invalid_argument("Kev decision temperatures must be positive");
     if (requireString(decision, @"chat_template", "Kev systemone template").empty())
       throw std::invalid_argument("Kev systemone template is empty");
-    if (smallDense) std::get<Qwen3_5_4BLayout>(result.target).decisionHeadSize = 512;
+    if (smallDense) std::get<Qwen3_5_4BLayout>(*target).decisionHeadSize = 512;
   }
+  DFlashDraftLayout dflashLayout;
   std::visit([&](const auto &layout) {
-    validateTextConfig(text, layout, layout.family, result.targetSource);
-    if constexpr (!std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_0_8BLayout> &&
-                  !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BLayout> &&
-                  !std::is_same_v<std::remove_cvref_t<decltype(layout)>, Qwen3_5_4BDFlashLayout>)
-      if (result.targetSource == TargetSource::Safetensors) requireQuantization(config, layout);
-    if (draft) validateDraftConfig(draft, result.draft, layout.maskToken, layout.hiddenCaptureLayers);
-  }, result.target);
+    if (targetSource == TargetSource::Safetensors && !layout.loadsSafetensors)
+      throw std::invalid_argument(std::string(layout.family) + " loads from a GGUF only");
+    validateTextConfig(text, layout, layout.family, targetSource);
+    if (targetSource == TargetSource::Safetensors) requireQuantization(config, layout);
+    if (draft) dflashLayout = readDraftLayout(draft, layout);
+  }, *target);
+  ModelDescriptor result = makeModelDescriptor(std::move(name), *target, dflashLayout,
+                                               {.outputHiddenSize = std::visit(
+                                                    [](const auto &layout) { return layout.hiddenSize; }, *target)},
+                                               targetSource, visionSource);
   if (result.hasVision())
     validateVisionConfig(requireObject(config, @"vision_config", "vision config"), result.vision,
                          result.targetSource);
@@ -753,6 +777,20 @@ GgufMetadata readGgufMetadata(const std::filesystem::path &path) {
   return metadata;
 }
 
+// The attention of a target whose full-attention layers select blocks (a
+// block indexer): a verify row attends its top blocks, and a row whose
+// history holds no more than those attends it all, through its page table.
+// None for a target whose rows attend every token.
+std::optional<SparseKvShape> sparseKvShape(const QwenTargetDimensions &layout) {
+  if (!layout.hasIndexer()) return std::nullopt;
+  return SparseKvShape{.blockTokens = layout.indexerBlockTokens,
+                       .selectedBlocks = layout.indexerTopBlocks,
+                       .verifyRows = ExecutionLimits::targetVerifyRows,
+                       .denseHistoryTokens = layout.indexerTokens(),
+                       .sinkTokens = 0,
+                       .localTokens = 0};
+}
+
 } // namespace
 
 ModelDescriptor makeModelDescriptor(std::string name, TargetLayout target,
@@ -770,7 +808,7 @@ ModelDescriptor makeModelDescriptor(std::string name, TargetLayout target,
   std::visit(
       [&](const auto &layout) {
         result.capabilities = {layout.vocabularySize,
-                               layout.maximumContextTokens};
+                               layout.nativeContextTokens, sparseKvShape(layout)};
         result.targetKvLayout = layout.kvLayout();
         result.stateLayout = {layout.gdnStateLayout(), draft.stateLayout()};
       },
@@ -784,22 +822,50 @@ bool ModelDescriptor::valid() const noexcept {
       !capabilities.maximumContextTokens ||
       !targetKvLayout.valid() || !stateLayout.valid() ||
       stateLayout.draft != draft.stateLayout() ||
-      (hasVision() && hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
-      (!hasDraft() && ((!std::holds_alternative<Qwen3_5_4BLayout>(target) && !std::holds_alternative<Qwen3_5_0_8BLayout>(target)) ||
+      (hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
+      (!hasDraft() && ((!std::holds_alternative<Qwen3_5_4BLayout>(target) &&
+                       !std::holds_alternative<Qwen3_5_0_8BLayout>(target)) ||
                       draft != DFlashDraftLayout{} || hasVision()))) {
     return false;
   }
   return std::visit(
       [&](const auto &layout) {
         return layout.vocabularySize == capabilities.vocabularySize &&
-               layout.maximumContextTokens ==
+               layout.servedContextTokens(ropeScaling) ==
                    capabilities.maximumContextTokens &&
-               (!hasDraft() || layout.hiddenSize == draft.hiddenSize) &&
-               layout.capturedHiddenSize() == draft.targetHiddenSize &&
+               // YaRN stretches the native window, at most to the family's
+               // YaRN window.
+               (!ropeScaling.yarn() ||
+                (ropeScaling.originalContextTokens == layout.nativeContextTokens &&
+                 capabilities.maximumContextTokens <= layout.yarnContextTokens)) &&
+               capabilities.sparseKv == sparseKvShape(layout) &&
+               (!capabilities.sparseKv || capabilities.sparseKv->blockTokens == SPLASH_ATTENTION_BLOCK_TOKENS) &&
+               (!hasDraft() || (layout.hiddenSize == draft.hiddenSize &&
+                draft.targetLayerCount && draft.targetLayerCount <= ExecutionLimits::maximumDraftTargetLayers &&
+                draft.targetLayers[draft.targetLayerCount - 1] < layout.layers)) &&
                layout.kvLayout() == targetKvLayout &&
                layout.gdnStateLayout() == stateLayout.target;
       },
       target);
+}
+
+ModelDescriptor servedFor(ModelDescriptor model, uint32_t contextTokens) {
+  if (model.ropeScaling.yarn())
+    throw std::invalid_argument("the target's RoPE is already scaled");
+  std::visit(
+      [&](const auto &layout) {
+        if (contextTokens <= layout.nativeContextTokens)
+          return;
+        if (contextTokens > layout.yarnContextTokens)
+          throw std::invalid_argument(
+              std::string(layout.family) + " serves at most " +
+              std::to_string(std::max(layout.nativeContextTokens, layout.yarnContextTokens)) + " tokens of context");
+        model.ropeScaling = {.factor = static_cast<double>(contextTokens) / layout.nativeContextTokens,
+                             .originalContextTokens = layout.nativeContextTokens};
+        model.capabilities.maximumContextTokens = layout.servedContextTokens(model.ropeScaling);
+      },
+      model.target);
+  return model;
 }
 
 ModelDescriptor inspectModelRoot(const std::filesystem::path &root) {
@@ -814,8 +880,6 @@ ModelDescriptor inspectModelRoot(const std::filesystem::path &root) {
     NSDictionary *draft = record[@"sources"][@"draft"] == [NSNull null]
         ? nil : readObject(root / "draft" / "config.json", "draft config");
     ModelDescriptor result = describeSourceModel(std::move(name), targetFormat, visionFormat, config, draft);
-    if (!draft && result.hasDraft())
-      throw std::invalid_argument("this model requires its matching draft");
     result.sourceIdentity = std::move(sourceIdentity);
     if (!result.valid()) throw std::invalid_argument("incompatible target and draft model");
     return result;
@@ -848,7 +912,7 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
           throw std::invalid_argument("invalid or repeated D3 answer code");
       }
       const auto metadata = readGgufMetadata(*ggufMetadata);
-      gguf::requireMetadata(metadata, geometry);
+      gguf::requireMetadata(metadata, "qwen35", geometry);
       return geometry.hiddenSize == 1024 ? "D3-lite" : "D3-mini";
     }
     if ([text[@"model_type"] isEqual:@"modernbert_text"]) {
@@ -877,7 +941,8 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
     if (descriptor.targetSource == TargetSource::Gguf) {
       if (!ggufMetadata) throw std::invalid_argument("a GGUF target is checked with its metadata");
       const GgufMetadata metadata = readGgufMetadata(*ggufMetadata);
-      std::visit([&](const auto &layout) { gguf::requireMetadata(metadata, layout); }, descriptor.target);
+      std::visit([&](const auto &layout) { gguf::requireMetadata(metadata, layout.ggufArchitecture, layout); },
+                 descriptor.target);
     }
     return descriptor.family();
   }

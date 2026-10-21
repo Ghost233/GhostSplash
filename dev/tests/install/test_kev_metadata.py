@@ -61,9 +61,9 @@ class KevMetadataTests(unittest.TestCase):
         self.assertIn("cls.output.bias", required)
         self.assertNotIn("output.weight", required)
         header.tensors = {
-            name: 0 if types == {"F32"} else 12 for name, types in required.items()
+            name: 0 if "F32" in types else 12 for name, types in required.items()
         }
-        header.shapes = {"cls.output.weight": (2560, 512), "cls.output.bias": (512,)}
+        header.extents = {"cls.output.weight": (2560, 512), "cls.output.bias": (512,)}
         gguf.require_loadable(header)
         for name in ("cls.output.weight", "cls.output.bias"):
             bad = copy.copy(header)
@@ -73,7 +73,7 @@ class KevMetadataTests(unittest.TestCase):
                 gguf.require_loadable(bad)
         for shape in ((512, 2560), (2560, 256)):
             bad = copy.copy(header)
-            bad.shapes = dict(header.shapes, **{"cls.output.weight": shape})
+            bad.extents = dict(header.extents, **{"cls.output.weight": shape})
             with self.assertRaisesRegex(gguf.ModelError, "shape"):
                 gguf.require_loadable(bad)
 
@@ -87,11 +87,11 @@ class KevMetadataTests(unittest.TestCase):
         header = self.metadata(values)
         required = gguf.loaded_tensors(header)
         header.tensors = {
-            name: 0 if types == {"F32"} else 8 for name, types in required.items()
+            name: 0 if "F32" in types else 8 for name, types in required.items()
         }
-        header.shapes = {"cls.output.weight": (1024, 512), "cls.output.bias": (512,)}
+        header.extents = {"cls.output.weight": (1024, 512), "cls.output.bias": (512,)}
         gguf.require_loadable(header)
-        header.shapes["cls.output.weight"] = (2560, 512)
+        header.extents["cls.output.weight"] = (2560, 512)
         with self.assertRaisesRegex(gguf.ModelError, "shape"):
             gguf.require_loadable(header)
 

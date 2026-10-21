@@ -1,0 +1,326 @@
+[
+  {
+    "file": "python-final.log",
+    "source": "build/upstream-140-merge-20261021/python-final.log",
+    "bytes": 57328,
+    "sha256": "fe3e19031a7055c1b4a4027da08d4ac594673ba43b2619fa116f9120eac65088"
+  },
+  {
+    "file": "native-cpu-build-final.log",
+    "source": "build/upstream-140-merge-20261021/native-cpu-build-final.log",
+    "bytes": 26874,
+    "sha256": "206a38c32e6179f74c8aa031d3f3223d046c6d746d2f861b9345dfc87e27dcd7"
+  },
+  {
+    "file": "native-build-sanitizers-final-attempt-2.log",
+    "source": "build/upstream-140-merge-20261021/native-build-sanitizers-final-attempt-2.log",
+    "bytes": 13390,
+    "sha256": "121747169f3bb15e483cc8decd285078356c13db476036b297357815a4738cb1"
+  },
+  {
+    "file": "build-identity-final.log",
+    "source": "build/upstream-140-merge-20261021/build-identity-final.log",
+    "bytes": 742,
+    "sha256": "7e79b808c40faad023813157542a50678c4b6a5b3979772819825cf4a8792d5c"
+  },
+  {
+    "file": "ruff-final.log",
+    "source": "build/upstream-140-merge-20261021/ruff-final.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "file": "ruff-format-final.log",
+    "source": "build/upstream-140-merge-20261021/ruff-format-final.log",
+    "bytes": 28,
+    "sha256": "c0f9c747ad491bb65b3a843ef99f08d2d00c7aee3b8ca1e196a8644a0297f026"
+  },
+  {
+    "file": "compileall-final.log",
+    "source": "build/upstream-140-merge-20261021/compileall-final.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "real-operators-results.json",
+    "source": "build/upstream-140-merge-20261021/real-operators-results.json",
+    "bytes": 1006,
+    "sha256": "af6da08e940f82ed14e5b999d7825dde3b6e796c1b1b1a0778f407a2a63fb110"
+  },
+  {
+    "file": "real-operators.log",
+    "source": "build/upstream-140-merge-20261021/real-operators.log",
+    "bytes": 143,
+    "sha256": "0c595cc32b2314a42ddfd2c90f40a2a52ab19890d77c2130ac4ad0b82a284fa8"
+  },
+  {
+    "file": "d3-lite-head.stdout",
+    "source": "build/upstream-140-merge-20261021/d3-lite-head.stdout",
+    "bytes": 65,
+    "sha256": "9091d02b7bb6f8b7e526d366807e56b6158a062ae3d236c12401c276712a6953"
+  },
+  {
+    "file": "d3-mini-head.stdout",
+    "source": "build/upstream-140-merge-20261021/d3-mini-head.stdout",
+    "bytes": 66,
+    "sha256": "159391971cfc503392cd19797cd0b3e97c75dd0bedeaa04188298b699dcc9303"
+  },
+  {
+    "file": "qwen4b-ffn-baseline.stdout",
+    "source": "build/upstream-140-merge-20261021/qwen4b-ffn-baseline.stdout",
+    "bytes": 191576,
+    "sha256": "20b94628bfdab8792d92c368284dc241d9431445b8473b01b4c6885a4c050a03"
+  },
+  {
+    "file": "decision-control-results-final.json",
+    "source": "build/upstream-140-merge-20261021/decision-control-results-final.json",
+    "bytes": 1181,
+    "sha256": "832287ae4b7f91b8c3baa9ea543a87787047d1f8c73e4cec4709daf0d325b245"
+  },
+  {
+    "file": "d3-lite-control.json",
+    "source": "build/upstream-140-merge-20261021/d3-lite-control.json",
+    "bytes": 2875,
+    "sha256": "bb807a30a1f81229cef626897a3287921d1889434e95f79a56146138a7235fe0"
+  },
+  {
+    "file": "d3-mini-control.json",
+    "source": "build/upstream-140-merge-20261021/d3-mini-control.json",
+    "bytes": 2880,
+    "sha256": "2d5d9d066a1f8cbfba51d854fca9c3023d9556211a2a7a98f7d30dc624aa165b"
+  },
+  {
+    "file": "compact-targeted-2.log",
+    "source": "build/upstream-140-merge-20261021/compact-targeted-2.log",
+    "bytes": 831,
+    "sha256": "a0c9551177e7b4fbc7e71a81169c5c7e67d016e6f5b3e415fab688416f96e19d"
+  },
+  {
+    "file": "standard-preparation-targeted.log",
+    "source": "build/upstream-140-merge-20261021/standard-preparation-targeted.log",
+    "bytes": 44,
+    "sha256": "3dfbaf32dcd27d7a3a0df9713fe4530c7d9a1cf28cea1fa9810bd5746b46abaa"
+  },
+  {
+    "file": "gguf-reference-targeted.log",
+    "source": "build/upstream-140-merge-20261021/gguf-reference-targeted.log",
+    "bytes": 4461,
+    "sha256": "23024fc8f31c6f775209ec55d803b991e3af839bd9c8824ad7b5ad7b30c7d5a4"
+  },
+  {
+    "file": "real-correctness.json",
+    "source": "build/upstream-140-merge-20261021/real-attempt-2/real-correctness.json",
+    "bytes": 9496,
+    "sha256": "a3cebbb250da55ca3fa46192bc04ddebb5fc7560f74688753b11b476bbd637f2"
+  },
+  {
+    "file": "launcher-syntax-final.log",
+    "source": "build/upstream-140-merge-20261021/launcher-syntax-final.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "file": "native-metal-final.log",
+    "source": "build/upstream-140-merge-20261021/native-metal-final.log",
+    "bytes": 275102,
+    "sha256": "c35622fa05087fed8f42412894d2665ed7c39fc869a9fbc90fe873eed37a4719"
+  },
+  {
+    "file": "native-metal-final.exit",
+    "source": "build/upstream-140-merge-20261021/native-metal-final.exit",
+    "bytes": 2,
+    "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+  },
+  {
+    "file": "metal-remaining-results.json",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-results.json",
+    "bytes": 4971,
+    "sha256": "dd3472ecacc104e757d67acf2785487d9aaf24e3f0c2869c8e53b448ac0b0cf2"
+  },
+  {
+    "file": "metal-remaining.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining.log",
+    "bytes": 2540,
+    "sha256": "5378f48d289e5e91a1e9cdd80ffc02c5f02bdc07e44e47a5997d299a359447a3"
+  },
+  {
+    "file": "metal-tail-results.json",
+    "source": "build/upstream-140-merge-20261021/metal-tail-results.json",
+    "bytes": 877,
+    "sha256": "c992b079ad220646ae65b7e45eb152aaa6a149af12d4598b62c022f30e8bd205"
+  },
+  {
+    "file": "metal-tail.log",
+    "source": "build/upstream-140-merge-20261021/metal-tail.log",
+    "bytes": 400,
+    "sha256": "5bcc3d3130387dca5239a9b0e4abdf59975bf5f35ca88b3568a9293714dc9638"
+  },
+  {
+    "file": "paged-plan-int8-targeted.log",
+    "source": "build/upstream-140-merge-20261021/paged-plan-int8-targeted.log",
+    "bytes": 9449,
+    "sha256": "b8b610dc3b546ce378d3da0cfa05dc979364eba840bdf84959ef0ae8a65c488d"
+  },
+  {
+    "file": "sampling-fast-targeted.log",
+    "source": "build/upstream-140-merge-20261021/sampling-fast-targeted.log",
+    "bytes": 118,
+    "sha256": "29e969dacb4b12e4bcc51cdc9ffd73c303644cc946d707ff31faca6b1c844a52"
+  },
+  {
+    "file": "metal-remaining-01-paged-attention-plan.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-01-paged-attention-plan.log",
+    "bytes": 9449,
+    "sha256": "aed25d530249f6f0070ddad9df62856ad01f6e69eff09d56747668e3ad87cfca"
+  },
+  {
+    "file": "metal-remaining-02-paged-attention-plan.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-02-paged-attention-plan.log",
+    "bytes": 7882,
+    "sha256": "f3aa39e9472c53359de45879fc746860e82a8129fe5793073c4be7a26800cdbc"
+  },
+  {
+    "file": "metal-remaining-03-paged-attention-plan.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-03-paged-attention-plan.log",
+    "bytes": 8002,
+    "sha256": "4896ea270c3db76218ba615ccdbd2fe6ae8c126336854dad78faffa63a6cb9e2"
+  },
+  {
+    "file": "metal-remaining-04-paged-attention-plan.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-04-paged-attention-plan.log",
+    "bytes": 9202,
+    "sha256": "11dc7df36295649693f7d94d1522add42e014aa02a8af0cc12fc74912656fcbe"
+  },
+  {
+    "file": "metal-remaining-05-linear-plan.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-05-linear-plan.log",
+    "bytes": 100,
+    "sha256": "12af0a27f4213a195bec42fed895ff327034f6851b1c628251223abdc93dbe62"
+  },
+  {
+    "file": "metal-remaining-06-runtime-resources.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-06-runtime-resources.log",
+    "bytes": 1585,
+    "sha256": "1e5afdb4004c8613e4ca10c63fc33c46920acdc7ea6f9ac5979e610cba317a5e"
+  },
+  {
+    "file": "metal-remaining-07-kv-page-tier.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-07-kv-page-tier.log",
+    "bytes": 1700,
+    "sha256": "7acf0427ccd67298d5b82bc1634674d1629e8ea675bd19dbb96c7b502a6d3fbc"
+  },
+  {
+    "file": "metal-remaining-08-model-loading.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-08-model-loading.log",
+    "bytes": 206,
+    "sha256": "e924e2b3ee9bd07a524047c86513193579acb4954f3241faf986f9e39a38dcdb"
+  },
+  {
+    "file": "metal-remaining-09-qwen-state-storage.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-09-qwen-state-storage.log",
+    "bytes": 279,
+    "sha256": "9cda9a795df3d180d99e575dd19ebd6f7b4637a4b295a2f6246fc32d6bc9bebb"
+  },
+  {
+    "file": "metal-remaining-10-q8-paged-kv-metal.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-10-q8-paged-kv-metal.log",
+    "bytes": 114,
+    "sha256": "bfc7fd1a80b30f757ad60ee4a3f1e7b2c13d0d1f927342e7635906ae4a463be5"
+  },
+  {
+    "file": "metal-remaining-11-q8-page-storage.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-11-q8-page-storage.log",
+    "bytes": 114,
+    "sha256": "b4d17a27c017abe8090baeeeb0be7ee82ac00d85e40c515fe4d78b8eb0842fc0"
+  },
+  {
+    "file": "metal-remaining-12-q8-flash-attention.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-12-q8-flash-attention.log",
+    "bytes": 42521,
+    "sha256": "1404a1fdff9eb511dca0390be5fce36e401a4fd2d4dddf05f2dbbb07aa7f1ecc"
+  },
+  {
+    "file": "metal-remaining-13-q8-chunked-prefill.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-13-q8-chunked-prefill.log",
+    "bytes": 122,
+    "sha256": "2332d3fabec08ad923c40dc5a302925a1d50738a2c92efd5bfe340bff14aafda"
+  },
+  {
+    "file": "metal-remaining-14-gdn-metal.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-14-gdn-metal.log",
+    "bytes": 8019,
+    "sha256": "c9b13efb22c9d4629be1158b30cd4d93a27d1b38c1179676dccb0c4ef816a148"
+  },
+  {
+    "file": "metal-remaining-15-dflash-batch-control.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-15-dflash-batch-control.log",
+    "bytes": 128,
+    "sha256": "3a5e4dee3c2d4c2e6f572ef9a27112cf62a24dc1e51de3938b17e6031ed86470"
+  },
+  {
+    "file": "metal-remaining-16-draft-attention.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-16-draft-attention.log",
+    "bytes": 246,
+    "sha256": "4b74c32e5dc39ca88b16a5ed312302d23388ffd6c8297c93f30d906677c90e5d"
+  },
+  {
+    "file": "metal-remaining-17-dflash-standard.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-17-dflash-standard.log",
+    "bytes": 2369,
+    "sha256": "48b8b4e2f47ea07e2e640e398bcc4e914c969c7bdfa3b621f133ef19311922c5"
+  },
+  {
+    "file": "metal-remaining-18-gdn-decode.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-18-gdn-decode.log",
+    "bytes": 2064,
+    "sha256": "1d1280e35d126d76ba67ee573fc6f5d495ea74b40ae81bd7fcb65784816e84c5"
+  },
+  {
+    "file": "metal-remaining-19-draft-selector.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-19-draft-selector.log",
+    "bytes": 116,
+    "sha256": "294e105d28e63058094f33b0aace8da29d88eed79c1614432d2ed374c286a61b"
+  },
+  {
+    "file": "metal-remaining-20-target-sampling.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-20-target-sampling.log",
+    "bytes": 637,
+    "sha256": "a9dbb7ac4a2aeffccc57b1a46d2f2f3edcae23dcbd45f0d48cb4d5f8b712d88c"
+  },
+  {
+    "file": "metal-remaining-21-target-sampling.log",
+    "source": "build/upstream-140-merge-20261021/metal-remaining-21-target-sampling.log",
+    "bytes": 183,
+    "sha256": "71d0f58d08da7fecf96f303672caba4385b8a31a885bb4092445b38131ffcfc3"
+  },
+  {
+    "file": "metal-tail-vision-metal.log",
+    "source": "build/upstream-140-merge-20261021/metal-tail-vision-metal.log",
+    "bytes": 106,
+    "sha256": "383fd00ef9988eee2d5ddc233ab10682f0386511af36636286686ea2c8047df9"
+  },
+  {
+    "file": "metal-tail-vision-attention.log",
+    "source": "build/upstream-140-merge-20261021/metal-tail-vision-attention.log",
+    "bytes": 2343,
+    "sha256": "87e3116968d882f9f7a8d3ac3da75b07a9082e1252b47be114f8199f11bdb802"
+  },
+  {
+    "file": "metal-tail-metal-backend.log",
+    "source": "build/upstream-140-merge-20261021/metal-tail-metal-backend.log",
+    "bytes": 2475,
+    "sha256": "ca374e0d4cdc56b6bcba8a2632af35e5b01077b85a6a2decc8e384007deb112c"
+  },
+  {
+    "file": "metal-tail-handoff.log",
+    "source": "build/upstream-140-merge-20261021/metal-tail-handoff.log",
+    "bytes": 667,
+    "sha256": "7a9598cce09392e1c8e3e9c2c812a78a3df54483f3110bacea27972aa81db058"
+  },
+  {
+    "file": "native-core-final.log",
+    "source": "build/upstream-140-merge-20261021/native-core-final.log",
+    "bytes": 26874,
+    "sha256": "ff51399ba6bf7007673d296d47b6d9e345ac2425542ce686616352c8f7418269"
+  }
+]

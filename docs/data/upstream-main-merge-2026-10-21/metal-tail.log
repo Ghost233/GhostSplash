@@ -1,0 +1,8 @@
+START MTL_SHADER_VALIDATION=1 build/engine-tests/vision-metal build/splash.metallib
+END 0
+START MTL_SHADER_VALIDATION=1 build/engine-tests/vision-attention build/splash.metallib
+END 0
+START MTL_SHADER_VALIDATION=1 build/engine-tests/metal-backend build/engine-tests/metal-backend.metallib
+END 0
+START MTL_SHADER_VALIDATION=1 build/engine-tests/handoff build/engine-tests/metal-backend.metallib
+END 0

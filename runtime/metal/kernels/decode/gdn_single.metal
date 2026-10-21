@@ -91,7 +91,7 @@ kernel void gdn_single_vh32(device const bfloat *packed [[buffer(0)]],
   const float inverse = rms_inverse_of_sums<4>(out * out, HeadDim, reductions, tid, lane, simdgroup);
   const bfloat normalized = bfloat(out * inverse * float(norm[tid]));
   const float silu = splash_silu(float(packed[ConvDim + head * HeadDim + tid]));
-  const uint outputHead = gdn_output_head<KeyHeads, ValueHeads>(head, params.tiled_heads != 0);
+  const uint outputHead = gdn_output_head<KeyHeads, ValueHeads>(head, (params.flags & GDN_TILED_HEADS) != 0);
   hidden[outputHead * HeadDim + tid] = bfloat(float(normalized) * silu);
 }
 

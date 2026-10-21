@@ -8,7 +8,7 @@ from unittest import mock
 from tokenizers import Regex, Tokenizer, decoders, models, normalizers, pre_tokenizers
 from transformers.utils import logging as transformers_logging
 
-from dev.tests.server_fixtures import byte_alphabet, main_args
+from dev.tests.server_fixtures import byte_alphabet, main_args, unprepared_hold
 from install.gguf import QWEN35_PATTERN
 from server import constraints as generation_constraints
 from server import server
@@ -68,14 +68,13 @@ class TokenizerContractTests(unittest.TestCase):
             generation_constraints.validate_tokenizer(tokenizer)
 
     def test_startup_rejects_tokenizer_before_starting_the_native_worker(self):
-        args = server.parse_args(
-            ["model", "--tokenizer", "tokenizer", "--model", "owner/model"]
-        )
+        args = server.parse_args(["model", "--model", "owner/model"])
         tokenizer = self.tokenizer()
         tokenizer.get_vocab()["</think>"] = 0
         http = mock.Mock()
         with (
             mock.patch.object(server, "parse_args", return_value=args),
+            unprepared_hold(),
             mock.patch.object(server.signal, "signal"),
             mock.patch.object(server, "load_thinking_key", return_value=None),
             mock.patch.object(
@@ -138,7 +137,12 @@ class TokenizerLoadingTests(unittest.TestCase):
         )
         with (
             mock.patch.object(
-                server, "parse_args", return_value=main_args(tokenizer=str(directory))
+                server,
+                "parse_args",
+                return_value=main_args(model_root=str(directory.parent)),
+            ),
+            mock.patch.object(
+                server.assembly, "hold", return_value=(directory.parent, object())
             ),
             mock.patch.object(server, "_raise_descriptor_limit"),
             mock.patch.object(server.signal, "signal"),
@@ -165,7 +169,8 @@ class TokenizerLoadingTests(unittest.TestCase):
             "qwen3_5_moe_text",
         ):
             with self.subTest(model_type=model_type), TemporaryDirectory() as directory:
-                root = Path(directory)
+                root = Path(directory) / "tokenizer"
+                root.mkdir()
                 original = self.fixture(root, model_type)
                 loaded, warning = self.load_at_startup(root)
                 warning.assert_not_called()
@@ -183,8 +188,10 @@ class TokenizerLoadingTests(unittest.TestCase):
     def test_other_model_types_keep_transformers_detection(self):
         for model_type in ("mistral", "custom", None):
             with self.subTest(model_type=model_type), TemporaryDirectory() as directory:
-                original = self.fixture(Path(directory), model_type)
-                loaded, warning = self.load_at_startup(Path(directory))
+                root = Path(directory) / "tokenizer"
+                root.mkdir()
+                original = self.fixture(root, model_type)
+                loaded, warning = self.load_at_startup(root)
                 if model_type is None:
                     warning.assert_not_called()
                 else:

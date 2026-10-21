@@ -1,0 +1,2 @@
+2026-10-21 15:06:22.882 qwen-state-storage[19095:10846494] Metal GPU Validation Enabled
+qwen state storage tests passed: lane_declared=356122624 lane_actual=356122624 four_lanes_declared=1424490496 four_lanes_actual=712245248 composite_declared=160038912 prefix_actual=160038912

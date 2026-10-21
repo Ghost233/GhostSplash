@@ -31,17 +31,8 @@ constant uint kDecodeSimdgroups = 8;
 template <uint HeadDim> struct GdnDecodeShared {
   bfloat queries[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
   bfloat keys[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
-#if SPLASH_TARGET_VERIFY_ROWS == 16
-  // Each state dimension consumes its value before writing its recurrent
-  // result to the same slot; other simdgroups own different dimensions.
-  union {
-    bfloat values[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
-    bfloat rows[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
-  };
-#else
   bfloat values[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
   bfloat rows[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
-#endif
   float decay[SPLASH_TARGET_VERIFY_ROWS];
   bfloat beta[SPLASH_TARGET_VERIFY_ROWS];
   bfloat pending_keys[SPLASH_TARGET_VERIFY_ROWS * HeadDim];
@@ -89,9 +80,7 @@ inline void gdn_decode_prologue(
     device const float *a_scale, device const bfloat *dt_bias,
     threadgroup GdnDecodeShared<HeadDim> &shared, uint value_head, uint lane,
     uint simd_group) {
-#if SPLASH_TARGET_VERIFY_ROWS != 8
   constexpr uint Tokens = SPLASH_TARGET_VERIFY_ROWS;
-#endif
   constexpr uint HeadsPerKey = ValueHeads / KeyHeads;
   constexpr uint KeyWidth = KeyHeads * HeadDim;
   constexpr uint ValueWidth = ValueHeads * HeadDim;
@@ -99,15 +88,14 @@ inline void gdn_decode_prologue(
   constexpr uint BOffset = ConvDim + ValueWidth;
   constexpr uint AOffset = BOffset + ValueHeads;
   constexpr uint Groups = HeadDim / 32;
-  static_assert(HeadDim == 128, "four channels per lane");
+  static_assert(Tokens == kDecodeSimdgroups && HeadDim == 128,
+                "one simdgroup per verify row, four channels per lane");
   const uint key_head = value_head / HeadsPerKey;
   // The key head's q/k rows and conv carry are shared by HeadsPerKey value
   // heads; the first of them writes the shared copies.
   const bool shared_writer = value_head % HeadsPerKey == 0;
   const bool carrier = simd_group < SPLASH_GDN_CONVOLUTION_TAPS - 1;
-#if SPLASH_TARGET_VERIFY_ROWS == 8
   const uint token = simd_group;
-#endif
   const uint q_channel = key_head * HeadDim + lane;
   const uint k_channel = KeyWidth + q_channel;
   const uint v_channel = 2 * KeyWidth + value_head * HeadDim + lane;
@@ -115,9 +103,6 @@ inline void gdn_decode_prologue(
   const uint k_column = key_head * HeadDim + lane;
   const uint v_column = KeyWidth + value_head * HeadDim + lane;
 
-#if SPLASH_TARGET_VERIFY_ROWS != 8
-  for (uint token = simd_group; token < Tokens; token += kDecodeSimdgroups) {
-#endif
   if (token < pending) {
     for (uint g = 0; g < Groups; ++g) {
       shared.pending_keys[token * HeadDim + 32 * g + lane] =
@@ -197,24 +182,6 @@ inline void gdn_decode_prologue(
       }
     }
   }
-#if SPLASH_TARGET_VERIFY_ROWS != 8
-  }
-  // A block of two tokens still advances all three convolution carry rows.
-  // The third simdgroup has no query token but owns carry row two.
-  if (carrier && simd_group >= Tokens) {
-    for (uint g = 0; g < Groups; ++g) {
-      conv_state_out[simd_group * ConvDim + v_channel + 32 * g] =
-          history.at(simd_group, v_channel + 32 * g);
-      if (shared_writer) {
-        conv_state_out[simd_group * ConvDim + q_channel + 32 * g] =
-            history.at(simd_group, q_channel + 32 * g);
-        conv_state_out[simd_group * ConvDim + k_channel + 32 * g] =
-            history.at(simd_group, k_channel + 32 * g);
-      }
-    }
-  }
-#endif
-
 }
 
 // Delta-rule recurrence over 128 state rows, four fp32 columns per lane.
@@ -332,7 +299,7 @@ template <uint KeyHeads, uint ValueHeads, uint HeadDim, uint ConvDim,
 inline void gdn_decode_gate(threadgroup GdnDecodeShared<HeadDim> &shared,
                             device const bfloat *packed,
                             device const W *norm_weight, device bfloat *hidden,
-                            bool tiled, uint value_head, uint lane,
+                            bool tiled, bool sigmoid_gate, uint value_head, uint lane,
                             uint token) {
 #pragma clang fp reassociate(off)
   constexpr uint Groups = HeadDim / 32;
@@ -358,7 +325,8 @@ inline void gdn_decode_gate(threadgroup GdnDecodeShared<HeadDim> &shared,
     const uint dim = 32 * g + lane;
     const bfloat normalized = bfloat((value[g] * inverse) * float(weight[g]));
     const float z = float(gate[g]);
-    const bfloat gated = bfloat((float(normalized) * z) /
+    // Qwen3.5 gates by silu(z), Qwen3.8-Flash-Next by sigmoid(z).
+    const bfloat gated = bfloat((float(normalized) * (sigmoid_gate ? 1.0f : z)) /
                                 (1.0f + fast::exp2(-1.44269504089f * z)));
     hidden[hidden_base + dim] = gated;
     shared.rows[token * HeadDim + dim] = gated;
@@ -415,15 +383,10 @@ inline void gdn_decode_batch_phase(
                                                 pending, group.x, lane,
                                                 simd_group);
   threadgroup_barrier(mem_flags::mem_threadgroup);
-  const bool tiled = params.tiled_heads != 0;
-#if SPLASH_TARGET_VERIFY_ROWS != 8
-  for (uint token = simd_group; token < Rows; token += kDecodeSimdgroups) {
-#else
-  const uint token = simd_group;
-#endif
+  const bool tiled = (params.flags & GDN_TILED_HEADS) != 0;
   gdn_decode_gate<KeyHeads, ValueHeads, HeadDim, ConvDim, PackedWidth>(
-      shared, packed, gdn_norm_weight, lane_hidden, tiled, group.x, lane,
-      token);
+      shared, packed, gdn_norm_weight, lane_hidden, tiled,
+      (params.flags & GDN_SIGMOID_GATE) != 0, group.x, lane, simd_group);
   if (table) {
     // Each group owns this head for all eight rows; each simdgroup writes
     // the table of the row it just gated.
@@ -431,22 +394,12 @@ inline void gdn_decode_batch_phase(
     const uint head = gdn_output_head<KeyHeads, ValueHeads>(group.x, tiled);
     for (uint g = 0; g < HeadDim / 64; ++g) {
       const uint column = head * HeadDim + g * 64 + 2 * lane;
-      const uint local = token * HeadDim + g * 64 + 2 * lane;
-#if SPLASH_TARGET_VERIFY_ROWS == 8
+      const uint local = simd_group * HeadDim + g * 64 + 2 * lane;
       Table::write(table + ulong(batch) * ValueWidth * Rows,
                    sums + ulong(batch) * Table::sums_per_tile(ValueWidth), ValueWidth,
                    column / 64, simd_group, lane, shared.rows[local], shared.rows[local + 1]);
-#else
-      const uint global_row = batch * Rows + token, tile = global_row / 8;
-      Table::write(table + ulong(tile) * ValueWidth * 8,
-                   sums + ulong(tile) * Table::sums_per_tile(ValueWidth), ValueWidth,
-                   column / 64, global_row % 8, lane, shared.rows[local], shared.rows[local + 1]);
-#endif
     }
   }
-#if SPLASH_TARGET_VERIFY_ROWS != 8
-  }
-#endif
 }
 
 // W: the norm weights' stored type (float: a GGUF's F32 norms, _f32).
@@ -505,6 +458,11 @@ GDN_DECODE_ENTRY(verify_gdn_fused_vh16_f32, 16, 16, 128, 6144, 8448, float)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_f32, 16, 48, 128, 10240, 16640, gguf_sg::Table16, float)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh32_f32, 16, 32, 128, 8192, 12544, gguf_sg::Table16, float)
 GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_vh16_f32, 16, 16, 128, 6144, 8448, gguf_sg::Table16, float)
+// Qwen3.8-Flash-Next (16512-column rows).
+GDN_DECODE_ENTRY(verify_gdn_fused_p16512, 16, 48, 128, 10240, 16512, bfloat)
+GDN_DECODE_ENTRY(verify_gdn_fused_p16512_f32, 16, 48, 128, 10240, 16512, float)
+GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_p16512, 16, 48, 128, 10240, 16512, gguf_sg::Table16, bfloat)
+GDN_DECODE_TABLE_ENTRY(verify_gdn_fused_table16_p16512_f32, 16, 48, 128, 10240, 16512, gguf_sg::Table16, float)
 #undef GDN_DECODE_ENTRY
 #undef GDN_DECODE_TABLE_ENTRY
 #undef GDN_DECODE_KERNEL

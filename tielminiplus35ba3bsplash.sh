@@ -35,37 +35,35 @@ exec "$python" -u - "$repo" "$model_dir" "$model_id" "$chat_template" "$host" "$
     "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" <<'PY'
 import hashlib
 import os
-import shutil
 import socket
 import sys
-import tempfile
 from pathlib import Path
 
 repo, model_dir, model_id, chat_template, host, port, context, memory, cache_disk, queue, kv_format = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, upstream
+from install import models, paths
+from install.local import prepare_local_model
 
 # Check the address before the first-run draft download.
+paths.BINARY = repo / "build/splash"
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((host, int(port)))
 
-selection = models.Selection.of(repo / "install/models-local", model_id, language_only=True)
-if models.installation_kind(selection.link) is None:
-    with tempfile.TemporaryDirectory(prefix="splash-model-check-") as scratch:
-        upstream.inspect_target(hub.Repository.local_directory(Path(model_dir)), selection.variant, selection.language_only, Path(scratch))
-    draft = hub.Repository.resolve("incoai/Qwen3.6-35B-A3B-DFlash2", revision="51ef7b6923ad6c14cb1bb41c37a9041446496ab6")
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None, draft=draft)
-else:
-    record = assembly.verify(selection.link)
-    if record["sources"]["target"] != {"repo": model_dir, "revision": None}:
-        raise models.ModelError("Prepared target does not match the local Tiel MiniPlus directory")
+from huggingface_hub import snapshot_download
 
-# Hold the verified assembly until the server exits, as the official launcher does.
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
+# Keep the audited Tiel draft in a local directory the launcher owns.
+draft_dir = snapshot_download(
+    "incoai/Qwen3.6-35B-A3B-DFlash2",
+    revision="51ef7b6923ad6c14cb1bb41c37a9041446496ab6",
+    local_dir=repo / "install/models-local/drafts/tiel-dflash2/source",
+    allow_patterns=["config.json", "*.safetensors", "*.safetensors.index.json"],
+)
+root = prepare_local_model(
+    Path(model_dir) / "Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf", draft=draft_dir, language_only=True,
+    models_dir=repo / "install/models-local",
+)
 
 # Keep the author's guidance, with Splash tool calls and later agent instructions.
 template = Path(chat_template).read_text(encoding="utf-8")
@@ -94,14 +92,15 @@ for old, new in replacements:
         raise models.ModelError("Local chat template changed; review its Splash tool-call adaptation")
     template = template.replace(old, new, 1)
 identity = hashlib.sha256((str(root) + template).encode()).hexdigest()
-tokenizer_dir = repo / "build/tokenizer-overrides/tiel-miniplus" / identity
-shutil.copytree(root / "tokenizer", tokenizer_dir, dirs_exist_ok=True)
-(tokenizer_dir / "chat_template.jinja").write_text(template, encoding="utf-8")
+template_dir = repo / "build/template-overrides/tiel-miniplus" / identity
+template_dir.mkdir(parents=True, exist_ok=True)
+template_file = template_dir / "chat_template.jinja"
+template_file.write_text(template, encoding="utf-8")
 print(f"Chat template: {chat_template} (Splash XML tool calls, later system messages)", flush=True)
 print(f"Tiel MiniPlus Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root), "--tokenizer", str(tokenizer_dir),
+    str(root), "--chat-template", str(template_file),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,

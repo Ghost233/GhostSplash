@@ -89,30 +89,22 @@ void requireLanes(uint32_t lanes) {
     throw std::invalid_argument("invalid draft batch width");
 }
 
-enum class KernelLayout : uint8_t { Hidden5120, Hidden2048, Standard2560 };
-
-// The compiled draft (metal/abi/DraftAttention.h) of each hidden size the
-// convolution kernels take.
-[[nodiscard]] KernelLayout kernelShape(DraftAttentionShape shape) {
-  const auto compiled = [](uint32_t hidden) {
-    return DraftAttentionShape{hidden,
-                               draft_dynamic_width(hidden),
-                               SPLASH_DRAFT_QKV_WIDTH,
-                               SPLASH_DRAFT_ATTENTION_WIDTH,
-                               SPLASH_DRAFT_QUERY_HEADS,
-                               SPLASH_DRAFT_KV_HEADS,
-                               SPLASH_DRAFT_HEAD_DIMENSION};
-  };
-  if (shape == compiled(5120))
-    return KernelLayout::Hidden5120;
-  if (shape == compiled(2048))
-    return KernelLayout::Hidden2048;
+// The draft attention the kernels are built for (metal/abi/DraftAttention.h),
+// over a hidden state of any whole number of convolution groups.
+void requireCompiledShape(DraftAttentionShape shape) {
   if (shape == DraftAttentionShape{2560, 0, SPLASH_DRAFT_QKV_WIDTH,
-                                  SPLASH_DRAFT_ATTENTION_WIDTH,
-                                  SPLASH_DRAFT_QUERY_HEADS, SPLASH_DRAFT_KV_HEADS,
-                                  SPLASH_DRAFT_HEAD_DIMENSION})
-    return KernelLayout::Standard2560;
-  throw std::invalid_argument("unsupported compiled draft attention shape");
+                                  SPLASH_DRAFT_ATTENTION_WIDTH, SPLASH_DRAFT_QUERY_HEADS,
+                                  SPLASH_DRAFT_KV_HEADS, SPLASH_DRAFT_HEAD_DIMENSION})
+    return;
+  const DraftAttentionShape compiled{shape.hiddenSize,
+                                     draft_dynamic_width(shape.hiddenSize),
+                                     SPLASH_DRAFT_QKV_WIDTH,
+                                     SPLASH_DRAFT_ATTENTION_WIDTH,
+                                     SPLASH_DRAFT_QUERY_HEADS,
+                                     SPLASH_DRAFT_KV_HEADS,
+                                     SPLASH_DRAFT_HEAD_DIMENSION};
+  if (!shape.hiddenSize || shape.hiddenSize % SPLASH_DRAFT_CONVOLUTION_GROUP || shape != compiled)
+    throw std::invalid_argument("unsupported compiled draft attention shape");
 }
 
 } // namespace
@@ -129,7 +121,7 @@ DraftAttentionWorkspace DraftAttentionPlan::workspace() const noexcept {
 DraftAttentionPlan DraftAttention::plan(DraftAttentionShape shape,
                                         uint32_t lanes) {
   requireLanes(lanes);
-  static_cast<void>(kernelShape(shape));
+  requireCompiledShape(shape);
   return {shape, lanes};
 }
 
@@ -147,8 +139,8 @@ void DraftAttention::addConvolution(metal::CommandGraph &graph,
     break;
   }
   const auto shape = plan.shape();
-  const KernelLayout kernel = kernelShape(shape);
-  if (kernel == KernelLayout::Standard2560)
+  requireCompiledShape(shape);
+  if (!shape.dynamicSize)
     throw std::invalid_argument("standard DFlash has no convolution");
   const auto workspace = plan.workspace();
   const uint32_t groups = phaseGroups(uint64_t{kRows} * shape.hiddenSize);
@@ -160,9 +152,8 @@ void DraftAttention::addConvolution(metal::CommandGraph &graph,
   requireBytes(buffers.weights,
                uint64_t{SPLASH_DRAFT_CONVOLUTION_STAGES} * SPLASH_DRAFT_CONVOLUTION_TAPS * shape.hiddenSize * 2,
                "draft convolution weight");
-  const DraftConvBatchParams params{finish};
-  graph.add(kernel == KernelLayout::Hidden5120 ? "draft_conv"
-                                               : "draft_conv_h2048",
+  const DraftConvBatchParams params{finish, shape.hiddenSize};
+  graph.add("draft_conv",
             {std::move(buffers.input), std::move(buffers.dynamic),
              std::move(buffers.weights), std::move(buffers.residual),
              std::move(buffers.output)},
@@ -256,7 +247,7 @@ void DraftAttention::addContextPrefill(
     metal::MetalBuffer ropeSin, metal::MetalBuffer keys,
     metal::MetalBuffer values, uint32_t tokens, uint32_t startPosition,
     DraftAttentionShape shape, DraftAttentionGeometry geometry) {
-  static_cast<void>(kernelShape(shape));
+  requireCompiledShape(shape);
   requireGeometry(geometry);
   if (!tokens)
     throw std::invalid_argument("invalid draft context prefill geometry");
@@ -287,7 +278,7 @@ void DraftAttention::addContextCommit(
   const auto lanes = static_cast<uint32_t>(startPositions.size());
   requireLanes(lanes);
   requireGeometry(geometry);
-  static_cast<void>(kernelShape(shape));
+  requireCompiledShape(shape);
   if (persistentKeys.size() != kMaximumLanes ||
       persistentValues.size() != kMaximumLanes)
     throw std::invalid_argument("invalid draft context commit geometry");

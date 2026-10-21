@@ -1,0 +1,148 @@
+{
+  "status": "core_validation_passed_by_partition",
+  "performance_test": false,
+  "previous_upstream_commit": "be3b083c5f413673d44e44881042e875e674e333",
+  "ours_commit": "456ee426dc436fcffd890ac291b8492c5eeb9c24",
+  "upstream_commit": "1482f6bbc2abf12375332725302019594150b6cb",
+  "upstream_tag": "1.4.0",
+  "upstream_tag_object": "a4270d232c1d38c89ce046f11b1d90a5fff3b182",
+  "current_branch": "ghost",
+  "build_identity": {
+    "build_id": "src-d2268eb4a7191633204be65fa7040e44cac3ae8905c088e1f09d199c0579951a",
+    "schema_version": 1,
+    "source_sha256": "d2268eb4a7191633204be65fa7040e44cac3ae8905c088e1f09d199c0579951a"
+  },
+  "commands": [
+    {
+      "name": "production_and_cpu_and_all_native_builds",
+      "command": "make -j4 check-source check-native-cpu check-native-build",
+      "log": "native-cpu-build-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "all_native_builds_and_sanitizers",
+      "command": "make -j4 check-native-build test-sanitizers",
+      "log": "native-build-sanitizers-final-attempt-2.log",
+      "exit_code": 0
+    },
+    {
+      "name": "python_all",
+      "command": ".venv/bin/python -m unittest discover -s dev/tests -t .",
+      "log": "python-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "ruff",
+      "command": ".venv/bin/python -m ruff check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+      "log": "ruff-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "ruff_format",
+      "command": ".venv/bin/python -m ruff format --check --config dev/ruff.toml server install/*.py dev/tools dev/tests dev/benchmarks",
+      "log": "ruff-format-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "python_syntax",
+      "command": ".venv/bin/python -m compileall -q server install dev/tools dev/tests dev/benchmarks",
+      "log": "compileall-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "build_identity",
+      "command": "make verify-build-identity",
+      "log": "build-identity-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "launcher_syntax",
+      "command": "for launcher in ./*.sh; do sh -n \"$launcher\" || exit \"$?\"; done",
+      "log": "launcher-syntax-final.log",
+      "exit_code": 0
+    },
+    {
+      "name": "metal_all",
+      "command": "make -j4 check-native-metal",
+      "log": "native-metal-final.log",
+      "exit_code": 2,
+      "status": "failed_then_repaired_by_targeted_checks_and_remaining_cases"
+    },
+    {
+      "name": "fast_topk_repair",
+      "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/target-sampling build/splash.metallib --fast-topk --correctness-only",
+      "log": "sampling-fast-targeted.log",
+      "exit_code": 0
+    },
+    {
+      "name": "final_core_source_cpu_native_builds",
+      "command": "make -j4 check-source check-native-cpu check-native-build",
+      "log": "native-core-final.log",
+      "exit_code": 0
+    }
+  ],
+  "python": {
+    "total": 1466,
+    "passed": 1462,
+    "skipped": 4,
+    "reason": "optional installed-client tests: Codex (2), OpenCode (1), Pi (1)"
+  },
+  "real_weights": {
+    "qwen35_4b": "real-correctness.json",
+    "d3_lite": "d3-lite-control.json",
+    "d3_mini": "d3-mini-control.json",
+    "operators": "real-operators-results.json"
+  },
+  "real_weight_results": {
+    "ffn_cache_off_bytes": 4529848320,
+    "ffn_cache_on_bytes": 0,
+    "cache_modes_tokens_equal": true,
+    "quantized_10GiB_ready": true,
+    "default_10GiB_expected_refusal_exit": 70,
+    "nodraft_130_token_release_restore": true,
+    "d3_control_exit_codes": [
+      0,
+      0
+    ],
+    "operator_exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "real_validation_reuse": {
+    "scope": "The real-weight records retain their original binary hashes and build IDs. Subsequent production changes only refine an invalid Standard target-layer diagnostic and a comment naming QUANT_TILE_ROWS; the final Metal gate validates current production inputs. Installer NoDraft eligibility was restricted to the seven supported local families and revalidated by the full Python suite."
+  },
+  "limitations": [
+    "No performance measurement.",
+    "Kev, Julia and Laya real weights were unavailable locally; configuration/synthetic checks only.",
+    "Q4 KV is refused on the upstream sparse Flash Next path; INT8/BF16 are supported.",
+    "The unvalidated Q4KGroupScale with ANE foreign-wait boundary combination is refused; baseline quantized FFN remains available."
+  ],
+  "failure_history": {
+    "raw_directory": "build/upstream-140-merge-20261021",
+    "preserved": true,
+    "interrupted_metal_attempt_3": "cancelled before completion; not a pass",
+    "fixed": [
+      "Local tests and tools adapted to upstream interfaces.",
+      "Standard empty optional projections excluded from decode storage warming.",
+      "NoDraft capability restricted to supported families.",
+      "Compact byte addressing updated to QUANT_TILE_ROWS and confidence workspace added.",
+      "Standard draft image hashes updated only after independent native-plane/every-byte/restore checks passed.",
+      "Duplicated Q2_0 JSON key, old seed special-case and standalone oracle removed in favor of upstream."
+    ]
+  },
+  "metal_repair": {
+    "original_full_exit": 2,
+    "first_failure": "local Q4 rotation test tried an unsupported sparse layout",
+    "first_fix": "keep dense numeric checks; assert sparse Q4 rejection before encoding; restore baseline format",
+    "first_targeted_exit": 0,
+    "remaining_attempts": "metal-remaining-results.json",
+    "second_failure_exit": 1,
+    "second_failure": "old fast-topk assertion treated top-k=1 as sampled rather than upstream greedy",
+    "second_targeted_exit": 0,
+    "tail_results": "metal-tail-results.json",
+    "all_cases_covered_after_targeted_repairs": true,
+    "fresh_final_gate": "required after the separately requested observability changes"
+  }
+}

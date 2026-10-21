@@ -1,0 +1,2 @@
+2026-10-21 15:16:42.817 target-sampling[41103:10922019] Metal GPU Validation Enabled
+target_sampling_metal_test: FAIL (fast top-k values 1..32): eligible top-k must use its fast path

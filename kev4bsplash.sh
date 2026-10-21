@@ -22,7 +22,8 @@ from pathlib import Path
 repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, binary = sys.argv[1:12]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, paths, upstream
+from install import paths
+from install.local import prepare_local_model
 from server import serve_options
 
 parser = argparse.ArgumentParser(prog="kev4bsplash.sh", description="Kev-4B Q4_K_M decision scoring via /v1/systemone")
@@ -47,22 +48,15 @@ paths.BINARY = Path(args.binary)
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((args.host, args.port))
-selection = models.Selection.of(repo / "install/models-local", model_id, language_only=True)
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None)
-record = assembly.verify(selection.link)
-if record.get("family") != "Kev-4B":
-    raise models.ModelError("Selected binary does not support the Kev decision head")
-if record["sources"] != {"target": {"repo": model_dir, "revision": None}, "draft": None}:
-    raise models.ModelError("Prepared Kev target does not match the local GGUF without a draft")
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
+root = prepare_local_model(
+    model_dir, language_only=True,
+    models_dir=repo / "install/models-local",
+)
 print(f"Kev-4B: context={args.max_context}, KV={args.kv_format}, queue={args.queue_size}, memory={args.max_memory}", flush=True)
 print(f"Decision head=Kev 512; drafter=off; compact=off; lookup=off; fast-topk=off; ANE={'off' if args.disable_ane else 'on'}", flush=True)
 print(f"System One: http://{args.host}:{args.port}/v1/systemone", flush=True)
 command = [str(repo / ".venv/bin/python"), "-u", "-m", "server.server", str(root),
-           "--tokenizer", str(root / "tokenizer"), "--model", model_id,
+           "--model", model_id,
            "--binary", args.binary, "--host", args.host, "--port", str(args.port),
            *serve_options.serve_argv(args)]
 os.chdir(repo)

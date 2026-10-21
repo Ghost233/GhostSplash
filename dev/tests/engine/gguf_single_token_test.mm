@@ -371,7 +371,7 @@ void checkKevHead(MetalBackend &backend, const std::filesystem::path &path) {
   if (hidden == 1024) static_cast<model::QwenTargetDimensions &>(layout) = model::Qwen3_5_0_8BLayout{};
   layout.decisionHeadSize = 512;
   model::WeightImages images(backend, std::string(64, 'f'));
-  model::GgufTargetLoader loader(backend, images, path, layout);
+  model::GgufTargetLoader loader(backend, images, {path}, layout.ggufArchitecture, layout);
   auto head = loader.head();
   static_cast<void>(model::readNorm(head, hidden, true, "Kev final norm"));
   auto projection = model::readBlockProjection(head, 512, hidden, "Kev pointer head");

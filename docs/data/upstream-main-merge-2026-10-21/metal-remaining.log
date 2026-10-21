@@ -1,0 +1,42 @@
+START 1 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=bf16
+END 1 exit 0
+START 2 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4h
+END 2 exit 0
+START 3 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4_0
+END 3 exit 0
+START 4 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4_0_unrotated
+END 4 exit 0
+START 5 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/linear-plan build/splash.metallib
+END 5 exit 0
+START 6 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/runtime-resources build/splash.metallib
+END 6 exit 0
+START 7 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/kv-page-tier build/engine-tests/metal-backend.metallib
+END 7 exit 0
+START 8 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/model-loading build/engine-tests/metal-backend.metallib build/splash.metallib
+END 8 exit 0
+START 9 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/qwen-state-storage build/engine-tests/q8-paged-kv.metallib
+END 9 exit 0
+START 10 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/q8-paged-kv-metal build/engine-tests/q8-paged-kv.metallib
+END 10 exit 0
+START 11 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/q8-page-storage build/engine-tests/metal-backend.metallib
+END 11 exit 0
+START 12 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/q8-flash-attention build/engine-tests/q8-attention.metallib
+END 12 exit 0
+START 13 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/q8-chunked-prefill build/engine-tests/q8-attention.metallib
+END 13 exit 0
+START 14 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/gdn-metal build/splash.metallib
+END 14 exit 0
+START 15 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/dflash-batch-control build/splash.metallib
+END 15 exit 0
+START 16 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/draft-attention build/splash.metallib
+END 16 exit 0
+START 17 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/dflash-standard build/splash.metallib
+END 17 exit 0
+START 18 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/gdn-decode build/splash.metallib
+END 18 exit 0
+START 19 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/draft-selector build/splash.metallib
+END 19 exit 0
+START 20 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/target-sampling build/splash.metallib
+END 20 exit 0
+START 21 / 25 MTL_SHADER_VALIDATION=1 build/engine-tests/target-sampling build/splash.metallib --fast-topk --correctness-only
+END 21 exit 1

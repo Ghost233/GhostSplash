@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Qwen3_8.hpp"
+#include "DFlashDraft.hpp"
 
 namespace splash::model {
 
@@ -8,13 +9,16 @@ class WeightImages;
 
 // Text-only Qwen3.5-4B, without a speculative draft. Its GDN geometry uses
 // the existing 32-value-head kernels; full attention is 16Q/4KV.
-struct Qwen3_5_4BLayout final : QwenHybridLayout<0> {
+struct Qwen3_5_4BLayout final : QwenHybridLayout {
   static constexpr std::string_view family = "Qwen3.5-4B";
+  static constexpr std::string_view modelType = "qwen3_5_text";
+  static constexpr std::string_view ggufArchitecture = "qwen35";
+  static constexpr bool loadsSafetensors = false;
   static constexpr std::string_view layerMagic = "MDFL0006";
   static constexpr std::string_view headMagic = "MDFL0002";
 
   constexpr Qwen3_5_4BLayout()
-      : QwenHybridLayout{{.maximumContextTokens = 262'144,
+      : QwenHybridLayout{{.nativeContextTokens = 262'144,
                           .layers = 32,
                           .hiddenSize = 2560,
                           .vocabularySize = 248320,
@@ -35,17 +39,20 @@ struct Qwen3_5_4BLayout final : QwenHybridLayout<0> {
                           .stopTokens = {248044, 248046},
                           .ffnKind = QwenFfnKind::Dense,
                           .intermediateSize = 9216,
-                          .tiedWordEmbeddings = true}, {}} {}
+                          .tiedWordEmbeddings = true}} {}
   bool operator==(const Qwen3_5_4BLayout &) const = default;
 };
 
 // Kev-0.8B uses the same hybrid and pointer-head semantics with 16 GDN value heads.
-struct Qwen3_5_0_8BLayout final : QwenHybridLayout<0> {
+struct Qwen3_5_0_8BLayout final : QwenHybridLayout {
   static constexpr std::string_view family = "Kev-0.8B";
+  static constexpr std::string_view modelType = Qwen3_5_4BLayout::modelType;
+  static constexpr std::string_view ggufArchitecture = Qwen3_5_4BLayout::ggufArchitecture;
+  static constexpr bool loadsSafetensors = false;
   static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
   static constexpr std::string_view headMagic = Qwen3_5_4BLayout::headMagic;
   constexpr Qwen3_5_0_8BLayout()
-      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{}), {}} {
+      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{})} {
     layers = 24;
     hiddenSize = 1024;
     packedGdnWidth = 8448;
@@ -61,13 +68,15 @@ struct Qwen3_5_0_8BLayout final : QwenHybridLayout<0> {
   bool operator==(const Qwen3_5_0_8BLayout &) const = default;
 };
 
-struct Qwen3_5_4BDFlashLayout final : QwenHybridLayout<8> {
+struct Qwen3_5_4BDFlashLayout final : QwenHybridLayout {
   static constexpr std::string_view family = Qwen3_5_4BLayout::family;
+  static constexpr std::string_view modelType = Qwen3_5_4BLayout::modelType;
+  static constexpr std::string_view ggufArchitecture = Qwen3_5_4BLayout::ggufArchitecture;
+  static constexpr bool loadsSafetensors = false;
   static constexpr std::string_view layerMagic = Qwen3_5_4BLayout::layerMagic;
   static constexpr std::string_view headMagic = Qwen3_5_4BLayout::headMagic;
   constexpr Qwen3_5_4BDFlashLayout()
-      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{}),
-                         {1, 5, 9, 13, 17, 21, 25, 29}} {}
+      : QwenHybridLayout{static_cast<const QwenTargetDimensions &>(Qwen3_5_4BLayout{})} {}
   bool operator==(const Qwen3_5_4BDFlashLayout &) const = default;
 };
 
@@ -75,8 +84,9 @@ inline constexpr DFlashDraftLayout kQwen3_5_4BDFlashDraftLayout{
     .layers = 6, .hiddenSize = 2560, .vocabularySize = 248320,
     .dynamicSize = 0, .qkvSize = 6144, .attentionSize = 4096,
     .intermediateSize = 9216, .attentionHeadDimension = 128,
-    .rotaryTheta = 10'000'000.0F, .targetHiddenSize = 20480,
-    .selectorRank = 0, .kvHeads = 8, .kind = DraftKind::Standard};
+    .rotaryTheta = 10'000'000.0F,
+    .selectorRank = 0, .kvHeads = 8, .kind = DraftKind::Standard,
+    .targetLayers = {1, 5, 9, 13, 17, 21, 25, 29}, .targetLayerCount = 8};
 
 using Qwen3_5_0_8BWeights = QwenTargetWeights<Qwen3_5_0_8BLayout, Qwen3_8LayerWeights>;
 [[nodiscard]] Qwen3_5_0_8BWeights loadQwen3_5_0_8BWeights(metal::MetalBackend &, Qwen3_5_0_8BLayout, const QwenTargetFiles &);

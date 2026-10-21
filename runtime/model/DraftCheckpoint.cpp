@@ -89,7 +89,7 @@ gguf::Image modelImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraf
   Builder b(checkpoint, consumed, "model.bin", layout.layers, 1);
   const std::string selector = "candidate_selector.";
   const uint64_t hidden = layout.hiddenSize;
-  b.projection({{"fc", hidden}}, layout.targetHiddenSize);
+  b.projection({{"fc", hidden}}, layout.targetHiddenSize());
   b.stored("hidden_norm.weight", {hidden});
   b.stored("norm.weight", {hidden});
   if (layout.kind == DraftKind::DFlash2) {

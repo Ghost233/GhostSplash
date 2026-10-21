@@ -1,0 +1,18 @@
+2026-10-21 15:05:59.226 runtime-resources[18624:10842086] Metal GPU Validation Enabled
+15:06:11 Weights loaded in 0.13 s.
+15:06:11 Decode cycles verify every row of the draft's block (--verify-rows auto, as optional-memory-test is dense).
+15:06:11 Kernel policy for GPU family 10 with 20 cores.
+15:06:12 Weights loaded in 0.12 s.
+15:06:12 Decode cycles verify every row of the draft's block (--verify-rows auto, as optional-memory-test is dense).
+15:06:12 Kernel policy for GPU family 10 with 20 cores.
+15:06:12 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-t4CxH1/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+15:06:12 Weights loaded in 0.14 s.
+15:06:12 Decode cycles verify every row of the draft's block (--verify-rows auto, as optional-memory-test is dense).
+15:06:12 Kernel policy for GPU family 10 with 20 cores.
+15:06:12 Weights loaded in 0.13 s.
+15:06:12 Decode cycles verify every row of the draft's block (--verify-rows auto, as optional-memory-test is dense).
+15:06:12 Kernel policy for GPU family 10 with 20 cores.
+15:06:12 compact head enabled: public ranking=/var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/optional-memory-plan-t4CxH1/public.splash; vocabulary=1024; capacity=512; numerical_validation=passed; comparisons=4096
+15:06:18 Weights loaded in 0.67 s.
+15:06:18 Decode cycles verify the rows the verify budget chooses (--verify-rows auto, as moe-test is a MoE target): greedy and seeded outputs can differ from run to run.
+runtime resources tests passed

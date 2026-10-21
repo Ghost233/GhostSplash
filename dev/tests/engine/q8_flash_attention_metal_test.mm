@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <iomanip>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -30,17 +29,31 @@ constexpr uint32_t kQueryStride = kStride;
 constexpr uint32_t kRows = kVerifyRows;
 static_assert(kStride == SPLASH_VERIFY_CHUNK_STRIDE);
 
-// The two production GQA geometries. The group size selects the kernel
-// specialization; the suffix names its pipelines.
+// The production GQA geometries. The group size selects the kernel
+// specialization; the suffix names its pipelines. The group of twelve runs
+// the sparse kernels, which attend through block lists, bound before their
+// parameters, and read token-major values.
 struct Shape {
   uint32_t kvHeads;
   uint32_t queryHeadsPerKvHead;
   const char *suffix;
   uint32_t queryHeads() const { return kvHeads * queryHeadsPerKvHead; }
   uint32_t fusedRows() const { return kRows * queryHeadsPerKvHead; }
-  Layout layout() const { return {1, kvHeads, kHeadDimension}; }
+  bool sparse() const { return queryHeadsPerKvHead == 12; }
+  Layout layout() const {
+    return {.attentionLayers = 1, .kvHeads = kvHeads, .headDimension = kHeadDimension,
+            .valuesTokenMajor = sparse()};
+  }
+  // A phase's ("verify" or "prefill") split and reduce entries.
+  std::string split(const char *phase) const {
+    return std::string(phase) + (sparse() ? "_attention_q8_sparse" : "_attention_q8_split") + suffix;
+  }
+  std::string reduce(const char *phase) const {
+    return std::string(phase) + (sparse() ? "_attention_sparse_reduce" : "_attention_reduce") + suffix;
+  }
 };
-constexpr std::array<Shape, 3> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}, {2, 4, "_kv2_g4"}}};
+constexpr std::array<Shape, 5> kShapes{{{4, 6, ""}, {2, 8, "_kv2_g8"}, {4, 4, "_kv4_g4"},
+                                       {2, 4, "_kv2_g4"}, {2, 12, "_kv2_g12"}}};
 
 using splash::test::require;
 
@@ -150,6 +163,17 @@ struct Case {
   std::vector<id<MTLBuffer>> extents;
   std::unique_ptr<HostKvExtents> pool;
   id<MTLBuffer> queries;
+  // QSA block masks (group of twelve only): maskWords words per row of the
+  // rows' attended blocks of SPLASH_ATTENTION_BLOCK_TOKENS tokens; none when
+  // maskWords is 0.
+  std::vector<uint32_t> mask;
+  uint32_t maskWords = 0;
+
+  bool attends(uint32_t row, uint32_t token) const {
+    if (!maskWords) return true;
+    const uint32_t block = token / SPLASH_ATTENTION_BLOCK_TOKENS;
+    return (mask[uint64_t{row} * maskWords + block / 32] >> (block % 32)) & 1u;
+  }
 
   uint64_t queryIndex(uint32_t head, uint32_t row, uint32_t dimension) const {
     const uint32_t kvHead = head / shape.queryHeadsPerKvHead;
@@ -189,7 +213,7 @@ Case makeCase(id<MTLDevice> device, Shape shape, uint32_t committed,
   result.pageTableBuffer = makeBuffer(device, pages * sizeof(SplashKvPage));
   result.pool->writeTable(result.pageTable, result.pageTableBuffer.contents);
   result.params = {committed, activeRows, kStride, pages,
-                   result.pool->layer(kLayer), splits};
+                   result.pool->layer(kLayer), splits, 0, 0};
   uint64_t queryElements =
       uint64_t{shape.queryHeads()} * kQueryStride * kHeadDimension;
   result.queries = makeBuffer(device, queryElements * sizeof(BFloat16Bits));
@@ -208,12 +232,92 @@ Case oneExtentCopy(id<MTLDevice> device, const Case &data) {
       std::memcpy(result.slab<std::byte>(tensor, page), data.slab<std::byte>(tensor, page),
                   tensor % 2 ? scaleBytes : dataBytes);
   std::memcpy(result.queries.contents, data.queries.contents, data.queries.length);
+  result.mask = data.mask;
+  result.maskWords = data.maskWords;
   return result;
 }
 
-// The page format is head-major inside a page, so a kv2_g8 page is the first
-// two heads of the four-head oracle page: quantize through the shared oracle
-// and store the layout's own head count.
+// Blocks a QSA row attends past kQsaTopBlocks complete blocks; up to there
+// every block up to its own, as block_indexer_select writes them.
+constexpr uint32_t kQsaTopBlocks = 40;
+// Block lists of every block for every row ahead of a dispatch's lists, and
+// after them, which a tile reading another list than its own would attend.
+constexpr uint32_t kQsaJunkLists = 3;
+
+// The case's block list (metal/abi/PagedAttention.h): each block of its
+// rows' history that one of them attends, with their bits.
+std::vector<uint32_t> blockList(const Case &data) {
+  constexpr uint32_t kBlockTokens = SPLASH_ATTENTION_BLOCK_TOKENS;
+  const uint32_t history = (data.params.committed_tokens + data.params.rows + kBlockTokens - 1) / kBlockTokens;
+  std::vector<uint32_t> result;
+  for (uint32_t block = 0; block < history; ++block) {
+    uint32_t rows = 0;
+    for (uint32_t row = 0; row < data.params.rows; ++row)
+      rows |= uint32_t(data.attends(row, block * kBlockTokens)) << row;
+    if (rows) result.push_back(block << SPLASH_ATTENTION_BLOCK_ROW_BITS | rows);
+  }
+  return result;
+}
+
+// A dispatch's block lists and their counts: kQsaJunkLists lists, then
+// `copies` copies of the case's (one per verify lane), then kQsaJunkLists
+// more; `stride` entries each.
+struct BlockLists {
+  id<MTLBuffer> lists;
+  id<MTLBuffer> counts;
+  uint32_t stride;
+};
+
+BlockLists qsaBlockLists(id<MTLDevice> device, const Case &data, uint32_t copies) {
+  const std::vector<uint32_t> list = blockList(data);
+  constexpr uint32_t kBlockTokens = SPLASH_ATTENTION_BLOCK_TOKENS;
+  const uint32_t history = (data.params.committed_tokens + data.params.rows + kBlockTokens - 1) / kBlockTokens;
+  const uint32_t total = copies + 2 * kQsaJunkLists;
+  BlockLists result{makeBuffer(device, uint64_t{total} * history * 4), makeBuffer(device, total * 4), history};
+  auto *entries = static_cast<uint32_t *>(result.lists.contents);
+  auto *counts = static_cast<uint32_t *>(result.counts.contents);
+  for (uint32_t index = 0; index < total; ++index) {
+    uint32_t *out = entries + uint64_t{index} * history;
+    const bool junk = index < kQsaJunkLists || index >= kQsaJunkLists + copies;
+    if (junk)
+      for (uint32_t block = 0; block < history; ++block)
+        out[block] = block << SPLASH_ATTENTION_BLOCK_ROW_BITS | ((1u << kRows) - 1u);
+    else
+      std::copy(list.begin(), list.end(), out);
+    counts[index] = junk ? history : uint32_t(list.size());
+  }
+  return result;
+}
+
+// Masks whose blocks a tile's rows attend in every way its list must tell
+// apart: whole pages for every row, one block per row of a page (no single
+// row attends the whole page), half a page or one block that only one row
+// attends, and pages no row attends; each row also attends its own block.
+// Rows past kQsaTopBlocks complete blocks attend sparsely, earlier ones
+// causally.
+void setQsaMask(Case &data) {
+  constexpr uint32_t kBlockTokens = SPLASH_ATTENTION_BLOCK_TOKENS;
+  constexpr uint32_t kPageBlocks = kPageTokens / kBlockTokens;
+  const uint32_t visible = data.params.committed_tokens + data.params.rows;
+  data.maskWords = visible / kBlockTokens / 32 + 2;
+  data.mask.assign(uint64_t{data.params.rows} * data.maskWords, 0u);
+  for (uint32_t row = 0; row < data.params.rows; ++row) {
+    uint32_t *bits = data.mask.data() + uint64_t{row} * data.maskWords;
+    const uint32_t complete = (data.params.committed_tokens + row + 1) / kBlockTokens;
+    for (uint32_t block = 0; block <= complete; ++block) {
+      const uint32_t page = block / kPageBlocks, slot = block % kPageBlocks;
+      const bool take = complete <= kQsaTopBlocks || block == complete ||
+                        page % 5 == 0 || (page % 5 == 2 && slot == row % 8) ||
+                        (page % 11 == 1 + row % 8 && slot % 2 == 0) ||
+                        (page % 13 == 2 + row % 8 && slot == (page + row) % 8);
+      if (take) bits[block / 32] |= 1u << (block % 32);
+    }
+  }
+}
+
+// The page format is head-major inside a page, so a two-head page is the
+// first two heads of the four-head oracle page: quantize through the shared
+// oracle and store the layout's own head count, values in its order.
 void fill(Case &data) {
   const Shape shape = data.shape;
   const Layout layout = shape.layout();
@@ -246,8 +350,12 @@ void fill(Case &data) {
                 data.slab<int8_t>(SPLASH_KV_KEYS, logicalPage));
     std::copy_n(quantized->keyScales.begin(), scales,
                 data.slab<float>(SPLASH_KV_KEY_SCALES, logicalPage));
-    std::copy_n(quantized->values.begin(), elements,
-                data.slab<int8_t>(SPLASH_KV_VALUES, logicalPage));
+    int8_t *values = data.slab<int8_t>(SPLASH_KV_VALUES, logicalPage);
+    for (uint32_t head = 0; head < shape.kvHeads; ++head)
+      for (uint32_t token = 0; token < kPageTokens; ++token)
+        for (uint32_t dimension = 0; dimension < kHeadDimension; ++dimension)
+          values[data.pool->valueElement(head, token, dimension)] =
+              quantized->values[splash_kv_value_element(head, token, dimension)];
     std::copy_n(quantized->valueScales.begin(), scales,
                 data.slab<float>(SPLASH_KV_VALUE_SCALES, logicalPage));
   }
@@ -278,7 +386,7 @@ float loadValue(const Case &data, uint32_t token, uint32_t head,
   float scale = data.slab<const float>(SPLASH_KV_VALUE_SCALES, logicalPage)[
       splash_kv_scale_element(head, pageToken)];
   return float(data.slab<const int8_t>(SPLASH_KV_VALUES, logicalPage)[
-             splash_kv_value_element(head, pageToken, dimension)]) *
+             data.pool->valueElement(head, pageToken, dimension)]) *
          scale;
 }
 
@@ -309,7 +417,9 @@ std::vector<BFloat16Bits> cpuReference(const Case &data, bool quantized) {
                         keyPattern(token, kvHead, dimension)));
           score += double(query) * key;
         }
-        weights[token] = score * 0.0625;
+        weights[token] = data.attends(row, token)
+                             ? score * 0.0625
+                             : -std::numeric_limits<double>::infinity();
         maximum = std::max(maximum, weights[token]);
       }
       double denominator = 0.0;
@@ -348,14 +458,12 @@ struct Pipelines {
 Pipelines makePipelines(id<MTLDevice> device, id<MTLLibrary> library,
                         Shape shape) {
   Pipelines result;
-  result.splitName = std::string("verify_attention_q8_split") + shape.suffix;
+  result.splitName = shape.split("verify");
   result.split = makePipeline(device, library, result.splitName);
-  result.reduce = makePipeline(
-      device, library, std::string("verify_attention_reduce") + shape.suffix);
-  result.prefillSplitName = std::string("prefill_attention_q8_split") + shape.suffix;
+  result.reduce = makePipeline(device, library, shape.reduce("verify"));
+  result.prefillSplitName = shape.split("prefill");
   result.prefillSplit = makePipeline(device, library, result.prefillSplitName);
-  result.prefillReduce = makePipeline(
-      device, library, std::string("prefill_attention_reduce") + shape.suffix);
+  result.prefillReduce = makePipeline(device, library, shape.reduce("prefill"));
   const uint64_t scratch = result.split.staticThreadgroupMemoryLength;
   std::cout << "pipeline=" << result.splitName << " threadgroup_bytes=" << scratch
             << (shaderValidationEnabled() ? " (instrumented by shader validation)" : "")
@@ -399,9 +507,13 @@ Dispatch dispatch(id<MTLDevice> device, id<MTLCommandQueue> queue,
     std::memcpy(static_cast<uint8_t *>(queries.contents) + lane * laneBytes,
                 data.queries.contents, laneBytes);
   }
+  // With QSA masks every lane attends through a copy of the case's list,
+  // lane l's list kQsaJunkLists + l.
+  const BlockLists blocks = data.maskWords ? qsaBlockLists(device, data, width) : BlockLists{partials, partials, 0};
   std::array<VerifyAttentionParams, 4> params{};
-  params.fill({data.params.committed_tokens, data.params.page_table_entries,
-               data.params.kv, splits, splits});
+  for (uint32_t lane = 0; lane < params.size(); ++lane)
+    params[lane] = {data.params.committed_tokens, data.params.page_table_entries, data.params.kv, splits, splits,
+                    blocks.stride, blocks.stride ? kQsaJunkLists + lane : 0};
   id<MTLCommandBuffer> command = [queue commandBuffer];
   id<MTLComputeCommandEncoder> encoder = [command computeCommandEncoder];
   [encoder setComputePipelineState:split];
@@ -410,21 +522,33 @@ Dispatch dispatch(id<MTLDevice> device, id<MTLCommandQueue> queue,
   [encoder setBuffer:statistics offset:0 atIndex:2];
   for (uint32_t index = 3; index < 7; ++index)
     [encoder setBuffer:data.pageTableBuffer offset:0 atIndex:index];
+  // A sparse split binds the lists and their counts, or without lists
+  // another buffer of the dispatch, of which it reads nothing.
+  NSUInteger paramsIndex = 7;
+  if (shape.sparse()) {
+    [encoder setBuffer:blocks.lists offset:0 atIndex:paramsIndex++];
+    [encoder setBuffer:blocks.counts offset:0 atIndex:paramsIndex++];
+  }
   [encoder setBytes:params.data()
               length:sizeof(VerifyAttentionParams) * params.size()
-             atIndex:7];
+             atIndex:paramsIndex];
   // The kernel reaches the extents only through the page entries.
   for (id<MTLBuffer> extent : data.extents)
     [encoder useResource:extent usage:MTLResourceUsageRead];
-  [encoder dispatchThreadgroups:MTLSizeMake(shape.kvHeads, splits, width)
+  // The sparse split's grid is one-dimensional (ops::PagedAttention::verifyPlan).
+  [encoder dispatchThreadgroups:shape.sparse() ? MTLSizeMake(shape.kvHeads * splits, 1, width)
+                                               : MTLSizeMake(shape.kvHeads, splits, width)
           threadsPerThreadgroup:MTLSizeMake(256, 1, 1)];
   [encoder setComputePipelineState:reduce];
   [encoder setBuffer:partials offset:0 atIndex:0];
   [encoder setBuffer:statistics offset:0 atIndex:1];
   [encoder setBuffer:output offset:0 atIndex:2];
+  paramsIndex = 3;
+  if (shape.sparse())
+    [encoder setBuffer:blocks.counts offset:0 atIndex:paramsIndex++];
   [encoder setBytes:params.data()
               length:sizeof(VerifyAttentionParams) * params.size()
-             atIndex:3];
+             atIndex:paramsIndex];
   [encoder dispatchThreadgroups:MTLSizeMake(shape.kvHeads, shape.fusedRows(), width)
           threadsPerThreadgroup:MTLSizeMake(256, 1, 1)];
   [encoder endEncoding];
@@ -444,6 +568,11 @@ Dispatch dispatchPrefill(id<MTLDevice> device, id<MTLCommandQueue> queue,
       device, slots * shape.fusedRows() * kHeadDimension * sizeof(float));
   id<MTLBuffer> statistics =
       makeBuffer(device, slots * shape.fusedRows() * 2 * sizeof(float));
+  // With QSA masks the tile attends through list kQsaJunkLists.
+  const BlockLists blocks = data.maskWords ? qsaBlockLists(device, data, 1) : BlockLists{partials, partials, 0};
+  PrefillAttentionParams params = data.params;
+  params.block_stride = blocks.stride;
+  params.block_list = blocks.stride ? kQsaJunkLists : 0;
   id<MTLCommandBuffer> command = [queue commandBuffer];
   id<MTLComputeCommandEncoder> encoder = [command computeCommandEncoder];
   [encoder setComputePipelineState:split];
@@ -451,7 +580,14 @@ Dispatch dispatchPrefill(id<MTLDevice> device, id<MTLCommandQueue> queue,
   [encoder setBuffer:partials offset:0 atIndex:1];
   [encoder setBuffer:statistics offset:0 atIndex:2];
   [encoder setBuffer:data.pageTableBuffer offset:0 atIndex:3];
-  [encoder setBytes:&data.params length:sizeof(data.params) atIndex:4];
+  // A sparse split binds the lists and their counts, or without lists
+  // another buffer of the dispatch, of which it reads nothing.
+  NSUInteger paramsIndex = 4;
+  if (shape.sparse()) {
+    [encoder setBuffer:blocks.lists offset:0 atIndex:paramsIndex++];
+    [encoder setBuffer:blocks.counts offset:0 atIndex:paramsIndex++];
+  }
+  [encoder setBytes:&params length:sizeof(params) atIndex:paramsIndex];
   for (id<MTLBuffer> extent : data.extents)
     [encoder useResource:extent usage:MTLResourceUsageRead];
   [encoder dispatchThreadgroups:MTLSizeMake(shape.kvHeads, 1, splits)
@@ -460,7 +596,10 @@ Dispatch dispatchPrefill(id<MTLDevice> device, id<MTLCommandQueue> queue,
   [encoder setBuffer:partials offset:0 atIndex:0];
   [encoder setBuffer:statistics offset:0 atIndex:1];
   [encoder setBuffer:output offset:0 atIndex:2];
-  [encoder setBytes:&data.params length:sizeof(data.params) atIndex:3];
+  paramsIndex = 3;
+  if (shape.sparse())
+    [encoder setBuffer:blocks.counts offset:0 atIndex:paramsIndex++];
+  [encoder setBytes:&params length:sizeof(params) atIndex:paramsIndex];
   [encoder dispatchThreadgroups:MTLSizeMake(shape.kvHeads, shape.fusedRows(), 1)
           threadsPerThreadgroup:MTLSizeMake(256, 1, 1)];
   [encoder endEncoding];
@@ -493,9 +632,13 @@ void checkOutput(const Case &data, uint32_t width,
   float qualityMaximumAbsolute = 0.0f;
   uint32_t top1Matches = 0;
   uint32_t top1Rows = 0;
+  // With QSA bitmaps each row attends its own blocks: a row that lost some
+  // must not hide in the cosine pooled over every row.
+  std::vector<std::array<double, 3>> rowSums(uint64_t{width} * activeRows, {0.0, 0.0, 0.0});
   for (uint32_t lane = 0; lane < width; ++lane) {
     for (uint32_t head = 0; head < shape.queryHeads(); ++head) {
       for (uint32_t row = 0; row < activeRows; ++row) {
+        std::array<double, 3> &rowSum = rowSums[uint64_t{lane} * activeRows + row];
         uint32_t actualTop = 0;
         float actualTopValue = -std::numeric_limits<float>::infinity();
         float bf16TopValue = -std::numeric_limits<float>::infinity();
@@ -510,6 +653,9 @@ void checkOutput(const Case &data, uint32_t width,
           dot += double(observed) * q8Reference;
           actualSquared += double(observed) * observed;
           expectedSquared += double(q8Reference) * q8Reference;
+          rowSum[0] += double(observed) * q8Reference;
+          rowSum[1] += double(observed) * observed;
+          rowSum[2] += double(q8Reference) * q8Reference;
           qualityMaximumAbsolute = std::max(
               qualityMaximumAbsolute, std::abs(observed - bf16Reference));
           qualityDot += double(observed) * bf16Reference;
@@ -542,6 +688,10 @@ void checkOutput(const Case &data, uint32_t width,
             << " bf16_top1=" << top1Agreement << '\n';
   require(cosine > 0.9995,
           "production batch attention differs from its Q8 reference");
+  if (data.maskWords)
+    for (const auto &[rowDot, rowActual, rowExpected] : rowSums)
+      require(rowDot / std::sqrt(rowActual * rowExpected) > 0.999,
+              "a QSA row's attention differs from its Q8 reference");
   require(maximumAbsolute < 0.02f,
           "production batch attention exceeds its Q8 error bound");
   require(!qualityGate ||
@@ -612,18 +762,20 @@ void requireIdentical(const std::string &pipeline, const Case &data,
 void runCase(id<MTLDevice> device, id<MTLCommandQueue> queue,
              const Pipelines &pipelines, Shape shape,
              uint32_t committed, uint32_t activeRows, uint32_t width,
-             bool qualityGate = true, uint32_t splits = kVerifySplits) {
+             bool qualityGate = true, uint32_t splits = kVerifySplits,
+             bool qsa = false) {
   require(width >= 1 && width <= 4 &&
               (activeRows == kRows ||
                (width == 1 && splits <= SPLASH_PREFILL_ATTENTION_MAXIMUM_SPLITS)),
           "invalid attention case");
   Case data = makeCase(device, shape, committed, activeRows, splits);
   fill(data);
+  if (qsa) setQsaMask(data);
   const Case oneExtent = oneExtentCopy(device, data);
   const std::vector<BFloat16Bits> expectedQ8 = cpuReference(data, true);
   const std::vector<BFloat16Bits> expectedBf16 = cpuReference(data, false);
   const bool verify = activeRows == kRows;
-  const std::string &name = verify ? pipelines.splitName : pipelines.prefillSplitName;
+  const std::string name = (verify ? pipelines.splitName : pipelines.prefillSplitName) + (qsa ? "_qsa" : "");
   const auto run = [&](const Case &c) {
     return verify ? dispatch(device, queue, pipelines.split, pipelines.reduce, c, width)
                   : dispatchPrefill(device, queue, pipelines.prefillSplit,
@@ -645,7 +797,7 @@ void runCase(id<MTLDevice> device, id<MTLCommandQueue> queue,
 // fewer rows run the prefill entry alone.
 void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
                  id<MTLLibrary> library, Shape shape, uint32_t splits,
-                 uint32_t activeRows, bool benchmark = false) {
+                 uint32_t activeRows) {
   const uint32_t m = shape.fusedRows(), d = kHeadDimension;
   auto partials = makeBuffer(device, uint64_t{shape.kvHeads} * splits * m * d * 4);
   auto stats = makeBuffer(device, uint64_t{shape.kvHeads} * splits * m * 2 * 4);
@@ -663,28 +815,27 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
         for (uint32_t dim = 0; dim < d; ++dim)
           p[index * d + dim] = float(int((split * 71 + dim * 37 + row * 13) % 257) - 128) * 0.125f;
       }
-  // One entry's merge of the partials into a poisoned output.
-  double lastGpuMilliseconds = 0.0;
-  const auto reduce = [&](const std::string &entry, const auto &params) {
+  // One phase's merge of the partials into a poisoned output; a sparse
+  // reduce without lists binds another buffer of the dispatch for their
+  // counts, of which it reads nothing.
+  const auto reduce = [&](const char *phase, const auto &params) {
     id<MTLBuffer> output = makeBuffer(device, uint64_t{shape.kvHeads} * kStride *
                                                  shape.queryHeadsPerKvHead * d * 2);
     std::memset(output.contents, 0xa5, output.length);
     id<MTLCommandBuffer> command = [queue commandBuffer];
     id<MTLComputeCommandEncoder> encoder = [command computeCommandEncoder];
-    [encoder setComputePipelineState:makePipeline(device, library, entry + shape.suffix)];
+    [encoder setComputePipelineState:makePipeline(device, library, shape.reduce(phase))];
     [encoder setBuffer:partials offset:0 atIndex:0];
     [encoder setBuffer:stats offset:0 atIndex:1];
     [encoder setBuffer:output offset:0 atIndex:2];
-    [encoder setBytes:&params length:sizeof(params) atIndex:3];
+    NSUInteger paramsIndex = 3;
+    if (shape.sparse())
+      [encoder setBuffer:partials offset:0 atIndex:paramsIndex++];
+    [encoder setBytes:&params length:sizeof(params) atIndex:paramsIndex];
     [encoder dispatchThreadgroups:MTLSizeMake(shape.kvHeads, m, 1)
            threadsPerThreadgroup:MTLSizeMake(256, 1, 1)];
     [encoder endEncoding];
     finish(command);
-    if (benchmark) {
-      lastGpuMilliseconds = (command.GPUEndTime - command.GPUStartTime) * 1000.0;
-      require(std::isfinite(lastGpuMilliseconds) && lastGpuMilliseconds > 0.0,
-              "reduce benchmark has no valid GPU command timing");
-    }
     return output;
   };
   // The fp64 merge of each active row, the inactive rows' zeros and the
@@ -729,62 +880,20 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
   };
   // The prefill tile holds as many rows as a verify lane.
   static_assert(SPLASH_PREFILL_ATTENTION_TILE_ROWS == SPLASH_TARGET_VERIFY_ROWS);
-  const uint32_t committed = benchmark ? 32768 : splits * 32 - activeRows;
-  const uint32_t pages = (committed + activeRows + kPageTokens - 1) / kPageTokens;
+  // A history every split takes a share of: a page each of the page loop's,
+  // and of a sparse reduce without lists the least blocks a split takes.
+  const uint32_t splitTokens = shape.sparse() ? SPLASH_SPARSE_SPLIT_BLOCKS * SPLASH_ATTENTION_BLOCK_TOKENS : 32;
+  const uint32_t committed = splits * splitTokens - activeRows;
+  const uint32_t pages = splits * splitTokens / 32;
   id<MTLBuffer> verify;
   if (activeRows == kRows) {
-    const VerifyAttentionParams params{committed, pages, {1, 0}, splits, splits};
-    verify = reduce("verify_attention_reduce", params);
+    const VerifyAttentionParams params{committed, pages, {1, 0}, splits, splits, 0, 0};
+    verify = reduce("verify", params);
     check(verify);
-    if (shape.kvHeads == 4 && shape.queryHeadsPerKvHead == 4) {
-      const auto candidate = reduce("verify_attention_reduce_shared_denom", params);
-      check(candidate);
-      require(!std::memcmp(verify.contents, candidate.contents, verify.length),
-              "shared denominator changed kv4_g4 reduction output bits or poison");
-      if (benchmark) {
-        const std::array<std::string, 2> entries{
-            "verify_attention_reduce", "verify_attention_reduce_shared_denom"};
-        std::array<std::vector<double>, 2> samples;
-        const auto measure = [&](uint32_t variant, bool retain) {
-          const auto output = reduce(entries[variant], params);
-          require(!std::memcmp(verify.contents, output.contents, verify.length),
-                  "reduce benchmark changed output bits or wrote into its poison guard");
-          if (retain) samples[variant].push_back(lastGpuMilliseconds);
-        };
-        for (uint32_t variant : {0U, 1U, 1U, 0U}) measure(variant, false);
-        // Twenty alternating AB/BA pairs form ten ABBA rounds. Both entries
-        // consume the same immutable partial/statistics tensors throughout.
-        for (uint32_t pair = 0; pair < 20; ++pair) {
-          measure(pair % 2, true);
-          measure(1 - pair % 2, true);
-        }
-        const auto median = [](std::vector<double> values) {
-          std::sort(values.begin(), values.end());
-          return (values[values.size() / 2 - 1] + values[values.size() / 2]) * 0.5;
-        };
-        const double baseline = median(samples[0]), shared = median(samples[1]);
-        std::cout << std::setprecision(9)
-                  << "{\"kind\":\"reduce65\",\"query_heads\":16,\"kv_heads\":4,"
-                     "\"head_dimension\":256,\"active_rows\":8,\"splits\":65,"
-                     "\"committed_tokens\":32768,\"fixture\":\"synthetic\","
-                     "\"pairs\":20,\"samples_per_variant\":20,"
-                     "\"baseline_median_gpu_ms\":" << baseline
-                  << ",\"shared_median_gpu_ms\":" << shared
-                  << ",\"shared_over_baseline\":" << shared / baseline
-                  << ",\"outputs_and_guards_identical\":true,\"gpu_ms_samples\":[";
-        for (uint32_t variant = 0; variant < 2; ++variant) {
-          std::cout << (variant ? ",[" : "[");
-          for (size_t i = 0; i < samples[variant].size(); ++i)
-            std::cout << (i ? "," : "") << samples[variant][i];
-          std::cout << ']';
-        }
-        std::cout << "]}\n";
-      }
-    }
   }
   if (splits <= SPLASH_PREFILL_ATTENTION_MAXIMUM_SPLITS) {
-    const PrefillAttentionParams params{committed, activeRows, kStride, splits, {1, 0}, splits};
-    id<MTLBuffer> prefill = reduce("prefill_attention_reduce", params);
+    const PrefillAttentionParams params{committed, activeRows, kStride, pages, {1, 0}, splits, 0, 0};
+    id<MTLBuffer> prefill = reduce("prefill", params);
     check(prefill);
     if (verify)
       require(!std::memcmp(verify.contents, prefill.contents, verify.length),
@@ -792,7 +901,7 @@ void checkReduce(id<MTLDevice> device, id<MTLCommandQueue> queue,
   }
 }
 
-void run(const char *libraryPath, bool benchmarkReduce65) {
+void run(const char *libraryPath) {
   testContract();
   id<MTLDevice> device = MTLCreateSystemDefaultDevice();
   if (!device)
@@ -804,12 +913,6 @@ void run(const char *libraryPath, bool benchmarkReduce65) {
   if (!library)
     throw std::runtime_error(error.localizedDescription.UTF8String);
   id<MTLCommandQueue> queue = [device newCommandQueue];
-  if (benchmarkReduce65) {
-    checkReduce(device, queue, library, Shape{4, 4, "_kv4_g4"}, 65, kRows, true);
-    return;
-  }
-  for (uint32_t splits : {1U, 3U, 7U, 32U, 65U, 128U})
-    checkReduce(device, queue, library, Shape{4, 4, "_kv4_g4"}, splits, kRows);
   for (const Shape shape : kShapes) {
     for (uint32_t splits : {1U, 3U, 7U, 32U, 65U, 128U}) {
       checkReduce(device, queue, library, shape, splits, kRows);
@@ -839,6 +942,28 @@ void run(const char *libraryPath, bool benchmarkReduce65) {
     runCase(device, queue, pipelines, shape, 8'192, 5, 1, false);
     runCase(device, queue, pipelines, shape, 32'768, 7, 1, false);
     runCase(device, queue, pipelines, shape, 32'768, 8, 2, false, 65);
+    if (shape.queryHeadsPerKvHead == 12) {
+      // QSA masks: a tile attends only the blocks its list names. Causal
+      // rows only; tiles crossing from causal to sparse rows (complete
+      // blocks 40 to 42, and only the last row past 40); sparse rows over
+      // several units per split, ragged and empty splits.
+      runCase(device, queue, pipelines, shape, 127, 8, 1, true, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 160, 8, 2, true, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 158, 6, 1, true, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 1'100, 8, 2, false, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 1'100, 8, 1, false, 1, true);
+      runCase(device, queue, pipelines, shape, 4'093, 5, 1, false, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 4'093, 8, 3, false, 65, true);
+      runCase(device, queue, pipelines, shape, 32'768, 7, 1, false, kVerifySplits, true);
+      runCase(device, queue, pipelines, shape, 32'768, 8, 2, false, 65, true);
+      // At a long history the sparse kernels agree with the reference
+      // through a list, whose count sets a split's share, and without one,
+      // over every block as the page loop attends them (past 64K tokens of
+      // full attention the bf16 probabilities' rounding alone moves the
+      // output past the cosine bound).
+      runCase(device, queue, pipelines, shape, 131'072, 8, 2, false, kVerifyMaximumSplits, true);
+      runCase(device, queue, pipelines, shape, 65'536, 8, 1, false, kVerifyMaximumSplits);
+    }
   }
   std::cout << "q8_flash_attention_metal_test: ok\n";
 }
@@ -848,11 +973,10 @@ void run(const char *libraryPath, bool benchmarkReduce65) {
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
     try {
-      if ((argc != 2 && argc != 3) ||
-          (argc == 3 && std::string(argv[2]) != "--benchmark-reduce65"))
+      if (argc != 2)
         throw std::runtime_error(
-            "usage: q8_flash_attention_metal_test <metallib> [--benchmark-reduce65]");
-      run(argv[1], argc == 3);
+            "usage: q8_flash_attention_metal_test <metallib>");
+      run(argv[1]);
       return 0;
     } catch (const std::exception &error) {
       std::cerr << "q8_flash_attention_metal_test: " << error.what() << '\n';

@@ -29,6 +29,9 @@ struct GdnStateLayout final {
   uint32_t recurrentRows = 0;
   uint32_t recurrentColumns = 0;
   ops::GdnStateFormat format = ops::GdnStateFormat::Float32;
+  // State a family keeps beside its GDN layers' (Qwen3.8-Flash-Next's PLE
+  // convolution history), after them in the cell.
+  uint64_t auxiliaryBytes = 0;
 
   [[nodiscard]] constexpr bool valid() const noexcept {
     return layers && convolutionHistory && convolutionChannels &&
@@ -50,10 +53,10 @@ struct GdnStateLayout final {
     return uint64_t{layers} * recurrentLayerBytes();
   }
   [[nodiscard]] constexpr uint64_t cellBytes() const noexcept {
-    return convolutionBytes() + recurrentBytes();
+    return convolutionBytes() + recurrentBytes() + alignUp(auxiliaryBytes);
   }
   // A cell holds every layer's convolution state, then every layer's
-  // recurrent state.
+  // recurrent state, then the auxiliary state.
   [[nodiscard]] constexpr ops::GdnStateStrides strides() const noexcept {
     return {convolutionLayerBytes(), recurrentLayerBytes(), convolutionBytes(),
             format};
@@ -88,7 +91,7 @@ struct DraftStateLayout final {
     return layers && !fullHistory;
   }
   [[nodiscard]] constexpr bool valid() const noexcept {
-    if (!layers || layers > layerContextTokens.size() || !kvHeads || !headDimension) return false;
+    if (!layers || (fullHistory && layers > layerContextTokens.size()) || !kvHeads || !headDimension) return false;
     if (usesContextWindow() && (!contextWidth || contextWidth % SPLASH_DRAFT_CONTEXT_GROUP)) return false;
     for (uint32_t i = 0; i < layers; ++i)
       if (contextTokens(i) % 128) return false;

@@ -488,6 +488,7 @@ class FakeRuntime:
             else {
                 "stop": wire.FinishReason.STOP,
                 "length": wire.FinishReason.LENGTH,
+                "bounded": wire.FinishReason.LENGTH,
             }[plan.reason]
         )
         plan.terminal.set()
@@ -503,6 +504,7 @@ class FakeRuntime:
             2_000,
             3_000,
             tuple(plan.logits) if plan.logits is not None else (),
+            bounded=reason == wire.FinishReason.LENGTH and plan.reason == "bounded",
         )
         call.complete(result=done)
 
@@ -778,7 +780,7 @@ def main_args(**overrides):
     return SimpleNamespace(
         **{
             "model_root": "model",
-            "tokenizer": "tokenizer",
+            "chat_template": None,
             "model": "test-model",
             "served_model_name": [],
             "announce_served_name": False,
@@ -808,6 +810,7 @@ def main_args(**overrides):
             "fast_topk": "off",
             "encoder_option_queries": "on",
             "encoder_submit_batch_size": 4,
+            "verify_rows": "auto",
             "max_image_pixels": images.MAX_PIXELS,
             "request_timeout": None,
             "queue_size": 1,
@@ -820,11 +823,22 @@ def main_args(**overrides):
             "max_request_size": serve_options.DEFAULT_MAX_REQUEST_BYTES,
             "port": 0,
             "binary": "splash",
+            "ple_memory": None,
+            "expert_memory": None,
+            "sparse_kv_memory": None,
             "kv_format": "int8",
             "state_format": "fp32",
             "experimental_quantized_ffn": "off",
             **overrides,
         }
+    )
+
+
+def unprepared_hold():
+    """main()'s hold of its model directory, for a test of a directory Splash
+    did not prepare: the directory as it is, held by nothing."""
+    return mock.patch.object(
+        api.assembly, "hold", side_effect=lambda path: (path, None)
     )
 
 

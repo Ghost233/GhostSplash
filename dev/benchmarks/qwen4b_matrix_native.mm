@@ -141,14 +141,14 @@ public:
 #endif
   }
   void maskRequested(uint64_t, std::span<const uint32_t>) override { throw std::logic_error("unexpected mask"); }
-  void completed(uint64_t id, EngineFinishReason reason, uint32_t, uint32_t count,
+  void completed(uint64_t id, EngineFinishReason reason, bool bounded, uint32_t, uint32_t count,
                  uint32_t, std::span<const float>, const SpeculativeCounts &) override {
     auto &request = requests.at(id - 1);
-    if (reason != EngineFinishReason::Length || count != request.output.size())
+    if (reason != EngineFinishReason::Length || bounded || count != request.output.size())
       throw std::runtime_error("forced generation did not finish at length");
     request.complete = true; request.end = Clock::now();
   }
-  void failed(uint64_t, LaneOutcome outcome, std::string message) override {
+  void failed(uint64_t, LaneOutcome outcome, std::string message, uint32_t) override {
     throw std::runtime_error(std::string(laneOutcomeWire(outcome).code) + ": " + message);
   }
 };

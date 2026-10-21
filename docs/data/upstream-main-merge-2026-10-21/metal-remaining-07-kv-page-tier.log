@@ -1,0 +1,27 @@
+2026-10-21 15:06:20.938 kv-page-tier[19033:10846168] Metal GPU Validation Enabled
+15:06:21 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+15:06:21 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+round trip int8 2x2x256 slot format v0: payload_bytes=66560 slot_bytes=81920
+round trip int8 10x2x256 slot format v0: payload_bytes=332800 slot_bytes=344064
+round trip int8 16x4x256 slot format v0: payload_bytes=1064960 slot_bytes=1064960
+round trip int8 12x2x256 slot format v1: payload_bytes=423936 slot_bytes=425984
+block records int8: record_bytes=4160 pitch=4160
+transfer limit tests passed
+write budget tests passed
+closed file tests passed
+transfers beside a command int8: the restore landed within 64 rounds of writes and checks
+teardown tests passed
+round trip bf16 2x2x256 slot format v0: payload_bytes=131072 slot_bytes=131072
+round trip bf16 10x2x256 slot format v0: payload_bytes=655360 slot_bytes=655360
+round trip bf16 16x4x256 slot format v0: payload_bytes=2097152 slot_bytes=2097152
+round trip bf16 12x2x256 slot format v1: payload_bytes=811008 slot_bytes=819200
+block records bf16: record_bytes=8192 pitch=8192
+transfer limit tests passed
+write budget tests passed
+closed file tests passed
+transfers beside a command bf16: the restore landed within 64 rounds of writes and checks
+teardown tests passed
+round trip q4h 8x4x256 slot format v0: payload_bytes=270336 slot_bytes=278528
+round trip q4_0 8x4x256 slot format v0: payload_bytes=294912 slot_bytes=294912
+round trip q4_0_unrotated 8x4x256 slot format v0: payload_bytes=294912 slot_bytes=294912
+kv page tier tests passed

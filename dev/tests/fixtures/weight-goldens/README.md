@@ -5,17 +5,24 @@
   `ggml_bf16_to_fp32_row` and `ggml_fp16_to_fp32_row`), and of block_nvfp4
   rows of llama.cpp's NVFP4 (`ggml-nvfp4`, which the loader converts into
   NVFP4's native rows) (`gguf-reference`). They pin the CPU reference
-  (`dev/tests/engine/GgufFormatReference.hpp`) to llama.cpp 7ab4ee7, and
-  PQ2_0, which upstream GGML lacks, to PrismML-Eng/llama.cpp 01ae597, so no
-  Splash change touches them.
+  (`dev/tests/engine/GgufFormatReference.hpp`) to the reference GGUF
+  implementation at commit 7ab4ee7 (Q2_0 too), and PQ2_0, which it lacks, to
+  commit 01ae597 of a fork that adds it, so no Splash change touches them.
+- `gguf_quantization`: the reference GGUF implementation's
+  `quantize_row_q8_0_ref` of the reference's Q8_0 fixture values (`q8_0`,
+  `gguf-reference`), which pins the reference's Q8_0 quantization, the
+  loader's of Qwen3.8-Flash-Next's BF16 and F16 hyper-connection projections,
+  to its commit 7ab4ee7 alike.
 - `gguf_images`: every image `gguf-preparation` writes from its dense and MoE
   GGUF fixtures.
 - `draft_images`: every image `draft-preparation` writes from the DFlash2
   draft checkpoint `run_draft_preparation.py` writes.
 - `standard_draft_images`: the six-layer Standard checkpoint images from
   `run_draft_preparation.py --standard`, checked with the same independent
-  af4g64 native-row and every-byte oracles. These hashes changed when its
-  old affine image layout migrated to block images during the ghost merge.
+  af4g64 native-row and every-byte oracles. These hashes changed with the
+  upstream 1.4.0 migration from 256-row to 64-row quantized planes. The
+  native-row, every-byte and release/restore checks passed before the
+  seven Standard image hashes were updated; DFlash2 uses upstream hashes.
 - `vision_image`: the image written from every `run_vision_preparation.py`
   tower.
 
@@ -52,24 +59,13 @@ to change them:
    new hashes here in the same commit, which says which images changed and
    why.
 
-The dequantization hashes change only with the fixture itself. Regenerate
-them with a libggml-base built from llama.cpp 7ab4ee7 (PrismML-Eng/llama.cpp
-01ae597 for PQ2_0; its other formats decode as upstream's):
+The dequantization and quantization hashes change only with the fixtures
+themselves. Regenerate them with a libggml-base built from the reference GGUF
+implementation at commit 7ab4ee7 (for PQ2_0, from commit 01ae597 of a fork that
+adds it; its other formats decode as 7ab4ee7's):
 `SPLASH_GGML_ORACLE=<libggml-base.dylib> build/engine-tests/gguf-reference dev/tests/fixtures/weight-goldens/goldens.json dev/tests/fixtures/mlx-quantization/fixture.json`
-compares the reference with GGML and prints GGML's hash of each format.
-
-Q2_0 was added in ggml-org/llama.cpp after those revisions. Its golden is
-pinned to `9c2e0e491a822adae1f0b1c831adb4160057d24f`. The standalone
-`q2_0-oracle.cpp` preserves that revision's `dequantize_row_q2_0` verbatim
-and generates the fixture without Splash headers: 256 rows of 1024 values,
-MT19937 seed 26, random bytes followed by finite half scales. Regenerate its
-hash without building or running a llama.cpp engine:
-
-```sh
-clang++ -std=c++20 dev/tests/fixtures/weight-goldens/q2_0-oracle.cpp -o build/q2_0-oracle
-build/q2_0-oracle > build/q2_0-values.bin
-shasum -a 256 build/q2_0-values.bin
-```
+compares the reference with that library and prints its hash of each format
+and of the Q8_0 quantization.
 
 The MLX formats have no GGML hash: `gguf-reference` and `gguf-preparation`
 compare them with MLX's own values in

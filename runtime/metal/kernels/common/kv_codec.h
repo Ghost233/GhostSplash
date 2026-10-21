@@ -44,7 +44,7 @@ inline auto splash_kv_value_operand(device Cache *data, threadgroup bfloat *stag
     return tensor<device Cache, dextents<int,2>, tensor_inline>(data, dextents<int,2>{N,D}, array<int,2>{1,N});
 }
 
-template <class Cache>
+template <class Cache, bool ValuesTokenMajor = false>
 inline float splash_kv_read(SplashKvPageTensors<Cache> slab, uint token, uint dimension, bool valueTensor) {
   const auto data = valueTensor ? slab.values : slab.keys;
   const uint element = token * SPLASH_KV_HEAD_DIMENSION + dimension;
@@ -55,7 +55,7 @@ inline float splash_kv_read(SplashKvPageTensors<Cache> slab, uint token, uint di
     return splash_q4h_decode(data[element / 2], dimension,
                             (valueTensor ? slab.value_scales : slab.key_scales)[token]);
   } else {
-    const uint at = valueTensor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element;
+    const uint at = valueTensor && !ValuesTokenMajor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element;
     if constexpr (is_same<Cache, bfloat>::value) return float(data[at]);
     else return splash_q8_decode(data[at], (valueTensor ? slab.value_scales : slab.key_scales)[token]);
   }
@@ -63,7 +63,7 @@ inline float splash_kv_read(SplashKvPageTensors<Cache> slab, uint token, uint di
 
 // Every GPU store uses the same codec after its caller selects a head slab
 // and loads one BF16 dimension. Only the parallel reductions are GPU-specific.
-template <class Cache>
+template <class Cache, bool ValuesTokenMajor = false>
 inline void splash_kv_store_row(SplashKvPageTensors<Cache> slab, bfloat source,
                                threadgroup float *maxima, bool valueTensor,
                                uint token, uint dimension, uint lane, uint group) {
@@ -80,7 +80,7 @@ inline void splash_kv_store_row(SplashKvPageTensors<Cache> slab, bfloat source,
     if (lane == 0) block->d = maximum == 0.0f ? as_type<half>(ushort(0x8000)) : half(scale);
     if (lane < 16) block->qs[lane] = splash_kv_pack_nibbles(code, other);
   } else if constexpr (is_same<Cache, bfloat>::value) {
-    data[valueTensor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element] = source;
+    data[valueTensor && !ValuesTokenMajor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element] = source;
   } else {
     const float value = float(source), local = simd_max(abs(value));
     if (lane == 0) maxima[group] = local;
@@ -98,7 +98,7 @@ inline void splash_kv_store_row(SplashKvPageTensors<Cache> slab, bfloat source,
       if (!(dimension & 1)) data[element / 2] = splash_kv_pack_nibbles(code, other);
       if (dimension == 0) scales[token] = splash_q4h_scale(maximum);
     } else {
-      data[valueTensor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element] = int8_t(splash_q8_quantize(value, maximum));
+      data[valueTensor && !ValuesTokenMajor ? dimension * SPLASH_TARGET_KV_BLOCK_TOKENS + token : element] = int8_t(splash_q8_quantize(value, maximum));
       if (dimension == 0) scales[token] = splash_q8_scale(maximum);
     }
   }

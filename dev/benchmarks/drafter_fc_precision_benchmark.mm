@@ -136,7 +136,7 @@ Result run(const std::filesystem::path &library, const std::filesystem::path &ro
   const auto setupStart = Clock::now();
   auto descriptor = model::inspectModelRoot(root);
   if (!descriptor.hasDraft() || descriptor.draft.kind != model::DraftKind::Standard ||
-      descriptor.draft.hiddenSize != 2560 || descriptor.draft.targetHiddenSize != 20480)
+      descriptor.draft.hiddenSize != 2560 || descriptor.draft.targetHiddenSize() != 20480)
     throw std::invalid_argument("benchmark requires the Qwen3.5-4B standard DFlash assembly");
   std::visit([&](const auto &target) {
     if (target.stopTokens != std::array<uint32_t, 2>{248044, 248046})

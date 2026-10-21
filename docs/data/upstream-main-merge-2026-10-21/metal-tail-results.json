@@ -1,0 +1,26 @@
+[
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/vision-metal build/splash.metallib",
+    "log": "metal-tail-vision-metal.log",
+    "exit_code": 0,
+    "elapsed_seconds": 0.8420619160024216
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/vision-attention build/splash.metallib",
+    "log": "metal-tail-vision-attention.log",
+    "exit_code": 0,
+    "elapsed_seconds": 5.644724750003661
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/metal-backend build/engine-tests/metal-backend.metallib",
+    "log": "metal-tail-metal-backend.log",
+    "exit_code": 0,
+    "elapsed_seconds": 17.242980583003373
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/handoff build/engine-tests/metal-backend.metallib",
+    "log": "metal-tail-handoff.log",
+    "exit_code": 0,
+    "elapsed_seconds": 3.552459500002442
+  }
+]

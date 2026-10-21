@@ -40,14 +40,15 @@ model::DFlashDraftLayout tinyDraftLayout(bool standard) {
   layout.intermediateSize = 256;
   layout.attentionHeadDimension = 64;
   layout.rotaryTheta = 10'000'000.0F;
-  layout.targetHiddenSize = 256;
+  layout.targetLayerCount = 1;
   layout.selectorRank = 256;
   layout.kvHeads = 2;
   if (standard) {
     layout.kind = model::DraftKind::Standard;
     layout.layers = 6; layout.dynamicSize = 0; layout.selectorRank = 0;
     layout.qkvSize = 768; layout.attentionSize = 512;
-    layout.intermediateSize = 512; layout.targetHiddenSize = 2048;
+    layout.intermediateSize = 512; layout.targetLayerCount = 8;
+    for (uint32_t index = 0; index < layout.targetLayerCount; ++index) layout.targetLayers[index] = index;
   }
   return layout;
 }
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
                p.blocks().segments.front().formatId == GGUF_FMT_AF4G64;
       };
       bool read = draft.layers.size() == layout.layers && draft.files.size() == layout.layers + 1 &&
-                  projection(draft.contextProjection, layout.hiddenSize, layout.targetHiddenSize) &&
+                  projection(draft.contextProjection, layout.hiddenSize, layout.targetHiddenSize()) &&
                   (standard ? draft.selectorProjection.inputSize == 0
                             : projection(draft.selectorProjection, layout.selectorRank, layout.hiddenSize));
       for (const auto &layer : draft.layers)

@@ -518,8 +518,10 @@ void testTargetOnlyState(metal::MetalBackend &backend) {
   const auto original = stateImage(storage, 0);
   constexpr uint32_t tokens = kv::kPageTokens;
   storage.updateLengths(0, {tokens, 0, 0});
-  auto reservation = storage.reserve();
-  require(reservation && !reservation->buffers().draft && !reservation->buffers().window,
+  metal::AllocationFailure refusal;
+  auto reservation = storage.reserve(refusal);
+  require(reservation && refusal == metal::AllocationFailure::None &&
+              !reservation->buffers().draft && !reservation->buffers().window,
           "target-only reservation allocated a draft payload");
   storage.copyWindow(0, *reservation);
   storage.copyState(0, *reservation);
@@ -579,15 +581,18 @@ void testFullHistoryState(metal::MetalBackend &backend) {
   storage.updateLengths(0, {6144, 0, 6144});
   // An unsealed reservation gives both the GDN cell and complete rings
   // back once. It never substitutes a DFlash2 context window.
-  auto reservation = storage.reserve();
-  require(reservation && reservation->buffers().draft && !reservation->buffers().window,
+  metal::AllocationFailure refusal;
+  auto reservation = storage.reserve(refusal);
+  require(reservation && refusal == metal::AllocationFailure::None &&
+              reservation->buffers().draft && !reservation->buffers().window,
           "full-history reservation omitted its rings or allocated a window");
   const uint64_t allocated = storage.actualAllocatedBytes();
   reservation.reset();
   require(storage.idleCells() == 1 && storage.idleRings() == 1 && storage.idleWindows() == 0,
           "unsealed full-history reservation did not return both payloads");
-  reservation = storage.reserve();
-  require(reservation && storage.idleCells() == 0 && storage.idleRings() == 0 &&
+  reservation = storage.reserve(refusal);
+  require(reservation && refusal == metal::AllocationFailure::None &&
+              storage.idleCells() == 0 && storage.idleRings() == 0 &&
               storage.actualAllocatedBytes() == allocated,
           "full-history reservation did not reuse its pooled buffers");
   storage.copyWindow(0, *reservation);
@@ -643,7 +648,7 @@ void testFullHistoryState(metal::MetalBackend &backend) {
 
 // A state a prefill command captures takes its cache slot before the command
 // runs: the pool's buffers, one admission for what the pool lacks, nothing
-// on a refusal. copyWindow() fills the slot's window alone and copyState()
+// on a refusal, whose cause it reports. copyWindow() fills the slot's window alone and copyState()
 // the lane's whole state. Sealing moves the slot into the cached state, which
 // carries the tier's file and staging as a snapshot does, and leaves the
 // reservation empty: a dropped reservation returns what it still holds, so
@@ -679,11 +684,14 @@ void testReservations(metal::MetalBackend &backend) {
     const uint64_t laneBytes = storage.actualAllocatedBytes();
 
     admitNew = false;
-    require(!storage.reserve() && storage.actualAllocatedBytes() == laneBytes,
-            "a refused reservation allocated its slot");
+    metal::AllocationFailure refusal;
+    require(!storage.reserve(refusal) && refusal == metal::AllocationFailure::EngineBudget &&
+                storage.actualAllocatedBytes() == laneBytes,
+            "a refused reservation allocated its slot or lost its cause");
     admitNew = true;
-    auto reservation = storage.reserve();
-    require(reservation && admissions == 2 && storage.actualAllocatedBytes() > laneBytes &&
+    auto reservation = storage.reserve(refusal);
+    require(reservation && refusal == metal::AllocationFailure::None && admissions == 2 &&
+                storage.actualAllocatedBytes() > laneBytes &&
                 storage.idleCells() == 0 && storage.idleWindows() == 0,
             "a reservation did not take one admission for its slot");
     const uint64_t slotted = storage.actualAllocatedBytes();
@@ -692,7 +700,7 @@ void testReservations(metal::MetalBackend &backend) {
                 storage.actualAllocatedBytes() == slotted,
             "a dropped reservation did not return its slot to the pool");
     admitNew = false;
-    reservation = storage.reserve();
+    reservation = storage.reserve(refusal);
     require(reservation && storage.idleCells() == 0 && storage.idleWindows() == 0,
             "a reservation did not take the pooled slot without an admission");
     admitNew = true;
@@ -740,10 +748,10 @@ void testReservations(metal::MetalBackend &backend) {
 
     // Another storage's reservation is refused.
     model::QwenStateStorage other(backend, admit, layout, nullptr);
-    auto foreign = other.reserve();
+    auto foreign = other.reserve(refusal);
     rejects([&] { static_cast<void>(storage.seal(*foreign, published(4096))); },
             "a state reservation of another storage", "a foreign reservation was sealed");
-    outlives = storage.reserve();
+    outlives = storage.reserve(refusal);
     storage.releaseLane(0, 9);
   }
   // Its storage went first: the reservation frees its buffers.

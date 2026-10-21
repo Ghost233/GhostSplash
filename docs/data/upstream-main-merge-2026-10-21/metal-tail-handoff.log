@@ -1,0 +1,13 @@
+2026-10-21 15:20:40.402 handoff[47524:10946439] Metal GPU Validation Enabled
+PASS a shared event never decreases
+PASS restart waits for old reports and isolates the fresh event
+PASS an agent that succeeds at jobs 0, 3 and 7 of 8
+PASS a failure before the ready at jobs 0, 3 and 7 of 8
+PASS a failure after the ready at jobs 0, 3 and 7 of 8
+PASS a start that throws at jobs 0, 3 and 7 of 8
+PASS a job never run at jobs 0, 3 and 7 of 8
+PASS a job run late at jobs 0, 3 and 7 of 8
+PASS a report twice at jobs 0, 3 and 7 of 8
+PASS finish() reports the agent's time over a command's jobs
+PASS cancel() and the destructor return within the bound
+handoff: all checks passed

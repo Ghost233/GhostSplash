@@ -50,7 +50,7 @@ inline ulong splash_current_value_index(uint stride, uint head, uint token,
 // INT8 derives a per-row scale; BF16 copies the original bits. Slots are
 // addressed inside the head's slab of the page: the page index functions at
 // page zero and head zero.
-template <uint KVHeads, typename CacheElement>
+template <uint KVHeads, typename CacheElement, bool ValuesTokenMajor = false>
 __attribute__((always_inline)) inline void splash_store_kv_row(
     device const bfloat *chunk_keys, device const bfloat *chunk_values,
     device const SplashKvPage *page_table,
@@ -69,6 +69,6 @@ __attribute__((always_inline)) inline void splash_store_kv_row(
                                                 chunk_token, dimension);
   bfloat source = value_tensor ? chunk_values[source_index] : chunk_keys[source_index];
 
-  splash_kv_store_row(slab, source, maxima, value_tensor, page_token,
+  splash_kv_store_row<CacheElement, ValuesTokenMajor>(slab, source, maxima, value_tensor, page_token,
                       dimension, simd_lane, simd_group);
 }

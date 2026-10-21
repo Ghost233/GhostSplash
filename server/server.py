@@ -22,6 +22,9 @@ from urllib.parse import unquote
 
 from transformers import AutoTokenizer
 
+from install import assembly
+from install.models import ModelError
+
 from . import images as image_input
 from . import json_codec, judgments, serve_options, startup_report
 from . import protocol as wire
@@ -391,10 +394,10 @@ class FrontendHandler(BaseHTTPRequestHandler):
             )
         super().end_headers()
 
-    def _send(self, status, data, content_type):
+    def _send(self, status, data, content_type, retry_after=1):
         self.send_response(status)
         if status in RETRY_STATUSES:
-            self.send_header("Retry-After", "1")
+            self.send_header("Retry-After", str(retry_after))
         if status == 401:
             self.send_header("WWW-Authenticate", "Bearer")
         self.send_header("Content-Type", content_type)
@@ -412,7 +415,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(data)
 
-    def _json(self, status, payload):
+    def _json(self, status, payload, retry_after=1):
         try:
             data = json_codec.encode(payload)
         except json_codec.JSONEncodingError as error:
@@ -422,7 +425,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 log=False,
             )
             return
-        self._send(status, data, "application/json")
+        self._send(status, data, "application/json", retry_after)
 
     def _log_api_error(self, code):
         path = "".join(char if char.isprintable() else "?" for char in self.route)
@@ -437,7 +440,7 @@ class FrontendHandler(BaseHTTPRequestHandler):
         if log:
             self._log_api_error(code)
         try:
-            self._json(status, payload)
+            self._json(status, payload, error.retry_after)
         except (BrokenPipeError, ConnectionResetError, TimeoutError):
             pass
 
@@ -920,9 +923,9 @@ class FrontendHandler(BaseHTTPRequestHandler):
         stop sequence the call it ends inside; text before a stop sequence is
         the text the client asked for. An answer without calls is validated
         against the response format only when the model ended it. `content`
-        is read only without tools: with tools, the projector holds it."""
+        is read only without a projector, which otherwise holds it."""
         ended = result.reason != "length" and result.stop_sequence is None
-        if job.tool_policy is None:
+        if projector is None:
             if ended:
                 validate_response_content(content, job.response_validator)
             return content, [], []
@@ -947,14 +950,16 @@ class FrontendHandler(BaseHTTPRequestHandler):
         start, each piece of output, the idle waits and prompt progress:
         streams send them, and complete Messages and Responses gather the
         output into blocks."""
-        policy = job.tool_policy
         splitter = ReasoningSplitter(job.thinking, job.may_call_tools)
-        # Output with tools is parsed as it arrives whether it streams or not.
+        # A chat answer is parsed as it arrives whether it streams or not:
+        # its calls where tools may be called, and in any answer, a </think>
+        # the model writes after its reasoning ended is dropped. A text
+        # completion, without a chat template, is its text as written.
         projector = (
             StreamingToolCallProjector(
-                policy, job.public_id, job.response_validator is not None
+                job.tool_policy, job.public_id, job.response_validator is not None
             )
-            if policy is not None
+            if job.tool_policy is not None or job.reasoning is not None
             else None
         )
         reasoning, content, result = [], [], None
@@ -1644,14 +1649,20 @@ def parse_args(argv=None):
     parser.add_argument(
         "model_root",
         metavar="MODEL_DIRECTORY",
-        help="installed model directory holding target/ and draft/",
+        help="the directory of a model Splash prepared, or a selection link to "
+        "one: the server holds and serves the directory it names at startup",
     )
-    parser.add_argument("--tokenizer", required=True)
     parser.add_argument(
         "--model",
         type=serve_options.parse_model_id,
         required=True,
         metavar="OWNER/REPO",
+    )
+    parser.add_argument(
+        "--chat-template",
+        type=Path,
+        metavar="FILE",
+        help="override the chat template in memory; tokenizer files still come from the held model",
     )
     parser.add_argument("--port", type=int, default=serve_options.DEFAULT_PORT)
     parser.add_argument("--binary", default=str(ROOT / "build" / "splash"))
@@ -1663,15 +1674,16 @@ def parse_args(argv=None):
     return args
 
 
-def _native_command(args, relaunch_context=None):
-    """The engine's command line, a relaunch's with `relaunch_context`, the
-    context the first engine served: without --max-context the relaunch keeps
-    it, where its own would follow a Neural Engine split calibrated anew."""
+def _native_command(args, model_root, relaunch_context=None):
+    """The engine's command line serving model_root, a relaunch's with
+    `relaunch_context`, the context the first engine served: without
+    --max-context the relaunch keeps it, where its own would follow a Neural
+    Engine split calibrated anew."""
+    if getattr(args, "decision_type", None) and args.experimental_quantized_ffn == "on":
+        raise ValueError(
+            "--experimental-quantized-ffn only supports Qwen3.5-4B generation"
+        )
     if getattr(args, "decision_type", None) in ("laya", "vllm-d3"):
-        if args.experimental_quantized_ffn == "on":
-            raise ValueError(
-                "--experimental-quantized-ffn only supports Qwen3.5-4B generation"
-            )
         if any(
             getattr(args, key) == "on"
             for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
@@ -1686,7 +1698,7 @@ def _native_command(args, relaunch_context=None):
             "serve-d3-native"
             if args.decision_type == "vllm-d3"
             else "serve-encoder-native",
-            args.model_root,
+            str(model_root),
             str(args.max_context if args.max_context is not None else relaunch_context)
             if args.max_context is not None or relaunch_context is not None
             else "auto",
@@ -1704,7 +1716,7 @@ def _native_command(args, relaunch_context=None):
     command = [
         args.binary,
         "serve-native",
-        args.model_root,
+        str(model_root),
         "auto" if args.max_context is None else str(args.max_context),
         "auto" if args.max_memory is None else str(args.max_memory),
     ]
@@ -1744,6 +1756,8 @@ def _native_command(args, relaunch_context=None):
         value = getattr(args, flag.replace("-", "_"))
         if value != default:
             command.extend(("--" + flag, str(value)))
+    if args.verify_rows != "auto":
+        command.extend(("--verify-rows", args.verify_rows))
     if args.decode_share is not None:
         command.extend(("--decode-share", str(args.decode_share)))
     if args.max_image_pixels != image_input.MAX_PIXELS:
@@ -1754,6 +1768,13 @@ def _native_command(args, relaunch_context=None):
         command.extend(("--idle-sleep", "allow"))
     if relaunch_context is not None and args.max_context is None:
         command.extend(("--relaunch-context", str(relaunch_context)))
+    for flag, value in (
+        ("--ple-memory", args.ple_memory),
+        ("--expert-memory", args.expert_memory),
+        ("--sparse-kv-memory", args.sparse_kv_memory),
+    ):
+        if value is not None:
+            command.extend((flag, str(value)))
     return command
 
 
@@ -1814,10 +1835,14 @@ def main():
         stage = "thinking key"
         thinking_codec = ThinkingCodec(load_thinking_key())
         print_status(f"Loading · {args.model}")
+        # Nothing reads `held`: it keeps the assembly held until the server
+        # exits, so that no installation collects the assembly its tokenizer
+        # and engines, a relaunched one too, serve.
+        model_root, held = assembly.hold(Path(args.model_root))
         stage = "tokenizer"
         tokenizer_options = {}
         decision_config = None
-        tokenizer_config = Path(args.tokenizer) / "config.json"
+        tokenizer_config = model_root / "tokenizer" / "config.json"
         if tokenizer_config.is_file():
             model_config = json.loads(tokenizer_config.read_text(encoding="utf-8"))
             model_type = model_config.get("model_type")
@@ -1835,7 +1860,7 @@ def main():
         if args.decision_type == "laya":
             tokenizer_options["fix_mistral_regex"] = False
         tokenizer = AutoTokenizer.from_pretrained(
-            args.tokenizer,
+            model_root / "tokenizer",
             local_files_only=True,
             trust_remote_code=False,
             **tokenizer_options,
@@ -1852,14 +1877,16 @@ def main():
         else:
             validate_tokenizer(tokenizer)
         stage = "chat template"
+        if args.chat_template is not None:
+            tokenizer.chat_template = args.chat_template.read_text(encoding="utf-8")
         thinking_end = thinking_end_tokens(tokenizer, args.thinking_end_text)
         chat_templates = ChatTemplates(tokenizer)
         print_status(f"Chat template · {chat_templates.describe()}")
         stage = "native engine (weights, ANE, compact validation, warmup)"
         runtime = engine_runtime.MultiplexedRuntime(
-            _native_command(args),
+            _native_command(args, model_root),
             relaunch_command=lambda first: _native_command(
-                args, first.max_context_tokens
+                args, model_root, first.max_context_tokens
             ),
             startup_timeout=NATIVE_START_TIMEOUT,
             pending_limit=args.queue_size,
@@ -1873,13 +1900,12 @@ def main():
         if not runtime.wait_ready():
             raise engine_runtime.EngineUnhealthy("native runtime did not become ready")
         readiness = runtime.readiness
-        if (
-            readiness is None
-            or not 1 <= readiness.max_context_tokens <= serve_options.MAX_CONTEXT_TOKENS
-            or (
-                args.max_context is not None
-                and readiness.max_context_tokens != args.max_context
-            )
+        # The engine serves --max-context as given, and without it a context
+        # the native window holds.
+        if readiness is None or not (
+            readiness.max_context_tokens == args.max_context
+            if args.max_context is not None
+            else 1 <= readiness.max_context_tokens <= serve_options.MAX_CONTEXT_TOKENS
         ):
             raise engine_runtime.EngineUnhealthy(
                 "native runtime reported an invalid context window"
@@ -1932,6 +1958,7 @@ def main():
         server.serve_forever()
     except (
         engine_runtime.EngineRuntimeError,
+        ModelError,
         ThinkingKeyError,
         ChatTemplateError,
         ThinkingEndError,

@@ -31,7 +31,7 @@ class D3MetadataTests(unittest.TestCase):
             header.tensors = {
                 name: 0 if types == {"F32"} else 30 for name, types in required.items()
             }
-            header.shapes = {"output.weight": (hidden, 2)}
+            header.extents = {"output.weight": (hidden, 2)}
             gguf.require_loadable(header)
             bad = copy.copy(header)
             bad.values = dict(header.values, **{"qwen35.attention.causal": True})

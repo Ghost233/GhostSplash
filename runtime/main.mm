@@ -164,7 +164,9 @@ void printUsage(std::string_view executable) {
       " [--ane-recovery-idle-watts WATTS] [--ane-recovery-max-power-percent PERCENT]"
       " [--prompt-lookup on|off] [--prompt-lookup-min-match 2|3|4]"
       " [--compact-draft-head on|off] [--compact-draft-ranking FILE]"
-      " [--compact-draft-capacity ROWS] [--fast-topk on|off] [--relaunch-context TOKENS]");
+      " [--compact-draft-capacity ROWS] [--fast-topk on|off] [--relaunch-context TOKENS]"
+      " [--ple-memory BYTES] [--expert-memory BYTES]"
+      " [--verify-rows auto|all]");
   writeStderrLine("       " + command + " model-check mlx-affine none|safetensors CONFIG [DRAFT_CONFIG]");
   writeStderrLine("       " + command + " model-check gguf none|gguf CONFIG GGUF_METADATA [DRAFT_CONFIG]");
   writeStderrLine("       " + command + " device-check");
@@ -219,6 +221,11 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
   config.resources.idleReleaseSeconds = arguments.idleReleaseSeconds;
   config.resources.aneFfn = arguments.aneFfn;
   config.resources.relaunchContext = arguments.relaunchContext;
+  config.resources.pleMemory = arguments.pleMemory;
+  config.resources.expertMemory = arguments.expertMemory;
+  config.resources.sparseKvMemory = arguments.sparseKvMemory;
+  config.resources.kvSpillAlways = arguments.kvSpillAlways;
+  config.resources.verifyRows = arguments.verifyRows;
   config.nativeLoop.engine.maxContext = arguments.maxContext;
   config.nativeLoop.engine.decodeShare = arguments.decodeShare;
   return config;

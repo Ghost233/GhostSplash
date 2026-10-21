@@ -269,9 +269,11 @@ int main(int argc,char **argv) {
       const bool regression=argc==5&&std::string(argv[4])=="--rounding-regression";
       require(argc==3||argc==4||regression,"usage: qwen4b-ffn-check METALLIB MODEL_ROOT [baseline|m64n32|fused_m64n32|q4k_group_scale] [--rounding-regression]");
       metal::MetalBackend backend(argv[1]);const auto descriptor=model::inspectModelRoot(argv[2]);
-      auto loaded=model::loadModel(backend,argv[2],descriptor,{.mode=model::FfnWeightMode::Quantized,.variant=variant(argc>=4?argv[3]:"baseline")});
+      auto loaded=model::loadModel(backend,argv[2],descriptor,{.ffn={.mode=model::FfnWeightMode::Quantized,.variant=variant(argc>=4?argv[3]:"baseline")}});
       require(loaded.targetFfnCacheAllocatedBytes()==0,"quantized loading retained FFN cache");
-      model::WeightSource source(model::findTargetGguf(std::filesystem::path(argv[2])/"target"));const model::GgufFile file(source);
+      const auto paths=model::findTargetGgufs(std::filesystem::path(argv[2])/"target");
+      require(paths.size()==1,"FFN numerical reference requires a single GGUF target");
+      model::WeightSource source(paths.front());const model::GgufFile file(source);
       const std::vector<model::Qwen3_8LayerWeights> *layers=nullptr;
       if(const auto *target=std::get_if<model::Qwen3_5_4BWeights>(&loaded.target))layers=&target->layers;
       if(const auto *target=std::get_if<model::Qwen3_5_4BDFlashWeights>(&loaded.target))layers=&target->layers;

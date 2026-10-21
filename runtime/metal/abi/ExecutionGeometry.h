@@ -2,17 +2,13 @@
 
 // C/Metal ABI constants shared by host and shader compilation. Startup
 // static assertions check the corresponding model and operator contracts.
-#ifndef SPLASH_DRAFT_BLOCK_SIZE
-#define SPLASH_DRAFT_BLOCK_SIZE 8
-#endif
-#if SPLASH_DRAFT_BLOCK_SIZE != 2 && SPLASH_DRAFT_BLOCK_SIZE != 4 && \
-    SPLASH_DRAFT_BLOCK_SIZE != 8 && SPLASH_DRAFT_BLOCK_SIZE != 16
-#error "SPLASH_DRAFT_BLOCK_SIZE must be 2, 4, 8 or 16"
-#endif
-#define SPLASH_DRAFT_QUERY_ROWS (SPLASH_DRAFT_BLOCK_SIZE + 0u)
-#define SPLASH_DRAFT_PROPOSAL_TOKENS (SPLASH_DRAFT_BLOCK_SIZE - 1u)
-#define SPLASH_TARGET_VERIFY_ROWS (SPLASH_DRAFT_BLOCK_SIZE + 0u)
-#define SPLASH_MAXIMUM_CONTEXT_TOKENS 262144u
+#define SPLASH_DRAFT_QUERY_ROWS 8u
+#define SPLASH_DRAFT_PROPOSAL_TOKENS 7u
+#define SPLASH_TARGET_VERIFY_ROWS 8u
+// The KV ceiling: four times the targets' native window of 262,144 tokens,
+// which holds the most context YaRN serves them
+// (QwenTargetDimensions::yarnContextTokens).
+#define SPLASH_MAXIMUM_CONTEXT_TOKENS 1048576u
 #define SPLASH_SPECULATIVE_SCRATCH_TOKENS                                  \
   (SPLASH_TARGET_VERIFY_ROWS - 1u)
 #define SPLASH_MAXIMUM_PHYSICAL_KV_TOKENS                                  \

@@ -33,13 +33,14 @@ from pathlib import Path
 repo, model_dir, draft_dir, draft_gguf, model_id, host, port, context, memory, cache_disk, queue, kv_format, binary = sys.argv[1:14]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, paths, upstream
+from install import models, paths
+from install.local import prepare_local_model
 from server import serve_options
 
 parser = argparse.ArgumentParser(
     prog="qwen3827bmlx4bitsplash.sh", description="Qwen3.8 27B MLX affine 4-bit with the converted Qwen3.8-27B DFlash2 draft",
     epilog="MLX 4-bit defaults: context=262144, KV=q4h, queue=1, memory=40G, "
-           "lookup=on, compact=on (public qwen35 ranking), fast-topk=on, ANE share=0.4182, "
+           "lookup=on, compact=off (explicit public ranking required), fast-topk=on, ANE share=0.4182, "
            "power reference=auto, recovery=on at 50% of the reference.",
 )
 parser.add_argument("--port", type=int, default=int(port))
@@ -50,8 +51,7 @@ parser.set_defaults(
     max_memory=serve_options.parse_max_memory(memory),
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
-    prompt_lookup="on", compact_draft_head="on", fast_topk="on",
-    compact_draft_ranking=repo / "compact-rankings/qwen35-248320-dev-seed.splash",
+    prompt_lookup="on", compact_draft_head="off", fast_topk="on",
     ane_ffn_share=0.4182, ane_power_reference="auto", ane_power_recovery="on",
     ane_recovery_max_power_percent=50.0,
 )
@@ -81,27 +81,15 @@ for name in ("config.json", "model.safetensors", "conversion.json"):
 conversion = json.loads((draft_path / "conversion.json").read_text())
 if conversion["source_gguf"] != draft_gguf:
     raise models.ModelError("Converted draft does not match the selected Qwen3.8-27B DFlash2 GGUF")
-selection = models.Selection.of(
-    repo / "install/models-local", model_id, language_only=True, draft_model=draft_dir,
+root = prepare_local_model(
+    model_dir, draft=draft_dir, language_only=True,
+    models_dir=repo / "install/models-local",
 )
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None)
-else:
-    record = assembly.verify(selection.link)
-    if record["sources"]["target"] != {"repo": model_dir, "revision": None}:
-        raise models.ModelError("Prepared target does not match the local Qwen3.8 27B MLX directory")
-    if record["sources"]["draft"] != {"repo": draft_dir, "revision": None}:
-        raise models.ModelError("Prepared draft does not match the converted Qwen3.8-27B DFlash2 GGUF")
-
-# Hold the verified assembly until the server exits, as the official launcher does.
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
 print(f"Qwen3.8 27B MLX Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 print(f"Draft: {draft_dir} (compatible Qwen3.8-27B Q4_K_M GGUF converted to BF16)", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root), "--tokenizer", str(root / "tokenizer"),
+    str(root),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", args.binary, "--port", str(port),
     *serve_options.serve_argv(args),

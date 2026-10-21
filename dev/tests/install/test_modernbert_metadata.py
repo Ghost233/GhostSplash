@@ -101,17 +101,17 @@ class ModernBertMetadataTests(unittest.TestCase):
         for kind in ("shape", "type", "missing", "causal"):
             with self.subTest(kind=kind):
                 bad = copy.copy(metadata)
-                bad.shapes, bad.tensors, bad.values = (
-                    dict(metadata.shapes),
+                bad.extents, bad.tensors, bad.values = (
+                    dict(metadata.extents),
                     dict(metadata.tensors),
                     dict(metadata.values),
                 )
                 if kind == "shape":
-                    bad.shapes["cls.output.weight"] = (384, 512)
+                    bad.extents["cls.output.weight"] = (384, 512)
                 if kind == "type":
                     bad.tensors["cls.output.weight"] = 8
                 if kind == "missing":
-                    del bad.shapes["cls.output.bias"]
+                    del bad.extents["cls.output.bias"]
                 if kind == "causal":
                     bad.values["modern-bert.attention.causal"] = True
                 with self.assertRaises(gguf.ModelError):

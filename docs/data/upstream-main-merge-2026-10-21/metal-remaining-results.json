@@ -1,0 +1,128 @@
+[
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=bf16",
+    "log": "metal-remaining-01-paged-attention-plan.log",
+    "exit_code": 0,
+    "elapsed_seconds": 36.772814500000095
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4h",
+    "log": "metal-remaining-02-paged-attention-plan.log",
+    "exit_code": 0,
+    "elapsed_seconds": 31.855375834013103
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4_0",
+    "log": "metal-remaining-03-paged-attention-plan.log",
+    "exit_code": 0,
+    "elapsed_seconds": 27.18627245799871
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/paged-attention-plan build/splash.metallib --format=q4_0_unrotated",
+    "log": "metal-remaining-04-paged-attention-plan.log",
+    "exit_code": 0,
+    "elapsed_seconds": 27.164610040999833
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/linear-plan build/splash.metallib",
+    "log": "metal-remaining-05-linear-plan.log",
+    "exit_code": 0,
+    "elapsed_seconds": 0.6422946670063538
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/runtime-resources build/splash.metallib",
+    "log": "metal-remaining-06-runtime-resources.log",
+    "exit_code": 0,
+    "elapsed_seconds": 21.978193834002013
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/kv-page-tier build/engine-tests/metal-backend.metallib",
+    "log": "metal-remaining-07-kv-page-tier.log",
+    "exit_code": 0,
+    "elapsed_seconds": 1.1187417500041192
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/model-loading build/engine-tests/metal-backend.metallib build/splash.metallib",
+    "log": "metal-remaining-08-model-loading.log",
+    "exit_code": 0,
+    "elapsed_seconds": 1.2371312500035856
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/qwen-state-storage build/engine-tests/q8-paged-kv.metallib",
+    "log": "metal-remaining-09-qwen-state-storage.log",
+    "exit_code": 0,
+    "elapsed_seconds": 3.4109322500007693
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/q8-paged-kv-metal build/engine-tests/q8-paged-kv.metallib",
+    "log": "metal-remaining-10-q8-paged-kv-metal.log",
+    "exit_code": 0,
+    "elapsed_seconds": 0.49625858399667777
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/q8-page-storage build/engine-tests/metal-backend.metallib",
+    "log": "metal-remaining-11-q8-page-storage.log",
+    "exit_code": 0,
+    "elapsed_seconds": 0.5251548329979414
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/q8-flash-attention build/engine-tests/q8-attention.metallib",
+    "log": "metal-remaining-12-q8-flash-attention.log",
+    "exit_code": 0,
+    "elapsed_seconds": 494.35328462500183
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/q8-chunked-prefill build/engine-tests/q8-attention.metallib",
+    "log": "metal-remaining-13-q8-chunked-prefill.log",
+    "exit_code": 0,
+    "elapsed_seconds": 40.347719915997004
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/gdn-metal build/splash.metallib",
+    "log": "metal-remaining-14-gdn-metal.log",
+    "exit_code": 0,
+    "elapsed_seconds": 9.988240292004775
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/dflash-batch-control build/splash.metallib",
+    "log": "metal-remaining-15-dflash-batch-control.log",
+    "exit_code": 0,
+    "elapsed_seconds": 0.45455141700222157
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/draft-attention build/splash.metallib",
+    "log": "metal-remaining-16-draft-attention.log",
+    "exit_code": 0,
+    "elapsed_seconds": 4.2077708750002785
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/dflash-standard build/splash.metallib",
+    "log": "metal-remaining-17-dflash-standard.log",
+    "exit_code": 0,
+    "elapsed_seconds": 1.2124191250040894
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/gdn-decode build/splash.metallib",
+    "log": "metal-remaining-18-gdn-decode.log",
+    "exit_code": 0,
+    "elapsed_seconds": 35.77839066700835
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/draft-selector build/splash.metallib",
+    "log": "metal-remaining-19-draft-selector.log",
+    "exit_code": 0,
+    "elapsed_seconds": 4.849475124996388
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/target-sampling build/splash.metallib",
+    "log": "metal-remaining-20-target-sampling.log",
+    "exit_code": 0,
+    "elapsed_seconds": 24.309560042005614
+  },
+  {
+    "command": "MTL_SHADER_VALIDATION=1 build/engine-tests/target-sampling build/splash.metallib --fast-topk --correctness-only",
+    "log": "metal-remaining-21-target-sampling.log",
+    "exit_code": 1,
+    "elapsed_seconds": 0.11493945799884386
+  }
+]

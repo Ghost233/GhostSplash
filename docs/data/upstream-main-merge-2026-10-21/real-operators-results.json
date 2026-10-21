@@ -1,0 +1,30 @@
+[
+  {
+    "name": "d3-lite-head",
+    "command": [
+      "build/engine-tests/d3-head",
+      "build/splash.metallib",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-140-merge-20261021/decision-models/.resolved/e57a06718e8bc453ca9fbfa9e86d114aa2bf8fc2ad1758833db847951c4bacc7"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "d3-mini-head",
+    "command": [
+      "build/engine-tests/d3-head",
+      "build/splash.metallib",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-140-merge-20261021/decision-models/.resolved/0bd8e191a8ef5c3491eb03bb33071c29b600b7476d4cbb985f884b67052708d3"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "qwen4b-ffn-baseline",
+    "command": [
+      "build/engine-tests/qwen4b-ffn-check",
+      "build/splash.metallib",
+      "/Users/ghost233/Ghost233Code/GhostSplash/build/upstream-140-merge-20261021/real-attempt-2/models/.resolved/44e02fd73af9fec9f5520a5a6a1d597b6a2147f9a1c5e2f5407a166c53284adc",
+      "baseline"
+    ],
+    "exit_code": 0
+  }
+]

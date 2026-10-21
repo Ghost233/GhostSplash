@@ -1,0 +1,3 @@
+2026-10-21 15:06:21.961 model-loading[19066:10846385] Metal GPU Validation Enabled
+synthetic declared_target=2523136 declared_draft=1687552 declared_vision=2080768 actual_tracked=6291456
+PASS model-loading

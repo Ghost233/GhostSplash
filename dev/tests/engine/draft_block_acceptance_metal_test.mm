@@ -38,7 +38,9 @@ int main(int argc, char **argv) {
     const auto dummy = test::sharedBuffer(backend, 16);
     for (const uint32_t lanes : {1u, 2u, 4u}) {
       Guarded draft(backend, uint64_t{lanes} * proposals * 4), target(backend, uint64_t{lanes} * block * 4),
-              retained(backend, uint64_t{lanes} * 4), accepted(backend, uint64_t{lanes} * 4);
+              retained(backend, uint64_t{lanes} * 4), accepted(backend, uint64_t{lanes} * 4),
+              verifyRows(backend, uint64_t{lanes} * 4);
+      std::fill_n(static_cast<uint32_t *>(verifyRows.view.contents()), lanes, block);
       std::vector<ops::SamplingPolicy> policies(lanes);
       for (const uint32_t rejected : {0u, proposals / 2, proposals}) {
         for (const uint32_t limit : {1u, block}) {
@@ -52,7 +54,7 @@ int main(int argc, char **argv) {
           std::vector<uint32_t> maximum(lanes, limit);
           metal::CommandGraph graph;
           sampling.addAcceptance(graph, {draft.view, dummy, dummy, dummy, dummy, target.view,
-                                          retained.view, accepted.view}, maximum, policies, 30, 31);
+                                          retained.view, accepted.view, verifyRows.view}, maximum, policies, 30, 31);
           static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
           for (uint32_t lane = 0; lane < lanes; ++lane) {
             const uint32_t kept = static_cast<const uint32_t *>(retained.view.contents())[lane];
@@ -61,7 +63,7 @@ int main(int argc, char **argv) {
                             kept == std::min(rejected + 1, limit) && kept <= block,
                           "compiled block produced a wrong acceptance or output bound");
           }
-          draft.intact(); target.intact(); retained.intact(); accepted.intact();
+          draft.intact(); target.intact(); retained.intact(); accepted.intact(); verifyRows.intact();
         }
       }
     }

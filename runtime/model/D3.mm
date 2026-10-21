@@ -99,11 +99,11 @@ struct D3::Impl {
     geometry = lite ? static_cast<QwenTargetDimensions>(Qwen3_5_0_8BLayout{})
                     : static_cast<QwenTargetDimensions>(Qwen3_5_4BLayout{});
     geometry.decisionHeadSize = 256;
-    const auto plans = gguf::planImages(file, geometry, codes);
-    uint64_t estimated=0; for (const auto &p:plans) estimated += p.bytes;
+    const auto plans = gguf::planImages(file, "qwen35", geometry, {.headTokens = codes});
+    uint64_t estimated=0; for (const auto &p:plans) estimated += gguf::loadedBytes(p);
     for (auto &[buffer,bytes]:workspace(context)) estimated += (bytes+16383)/16384*16384;
     if (estimated>maximum) throw GgufError("D3 context and weights do not fit --max-memory");
-    GgufTargetLoader loader(b,images,path,geometry,codes);
+    GgufTargetLoader loader(b,images,{path},"qwen35",geometry,{},{},codes);
     if (lite) { Qwen3_5_0_8BLayout layout; layout.decisionHeadSize=256; weights=loadQwen3_5_0_8BWeights(b,layout,std::ref(loader)); }
     else { Qwen3_5_4BLayout layout; layout.decisionHeadSize=256; weights=loadQwen3_5_4BWeights(b,layout,std::ref(loader)); }
     weightSize=b.memoryStats().allocatedBytes;

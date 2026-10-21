@@ -12,7 +12,7 @@ def configuration_lines(args):
     for flag, value in (
         ("MODEL_DIRECTORY", args.model_root),
         ("--model", args.model),
-        ("--tokenizer", args.tokenizer),
+        ("--chat-template", args.chat_template),
         ("--binary", args.binary),
         ("--port", args.port),
     ):

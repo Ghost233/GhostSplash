@@ -13,11 +13,12 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ModelFamily:
     # The family's name, as the engine names it (each target layout's family,
-    # runtime/model/Qwen3_8.hpp and Qwen3_6Moe.hpp).
+    # runtime/model/Qwen3_8.hpp, Qwen3_6Moe.hpp and Qwen4Exp.hpp).
     name: str
     # The repository of the DFlash2 checkpoint trained for the family, as its
     # release publishes it: config.json and BF16 safetensors. Installations
-    # follow its default branch as they follow the target's.
+    # follow its default branch as they follow the target's. None says no
+    # default is released; only NO_DRAFT_FAMILIES may serve without one.
     draft_repo: str | None
 
 
@@ -31,6 +32,11 @@ FAMILIES = (
     ModelFamily("Laya", None),
     ModelFamily("Qwen3.8-27B", "incoai/Qwen3.8-27B-DFlash2"),
     ModelFamily("Qwen3.6-35B-A3B", "incoai/Qwen3.6-35B-A3B-DFlash2"),
+    ModelFamily("Qwen3.8-Flash-Next", "incoai/Qwen3.8-Flash-Next-DFlash2"),
+)
+
+NO_DRAFT_FAMILIES = frozenset(
+    {"Qwen3.5-4B", "Kev-4B", "Kev-0.8B", "D3-lite", "D3-mini", "Julia-1", "Laya"}
 )
 
 

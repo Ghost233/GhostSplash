@@ -35,7 +35,7 @@ OFF = (
     ROOT
     / "install/models-local/.resolved/0db89c15cde311ca967567bc505737ddd7383d4c31e1123b537d564f46a756f8"
 )
-BLOCKS = (2, 4, 8, 16)
+BLOCKS = (8,)
 EXTRA_SOURCES = (
     "Makefile",
     "dev/native.mk",
@@ -107,11 +107,12 @@ def prefix_digest(values):
 
 def expected_configuration(root, block):
     """Mirror current Makefile flags/config records; overridden flags are unsupported."""
-    macro = f"-DSPLASH_DRAFT_BLOCK_SIZE={block}"
+    matrix.require(block == 8, "production draft block is fixed at 8")
+    macro = ""
     deployment = "-mmacosx-version-min=26.4"
-    cxx = f"-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime {macro} {deployment}"
+    cxx = f"-std=c++20 -O3 -Wall -Wextra -Werror -Iruntime {deployment}"
     objc = cxx + " -fobjc-arc"
-    metal = f"-std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime {macro} {deployment}"
+    metal = f"-std=metal4.0 -O3 -Wall -Wextra -Werror -Iruntime {deployment}"
     link = (
         "-framework Foundation -framework Metal -framework IOKit -framework IOSurface"
     )
@@ -144,7 +145,7 @@ def expected_configuration(root, block):
     test = prefix_digest(
         [
             production,
-            f"-std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev {macro} {deployment}",
+            f"-std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev {deployment}",
             metal.replace(" -O3", ""),
         ]
     )

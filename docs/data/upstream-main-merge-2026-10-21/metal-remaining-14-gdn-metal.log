@@ -1,0 +1,66 @@
+2026-10-21 15:15:22.303 gdn-metal[37497:10911418] Metal GPU Validation Enabled
+vh48 tokens=1: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 5.60366e-08, rows 0.415506 ulps (max|err| 5.99792e-05), state max|err| 5.69542e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=37: prepare 0.65641 ulps (max|err| 1.52588e-05), beta max|err| 0, decay max|err| 8.15084e-08, rows 0.456942 ulps (max|err| 0.000120922), state max|err| 8.65374e-08, hidden 0.831169 ulps (0.000879786% inexact)
+vh48 tokens=1000: prepare 1.16895 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 8.38789e-08, rows 0.45434 ulps (max|err| 0.000121), state max|err| 4.86641e-08, hidden 1.29293 ulps (0.000602214% inexact)
+vh48 tokens=2048: prepare 1.22488 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 8.74995e-08, rows 0.459177 ulps (max|err| 0.000120631), state max|err| 3.63282e-08, hidden 1.47977 ulps (0.000564257% inexact)
+vh48 tokens=1 f32 norm: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 5.60366e-08, rows 0.415506 ulps (max|err| 5.99792e-05), state max|err| 5.69542e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=37 f32 norm: prepare 0.65641 ulps (max|err| 1.52588e-05), beta max|err| 0, decay max|err| 8.15084e-08, rows 0.456942 ulps (max|err| 0.000120922), state max|err| 8.65374e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=2048 split=1000: byte-identical to the single pass
+vh48 tokens=37 split=17: byte-identical to the single pass
+vh48 tokens=1 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=37 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=1000 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=1 bf16 state: the fp32 scan's rows and its state rounded
+vh48 tokens=37 bf16 state: the fp32 scan's rows and its state rounded
+vh48 tokens=1000 bf16 state: the fp32 scan's rows and its state rounded
+vh48 fp32 captured states: each captured state is the split's, and the command the single pass
+vh48 bf16 captured states: each captured state is the split's, and the command the split
+vh32 tokens=1: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 7.06342e-08, rows 0.421027 ulps (max|err| 5.15509e-05), state max|err| 4.96733e-08, hidden 0 ulps (0% inexact)
+vh32 tokens=37: prepare 0.677249 ulps (max|err| 0.00012207), beta max|err| 0, decay max|err| 7.46072e-08, rows 0.455973 ulps (max|err| 0.000111853), state max|err| 5.94748e-08, hidden 0 ulps (0% inexact)
+vh32 tokens=1000: prepare 1.24272 ulps (max|err| 0.000244141), beta max|err| 0, decay max|err| 3.37255e-05, rows 0.459316 ulps (max|err| 0.000113598), state max|err| 4.66902e-08, hidden 1.34031 ulps (0.000610352% inexact)
+vh32 tokens=2048: prepare 1.31959 ulps (max|err| 0.00195312), beta max|err| 0, decay max|err| 8.63567e-08, rows 0.45647 ulps (max|err| 0.000190456), state max|err| 2.8623e-08, hidden 1.62025 ulps (0.00064373% inexact)
+vh32 tokens=1 f32 norm: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 7.06342e-08, rows 0.421027 ulps (max|err| 5.15509e-05), state max|err| 4.96733e-08, hidden 0 ulps (0% inexact)
+vh32 tokens=37 f32 norm: prepare 0.677249 ulps (max|err| 0.00012207), beta max|err| 0, decay max|err| 7.46072e-08, rows 0.455973 ulps (max|err| 0.000111853), state max|err| 5.94748e-08, hidden 0.820513 ulps (0.00065984% inexact)
+vh32 tokens=2048 split=1000: byte-identical to the single pass
+vh32 tokens=37 split=17: byte-identical to the single pass
+vh32 tokens=1 tiled f32 norm: byte-identical to the grouped order
+vh32 tokens=37 tiled f32 norm: byte-identical to the grouped order
+vh32 tokens=1000 tiled f32 norm: byte-identical to the grouped order
+vh32 tokens=1 bf16 state: the fp32 scan's rows and its state rounded
+vh32 tokens=37 bf16 state: the fp32 scan's rows and its state rounded
+vh32 tokens=1000 bf16 state: the fp32 scan's rows and its state rounded
+vh32 fp32 captured states: each captured state is the split's, and the command the single pass
+vh32 bf16 captured states: each captured state is the split's, and the command the split
+vh16 tokens=1: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 3.81849e-08, rows 0.377973 ulps (max|err| 3.03634e-05), state max|err| 3.01412e-08, hidden 0 ulps (0% inexact)
+vh16 tokens=37: prepare 0.723164 ulps (max|err| 0.000244141), beta max|err| 0, decay max|err| 7.52766e-08, rows 0.448102 ulps (max|err| 0.000147767), state max|err| 1.35369e-07, hidden 0.520325 ulps (0.00131968% inexact)
+vh16 tokens=1000: prepare 1.31282 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 7.92427e-08, rows 0.441271 ulps (max|err| 0.000106832), state max|err| 3.22593e-08, hidden 1.06224 ulps (0.000537109% inexact)
+vh16 tokens=2048: prepare 1.3913 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 8.58549e-08, rows 0.454384 ulps (max|err| 0.000116281), state max|err| 4.82999e-08, hidden 1.30612 ulps (0.000739098% inexact)
+vh16 tokens=1 f32 norm: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 3.81849e-08, rows 0.377973 ulps (max|err| 3.03634e-05), state max|err| 3.01412e-08, hidden 0 ulps (0% inexact)
+vh16 tokens=37 f32 norm: prepare 0.723164 ulps (max|err| 0.000244141), beta max|err| 0, decay max|err| 7.52766e-08, rows 0.448102 ulps (max|err| 0.000147767), state max|err| 1.35369e-07, hidden 1.4382 ulps (0.00131968% inexact)
+vh16 tokens=2048 split=1000: byte-identical to the single pass
+vh16 tokens=37 split=17: byte-identical to the single pass
+vh16 tokens=1 tiled f32 norm: byte-identical to the grouped order
+vh16 tokens=37 tiled f32 norm: byte-identical to the grouped order
+vh16 tokens=1000 tiled f32 norm: byte-identical to the grouped order
+vh16 tokens=1 bf16 state: the fp32 scan's rows and its state rounded
+vh16 tokens=37 bf16 state: the fp32 scan's rows and its state rounded
+vh16 tokens=1000 bf16 state: the fp32 scan's rows and its state rounded
+vh16 fp32 captured states: each captured state is the split's, and the command the single pass
+vh16 bf16 captured states: each captured state is the split's, and the command the split
+vh48 tokens=1: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 5.60366e-08, rows 0.415506 ulps (max|err| 5.99792e-05), state max|err| 5.69542e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=37: prepare 0.65641 ulps (max|err| 1.52588e-05), beta max|err| 0, decay max|err| 8.15084e-08, rows 0.456942 ulps (max|err| 0.000120922), state max|err| 8.65374e-08, hidden 0.512 ulps (0.000439893% inexact)
+vh48 tokens=1000: prepare 1.16895 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 8.38789e-08, rows 0.45434 ulps (max|err| 0.000121), state max|err| 4.86641e-08, hidden 1.42222 ulps (0.000651042% inexact)
+vh48 tokens=2048: prepare 1.22488 ulps (max|err| 0.000976562), beta max|err| 0, decay max|err| 8.74995e-08, rows 0.459177 ulps (max|err| 0.000120631), state max|err| 3.63282e-08, hidden 1.20188 ulps (0.000588099% inexact)
+vh48 tokens=1 f32 norm: prepare 0 ulps (max|err| 0), beta max|err| 0, decay max|err| 5.60366e-08, rows 0.415506 ulps (max|err| 5.99792e-05), state max|err| 5.69542e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=37 f32 norm: prepare 0.65641 ulps (max|err| 1.52588e-05), beta max|err| 0, decay max|err| 8.15084e-08, rows 0.456942 ulps (max|err| 0.000120922), state max|err| 8.65374e-08, hidden 0 ulps (0% inexact)
+vh48 tokens=2048 split=1000: byte-identical to the single pass
+vh48 tokens=37 split=17: byte-identical to the single pass
+vh48 tokens=1 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=37 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=1000 tiled f32 norm: byte-identical to the grouped order
+vh48 tokens=1 bf16 state: the fp32 scan's rows and its state rounded
+vh48 tokens=37 bf16 state: the fp32 scan's rows and its state rounded
+vh48 tokens=1000 bf16 state: the fp32 scan's rows and its state rounded
+vh48 fp32 captured states: each captured state is the split's, and the command the single pass
+vh48 bf16 captured states: each captured state is the split's, and the command the split
+gdn_metal_test passed

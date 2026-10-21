@@ -30,7 +30,8 @@ from pathlib import Path
 repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, binary = sys.argv[1:12]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, upstream
+from install import paths
+from install.local import prepare_local_model
 from server import serve_options
 
 parser = argparse.ArgumentParser(
@@ -60,26 +61,26 @@ print(f"Swift 1.5 27B GSQ RCO: context={args.max_context}, KV={args.kv_format}, 
       f"queue={args.queue_size}, memory={args.max_memory}", flush=True)
 
 # Check the address before the first-run draft download.
+paths.BINARY = Path(args.binary)
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((host, int(port)))
 
-selection = models.Selection.of(repo / "install/models-local", model_id, language_only=True)
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None)
-else:
-    record = assembly.verify(selection.link)
-    if record["sources"]["target"] != {"repo": model_dir, "revision": None}:
-        raise models.ModelError("Prepared target does not match the local Swift 1.5 directory")
+from huggingface_hub import snapshot_download
 
-# Hold the verified assembly until the server exits, as the official launcher does.
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
+# Record the default draft in the Hub cache before the offline preparation.
+snapshot_download(
+    "incoai/Qwen3.8-27B-DFlash2",
+    allow_patterns=["config.json", "*.safetensors", "*.safetensors.index.json"],
+)
+root = prepare_local_model(
+    Path(model_dir) / "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf", language_only=True,
+    models_dir=repo / "install/models-local",
+)
 print(f"Swift 1.5 Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root), "--tokenizer", str(root / "tokenizer"),
+    str(root),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
     "--binary", args.binary, "--port", str(port),
     *serve_options.serve_argv(args),

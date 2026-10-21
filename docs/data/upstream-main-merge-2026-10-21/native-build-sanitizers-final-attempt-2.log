@@ -1,0 +1,132 @@
+python3 dev/tools/build_config.py record --output 'build/engine-tests/qwen4b-ffn-check' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/qwen4b_ffn_check.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/qwen4b-ffn-check
+python3 dev/tools/build_config.py record --output 'build/engine-tests/decode-profile' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/decode_profile.mm build/engine/metal/MetalBackendInstrumented.o build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/decode-profile
+python3 dev/tools/build_config.py record --output 'build/engine-tests/teacher-logits' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/teacher_logits.mm build/engine/model/RuntimeInstrumented.o build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/teacher-logits
+python3 dev/tools/build_config.py record --output 'build/engine-tests/attention-sweep' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/attention_sweep.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/attention-sweep
+python3 dev/tools/build_config.py record --output 'build/engine-tests/gguf-projection-benchmark' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_projection_benchmark.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/gguf-projection-benchmark
+python3 dev/tools/build_config.py record --output 'build/engine-tests/gguf-moe-benchmark' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/gguf_moe_benchmark.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/gguf-moe-benchmark
+python3 dev/tools/build_config.py record --output 'build/engine-tests/qwen4b-operator-candidates' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/qwen4b_operator_candidates.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/qwen4b-operator-candidates
+python3 dev/tools/build_config.py record --output 'build/engine-tests/drafter-fc-precision-benchmark' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -fobjc-arc dev/benchmarks/drafter_fc_precision_benchmark.mm build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/drafter-fc-precision-benchmark
+python3 dev/tools/build_config.py record --output 'build/engine-tests/d3-head' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -Idev/tests/engine -fobjc-arc dev/tests/engine/d3_head_test.mm build/engine/libsplash.a -framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/d3-head
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/slot-file-asan-ubsan
+python3 dev/tools/build_config.py record --output 'build/engine-tests/model-runtime-oracle' --config 9b4c535cc830daff -- xcrun -sdk macosx clang++ -std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev -mmacosx-version-min=26.4 -include build/engine/BuildIdentity.hpp -fobjc-arc dev/tests/engine/model_runtime_oracle_test.mm build/engine/metal/MetalBackendInstrumented.o build/engine/ane/ProgramInstrumented.o build/engine/model/RuntimeInstrumented.o build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/model-runtime-oracle
+14:07:05 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+Slot file tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/slot-file-tsan
+python3 dev/tools/build_config.py record --output 'build/engine-tests/backend-benchmark' --config 92e37ef4490fb842 -- xcrun -sdk macosx clang++ -std=c++20 -O3 -Wall -Wextra -Werror -Iruntime -mmacosx-version-min=26.4 -fobjc-arc -include build/engine/BuildIdentity.hpp dev/benchmarks/backend_benchmark.mm \
+		build/engine/libsplash.a \
+		-framework Foundation -framework Metal -framework IOKit -framework IOSurface -o build/engine-tests/backend-benchmark
+14:07:06 An SSD cache file takes no more writes after one failed (File too large); what it holds stays readable.
+Slot file tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/kv-slot-format-asan-ubsan
+kv_slot_format_test: PASS
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/kv-page-tier-host-asan-ubsan
+round trips int8 slot format v0
+teardown int8
+round trips int8 slot format v1
+teardown int8
+round trips bf16 slot format v0
+teardown bf16
+round trips bf16 slot format v1
+teardown bf16
+kv page tier host tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/kv-page-tier-host-tsan
+round trips int8 slot format v0
+teardown int8
+round trips int8 slot format v1
+teardown int8
+round trips bf16 slot format v0
+teardown bf16
+round trips bf16 slot format v1
+teardown bf16
+kv page tier host tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/disk-space-asan-ubsan
+14:07:13 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 SSD cache: a second write found /Volumes/Share full, a volume whose free space it does not follow; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-yhnJMB/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-IbgtNP/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-Fhi2xA/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+Disk space tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/disk-space-tsan
+14:07:13 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 SSD cache: a second write found /Volumes/Test full while it shows 100.0 GiB available; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 SSD cache: a second write found /Volumes/Share full, a volume whose free space it does not follow; the cache keeps within the 0.0 GiB it holds while this server runs.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-CW5QDm/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-xjtmxZ/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+14:07:13 Persistent cache: removed /var/folders/gz/qn4bw9mn1rd25_61tzh2r7b80000gn/T/splash-disk-space-root-swdLLP/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (0.0 GiB), the oldest cache nobody holds, to keep the cache root within 0.0 GiB.
+Disk space tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/cache-directory-asan-ubsan
+Cache directory tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/cache-directory-tsan
+Cache directory tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/persistent-cache-asan-ubsan
+Persistent cache tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/persistent-cache-tsan
+Persistent cache tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/engine-cache-asan-ubsan
+engine cache tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/engine-cache-tsan
+engine cache tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/cache-property-asan-ubsan
+cache property runs ok
+cache property tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/cache-property-tsan
+cache property runs ok
+cache property tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/protocol-asan-ubsan dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/protocol-tsan dev/tests/engine/protocol_golden.txt
+native protocol tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/engine-asan-ubsan
+engine tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/engine-tsan
+engine tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/ragged-scheduler-asan-ubsan
+ragged scheduler tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/ragged-scheduler-tsan
+ragged scheduler tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/native-fd-asan-ubsan
+native fd transport tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/native-fd-tsan
+native fd transport tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/ane-ffn-calibration-asan-ubsan
+ane ffn calibration tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/ane-ffn-calibration-tsan
+ane ffn calibration tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/sparse-row-store-asan-ubsan
+sparse row store tests passed (90- and 170-byte rows)
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/sparse-row-store-tsan
+sparse row store tests passed (90- and 170-byte rows)
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/ssd-readers-asan-ubsan
+ssd_readers_test: PASS
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/ssd-readers-tsan
+ssd_readers_test: PASS
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/elastic-kv-pool-asan-ubsan
+elastic KV pool tests passed
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/elastic-kv-pool-tsan
+elastic KV pool tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/slot-recycler-asan-ubsan dev/tests/fixtures/kv-selection-traces
+slot_recycler_test: code128.kvst: 51521 misses, 52949 least recently used
+slot_recycler_test: novel128.kvst: 54301 misses, 55585 least recently used
+slot_recycler_test: novel256.kvst: 76406 misses, 78716 least recently used
+slot_recycler_test: PASS
+TSAN_OPTIONS=halt_on_error=1 build/sanitizers/slot-recycler-tsan dev/tests/fixtures/kv-selection-traces
+slot_recycler_test: code128.kvst: 51521 misses, 52949 least recently used
+slot_recycler_test: novel128.kvst: 54301 misses, 55585 least recently used
+slot_recycler_test: novel256.kvst: 76406 misses, 78716 least recently used
+slot_recycler_test: PASS
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/engine-memory-plan-asan-ubsan
+elastic memory plan tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/memory-audit-asan-ubsan
+elastic memory audit tests passed
+ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 build/sanitizers/runtime-status-asan-ubsan dev/tests/engine/status_golden.json
+runtime status tests passed

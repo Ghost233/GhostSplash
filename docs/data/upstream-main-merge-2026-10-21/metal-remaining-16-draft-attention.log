@@ -1,0 +1,4 @@
+2026-10-21 15:15:32.759 draft-attention[37854:10912528] Metal GPU Validation Enabled
+standard draft attention capacity=4096 window=4096 causal=1 PASS
+standard draft attention capacity=32768 window=0 causal=0 PASS
+draft_attention_metal_test: PASS

@@ -100,8 +100,10 @@ void formatCheck(metal::MetalBackend &backend, uint32_t format) {
     const auto *got = static_cast<const uint8_t *>(read.contents());
     for (uint32_t row = 0; row < C; ++row)
       for (uint32_t unit = 0; unit < units; ++unit) {
-        const uint64_t from = ((uint64_t{ids[row] / 256} * units + unit) * 256 + ids[row] % 256) * bytes;
-        const uint64_t to = ((uint64_t{row / 256} * units + unit) * 256 + row % 256) * bytes;
+        const uint64_t from = ((uint64_t{ids[row] / QUANT_TILE_ROWS} * units + unit) *
+                               QUANT_TILE_ROWS + ids[row] % QUANT_TILE_ROWS) * bytes;
+        const uint64_t to = ((uint64_t{row / QUANT_TILE_ROWS} * units + unit) *
+                             QUANT_TILE_ROWS + row % QUANT_TILE_ROWS) * bytes;
         require(!std::memcmp(got + to, original.data() + from, bytes),
                 "compact quantized plane differs: " + std::string(info.name));
       }
@@ -214,6 +216,7 @@ void dflash2MappingCheck(metal::MetalBackend &backend) {
     std::fill_n(static_cast<float *>(b.uniforms.contents()), SPLASH_SAMPLING_UNIFORMS, 0.37F);
     b.proposedTokens = test::sharedBuffer(backend, SPLASH_DRAFT_PROPOSAL_TOKENS * 4);
     b.proposalProbabilities = test::sharedBuffer(backend, workspace.proposalProbabilitiesBytes);
+    b.confidence = test::sharedBuffer(backend, SPLASH_DRAFT_PROPOSAL_TOKENS * 4);
     return b;
   };
   auto full = buffers(Vocabulary), compact = buffers(Capacity);

@@ -147,8 +147,10 @@ void run(MetalBackend &backend, bool causal) {
   DFlashDraftWeights weights;
   weights.layout = {.layers=1, .hiddenSize=Hidden, .vocabularySize=Vocabulary, .dynamicSize=0,
       .qkvSize=Qkv, .attentionSize=Attention, .intermediateSize=Intermediate,
-      .attentionHeadDimension=Head, .rotaryTheta=1000000, .targetHiddenSize=20480, .selectorRank=0,
+      .attentionHeadDimension=Head, .rotaryTheta=1000000, .selectorRank=0,
       .kvHeads=8, .kind=DraftKind::Standard};
+  weights.layout.targetLayerCount = 8;
+  for (uint32_t index = 0; index < weights.layout.targetLayerCount; ++index) weights.layout.targetLayers[index] = 1 + 4 * index;
   DFlashDraftLayerWeights layer;
   layer.inputNorm = {ones(backend, Hidden), false}; layer.queryNorm = ones(backend, Head);
   layer.keyNorm = ones(backend, Head); layer.postAttentionNorm = {ones(backend, Hidden), false};
@@ -160,7 +162,7 @@ void run(MetalBackend &backend, bool causal) {
   layer.causal = causal; layer.slidingWindow = causal ? 4096 : 0;
   weights.layers.push_back(layer); weights.finalNorm = {ones(backend, Hidden), false};
   auto head = projection(backend, Vocabulary, Hidden, 6); head.destination = FloatOutput::Float32;
-  weights.contextProjection = projection(backend, Hidden, weights.layout.targetHiddenSize, 7);
+  weights.contextProjection = projection(backend, Hidden, weights.layout.targetHiddenSize(), 7);
   weights.hiddenNorm = {ones(backend, Hidden), false};
   const auto &linear = operators.linear();
   LinearScratchSize size;
@@ -212,6 +214,9 @@ void run(MetalBackend &backend, bool causal) {
       static_cast<uint16_t *>(buffers.hidden[0].contents())[row * Hidden + n] = floatToBf16(input[row * Hidden + n]);
     }
   const DFlashDraft draft(weights, backend, operators);
+  require(draft.decodeStorageLanes(1) >= 1 &&
+              draft.decodeStorageLanes(1) <= ExecutionLimits::maximumBatchWidth,
+          "standard draft storage planning treated absent dynamic projections as matrices");
   {
     // Exercise the actual FC -> hidden norm -> context K/V graph entry.
     // Runtime must bind physical storage capacity while this entry's
@@ -219,7 +224,7 @@ void run(MetalBackend &backend, bool causal) {
     DFlashContextBuffers context;
     context.linearScratch = scratch;
     context.capturedTargetHidden = allocated(backend,
-        uint64_t{storageRows} * weights.layout.targetHiddenSize * 2);
+        uint64_t{storageRows} * weights.layout.targetHiddenSize() * 2);
     context.projected = hidden(); context.hidden = hidden();
     context.contextKv = allocated(backend,
         uint64_t{storageRows} * weights.layout.contextKvSize() * 2);
@@ -231,7 +236,7 @@ void run(MetalBackend &backend, bool causal) {
     if (storageRows > Rows) {
       auto shortContext = context;
       shortContext.capturedTargetHidden = backend.view(context.capturedTargetHidden, 0,
-          uint64_t{Rows} * weights.layout.targetHiddenSize * 2);
+          uint64_t{Rows} * weights.layout.targetHiddenSize() * 2);
       metal::CommandGraph refused;
       splash::test::rejects([&] { draft.addContextCommit(refused, shortContext, starts); },
           "projection input buffer holds", "context FC accepted an unpadded captured input view");

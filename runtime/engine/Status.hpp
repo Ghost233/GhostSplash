@@ -7,6 +7,9 @@
 #include "engine/MemoryGovernor.hpp"
 #include "engine/MemoryAudit.hpp"
 #include "engine/ThermalState.hpp"
+#include "model/ExpertStoreStats.hpp"
+#include "model/KvReadStats.hpp"
+#include "model/SparseRowStore.hpp"
 
 #include <algorithm>
 #include <array>
@@ -292,6 +295,15 @@ struct RuntimeFeatureSnapshot final {
   model::OptionalFeatureReport optional;
 };
 
+// A spill-capable target's KV on the SSD cache as /status reports it
+// (kv_spill): what the cache holds and did (Cache::spillSnapshot), and its
+// readers' memory and reads.
+struct KvSpillStatus final {
+  KvSpillSnapshot cache;
+  std::optional<model::KvBlockCacheStats> blockCache;
+  std::optional<model::KvHistoryStreamStats> historyStream;
+};
+
 // Single source for /status and native protocol status events.
 [[nodiscard]] std::string runtimeStatusJson(
     const EngineMemoryPlan &plan, const EngineSnapshot &core,
@@ -303,6 +315,9 @@ struct RuntimeFeatureSnapshot final {
     std::string metalFailureReason, const ResourceWaitSnapshot &resourceWait,
     const NativeLoopTiming &loop, const WeightsSnapshot &weights,
     const AneFfnSnapshot &aneFfn, ThermalState thermalState,
+    const std::optional<model::SparseRowStats> &streamedTable = std::nullopt,
+    const std::optional<model::ExpertStoreStats> &streamedExperts = std::nullopt,
+    const std::optional<KvSpillStatus> &kvSpill = std::nullopt,
     const std::optional<RuntimeFeatureSnapshot> &features = std::nullopt);
 
 } // namespace splash::engine

@@ -41,25 +41,22 @@ repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_fo
 binary = binaries[0] if binaries else str(Path(repo) / "build/splash")
 repo = Path(repo)
 sys.path.insert(0, str(repo))
-from install import assembly, hub, models, upstream
+from install import paths
+from install.local import prepare_local_model
 
+paths.BINARY = Path(binary)
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     listener.bind((host, int(port)))
 
-selection = models.Selection.of(repo / "install/models-local", model_id, language_only=True)
-if models.installation_kind(selection.link) is None:
-    upstream._install(selection, hub.Repository.local_directory(Path(model_dir)), None)
-record = assembly.verify(selection.link)
-if record["sources"] != {"target": {"repo": model_dir, "revision": None}, "draft": None}:
-    raise models.ModelError("Prepared 4B target does not match the local GGUF without a draft")
-root, record_lock = assembly.hold(selection.link, selection.models_root)
-if record_lock is not None:
-    os.set_inheritable(record_lock.fileno(), True)
+root = prepare_local_model(
+    Path(model_dir) / "Qwen3.5-4B-UD-Q4_K_XL.gguf", language_only=True,
+    models_dir=repo / "install/models-local",
+)
 print(f"Qwen3.5-4B: http://{host}:{port}/v1; model root: {root}", flush=True)
 command = [
     str(repo / ".venv/bin/python"), "-u", "-m", "server.server", str(root),
-    "--tokenizer", str(root / "tokenizer"), "--model", model_id,
+    "--model", model_id,
     "--binary", binary, "--host", host, "--port", str(port),
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--disable-ane", "--no-webui",

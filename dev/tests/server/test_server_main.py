@@ -1,11 +1,13 @@
 import io
 import math
 import signal
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from dev.tests.server_fixtures import main_args
+from dev.tests.server_fixtures import main_args, unprepared_hold
 from server import backend as backend_api
 from server import diagnostics
 from server import protocol as native_wire
@@ -14,6 +16,42 @@ from server.origins import ANY_ORIGIN
 
 
 class ServerMainTests(unittest.TestCase):
+    def test_chat_template_override_keeps_the_held_tokenizer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            template = Path(directory) / "custom.jinja"
+            template.write_text("custom template", encoding="utf-8")
+            held_root = Path(directory) / "held"
+            tokenizer = SimpleNamespace(chat_template="original")
+            runtime = mock.Mock()
+            runtime.wait_ready.side_effect = KeyboardInterrupt
+            with (
+                mock.patch.object(
+                    api, "parse_args", return_value=main_args(chat_template=template)
+                ),
+                mock.patch.object(
+                    api.assembly, "hold", return_value=(held_root, object())
+                ),
+                mock.patch.object(api, "load_thinking_key", return_value=None),
+                mock.patch.object(
+                    api.AutoTokenizer, "from_pretrained", return_value=tokenizer
+                ) as load,
+                mock.patch.object(api, "validate_tokenizer"),
+                mock.patch.object(api, "ChatTemplates") as templates,
+                mock.patch.object(
+                    api.engine_runtime, "MultiplexedRuntime", return_value=runtime
+                ),
+                mock.patch.object(api, "NativeBackend"),
+                mock.patch.object(api, "FrontendServer"),
+                mock.patch.object(api.signal, "signal"),
+                mock.patch.object(api, "print_status"),
+            ):
+                api.main()
+            load.assert_called_once_with(
+                held_root / "tokenizer", local_files_only=True, trust_remote_code=False
+            )
+            templates.assert_called_once_with(tokenizer)
+            self.assertEqual(tokenizer.chat_template, "custom template")
+
     def test_sigterm_uses_the_normal_main_cleanup_path(self):
         args = main_args()
         runtime = mock.Mock()
@@ -59,6 +97,7 @@ class ServerMainTests(unittest.TestCase):
         server.serve_forever.side_effect = serve
         with (
             mock.patch.object(api, "parse_args", return_value=args),
+            unprepared_hold(),
             mock.patch.object(api, "load_thinking_key", return_value=None),
             mock.patch.object(
                 api.AutoTokenizer, "from_pretrained", return_value=tokenizer
@@ -133,6 +172,7 @@ class ServerMainTests(unittest.TestCase):
                 runtime.readiness = native_wire.ReadyEvent(4, 131072, vision)
                 with (
                     mock.patch.object(api, "parse_args", return_value=args),
+                    unprepared_hold(),
                     mock.patch.object(api, "load_thinking_key", return_value=None),
                     mock.patch.object(
                         api.AutoTokenizer, "from_pretrained", return_value=object()
@@ -176,6 +216,63 @@ class ServerMainTests(unittest.TestCase):
                     status.call_args_list,
                 )
 
+    def test_main_serves_the_context_it_asked_for(self):
+        # The engine announces --max-context as given, past the native window
+        # too, where YaRN serves it; without it, a context the native window
+        # holds, which the automatic context never passes.
+        for max_context, window, served in (
+            (1010000, 1010000, True),
+            (300000, 300000, True),
+            (1000000, 1010000, False),
+            (300000, 262144, False),
+            (None, 262144, True),
+            (None, 262145, False),
+        ):
+            with self.subTest(max_context=max_context, window=window):
+                runtime = mock.Mock()
+                runtime.readiness = native_wire.ReadyEvent(4, window, False)
+                with (
+                    mock.patch.object(
+                        api,
+                        "parse_args",
+                        return_value=main_args(max_context=max_context),
+                    ),
+                    unprepared_hold(),
+                    mock.patch.object(api, "load_thinking_key", return_value=None),
+                    mock.patch.object(
+                        api.AutoTokenizer, "from_pretrained", return_value=object()
+                    ),
+                    mock.patch.object(api, "validate_tokenizer"),
+                    mock.patch.object(api, "ChatTemplates"),
+                    mock.patch.object(
+                        api.engine_runtime, "MultiplexedRuntime", return_value=runtime
+                    ),
+                    mock.patch.object(api, "NativeBackend"),
+                    mock.patch.object(api, "ConstraintFactory"),
+                    mock.patch.object(api, "Frontend") as app_type,
+                    mock.patch.object(
+                        api, "FrontendServer", return_value=mock.Mock(server_port=8000)
+                    ),
+                    mock.patch.object(api.signal, "signal"),
+                    mock.patch.object(api, "print_status") as status,
+                ):
+                    if served:
+                        api.main()
+                        self.assertEqual(app_type.call_args.args[3], window)
+                    else:
+                        with self.assertRaises(SystemExit):
+                            api.main()
+                        self.assertTrue(
+                            any(
+                                call.args[0].startswith(
+                                    "Error · native runtime reported an invalid context window"
+                                )
+                                and call.kwargs.get("error") is True
+                                for call in status.call_args_list
+                            )
+                        )
+                        app_type.assert_not_called()
+
     def test_main_wires_allowed_origins_and_warns_without_a_key(self):
         warning = mock.call(
             "Warning · --allowed-origin '*' without --api-key lets every web "
@@ -198,6 +295,7 @@ class ServerMainTests(unittest.TestCase):
                         "parse_args",
                         return_value=main_args(allowed_origin=origins, api_key=key),
                     ),
+                    unprepared_hold(),
                     mock.patch.object(api, "load_thinking_key", return_value=None),
                     mock.patch.object(
                         api.AutoTokenizer, "from_pretrained", return_value=object()
@@ -234,6 +332,7 @@ class ServerMainTests(unittest.TestCase):
         server = mock.Mock()
         with (
             mock.patch.object(api, "parse_args", return_value=args),
+            unprepared_hold(),
             mock.patch.object(api, "load_thinking_key", return_value=None),
             mock.patch.object(
                 api.AutoTokenizer, "from_pretrained", return_value=object()
@@ -261,6 +360,7 @@ class ServerMainTests(unittest.TestCase):
         server = mock.Mock()
         with (
             mock.patch.object(api, "parse_args", return_value=main_args()),
+            unprepared_hold(),
             mock.patch.object(api, "load_thinking_key", return_value=None),
             mock.patch.object(
                 api.AutoTokenizer,
@@ -301,6 +401,123 @@ class ServerMainTests(unittest.TestCase):
         server.server_activate.assert_not_called()
         server.server_close.assert_called_once_with()
         self.assertIn("Address already in use", stderr.getvalue())
+
+    def test_main_holds_and_serves_the_assembly_its_model_directory_names(self):
+        models = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        served = models / ".resolved/assembly"
+        served.mkdir(parents=True)
+        (served / "model.json").write_text("{}")
+        link = models / "owner/model"
+        link.parent.mkdir()
+        link.symlink_to(served, target_is_directory=True)
+        runtime = mock.Mock()
+        runtime.readiness = native_wire.ReadyEvent(4, 131072, False)
+        held = []
+
+        def start(command, **options):
+            # Installations remove no assembly a server holds.
+            held.append(api.assembly.is_held(served))
+            return runtime
+
+        with (
+            mock.patch.object(
+                api, "parse_args", return_value=main_args(model_root=str(link))
+            ),
+            mock.patch.object(api, "load_thinking_key", return_value=None),
+            mock.patch.object(
+                api.AutoTokenizer, "from_pretrained", return_value=object()
+            ) as tokenizer,
+            mock.patch.object(api, "validate_tokenizer"),
+            mock.patch.object(api, "ChatTemplates"),
+            mock.patch.object(
+                api.engine_runtime, "MultiplexedRuntime", side_effect=start
+            ) as runtime_type,
+            mock.patch.object(api, "NativeBackend"),
+            mock.patch.object(api, "ConstraintFactory"),
+            mock.patch.object(api, "Frontend"),
+            mock.patch.object(
+                api, "FrontendServer", return_value=mock.Mock(server_port=8000)
+            ),
+            mock.patch.object(api.signal, "signal"),
+            mock.patch.object(api, "print_status"),
+        ):
+            api.main()
+        self.assertEqual(held, [True])
+        # The tokenizer and every engine, a relaunched one too, are the
+        # assembly's the link named, wherever the link points later.
+        tokenizer.assert_called_once_with(
+            served / "tokenizer", local_files_only=True, trust_remote_code=False
+        )
+        command = runtime_type.call_args.args[0]
+        relaunch = runtime_type.call_args.kwargs["relaunch_command"]
+        self.assertEqual(command[2], str(served))
+        self.assertEqual(relaunch(runtime.readiness)[2], str(served))
+
+    def test_main_refuses_a_directory_that_names_no_prepared_model(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        models = root / "models"
+        (models / ".resolved").mkdir(parents=True)
+        (models / ".resolved/file").touch()
+        (models / "owner").mkdir()
+        (models / "owner/model").symlink_to(models / ".resolved/collected")
+        gone = "names no model Splash prepared: prepare the model again"
+        for directory, refusal in (
+            # A directory Splash did not prepare.
+            (root, "is not a model directory Splash prepared"),
+            # One a later preparation collected, and a selection link to it.
+            (models / ".resolved/collected", gone),
+            (models / "owner/model", gone),
+            # A file in its place, and one in a models directory since removed.
+            (models / ".resolved/file", gone),
+            (root / "removed/.resolved/collected", gone),
+        ):
+            with self.subTest(directory=str(directory.relative_to(root))):
+                self.assertIn(f"Error · {directory} {refusal}", self.refusal(directory))
+
+    def test_main_refuses_a_model_directory_it_cannot_hold(self):
+        # Holding takes the installation lock of the models directory, which
+        # the server must be able to write. A lock it cannot open is no
+        # failure to start the HTTP server, whose socket is already bound.
+        models = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        served = models / ".resolved/assembly"
+        served.mkdir(parents=True)
+        (served / "model.json").write_text("{}")
+        lock = models / ".install.lock"
+        refusal = (
+            f"Error · cannot hold {served} in {models}: "
+            f"[Errno 13] Permission denied: '{lock}'"
+        )
+        # A read-only lock.
+        lock.touch(mode=0o444)
+        self.assertIn(refusal, self.refusal(served))
+        # None, in a read-only models directory.
+        lock.unlink()
+        models.chmod(0o555)
+        self.addCleanup(models.chmod, 0o755)
+        self.assertIn(refusal, self.refusal(served))
+
+    def refusal(self, directory):
+        """What main reports on stderr when it refuses to serve directory,
+        before it loads a tokenizer or starts an engine."""
+        server = mock.Mock()
+        with (
+            mock.patch.object(
+                api, "parse_args", return_value=main_args(model_root=str(directory))
+            ),
+            mock.patch.object(api, "load_thinking_key", return_value=None),
+            mock.patch.object(api, "FrontendServer", return_value=server),
+            mock.patch.object(api.AutoTokenizer, "from_pretrained") as tokenizer,
+            mock.patch.object(api.engine_runtime, "MultiplexedRuntime") as runtime,
+            mock.patch.object(api.signal, "signal"),
+            mock.patch("sys.stdout", new_callable=io.StringIO),
+            mock.patch("sys.stderr", new_callable=io.StringIO) as stderr,
+            self.assertRaisesRegex(SystemExit, "1"),
+        ):
+            api.main()
+        tokenizer.assert_not_called()
+        runtime.assert_not_called()
+        server.server_close.assert_called_once_with()
+        return stderr.getvalue()
 
 
 if __name__ == "__main__":
