@@ -3998,6 +3998,11 @@ int main(int argc, char **argv) {
       return 0;
     }
     model::Runtime &executor = *runtime;
+    if (std::visit([](const auto &weights) {
+          return weights.layout.ffnKind == model::QwenFfnKind::SparseMoe;
+        }, model.target))
+      require(!executor.capturesStatesInsidePrefill(),
+              "fixed-row MoE prefill partitions depend on snapshot admission");
     // Warmup runs on the KV runway and never allocates: without it, after
     // actual state activation, warmupPrefill fails and cleans up.
     pages.releaseExtent(0);
@@ -6155,6 +6160,8 @@ int main(int argc, char **argv) {
       const metal::AllocationResult budgetArenas =
           governedFor(governor, "the budgeted runtime's arenas")(arenaBytes, [&] { runtime.emplace(context); });
       require(static_cast<bool>(budgetArenas), "the budgeted runtime's arenas exceed the oracle Metal budget");
+      require(runtime->capturesStatesInsidePrefill() == !stateLayout.draft.fullHistory,
+              "auto verification changed the normal prefill capture policy");
       requireBudgetedCyclesAreWellFormed(*runtime, states, samplingSeedTokens);
     } else {
       std::cout << "budgeted_cycles=SKIP (a dense target verifies every row; the verify budget does not apply)\n";

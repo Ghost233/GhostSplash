@@ -419,6 +419,9 @@ struct Runtime::Impl {
   // follow where the budget chooses them (budgetsVerifyRows); none where
   // the cycles verify every row.
   std::optional<VerifyBudget> verifyBudget;
+  // Fixed-row MoE checks also fix prefill partitions: snapshot admission
+  // must not choose different matmul row shapes for the same prompt.
+  const bool fixedMoePrefill;
   ops::AneFfn *aneFfn;
   // The readers of spilled K/V, when the target's K/V spills.
   KvBlockCache *blockCache;
@@ -446,6 +449,10 @@ struct Runtime::Impl {
         draftModel(value.model.descriptor.hasDraft()
                        ? std::make_unique<DFlashDraft>(value.model.draft, value.backend, operators)
                        : nullptr),
+        fixedMoePrefill(value.verifyRows == VerifyRows::All &&
+                        std::visit([](const auto &layout) {
+                          return layout.ffnKind == QwenFfnKind::SparseMoe;
+                        }, model.descriptor.target)),
         aneFfn(value.aneFfn), blockCache(value.blockCache), historyStream(value.historyStream) {
     if (states.layout() != model.stateLayout(states.layout().target.format) ||
         kvPages.layout() != model.targetKvLayout(kvPages.layout().format) || !blockCache != !historyStream) {
@@ -3258,7 +3265,7 @@ uint32_t Runtime::residentLane(uint64_t requestId) {
 }
 
 bool Runtime::capturesStatesInsidePrefill() const noexcept {
-  return !impl_->states.layout().draft.fullHistory;
+  return !impl_->states.layout().draft.fullHistory && !impl_->fixedMoePrefill;
 }
 
 std::shared_ptr<StateReservation> Runtime::reserveState(uint64_t requestId, uint32_t tokens,

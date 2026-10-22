@@ -892,7 +892,8 @@ SERVE_OPTIONS = (
             default="auto",
             help="rows of each draft block decode verifies: all verifies every "
             "row, so a MoE model's greedy and seeded outputs repeat as a dense "
-            "model's do (default: auto, where a verify budget learned from "
+            "model's do; all also keeps MoE prefill on state boundaries, "
+            "independent of snapshot buffer admission (default: auto, where a verify budget learned from "
             "earlier cycles chooses a MoE model's rows, which is faster but "
             "lets those outputs differ from run to run)",
         ),
