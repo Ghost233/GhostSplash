@@ -396,7 +396,8 @@ private:
 
   uint64_t localReservedBytes() const noexcept;
   void refreshHostHeld();
-  void observeAutomaticGrowth(const std::optional<HostMemory> &host);
+  void observeAutomaticGrowth(const std::optional<HostMemory> &host, uint64_t scopeOwnedBytes = 0);
+  [[nodiscard]] metal::AllocationResult checkAutomaticStorageGrowth();
   [[nodiscard]] uint64_t policyNow() const;
   [[nodiscard]] bool automaticStorageFits(uint64_t contribution) const noexcept;
   [[nodiscard]] std::optional<uint64_t> sampleAutomaticStorage() const noexcept;
@@ -413,7 +414,7 @@ private:
   AllocationDriver allocationDriver_;
   std::function<MemoryPressure()> pressureProvider_;
   bool allocationScope_ = false;
-  uint64_t allocationPeak_ = 0;
+  uint64_t allocationPeak_ = 0, allocationStartBytes_ = 0;
   bool allocationMandatory_ = true;
   bool allocationElastic_ = false;
   bool automaticStorageInsufficient_ = false;

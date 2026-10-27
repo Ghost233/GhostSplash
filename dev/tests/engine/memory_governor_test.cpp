@@ -8,6 +8,8 @@
 #include "engine/MemoryPlan.hpp"
 
 #include <cstdlib>
+#include <array>
+#include <atomic>
 #include <chrono>
 #include <thread>
 #include <functional>
@@ -344,6 +346,188 @@ void testWarningRecoversByMeasuredHeadroomAndRechecksTheRealReceiver() {
     ++now;
     require(bool(grow()) && allocations == before + 1,
             "Warning did not recover after the replacement stable interval");
+  }
+}
+
+void testAutomaticPayloadRechecksAfterItsBlockPermitWasConsumed() {
+  for (unsigned interruption = 0; interruption < 3; ++interruption) {
+    test::metalStatistics() = {}; test::hostStatistics() = {};
+    allocate(kGiB);
+    uint64_t actual = kGiB, now = 0, sequence = 0, spare = 10 * kGiB, payloads = 0;
+    auto observed = MemoryPolicyObservation::Pressure::Warning;
+    metal::MetalBackend backend("unused");
+    MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                            [&] { return hostMemory(spare); }, 0);
+    governor.setPressure(MemoryPressure::Warning);
+    governor.setAutomaticStorageQuota(actual, 4 * kGiB, [&] { return actual; });
+    governor.enablePressureControl({[&] { return now; }, [&] { return MemoryPolicyObservation{observed, sequence}; }});
+    bool interrupt = true;
+    const auto grow = [&] {
+      const AutomaticStorageBlock block{AutomaticStorageKind::ExpertBlock, 1, now + 1, kMiB, 0};
+      return governor.automaticStorageAdmission("expert_optional", block)(kMiB, [&] {
+        require(governor.consumeAutomaticStorageBlock(block), "receiver did not consume its admitted block plan");
+        // Read-ahead may drain between the owner's permit and its nested
+        // payload admission. A current Warning alone must remain eligible.
+        if (interrupt) {
+          if (interruption == 0) spare = 2 * kGiB + kHostRecoveryMarginBytes - 1;
+          else if (interruption == 1) observed = MemoryPolicyObservation::Pressure::Unknown;
+          else ++sequence; // Critical already returned to Warning.
+        }
+        const auto result = governor.allocationAdmission("managed_buffer")(kMiB, [&] {
+          ++payloads; actual += kMiB; allocate(kMiB);
+        });
+        if (!result) throw metal::MetalAllocationError(result.detail, result.failure);
+      });
+    };
+    now = 30'000;
+    const auto denied = grow();
+    const auto cause = interruption == 2 ? metal::AllocationFailure::GrowthDeferred : metal::AllocationFailure::HostPressure;
+    require(denied.failure == cause && payloads == 0 && actual == kGiB &&
+                governor.snapshot().chargedBytes == kGiB && governor.snapshot().localReservedBytes == 0,
+            "consumed expert permit survived a drain-time unsafe observation before its actual Metal payload");
+    interrupt = false; observed = MemoryPolicyObservation::Pressure::Warning; spare = 10 * kGiB;
+    static_cast<void>(governor.evaluate());
+    now = 59'999;
+    require(!grow() && payloads == 0, "drain-time unsafe observation retained old stable credit");
+    now = 60'000;
+    require(bool(grow()) && payloads == 1 && actual == kGiB + kMiB,
+            "Warning did not resume one expert payload after a replacement stable interval");
+  }
+}
+
+void testAutomaticPayloadKeepsItsPaidPeakSeparateFromExternalPressure() {
+  for (const bool externalDrop : {false, true}) {
+    test::metalStatistics() = {}; test::hostStatistics() = {};
+    allocate(kGiB);
+    constexpr uint64_t first = kGiB, second = 512 * kMiB, total = first + second;
+    uint64_t actual = kGiB, now = 0, spare = 4608 * kMiB, payloads = 0;
+    metal::MetalBackend backend("unused");
+    MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                            [&] { return hostMemory(spare); }, 0);
+    governor.setPressure(MemoryPressure::Warning);
+    governor.setAutomaticStorageQuota(actual, 4 * kGiB, [&] { return actual; });
+    governor.enablePressureControl({[&] { return now; }, [] {
+      return MemoryPolicyObservation{MemoryPolicyObservation::Pressure::Warning, 0};
+    }});
+    now = 30'000;
+    const AutomaticStorageBlock block{AutomaticStorageKind::ExpertBlock, 1, 1, total, 0};
+    const auto result = governor.automaticStorageAdmission("expert_optional", block)(total, [&] {
+      require(governor.consumeAutomaticStorageBlock(block), "split payload lost its original permit");
+      const auto part = [&](uint64_t bytes) {
+        const auto admitted = governor.allocationAdmission("managed_buffer")(bytes, [&] {
+          ++payloads; actual += bytes; allocate(bytes); spare -= bytes;
+        });
+        if (!admitted) throw metal::MetalAllocationError(admitted.detail, admitted.failure);
+      };
+      part(first);
+      if (externalDrop) spare -= 512 * kMiB;
+      part(second);
+    });
+    if (externalDrop)
+      require(result.failure == metal::AllocationFailure::HostPressure && payloads == 1 &&
+                  actual == 2 * kGiB && governor.snapshot().chargedBytes == actual,
+              "a paid partial block masked an external decline across its remaining peak margin");
+    else
+      require(bool(result) && payloads == 2 && actual == kGiB + total && spare == 3 * kGiB,
+              "scope-owned first payload was counted twice against an already admitted split peak");
+    require(governor.snapshot().localReservedBytes == 0, "split automatic payload retained a finished peak reservation");
+  }
+}
+
+void testRealPlePrefetchDrainCannotKeepAConsumedUnsafePermit() {
+  for (unsigned interruption = 0; interruption < 3; ++interruption) {
+    test::metalStatistics() = {}; test::hostStatistics() = {};
+    std::atomic<uint64_t> spare{64 * kGiB}, sequence{0};
+    std::atomic<MemoryPolicyObservation::Pressure> observed{MemoryPolicyObservation::Pressure::Warning};
+    std::atomic<bool> consumed{false}, readStarted{false}, drained{false};
+    struct DrainingRows final : model::RowReader {
+      std::function<void()> drain;
+      explicit DrainingRows(std::function<void()> action) : drain(std::move(action)) {}
+      void read(uint64_t, std::span<uint8_t> bytes) override { drain(); std::fill(bytes.begin(), bytes.end(), 0); }
+      void checkUnchanged() override {}
+      uint64_t size() const override { return 12'288 * 16; }
+    };
+    auto accounting = std::make_shared<HostMemoryAccounting>();
+    MemoryGovernor *admission = nullptr;
+    uint64_t payloads = 0;
+    const HostMemoryAdmission hostAllocation = [&](uint64_t bytes, const std::function<void()> &allocate,
+                                                  const std::function<uint64_t()> &held) {
+      HostMemoryAllocation lease;
+      const auto body = [&] {
+        if (admission) ++payloads;
+        allocate();
+        lease = HostMemoryAllocation(accounting, held ? held() : bytes, false);
+      };
+      if (admission) {
+        const auto result = admission->allocationAdmission("managed_buffer")(bytes, body);
+        if (!result) throw metal::MetalAllocationError(result.detail, result.failure);
+      } else body();
+      return lease;
+    };
+    constexpr uint64_t rows = 12'288;
+    constexpr uint32_t rowBytes = 16, prefetchRows = 1, stageRows = 8;
+    const auto maximum = model::SparseRowStore::maximumResizableBytes(rows, rowBytes, prefetchRows, stageRows);
+    const auto floor = model::SparseRowStore::minimumResizableBytes(maximum, rowBytes, prefetchRows, stageRows, rows);
+    auto reader = std::make_unique<DrainingRows>([&] {
+      readStarted = true;
+      const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+      while (!consumed && std::chrono::steady_clock::now() < until)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      require(consumed, "bounded real PLE prefetch never reached its consumed permit");
+      if (interruption == 0) spare = 2 * kGiB + kHostRecoveryMarginBytes - 1;
+      else if (interruption == 1) observed = MemoryPolicyObservation::Pressure::Unknown;
+      else ++sequence; // A brief Critical already ended in Warning.
+      drained = true;
+    });
+    model::SparseRowStore store({"drain-time-pressure", rows, rowBytes, 0}, std::move(reader),
+        {.cacheBytes = floor, .readers = std::make_shared<model::SsdReaders>(1), .prefetchRows = prefetchRows,
+         .stageRows = stageRows, .maximumCacheBytes = maximum, .boundedWorkingMemory = true,
+         .hostAllocation = hostAllocation});
+    metal::MetalBackend backend("unused");
+    MemoryGovernor governor(backend, 8 * kMiB, 2 * kGiB, 2 * kGiB,
+                            [&] { return hostMemory(spare.load()); }, 0, accounting->fixedBytes.load());
+    admission = &governor;
+    governor.setNonBackendHostHeld([&] { return accounting->fixedBytes.load(); });
+    governor.setPressure(MemoryPressure::Warning);
+    governor.setAutomaticStorageQuota(floor, maximum, [&] { return store.committedBytes(); });
+    uint64_t now = 0;
+    governor.enablePressureControl({[&] { return now; }, [&] {
+      return MemoryPolicyObservation{observed.load(), sequence.load()};
+    }});
+    store.setGrowthGuard([&](const model::StorageGrowthPlan &plan) {
+      const bool permitted = governor.consumeAutomaticStorageBlock({AutomaticStorageKind::PleBlock, 1,
+          plan.candidate, plan.contributionBytes, plan.auxiliaryBytes});
+      if (permitted) consumed = true;
+      return permitted;
+    });
+    store.prefetch(std::array<uint32_t, 1>{1});
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (!readStarted && std::chrono::steady_clock::now() < until)
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    require(readStarted, "real PLE prefetch did not begin its bounded blocking read");
+    const auto grow = [&] {
+      const auto plan = store.planGrowOne(maximum);
+      require(plan.has_value(), "real PLE lost its next physical block");
+      return governor.automaticStorageAdmission("ple_optional", {AutomaticStorageKind::PleBlock, 1,
+          plan->candidate, plan->contributionBytes, plan->auxiliaryBytes})(plan->peakBytes,
+          [&] { static_cast<void>(store.growOne(*plan)); });
+    };
+    const auto before = accounting->fixedBytes.load();
+    now = 30'000;
+    const auto denied = grow();
+    const auto cause = interruption == 2 ? metal::AllocationFailure::GrowthDeferred : metal::AllocationFailure::HostPressure;
+    require(consumed && drained && denied.failure == cause && payloads == 0 &&
+                store.committedBytes() == floor && accounting->fixedBytes == before &&
+                governor.snapshot().chargedBytes == before && governor.snapshot().localReservedBytes == 0,
+            "real PLE drain retained an unsafe consumed permit or allocated a host payload");
+    spare = 64 * kGiB; observed = MemoryPolicyObservation::Pressure::Warning;
+    static_cast<void>(governor.evaluate());
+    now = 59'999;
+    require(!grow() && payloads == 0, "real PLE drain failure preserved the previous stable interval");
+    now = 60'000;
+    require(bool(grow()) && payloads > 0 && store.committedBytes() > floor &&
+                accounting->fixedBytes > before && governor.snapshot().localReservedBytes == 0,
+            "real PLE did not recover under Warning after a replacement stable interval");
   }
 }
 
@@ -1290,6 +1474,9 @@ void testNonBackendHostSurvivesUnpublishedTrackedGrowth() {
 
 int main() {
   try {
+    testRealPlePrefetchDrainCannotKeepAConsumedUnsafePermit();
+    testAutomaticPayloadKeepsItsPaidPeakSeparateFromExternalPressure();
+    testAutomaticPayloadRechecksAfterItsBlockPermitWasConsumed();
     testWarningRecoversByMeasuredHeadroomAndRechecksTheRealReceiver();
     testCriticalBeforeRealPleReceiptRetainsItsHostPressureCause();
     testLocalAdaptiveTransferRequiresActualDonationAndOnePacedReceipt();

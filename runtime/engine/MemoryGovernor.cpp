@@ -258,7 +258,7 @@ uint64_t MemoryGovernor::policyNow() const {
       uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(AwakeClock::now().time_since_epoch()).count());
 }
 
-void MemoryGovernor::observeAutomaticGrowth(const std::optional<HostMemory> &host) {
+void MemoryGovernor::observeAutomaticGrowth(const std::optional<HostMemory> &host, uint64_t scopeOwnedBytes) {
   if (!pressureManaged_) return;
   const uint64_t now = policyNow();
   MemoryPolicyObservation observation{
@@ -267,11 +267,15 @@ void MemoryGovernor::observeAutomaticGrowth(const std::optional<HostMemory> &hos
   catch (...) { observation = {}; }
   if (now < policyNow_ || observation.unsafeSequence != pressureSequence_) normalSince_.reset();
   policyNow_ = now; pressureSequence_ = observation.unsafeSequence;
+  // A partially allocated admitted block has already paid these bytes in
+  // the live spare sample. Count them once against its original recovery
+  // threshold; the fresh raw sample must still fit its remaining peak.
+  const uint64_t spare = host ? host->spare + std::min(scopeOwnedBytes, UINT64_MAX - host->spare) : 0;
   if (!host) growthReason_ = "telemetry_unavailable";
   else if (observation.pressure == MemoryPolicyObservation::Pressure::Unknown) growthReason_ = "pressure_unknown";
   else if (observation.pressure == MemoryPolicyObservation::Pressure::Critical || systemPressure_ == MemoryPressure::Critical)
     growthReason_ = "system_pressure";
-  else if (host->spare < hostSpareReserveBytes_ || host->spare - hostSpareReserveBytes_ < kHostRecoveryMarginBytes)
+  else if (spare < hostSpareReserveBytes_ || spare - hostSpareReserveBytes_ < kHostRecoveryMarginBytes)
     growthReason_ = "recovery_reserve";
   else {
     // A new valid post-allocation sample already reflects actual ownership.
@@ -352,6 +356,12 @@ metal::AllocationAdmission MemoryGovernor::makeAdmission(std::string purpose, bo
       if (systemPressure_ == MemoryPressure::Critical ||
           (!allocationMandatory_ && systemPressure_ == MemoryPressure::Warning && !automaticBlock_))
         return metal::AllocationFailure::HostPressure;
+      if (automaticBlock_) {
+        // The owner may have waited for read-ahead after consuming its
+        // block permit. Recheck just before each real Metal/host payload.
+        const auto checked = checkAutomaticStorageGrowth();
+        if (!checked) return checked;
+      }
       const uint64_t actual = actualBytes();
       if (actual > allocationPeak_ || bytes > allocationPeak_ - actual)
         return {metal::AllocationFailure::PlanInsufficient,
@@ -419,6 +429,7 @@ metal::AllocationAdmission MemoryGovernor::makeAdmission(std::string purpose, bo
       allocationScope_ = true;
       allocationMandatory_ = mandatory;
       allocationElastic_ = retained;
+      allocationStartBytes_ = before;
       allocationPeak_ = bytes <= UINT64_MAX - before ? before + bytes : UINT64_MAX;
     }
     beginStorage();
@@ -466,24 +477,40 @@ metal::AllocationAdmission MemoryGovernor::automaticStorageAdmission(std::string
   return makeAdmission(std::move(purpose), false, block.contributionBytes, block);
 }
 
+metal::AllocationResult MemoryGovernor::checkAutomaticStorageGrowth() {
+  try {
+    if (pressureProvider_) systemPressure_ = pressureProvider_();
+  } catch (...) {
+    normalSince_.reset();
+    growthReason_ = "pressure_unknown";
+    return {metal::AllocationFailure::HostPressure, "automatic block pressure unavailable before payload"};
+  }
+  const auto host = sampleHost();
+  uint64_t scopeOwnedBytes = 0;
+  const uint64_t actual = actualBytes();
+  if (allocationScope_ && actual <= allocationPeak_) {
+    scopeOwnedBytes = actual > allocationStartBytes_ ? actual - allocationStartBytes_ : 0;
+    const uint64_t remaining = allocationPeak_ - actual;
+    const uint64_t room = host && host->spare > hostSpareReserveBytes_ ? host->spare - hostSpareReserveBytes_ : 0;
+    if (remaining > room || room - remaining < kHostWarningMarginBytes) {
+      normalSince_.reset();
+      growthReason_ = "recovery_reserve";
+      return {metal::AllocationFailure::HostPressure, "automatic block remaining peak exceeds fresh host headroom"};
+    }
+  }
+  observeAutomaticGrowth(host, scopeOwnedBytes);
+  if (growthReason_ == "ready") return {};
+  const bool pressured = growthReason_ == "system_pressure" || growthReason_ == "pressure_unknown" ||
+      growthReason_ == "telemetry_unavailable" || growthReason_ == "recovery_reserve";
+  return {pressured ? metal::AllocationFailure::HostPressure : metal::AllocationFailure::GrowthDeferred,
+          "automatic block refused before payload: " + std::string(growthReason_)};
+}
+
 bool MemoryGovernor::consumeAutomaticStorageBlock(const AutomaticStorageBlock &block) {
   if (!automaticBlock_ || automaticBlockConsumed_ || *automaticBlock_ != block) return false;
   if (pressureManaged_) {
-    try {
-      if (pressureProvider_) systemPressure_ = pressureProvider_();
-    } catch (...) {
-      normalSince_.reset();
-      growthReason_ = "pressure_unknown";
-      throw metal::MetalAllocationError("automatic block pressure unavailable before receipt",
-                                       metal::AllocationFailure::HostPressure);
-    }
-    observeAutomaticGrowth(sampleHost());
-    if (growthReason_ != "ready") {
-      const bool pressured = growthReason_ == "system_pressure" || growthReason_ == "pressure_unknown" ||
-          growthReason_ == "telemetry_unavailable" || growthReason_ == "recovery_reserve";
-      throw metal::MetalAllocationError("automatic block refused before receipt: " + std::string(growthReason_),
-          pressured ? metal::AllocationFailure::HostPressure : metal::AllocationFailure::GrowthDeferred);
-    }
+    const auto checked = checkAutomaticStorageGrowth();
+    if (!checked) throw metal::MetalAllocationError(checked.detail, checked.failure);
   }
   automaticBlockConsumed_ = true;
   return true;

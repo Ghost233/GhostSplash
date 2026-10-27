@@ -415,7 +415,7 @@ void testCleanRuntimeStatus(const char *goldenPath) {
                   std::string::npos &&
               tokenMajorStatus.find("\"value_layout\":\"token_major\"") != std::string::npos,
           "token-major values were reported dimension-major");
-  require(json.find("\"schema_version\":7") != std::string::npos &&
+  require(json.find("\"schema_version\":6") != std::string::npos &&
               json.find("\"ready\":true") != std::string::npos,
           "status readiness/schema is wrong");
   require(json.find("\"ready\":true,\"maximum_context_tokens\":102400,") !=
@@ -690,7 +690,7 @@ void testResourceWaitDiagnostics() {
       memoryPlan, {}, {}, {}, {}, {}, {}, {}, {}, true, {}, wait,
       NativeLoopTiming{1843.25}, {}, {}, {});
   require(ticked.find("\"loop\":{\"max_tick_ms\":1843.25}") != std::string::npos &&
-              ticked.find("\"schema_version\":7") != std::string::npos,
+              ticked.find("\"schema_version\":6") != std::string::npos,
           "the loop's longest tick is missing, or changed the status schema");
 }
 
@@ -905,7 +905,7 @@ void testStreamedTableStatus() {
                         "\"samples\":0},\"prefetch_requested_rows\":32768,") != std::string::npos &&
               json.find("\"prefetch_read_rows\":30000,\"prefetch_dropped_rows\":0,\"poisoned\":true,"
                         "\"failure\":\"injected\"}") != std::string::npos &&
-              json.find("\"schema_version\":7,") != std::string::npos,
+              json.find("\"schema_version\":6,") != std::string::npos,
           "the streamed table's status is missing or inaccurate");
 }
 
