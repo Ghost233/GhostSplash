@@ -105,6 +105,7 @@ command = [
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--no-webui",
+    "--expert-memory", "auto", "--moe-memory-pressure", "on",
     "--experimental-quantized-ffn", experimental_quantized_ffn,
 ]
 os.chdir(repo)

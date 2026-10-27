@@ -36,9 +36,9 @@ from server import serve_options
 
 parser = argparse.ArgumentParser(
     prog="tielcoder35ba3bq4xlsplash.sh",
-    description="Tiel Coder 35B-A3B UD-Q4_K_XL with a 15G streamed-expert store",
+    description="Tiel Coder 35B-A3B UD-Q4_K_XL with automatic expert memory pressure control",
     epilog="Defaults: context=262144, KV=q4h, queue=4, memory=30G, "
-           "expert-memory=15G, SSD cache=50G; lookup, fast-topk and compact off.",
+           "expert-memory=auto, moe-memory-pressure=on, SSD cache=50G; lookup, fast-topk and compact off.",
 )
 parser.add_argument("--port", type=int, default=int(port))
 parser.add_argument("--binary", default=binary)
@@ -48,7 +48,7 @@ parser.set_defaults(
     max_memory=serve_options.parse_max_memory(memory),
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
-    expert_memory=serve_options.parse_expert_memory("15G"),
+    expert_memory=serve_options.parse_expert_memory("auto"), moe_memory_pressure="on",
     prompt_lookup="off", fast_topk="off", compact_draft_head="off",
     experimental_quantized_ffn="off",
 )
@@ -79,7 +79,8 @@ root = prepare_local_model(
 print(f"Main model: {target}", flush=True)
 print(f"Draft: {draft_dir}", flush=True)
 print(f"Tiel Coder UD-Q4_K_XL: context={args.max_context}, KV={args.kv_format}, "
-      f"queue={args.queue_size}, memory={args.max_memory}, experts={args.expert_memory}", flush=True)
+      f"queue={args.queue_size}, memory={args.max_memory}, "
+      f"experts={args.expert_memory if args.expert_memory is not None else 'auto'}", flush=True)
 print(f"Tiel Coder Splash: http://127.0.0.1:{args.port}/v1 "
       f"(WebUI disabled; listening on {args.host})", flush=True)
 command = [
