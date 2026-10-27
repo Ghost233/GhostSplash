@@ -5,7 +5,7 @@ set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 launcher_allow_baseline=1
 . "$repo/dev/tools/launcher_kv.sh"
-splash_parse_launcher_options "$@"
+splash_parse_launcher_options --experimental-quantized-ffn on "$@"
 binary="$repo/build/splash"
 if [ "$use_baseline" -eq 1 ]; then
     binary="$repo/build/baseline-qwen4b/splash"
@@ -31,14 +31,13 @@ done
 unset SPLASH_API_KEY
 echo "KV format: $kv_format"
 exec "$repo/.venv/bin/python" -u - "$repo" "$model_dir" "$model_id" "$host" "$port" \
-    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" "$binary" <<'PY'
+    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" "$binary" "$experimental_quantized_ffn" <<'PY'
 import os
 import socket
 import sys
 from pathlib import Path
 
-repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, *binaries = sys.argv[1:]
-binary = binaries[0] if binaries else str(Path(repo) / "build/splash")
+repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, binary, experimental_quantized_ffn = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
 from install import paths
@@ -60,6 +59,7 @@ command = [
     "--binary", binary, "--host", host, "--port", str(port),
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--disable-ane", "--no-webui",
+    "--experimental-quantized-ffn", experimental_quantized_ffn,
 ]
 os.chdir(repo)
 os.execv(command[0], command)

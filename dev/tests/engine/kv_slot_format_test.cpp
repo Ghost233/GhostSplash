@@ -38,6 +38,7 @@ constexpr uint32_t kBlockTokens = SPLASH_ATTENTION_BLOCK_TOKENS;
 // values and a 128-wide index.
 constexpr kv::Layout kFlashNext{12, 2, 256, kv::Format::Int8, 128, true};
 constexpr kv::Layout kFlashNextBf16{12, 2, 256, kv::Format::BFloat16, 128, true};
+constexpr kv::Layout kFlashNextQ4h{12, 2, 256, kv::Format::Int4Hadamard, 128, true};
 
 // The bytes a write of the page stores, in slot order.
 std::vector<std::byte> gather(const SlotFormat &format, const test::HostKvPages &pages, uint32_t page) {
@@ -53,16 +54,17 @@ std::vector<std::byte> gather(const SlotFormat &format, const test::HostKvPages 
 std::vector<std::byte> expectedRecord(const kv::Layout &layout, const test::HostKvPages &pages, uint32_t page,
                                       uint32_t layer, uint32_t block) {
   const SlotFormat::LayerSpans tensors = pages.layerSpans(page, layer);
-  const uint64_t element = layout.format == kv::Format::Int8 ? 1 : 2;
+  const uint64_t element = layout.format == kv::Format::BFloat16 ? 2 : 1;
+  const uint64_t packed = layout.format == kv::Format::Int4Hadamard ? 2 : 1;
   std::vector<std::byte> record;
   for (uint32_t tensor = SPLASH_KV_KEYS; tensor <= SPLASH_KV_VALUE_SCALES; ++tensor) {
     const bool scales = tensor % 2;
-    if (scales && layout.format != kv::Format::Int8) continue;
+    if (scales && layout.format == kv::Format::BFloat16) continue;
     for (uint32_t head = 0; head < layout.kvHeads; ++head) {
       const uint32_t token = block * kBlockTokens;
       const uint64_t first = scales ? splash_kv_scale_element(head, token) * sizeof(float)
-                                    : splash_kv_key_element(head, token, 0) * element;
-      const uint64_t bytes = kBlockTokens * (scales ? sizeof(float) : SPLASH_KV_HEAD_DIMENSION * element);
+                                    : splash_kv_key_element(head, token, 0) * element / packed;
+      const uint64_t bytes = kBlockTokens * (scales ? sizeof(float) : SPLASH_KV_HEAD_DIMENSION * element / packed);
       const auto run = tensors[tensor].subspan(first, bytes);
       record.insert(record.end(), run.begin(), run.end());
     }
@@ -81,6 +83,9 @@ const std::vector<kv::Layout> &spillableLayouts() {
   static const std::vector<kv::Layout> layouts{
       kFlashNext,
       kFlashNextBf16,
+      kFlashNextQ4h,
+      {5, 1, 256, kv::Format::Int4Hadamard, 128, true},
+      {4, 3, 256, kv::Format::Int4Hadamard, 64, true},
       {12, 4, 256, kv::Format::Int8, 128, true},
       {12, 4, 256, kv::Format::BFloat16, 128, true},
       {12, 2, 256, kv::Format::Int8, 64, true},
@@ -95,6 +100,10 @@ const std::vector<kv::Layout> &spillableLayouts() {
 // Flash-Next's numbers: 4,160 B int8 records at their own size as pitch,
 // each one aligned 8 KiB read, after a 24 KiB index; 8 KiB BF16 records.
 void testFlashNextSlots() {
+  const SlotFormat packed(kFlashNextQ4h);
+  require(packed.version() == 1 && packed.recordBytes() == 2112 && packed.recordPitch() == 4096 &&
+              packed.indexRange() == SlotRange{0, 24576} && packed.payloadBytes() == 415808,
+          "Flash-Next Q4H slots are not 2,112 B records in 4 KiB reads after a 24 KiB index");
   const SlotFormat format(kFlashNext);
   require(format.version() == 1 && format.recordBytes() == 4160 && format.recordPitch() == 4160 &&
               format.indexRange() == SlotRange{0, 24576} && format.payloadBytes() == 423936,

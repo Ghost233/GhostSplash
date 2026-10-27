@@ -391,6 +391,9 @@ def collect_garbage(models_root: Path):
     linked = {link.resolve() for link in models.selection_links(models_root)}
     used = set()
     for assembly in sorted(resolved.iterdir()) if resolved.is_dir() else ():
+        # Files such as Finder's .DS_Store and external links are not entries.
+        if assembly.is_symlink() or not assembly.is_dir():
+            continue
         if assembly not in linked and not is_held(assembly):
             shutil.rmtree(assembly)
             continue
@@ -404,7 +407,7 @@ def collect_garbage(models_root: Path):
             if path and path.is_relative_to(derived):
                 used.add(path.relative_to(derived).parts[0])
     for entry in sorted(derived.iterdir()) if derived.is_dir() else ():
-        if entry.name not in used:
+        if not entry.is_symlink() and entry.is_dir() and entry.name not in used:
             shutil.rmtree(entry)
     for stage in models_root.glob(f"*/{models.LINK_STAGING}*"):
         shutil.rmtree(stage)

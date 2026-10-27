@@ -32,6 +32,7 @@ parser.add_argument("--binary", default=binary)
 parser.add_argument("--ane", choices=("off",), default="off")
 serve_options.add_serve_arguments(parser)
 parser.set_defaults(host=host, max_context=int(context), max_memory=serve_options.parse_max_memory(memory),
+                    experimental_quantized_ffn="off",
                     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk), queue_size=int(queue),
                     kv_format=kv_format, prompt_lookup="off", compact_draft_head="off", fast_topk="off", no_webui=True)
 args = parser.parse_args(sys.argv[12:])

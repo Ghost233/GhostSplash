@@ -132,6 +132,44 @@ class LocalModelTest(unittest.TestCase):
         self.assertFalse((prepared / "draft").exists())
         self.assertEqual(assembly.pins(record), [])
 
+    def test_preparation_ignores_regular_files_in_cache_directories(self):
+        target = self.gguf(self.root / "target.gguf")
+        draft = draft_dir(self.root / "draft", MOE)
+        for name in (".resolved", ".metadata"):
+            with self.subTest(directory=name):
+                self.models = self.root / ("models" + name)
+                directory = self.models / name
+                directory.mkdir(parents=True)
+                unrelated = [directory / ".DS_Store", directory / "notes.txt"]
+                for path in unrelated:
+                    path.write_bytes(b"keep this file")
+                stale = directory / ".loading-interrupted"
+                stale.mkdir()
+                prepared = self.prepare(target, draft)
+                assembly.verify(prepared, full=True)
+                self.assertFalse(stale.exists())
+                for path in unrelated:
+                    self.assertEqual(path.read_bytes(), b"keep this file")
+
+    def test_preparation_ignores_symlinks_in_cache_directories(self):
+        target = self.gguf(self.root / "target.gguf")
+        draft = draft_dir(self.root / "draft", MOE)
+        outside = self.root / "source-files"
+        outside.mkdir()
+        marker = outside / "weights"
+        marker.write_bytes(b"keep source weights")
+        for name in (".resolved", ".metadata"):
+            with self.subTest(directory=name):
+                self.models = self.root / ("models" + name)
+                directory = self.models / name
+                directory.mkdir(parents=True)
+                shortcut = directory / "external-directory"
+                shortcut.symlink_to(outside, target_is_directory=True)
+                prepared = self.prepare(target, draft)
+                assembly.verify(prepared, full=True)
+                self.assertTrue(shortcut.is_symlink())
+                self.assertEqual(marker.read_bytes(), b"keep source weights")
+
     def test_a_gguf_and_its_draft_are_prepared_as_the_engine_loads_them(self):
         target = self.gguf(self.root / "downloads" / "model-Q4_K_M.gguf")
         draft = draft_dir(self.root / "draft", MOE)

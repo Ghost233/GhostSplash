@@ -347,7 +347,7 @@ int main(int argc, const char *argv[]) {
     }
     try {
       MetalBackend backend(argv[1]);
-      for (const kv::Format format : {kv::Format::Int8, kv::Format::BFloat16})
+      for (const kv::Format format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard})
         for (const uint32_t buffers : {1u, 2u}) streams(backend, format, buffers);
       lifecycle(backend);
       endsTheReadsOfACommandGivenUp(backend);

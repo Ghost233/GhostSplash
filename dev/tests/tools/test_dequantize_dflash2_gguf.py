@@ -28,11 +28,21 @@ def quantized_block(kind):
     elif kind == GGMLQuantizationType.Q6_K:
         raw[:128], raw[128:192], raw[192:208] = 0x98, 0xAA, 3
         raw[208:] = np.frombuffer(struct.pack("<e", 0.125), dtype=np.uint8)
+    elif kind == GGMLQuantizationType.Q8_0:
+        raw[:2] = np.frombuffer(struct.pack("<e", 0.125), dtype=np.uint8)
+        raw[2:] = np.arange(-16, 16, dtype=np.int8).view(np.uint8)
     return raw
 
 
 class DraftGgufConversionTests(unittest.TestCase):
-    def fixture(self, source, target):
+    def fixture(
+        self,
+        source,
+        target,
+        *,
+        architecture="qwen35",
+        fc_kind=GGMLQuantizationType.Q4_K,
+    ):
         values = {
             "general.architecture": "dflash",
             "dflash.block_count": 2,
@@ -80,12 +90,12 @@ class DraftGgufConversionTests(unittest.TestCase):
             writer.write_tensors_to_file()
             writer.close()
 
-        writer = GGUFWriter(str(target), "qwen35")
+        writer = GGUFWriter(str(target), architecture)
         add_metadata(
             writer,
             {
-                "qwen35.block_count": 4,
-                "qwen35.embedding_length": 256,
+                architecture + ".block_count": 4,
+                architecture + ".embedding_length": 256,
                 **{k: v for k, v in values.items() if k.startswith("tokenizer.")},
             },
         )
@@ -109,12 +119,8 @@ class DraftGgufConversionTests(unittest.TestCase):
         }
         for name, (_, shape) in tensor_mapping(config).items():
             if name in ("fc.weight", "blk.1.ffn_down.weight"):
-                kind = (
-                    GGMLQuantizationType.Q4_K
-                    if name == "fc.weight"
-                    else GGMLQuantizationType.Q6_K
-                )
-                blocks = np.prod(shape) // 256
+                kind = fc_kind if name == "fc.weight" else GGMLQuantizationType.Q6_K
+                blocks = np.prod(shape) // GGML_QUANT_SIZES[kind][0]
                 data = np.tile(quantized_block(kind), int(blocks)).reshape(shape[0], -1)
                 writer.add_tensor(name, data, raw_dtype=kind)
             else:
@@ -142,9 +148,53 @@ class DraftGgufConversionTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "nonfinite"):
             list(converted_chunks(tensor))
-        tensor.tensor_type = GGMLQuantizationType.Q8_0
+        tensor.tensor_type = GGMLQuantizationType.Q5_K
         with self.assertRaisesRegex(ValueError, "unsupported"):
             list(converted_chunks(tensor))
+
+    def test_q8_0_signed_values_and_half_scale(self):
+        tensor = SimpleNamespace(
+            name="weight",
+            tensor_type=GGMLQuantizationType.Q8_0,
+            data=quantized_block(GGMLQuantizationType.Q8_0),
+        )
+        actual = np.concatenate(list(converted_chunks(tensor)))
+        expected = (np.arange(-16, 16, dtype=np.float32) * 0.125).view(np.uint32) >> 16
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_flash_next_q8_conversion_preserves_shapes_and_capture_mapping(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, target, destination = (
+                root / "draft.gguf",
+                root / "target.gguf",
+                root / "output",
+            )
+            self.fixture(
+                source,
+                target,
+                architecture="qwen4exp",
+                fc_kind=GGMLQuantizationType.Q8_0,
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                convert(source, destination, target)
+            config = json.loads((destination / "config.json").read_text())
+            self.assertEqual(config["dflash_config"]["target_layer_ids"], [0, 2])
+            self.assertEqual(config["num_target_layers"], 4)
+            self.assertEqual(config["hidden_size"], 256)
+            payload = (destination / "model.safetensors").read_bytes()
+            size = struct.unpack_from("<Q", payload)[0]
+            header = json.loads(payload[8 : 8 + size])
+            self.assertEqual(header["fc.weight"]["shape"], [256, 512])
+            begin, end = header["fc.weight"]["data_offsets"]
+            actual = np.frombuffer(
+                payload[8 + size + begin : 8 + size + end], dtype="<u2"
+            )
+            expected = np.tile(
+                (np.arange(-16, 16, dtype=np.float32) * 0.125).view(np.uint32) >> 16,
+                256 * 512 // 32,
+            )
+            np.testing.assert_array_equal(actual, expected)
 
     def test_complete_conversion_shapes_layer_ids_and_no_overwrite(self):
         with TemporaryDirectory() as temporary:

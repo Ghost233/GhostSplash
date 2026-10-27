@@ -99,6 +99,9 @@ access.
 | `--state-format` | `fp32` | Recurrent state storage: `fp32` or `bf16`. See [state precision](#state-precision). |
 | `--ple-memory` | Auto | Qwen3.8-Flash-Next: read the PLE n-gram table from the SSD through a host row cache of this size, e.g. `2G`; `off` loads the whole table. Auto loads it where memory holds it, else streams it through its share of the budget. See [PLE table streaming](#ple-table-streaming). |
 | `--expert-memory` | Auto | MoE targets: hold routed experts in this much memory, e.g. `16G`, and read the others from the SSD when a step routes them; `off` loads every expert. Auto loads them all where memory holds them, else gives them what the context leaves. See [streamed experts](#streamed-experts). |
+| `--expert-ple-memory` | Auto | Independent combined budget for routed-expert and PLE storage, e.g. `20G`; KV, state and workspaces stay under the separate overall `--max-memory` budget. Auto adds no shared cap. |
+| `--expert-ple-policy` | `static` | `adaptive` adjusts the two physical caches inside an explicit shared pool; needs both per-store settings `auto`. Static retains the original allocation policy. |
+| `--expert-ple-ratio` | `1:20` | Adaptive PLE ceiling relative to experts: `1:20` means pool/21, or `1:10` means pool/11. PLE starts at 512 MiB, bounded by the stores' floors and ceiling. |
 | `--sparse-kv-memory` | Auto | Qwen3.8-Flash-Next: memory for the KV blocks read back from the SSD for requests whose KV is there, e.g. `1200M`; never below its floor, which auto keeps. See [KV on the SSD](#kv-on-the-ssd). |
 | `--idle-release` | `10m` | Time without a request before the engine unwires its memory and frees the weights; the next request restores them. `off` keeps both, though `POST /v1/memory/release` still frees the weights. See [weight loading](#weight-loading). |
 | `--max-cache-disk` | `auto` | SSD quota for cached KV pages and states: `auto` follows the volume, a quarter of its free space beyond a floor of 10 GiB (5% of a volume under 200 GiB), at most 32 GiB; a size such as `16G` is held as given while the volume keeps that floor; `0` turns the cache off. Kept for the session, or across restarts with `--persistent-cache`. See [SSD cache](#ssd-cache). |
@@ -227,7 +230,68 @@ a part, unless the target's KV spills to it. `--expert-memory`, `--ple-memory`
 and `--sparse-kv-memory` set their own part instead; a size below the part's
 smallest store, a `--sparse-kv-memory` beyond what the floors leave and a
 `--ple-memory` size for a table that cannot stream are refused, and startup
-logs how each part was sized. Only a loaded model sizes
+logs how each part was sized.
+
+`--expert-ple-memory SIZE` adds an independent ceiling on the two stores
+combined, including expert staging/tables and PLE cache working memory.
+It also counts a part loaded whole. The automatic parts retain their priority
+(experts first, with the table's share reserved), but cannot exceed this pool.
+KV, recurrent state, other weights and shared workspaces are outside it and
+still share the overall `--max-memory` budget. For example, a `20G` pool may
+run under `--max-memory 40G`; the pool does not cap KV at 20G or preallocate
+the rest. The global budget and host-memory protection still apply.
+
+Explicit `--expert-memory` and `--ple-memory` settings count toward the pool
+and are never silently overridden: incompatible settings or a pool below
+the minimum stores refuse startup by name. For launchers with fixed per-store
+defaults, pass `--expert-memory auto --ple-memory auto` to let the pool plan
+both. `--expert-ple-memory auto`, the default, preserves the original plan.
+The startup log reports each planned charge; `/status` reports the cap and
+charges under `memory_plan.budget.expert_ple_pool` as `limit_bytes`,
+`expert_planned_bytes` and `ple_planned_bytes`. These are planning charges,
+not an additional allocation; the existing store statistics report actual
+buffers separately.
+
+`--expert-ple-policy adaptive` opts into runtime repartitioning. It requires
+an explicit shared cap and both stores `auto`, and a target with streamable
+experts and a PLE table. PLE starts at 512 MiB, clamped to its physical floor
+and its ceiling: shared cap / 21 by default, or / 11 with
+`--expert-ple-ratio 1:10`. The managed total is frozen at startup, potentially
+below the cap when the global budget is tighter; transfers never borrow KV,
+state or workspace capacity. CPU bookkeeping remains under the existing
+runtime reserve. The cache index, payload, per-row prefetch flags and bounded
+eviction history are charged to the PLE reservation; addressed weight chunks,
+their address tables and staging count toward the expert reservation.
+
+The policy samples each second, keeps prefill/decode observations separate,
+and requires two consistent windows of at least 10 seconds and 32 stages.
+It uses repeated eviction/reload signals and wall time actually waiting for
+reads, with cost normalized by demanded rows. A trial transfers at most
+128 MiB of quota, rounded down by the stores' physical chunk geometry, then
+waits at least 30 seconds to evaluate repayment, including resize cost.
+Unhelpful trials restore the previous split and cool down for 60 seconds;
+a phase change restores the old split without comparing different phases.
+Host pressure pauses optional growth and resets observation windows.
+
+Resizing runs between GPU commands: prefetches are drained, donation releases
+physical chunks before receiving allocations are admitted. Retained chunks
+and hot PLE rows remain valid. Startup validation is unchanged; runtime
+category/reserve/deviation checks use peaks from the same constant-PLE
+allocation epoch while preserving global Metal peak history. A failed resize
+freezes a safe split and reports the error; an invalid memory audit fails
+the engine. `/status.expert_ple_adaptive` reports quotas, bounds, decisions,
+rollbacks, cooldown, failure and the latest runtime audit.
+
+For the local Flash Next launcher (10 GiB shared pool, 25 GiB overall Metal
+budget, Q4H KV and adaptive policy by default):
+
+```sh
+sh swift15flashnextsplash.sh --expert-ple-policy adaptive
+# More room for PLE, with the same shared total and KV budget:
+sh swift15flashnextsplash.sh --expert-ple-policy adaptive --expert-ple-ratio 1:10
+```
+
+Only a loaded model sizes
 the arenas, which rest on its weights' formats and grow where a part
 streams: prefill groups for streamed experts, a step's staged rows for a
 streamed table. One load gives them for whatever streams, so a start loads

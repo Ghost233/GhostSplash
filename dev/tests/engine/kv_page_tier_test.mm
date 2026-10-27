@@ -641,9 +641,13 @@ void namespaceNamesTheSlotFormat() {
   const kv::Layout dense{16, 4, 256, kv::Format::Int8};
   const kv::Layout flashNext{12, 2, 256, kv::Format::Int8, 128, true};
   const kv::Layout flashNextBf16{12, 2, 256, kv::Format::BFloat16, 128, true};
+  const kv::Layout flashNextQ4h{12, 2, 256, kv::Format::Int4Hadamard, 128, true};
   require(KvPageTier::slotFormatToken(dense).empty() &&
               KvPageTier::slotFormatToken(flashNext) == " slots block-records-v1",
           "the slot format's token changed");
+  require(KvPageTier::slotFormatToken(flashNextQ4h) == " slots block-records-v1" &&
+              name(flashNextQ4h) != name(flashNext) && name(flashNextQ4h) != name(flashNextBf16),
+          "Q4H spilled KV must have block records and its own persistent namespace");
   // What the stack's builds named these caches.
   require(name(dense) == "6365d687c8be103a3bbcc6d2a83b1543",
           "a dense layout's cache namespace changed: its caches would be emptied");
@@ -683,6 +687,10 @@ void run(const std::string &metallib) {
     roundTrip(backend, governor, readers, layout);
     persistentRoundTrip(backend, governor, readers, layout);
   }
+  const kv::Layout q4hSparse{12, 2, 256, kv::Format::Int4Hadamard, 128, true};
+  roundTrip(backend, governor, readers, q4hSparse);
+  blockRecords(backend, governor, readers, q4hSparse);
+  persistentRoundTrip(backend, governor, readers, q4hSparse);
   std::cout << "kv page tier tests passed\n";
 }
 

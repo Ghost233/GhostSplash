@@ -67,6 +67,8 @@ VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
 VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
 VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g12, 24, 2, bfloat, false)
 VERIFY_ATTENTION_QKV(verify_attention_qkv_kv2_g12_f32, 24, 2, float, false)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g12, 24, 2, bfloat, true)
+VERIFY_ATTENTION_QKV(verify_attention_qkv_q4h_kv2_g12_f32, 24, 2, float, true)
 #undef VERIFY_ATTENTION_QKV
 
 // Element `element` of every verify lane's rows, lane by lane.

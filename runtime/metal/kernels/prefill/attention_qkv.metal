@@ -44,6 +44,8 @@ PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4, 16, 4, bfloat, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv4_g4_f32, 16, 4, float, true)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g12, 24, 2, bfloat, false)
 PREFILL_ATTENTION_QKV(prefill_attention_qkv_kv2_g12_f32, 24, 2, float, false)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g12, 24, 2, bfloat, true)
+PREFILL_ATTENTION_QKV(prefill_attention_qkv_q4h_kv2_g12_f32, 24, 2, float, true)
 #undef PREFILL_ATTENTION_QKV
 
 template <uint QHeads, uint KHeads>

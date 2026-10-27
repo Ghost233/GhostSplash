@@ -4,6 +4,7 @@ import io
 import json
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -45,6 +46,7 @@ class LocalLauncherTests(unittest.TestCase):
         *,
         kv_format="int8",
         startup_options=(),
+        experimental_quantized_ffn=None,
     ):
         text = script.read_text()
         source = text.split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
@@ -58,56 +60,49 @@ class LocalLauncherTests(unittest.TestCase):
             )
             draft_dir.mkdir(parents=True, exist_ok=True)
             (draft_dir / "model.safetensors").touch()
-        if script.name in {
-            "qwen38miniplusv3splash.sh",
-            "qwen38efficientthinkv3splash.sh",
-            "qwen38valapexminiplusv3splash.sh",
+        converted_draft = script.name in {
             "qwen3827bmlx4bitsplash.sh",
-        }:
+            "swift15flashnextsplash.sh",
+        }
+        draft_filename = (
+            "Qwen3.8-Flash-Next-DFlash2-Q8_0.gguf"
+            if script.name == "swift15flashnextsplash.sh"
+            else "dflash2-qwen38-27b-Q4_K_M.gguf"
+        )
+        if converted_draft:
             draft_dir.mkdir(exist_ok=True)
             (draft_dir / "model.safetensors").touch()
             (draft_dir / "config.json").write_text("{}")
             (draft_dir / "conversion.json").write_text(
                 json.dumps(
                     {
-                        "source_gguf": str(
-                            self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"
-                        ),
+                        "source_gguf": str(self.target / draft_filename),
                     }
                 )
             )
         arguments = [str(self.root), str(self.target)]
-        if script.name in {
-            "coder39027bsplash.sh",
-            "qwen38miniplusv3splash.sh",
-            "qwen38efficientthinkv3splash.sh",
-            "qwen38valapexminiplusv3splash.sh",
-            "qwen3827bmlx4bitsplash.sh",
-        }:
+        if converted_draft:
             arguments.append(str(draft_dir))
-        if script.name in {
-            "qwen38miniplusv3splash.sh",
-            "qwen38efficientthinkv3splash.sh",
-            "qwen38valapexminiplusv3splash.sh",
-            "qwen3827bmlx4bitsplash.sh",
-        }:
-            arguments.append(str(self.target / "dflash2-qwen38-27b-Q4_K_M.gguf"))
+        if converted_draft:
+            arguments.append(str(self.target / draft_filename))
         arguments.append(model_id)
         if script.name == "tielminiplus35ba3bsplash.sh":
             arguments.append(str(self.template))
         arguments.extend(["127.0.0.1", "18004", "262144", "40G", "50G", "4", kv_format])
+        small_qwen = script.name in {"qwen3.54bsplash.sh", "qwen3.54bdflashsplash.sh"}
+        if small_qwen:
+            arguments.extend(
+                [str(self.root / "build/splash"), experimental_quantized_ffn or "on"]
+            )
+        elif script.name == "tielminiplus35ba3bsplash.sh":
+            arguments.append(experimental_quantized_ffn or "off")
         if script.name in {
             "swift1527biq3ssplash.sh",
-            "kev4bsplash.sh",
-            "kev08bsplash.sh",
+            "tielcoder35ba3bq4xlsplash.sh",
             "d3litesplash.sh",
             "d3minisplash.sh",
-            "julia1splash.sh",
-            "layasplash.sh",
-            "qwen38miniplusv3splash.sh",
-            "qwen38efficientthinkv3splash.sh",
-            "qwen38valapexminiplusv3splash.sh",
             "qwen3827bmlx4bitsplash.sh",
+            "swift15flashnextsplash.sh",
         }:
             arguments.extend([str(self.root / "build/splash"), *startup_options])
         with (
@@ -139,18 +134,20 @@ class LocalLauncherTests(unittest.TestCase):
             self.assertEqual(parsed.max_context, 262144)
             self.assertEqual(parsed.queue_size, 4)
             self.assertEqual(parsed.kv_format, kv_format)
+            self.assertEqual(
+                parsed.experimental_quantized_ffn,
+                experimental_quantized_ffn or ("on" if small_qwen else "off"),
+            )
             self.assertTrue(parsed.no_webui)
             self.assertNotIn("--tokenizer", command)
             prepare.assert_called_once()
             target_names = {
-                "coder39027bsplash.sh": "Qwen3.8-27B-Coder390-EfficientThink-Q4LynnStyle-MTP.gguf",
                 "qwen3.54bsplash.sh": "Qwen3.5-4B-UD-Q4_K_XL.gguf",
                 "qwen3.54bdflashsplash.sh": "Qwen3.5-4B-UD-Q4_K_XL.gguf",
-                "qwen38miniplusv3splash.sh": "Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
-                "qwen38valapexminiplusv3splash.sh": "Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf",
-                "qwen38efficientthinkv3splash.sh": "Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V3.gguf",
                 "swift1527biq3ssplash.sh": "Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_S-mtp.gguf",
+                "swift15flashnextsplash.sh": "Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00001-of-00002.gguf",
                 "tielminiplus35ba3bsplash.sh": "Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf",
+                "tielcoder35ba3bq4xlsplash.sh": "Tiel-Coder-35B-A3B-UD-Q4_K_XL.gguf",
             }
             expected_target = (
                 self.target / target_names[script.name]
@@ -164,13 +161,11 @@ class LocalLauncherTests(unittest.TestCase):
                 self.root / "install/models-local",
             )
             explicit = script.name in {
-                "coder39027bsplash.sh",
                 "qwen3.54bdflashsplash.sh",
-                "qwen38miniplusv3splash.sh",
-                "qwen38efficientthinkv3splash.sh",
-                "qwen38valapexminiplusv3splash.sh",
                 "qwen3827bmlx4bitsplash.sh",
                 "tielminiplus35ba3bsplash.sh",
+                "tielcoder35ba3bq4xlsplash.sh",
+                "swift15flashnextsplash.sh",
             }
             if explicit:
                 self.assertEqual(Path(prepare.call_args.kwargs["draft"]), draft_dir)
@@ -226,31 +221,74 @@ class LocalLauncherTests(unittest.TestCase):
     def test_saluki_launcher_is_removed(self):
         self.assertFalse((ROOT / "saluki27biq2mixsplash.sh").exists())
 
-    def test_val_apex_miniplus_uses_shared_draft_and_keeps_compact_off(self):
-        parsed = self.launch(ROOT / "qwen38valapexminiplusv3splash.sh")
-        self.assertEqual(parsed.compact_draft_head, "off")
-        self.assertIsNone(parsed.compact_draft_ranking)
-        self.assertEqual(parsed.prompt_lookup, "on")
-        self.assertIsNone(parsed.ane_ffn_share)
-
-    def test_miniplus_uses_its_converted_draft_and_independent_switches(self):
-        parsed = self.launch(ROOT / "qwen38miniplusv3splash.sh")
-        self.assertEqual(parsed.compact_draft_head, "off")
-        self.assertEqual(parsed.prompt_lookup, "on")
-        parsed = self.launch(
-            ROOT / "qwen38miniplusv3splash.sh",
+    def test_flash_next_uses_ssd_ple_and_resident_experts(self):
+        script = ROOT / "swift15flashnextsplash.sh"
+        args = self.launch(script)
+        self.assertIsNone(args.ple_memory)
+        self.assertIsNone(args.expert_memory)
+        self.assertEqual(args.expert_ple_memory, 10 * 1024**3)
+        self.assertEqual(args.expert_ple_policy, "adaptive")
+        self.assertTrue(args.disable_ane)
+        self.assertEqual(args.prompt_lookup, "off")
+        self.assertEqual(args.fast_topk, "off")
+        self.assertEqual(args.compact_draft_head, "off")
+        changed = self.launch(
+            script,
             startup_options=(
-                "--compact-draft-head",
-                "on",
-                "--compact-draft-ranking",
-                str(self.root / "model rank"),
-                "--prompt-lookup",
+                "--expert-ple-policy",
+                "static",
+                "--ple-memory",
+                "256M",
+                "--expert-memory",
                 "off",
             ),
         )
-        self.assertEqual(parsed.compact_draft_head, "on")
-        self.assertEqual(parsed.compact_draft_ranking, self.root / "model rank")
-        self.assertEqual(parsed.prompt_lookup, "off")
+        self.assertEqual(changed.ple_memory, 256 * 1024**2)
+        self.assertEqual(changed.expert_memory, "off")
+
+    def test_flash_next_rejects_q4_0_sparse_kv(self):
+        for kind in ("q4_0", "q4_0_unrotated"):
+            with (
+                self.subTest(kind=kind),
+                contextlib.redirect_stderr(io.StringIO()),
+                self.assertRaises(SystemExit) as error,
+            ):
+                self.launch(ROOT / "swift15flashnextsplash.sh", kv_format=kind)
+            self.assertEqual(error.exception.code, 2)
+
+    def test_small_qwen_launchers_can_disable_quantized_ffn(self):
+        for name in ("qwen3.54bsplash.sh", "qwen3.54bdflashsplash.sh"):
+            with self.subTest(launcher=name):
+                self.launch(ROOT / name, experimental_quantized_ffn="off")
+
+    def test_shell_quantized_ffn_arguments_ignore_environment_and_validate_values(self):
+        command = [
+            "sh",
+            "-c",
+            '. "$1"; shift; launcher_allow_baseline=1; '
+            'splash_parse_launcher_options "$@"; echo "$experimental_quantized_ffn"',
+            "launcher-test",
+            str(ROOT / "dev/tools/launcher_kv.sh"),
+        ]
+        environment = dict(os.environ, experimental_quantized_ffn="on")
+        for args, code, expected in (
+            ([], 0, "off"),
+            (["--experimental-quantized-ffn", "on"], 0, "on"),
+            (["--experimental-quantized-ffn=off"], 0, "off"),
+            (["--experimental-quantized-ffn"], 2, "requires on or off"),
+            (["--experimental-quantized-ffn", "invalid"], 2, "requires on or off"),
+            (
+                ["--baseline", "--experimental-quantized-ffn", "on"],
+                2,
+                "--baseline requires --experimental-quantized-ffn off",
+            ),
+        ):
+            with self.subTest(args=args):
+                result = subprocess.run(
+                    [*command, *args], capture_output=True, text=True, env=environment
+                )
+                self.assertEqual(result.returncode, code, result.stderr)
+                self.assertIn(expected, result.stdout + result.stderr)
 
     def test_mlx_27b_uses_local_draft_and_forwards_startup_options(self):
         script = ROOT / "qwen3827bmlx4bitsplash.sh"
@@ -289,51 +327,13 @@ class LocalLauncherTests(unittest.TestCase):
         self.assertEqual(parsed.ane_power_reference, "off")
         self.assertEqual(parsed.ane_power_recovery, "off")
 
-    def test_efficientthink_uses_shared_draft_and_requested_ane_defaults(self):
-        script = ROOT / "qwen38efficientthinkv3splash.sh"
-        parsed = self.launch(script)
-        self.assertEqual(parsed.prompt_lookup, "on")
-        self.assertEqual(parsed.fast_topk, "off")
-        self.assertEqual(parsed.compact_draft_head, "off")
-        self.assertIsNone(parsed.compact_draft_ranking)
-        self.assertEqual(parsed.ane_ffn_share, 0.4182)
-        self.assertEqual(parsed.ane_power_reference, "auto")
-        self.assertEqual(parsed.ane_power_recovery, "on")
-        self.assertEqual(parsed.ane_recovery_max_power_percent, 50)
-        parsed = self.launch(
-            script,
-            startup_options=(
-                "--disable-ane",
-                "--prompt-lookup",
-                "off",
-                "--ane-ffn-share",
-                "auto",
-                "--ane-power-recovery",
-                "off",
-                "--ane-power-reference",
-                "off",
-            ),
-        )
-        self.assertTrue(parsed.disable_ane)
-        self.assertEqual(parsed.prompt_lookup, "off")
-        self.assertIsNone(parsed.ane_ffn_share)
-        self.assertEqual(parsed.ane_power_reference, "off")
-        self.assertEqual(parsed.ane_power_recovery, "off")
-
     def test_modern_launchers_default_compact_off_and_require_explicit_public_ranking(
         self,
     ):
         for name in (
             "swift1527biq3ssplash.sh",
-            "kev4bsplash.sh",
-            "kev08bsplash.sh",
             "d3litesplash.sh",
             "d3minisplash.sh",
-            "julia1splash.sh",
-            "layasplash.sh",
-            "qwen38miniplusv3splash.sh",
-            "qwen38efficientthinkv3splash.sh",
-            "qwen38valapexminiplusv3splash.sh",
         ):
             with self.subTest(launcher=name):
                 parsed = self.launch(ROOT / name)
@@ -355,7 +355,12 @@ class LocalLauncherTests(unittest.TestCase):
 
     def test_every_gguf_launcher_forwards_each_kv_format(self):
         for script in GGUF_SCRIPTS:
-            for kv_format in ("int8", "bf16", "q4_0", "q4_0_unrotated", "q4h"):
+            formats = (
+                ("int8", "bf16", "q4h")
+                if script.name == "swift15flashnextsplash.sh"
+                else ("int8", "bf16", "q4_0", "q4_0_unrotated", "q4h")
+            )
+            for kv_format in formats:
                 with self.subTest(script=script.name, kv_format=kv_format):
                     self.launch(script, kv_format=kv_format)
 
@@ -374,12 +379,8 @@ class LocalLauncherTests(unittest.TestCase):
                     in {
                         "qwen3.54bsplash.sh",
                         "qwen3.54bdflashsplash.sh",
-                        "kev4bsplash.sh",
-                        "kev08bsplash.sh",
                         "d3litesplash.sh",
                         "d3minisplash.sh",
-                        "julia1splash.sh",
-                        "layasplash.sh",
                     }
                     else "0.0.0.0",
                 )

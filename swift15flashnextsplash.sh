@@ -1,20 +1,20 @@
 #!/bin/sh
 set -eu
 
-# Local VAL APEX I MiniPlus V3, text only, reusing the compatible converted Qwen3.8-27B DFlash2.
-model_dir=/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF
-draft_gguf=/Users/ghost233/.lmstudio/models/IsValorum/Qwen3.8-27B-EfficientThink-VAL-APEX-I-MiniPlus-V2.1-GGUF/dflash2-qwen38-27b-Q4_K_M.gguf
-model_id=IsValorum/Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3-GGUF:V3
+# Flash Next: expert/PLE shared pool, separate KV budget, text only.
+model_dir=/Users/ghost233/.lmstudio/models/SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF
+draft_gguf=/Users/ghost233/.lmstudio/models/incoai/Qwen3.8-Flash-Next-DFlash2-GGUF/Qwen3.8-Flash-Next-DFlash2-Q8_0.gguf
+model_id=SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF:IQ3_S
 host=0.0.0.0
-port=8008
+port=8018
 max_context=262144
-max_memory=40G
+max_memory=30G
 max_cache_disk=50G
 queue_size=1
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 python="$repo/.venv/bin/python"
 binary="$repo/build/splash"
-draft_dir="$repo/install/models-local/drafts/miniplus-v3-dflash2-q4km/bf16"
+draft_dir="$repo/install/models-local/drafts/flash-next-dflash2-q8_0/bf16"
 if [ ! -x "$python" ]; then
     echo "Missing: $python" >&2
     exit 1
@@ -38,9 +38,12 @@ from install.local import prepare_local_model
 from server import serve_options
 
 parser = argparse.ArgumentParser(
-    prog="qwen38miniplusv3splash.sh", description="Qwen3.8 27B VAL APEX I MiniPlus V3 with the converted Qwen3.8-27B DFlash2 draft",
-    epilog="MiniPlus V3 defaults: context=262144, KV=q4h, queue=1, memory=40G, "
-           "lookup=on, compact=off (explicit public ranking required), fast-topk=off, ANE power recovery/reference=off.",
+    prog="swift15flashnextsplash.sh",
+    description="Swift 1.5 Flash Next abliterated IQ3_S with its converted Q8_0 DFlash2",
+    epilog="Defaults: context=262144, KV=q4h, queue=1, memory=20G, "
+           "expert/PLE pool=10G with both stores auto, adaptive policy=adaptive. "
+           "--ple-memory off loads the WHOLE PLE table into RAM. "
+           "Lookup, fast-topk, compact and the 4B FFN experiment are off.",
 )
 parser.add_argument("--port", type=int, default=int(port))
 parser.add_argument("--binary", default=binary)
@@ -50,25 +53,25 @@ parser.set_defaults(
     max_memory=serve_options.parse_max_memory(memory),
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
-    prompt_lookup="on", compact_draft_head="off", fast_topk="off",
+    ple_memory=None, expert_memory=None,
+    expert_ple_memory=serve_options.parse_max_memory("10G"),
+    expert_ple_policy="adaptive",
+    disable_ane=True, prompt_lookup="off", compact_draft_head="off", fast_topk="off",
+    experimental_quantized_ffn="off",
 )
 args = parser.parse_args(sys.argv[14:])
 serve_options.check_serve_arguments(parser, args)
 if not 0 <= args.port <= 65535:
     parser.error("--port must be in [0, 65535]")
+if args.kv_format not in ("int8", "bf16", "q4h"):
+    parser.error("Flash Next sparse KV supports int8, bf16 or q4h, not Q4_0 formats")
 args.binary = str(Path(args.binary).expanduser().absolute())
 if not Path(args.binary).is_file():
     parser.error("native binary is missing: " + args.binary)
-host, port = args.host, args.port
-print(f"Main model: {Path(model_dir) / 'Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf'}", flush=True)
-print(f"MiniPlus V3 27B: context={args.max_context}, KV={args.kv_format}, "
-      f"queue={args.queue_size}, memory={args.max_memory}", flush=True)
-
-# Check the address before preparing the local model assembly.
 paths.BINARY = Path(args.binary)
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listener.bind((host, int(port)))
+    listener.bind((args.host, args.port))
 
 draft_path = Path(draft_dir)
 for name in ("config.json", "model.safetensors", "conversion.json"):
@@ -77,18 +80,21 @@ for name in ("config.json", "model.safetensors", "conversion.json"):
                      + "; prepare it with python -m dev.tools.dequantize_dflash2_gguf")
 conversion = json.loads((draft_path / "conversion.json").read_text())
 if conversion["source_gguf"] != draft_gguf:
-    raise models.ModelError("Converted draft does not match the selected Qwen3.8-27B DFlash2 GGUF")
+    raise models.ModelError("Converted draft does not match the selected Flash Next DFlash2 GGUF")
+target = Path(model_dir) / "Swift-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00001-of-00002.gguf"
+print(f"Main model: {target} (two GGUF parts)", flush=True)
+print(f"Draft: {draft_path} (converted from {draft_gguf})", flush=True)
+print(f"Flash Next: context={args.max_context}, KV={args.kv_format}, queue={args.queue_size}, "
+      f"memory={args.max_memory}; PLE cache={args.ple_memory}; expert memory={args.expert_memory}", flush=True)
 root = prepare_local_model(
-    Path(model_dir) / "Qwen3.8-27B-VAL-APEX-I-MiniPlus-V3.gguf", draft=draft_dir, language_only=True,
-    models_dir=repo / "install/models-local",
+    target, draft=draft_path, language_only=True, models_dir=repo / "install/models-local",
 )
-print(f"MiniPlus V3 Splash: http://127.0.0.1:{port}/v1 (WebUI disabled; listening on {host})", flush=True)
-print(f"Draft: {draft_dir} (compatible Qwen3.8-27B Q4_K_M GGUF converted to BF16)", flush=True)
+print(f"Swift Flash Next Splash: http://127.0.0.1:{args.port}/v1 "
+      f"(WebUI disabled; listening on {args.host})", flush=True)
 command = [
-    str(repo / ".venv/bin/python"), "-u", "-m", "server.server",
-    str(root),
+    str(repo / ".venv/bin/python"), "-u", "-m", "server.server", str(root),
     "--model", model_id, "--served-model-name", "splash_" + model_id,
-    "--binary", args.binary, "--port", str(port),
+    "--binary", args.binary, "--port", str(args.port),
     *serve_options.serve_argv(args),
 ]
 if args.api_key is not None:

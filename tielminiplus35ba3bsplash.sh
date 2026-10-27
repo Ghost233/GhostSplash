@@ -8,13 +8,13 @@ model_id=IsValorum/Tiel-Coder-35B-A3B-APEX-I-MiniPlus-V2.1-GGUF
 host=0.0.0.0
 port=8004
 max_context=262144
-max_memory=40G
+max_memory=30G
 max_cache_disk=50G
 queue_size=4
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 launcher_allow_baseline=0
 . "$repo/dev/tools/launcher_kv.sh"
-splash_parse_launcher_options "$@"
+splash_parse_launcher_options --kv-format q4h "$@"
 python="$repo/.venv/bin/python"
 
 for path in "$model_dir/Tiel-Coder-35B-A3B.APEX-I-MiniPlus-V2.1.gguf" \
@@ -32,14 +32,14 @@ fi
 unset SPLASH_API_KEY
 echo "KV format: $kv_format"
 exec "$python" -u - "$repo" "$model_dir" "$model_id" "$chat_template" "$host" "$port" \
-    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" <<'PY'
+    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" "$experimental_quantized_ffn" <<'PY'
 import hashlib
 import os
 import socket
 import sys
 from pathlib import Path
 
-repo, model_dir, model_id, chat_template, host, port, context, memory, cache_disk, queue, kv_format = sys.argv[1:]
+repo, model_dir, model_id, chat_template, host, port, context, memory, cache_disk, queue, kv_format, experimental_quantized_ffn = sys.argv[1:]
 repo = Path(repo)
 sys.path.insert(0, str(repo))
 from install import models, paths
@@ -105,6 +105,7 @@ command = [
     "--binary", str(repo / "build/splash"), "--host", host, "--port", port,
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--no-webui",
+    "--experimental-quantized-ffn", experimental_quantized_ffn,
 ]
 os.chdir(repo)
 os.execv(command[0], command)

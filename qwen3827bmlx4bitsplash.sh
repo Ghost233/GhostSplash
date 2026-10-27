@@ -52,6 +52,7 @@ parser.set_defaults(
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
     prompt_lookup="on", compact_draft_head="off", fast_topk="on",
+    experimental_quantized_ffn="off",  # The FP16 cache experiment is 4B-only.
     ane_ffn_share=0.4182, ane_power_reference="auto", ane_power_recovery="on",
     ane_recovery_max_power_percent=50.0,
 )

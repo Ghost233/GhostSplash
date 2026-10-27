@@ -90,14 +90,16 @@ std::string pipelineName(std::string_view phase, bool split, uint32_t queryHeads
       : layout.format == kv::Format::Int8 ? "q8_" : "bf16_";
   return std::string(phase) + "_attention_" +
          (split ? format + (sparse ? "sparse" : "split")
-                : std::string(sparse ? "sparse_reduce" : kv::usesHadamard(layout.format) ? "q4h_reduce" : "reduce")) +
+                : std::string(sparse ? (kv::usesHadamard(layout.format) ? "q4h_sparse_reduce" : "sparse_reduce")
+                                     : kv::usesHadamard(layout.format) ? "q4h_reduce" : "reduce")) +
          suffix;
 }
 
 // The verify split that reads a sparse layout's listed blocks where their
 // locations name (ops::AttentionBlocks::locations).
 std::string locatedSplitName(kv::Layout layout) {
-  return std::string("verify_attention_") + (layout.format == kv::Format::Int8 ? "q8" : "bf16") +
+  return std::string("verify_attention_") + (layout.format == kv::Format::Int4Hadamard ? "q4h"
+                                             : layout.format == kv::Format::Int8 ? "q8" : "bf16") +
          "_sparse_located_kv2_g12";
 }
 
@@ -411,8 +413,10 @@ Case makeCase(metal::MetalBackend &backend, uint32_t queryHeads,
           data.pool.slab<float>(kLayer, SPLASH_KV_VALUE_SCALES, id)[slot] =
                0.007f * (1 + float((token * 5 + head) % 11) / 16);
         } else if (layout.format == kv::Format::Int4Hadamard) {
-          data.pool.slab<float>(kLayer, SPLASH_KV_KEY_SCALES, id)[slot] = 0.006f;
-          data.pool.slab<float>(kLayer, SPLASH_KV_VALUE_SCALES, id)[slot] = 0.007f;
+          data.pool.slab<float>(kLayer, SPLASH_KV_KEY_SCALES, id)[slot] =
+              0.006f * (layout.valuesTokenMajor ? 1 + float((token + head) % 9) / 16 : 1);
+          data.pool.slab<float>(kLayer, SPLASH_KV_VALUE_SCALES, id)[slot] =
+              0.007f * (layout.valuesTokenMajor ? 1 + float((token * 5 + head) % 11) / 16 : 1);
         }
         for (uint32_t dimension = 0; dimension < 256; ++dimension) {
           const int key = int((token * 37 + head * 101 + dimension * 17 +
@@ -1183,21 +1187,23 @@ void checkProjection(metal::MetalBackend &backend, uint32_t queryHeads, kv::Layo
     }
   const kv::Format baselineFormat = layout.format;
   if (layout.valuesTokenMajor) {
-    for (auto format : {kv::Format::Int4Hadamard, kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
+    for (auto format : {kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
       layout.format = format;
       metal::CommandGraph rejected;
       rejects([&] { addProjection(rejected, keyNorm); }, "no sparse attention kernel for layout",
               "sparse Q4 preparation was accepted without a matching kernel");
       require(rejected.empty(), "unsupported sparse Q4 preparation encoded a dispatch");
     }
-  } else {
-  // Independent dense H256/H64 reference of the validated baseline.
+  }
+  {
+  // Independent H256/H64 reference of the validated baseline, dense or sparse.
   const auto copy = [](metal::MetalBuffer b) {
     auto *bits = static_cast<const uint16_t *>(b.contents());
     return std::vector<uint16_t>(bits, bits + b.sizeBytes() / 2);
   };
   const auto oldQueries = copy(queries), oldKeys = copy(keys), oldValues = copy(values);
   for (auto format : {kv::Format::Int4Hadamard, kv::Format::Q4_0Hadamard}) {
+  if (layout.valuesTokenMajor && format != kv::Format::Int4Hadamard) continue;
   layout.format = format;
   metal::CommandGraph rotated;
   addProjection(rotated, keyNorm);
@@ -1230,12 +1236,14 @@ void checkProjection(metal::MetalBackend &backend, uint32_t queryHeads, kv::Layo
         }
       }
   }
+  if (!layout.valuesTokenMajor) {
   layout.format = kv::Format::Q4_0Unrotated;
   metal::CommandGraph unrotated;
   addProjection(unrotated, keyNorm);
   (void)backend.submitCommandAsync(unrotated.dispatches()).wait();
   require(copy(queries) == oldQueries && copy(keys) == oldKeys && copy(values) == oldValues,
           "unrotated Q4_0 preparation changed the baseline projection bits");
+  }
   }
   layout.format = baselineFormat;
   // One dispatch normalizes the queries and the keys, so it takes one norm type.
@@ -1816,9 +1824,9 @@ int main(int argc, char **argv) {
     for (auto format : {kv::Format::Int8, kv::Format::BFloat16, kv::Format::Int4Hadamard,
                         kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
       for (const Geometry geometry : kGeometries)
-        if (!geometry.valuesTokenMajor || format == kv::Format::Int8 || format == kv::Format::BFloat16)
+        if (!geometry.valuesTokenMajor || !kv::isQ4_0(format))
           checkPlans(geometry.queryHeads, geometry.layout(format));
-    for (auto format : {kv::Format::Int4Hadamard, kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
+    for (auto format : {kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
       rejects([&] { (void)ops::PagedAttention::prefillPlan(8, 24, Geometry{24, 2, true}.layout(format)); },
               "no sparse attention kernel for layout", "sparse Q4 was accepted without a matching kernel");
     if (argc == 1) {
@@ -1895,7 +1903,7 @@ int main(int argc, char **argv) {
                         kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
     for (const Geometry geometry : kGeometries) {
       if (!selector.empty() && selector.substr(9) != kv::formatName(format)) continue;
-      if (geometry.valuesTokenMajor && format != kv::Format::Int8 && format != kv::Format::BFloat16) continue;
+      if (geometry.valuesTokenMajor && kv::isQ4_0(format)) continue;
       const uint32_t heads = geometry.queryHeads;
       const kv::Layout layout = geometry.layout(format);
       if (heads == 16 && layout.kvHeads == 4)

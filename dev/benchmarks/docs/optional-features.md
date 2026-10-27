@@ -30,7 +30,7 @@
 原生服务和启动器默认关闭 compact。显式开启时必须同时指定文件：
 
 ```sh
-sh qwen38miniplusv3splash.sh \
+sh swift1527biq3ssplash.sh \
   --compact-draft-head on \
   --compact-draft-ranking compact-rankings/qwen35-248320-dev-seed.splash
 ```

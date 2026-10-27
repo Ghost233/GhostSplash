@@ -43,7 +43,8 @@ KernelLayout attentionKernelLayout(uint32_t queryHeads, kv::Layout layout) {
   const KernelLayout storage = storageKernelLayout(layout);
   if (layout.valuesTokenMajor) {
     if (storage != KernelLayout::Kv2Group8 || queryHeads != 24 ||
-        (layout.format != kv::Format::Int8 && layout.format != kv::Format::BFloat16))
+        (layout.format != kv::Format::Int8 && layout.format != kv::Format::BFloat16 &&
+         layout.format != kv::Format::Int4Hadamard))
       throw std::invalid_argument("no sparse attention kernel for layout");
     return KernelLayout::Kv2Group12;
   }
@@ -61,8 +62,11 @@ std::string_view storePipeline(kv::Layout layout, bool verify) {
   const bool bf16 = layout.format == kv::Format::BFloat16;
   if (layout.valuesTokenMajor) {
     if (kernel != KernelLayout::Kv2Group8 ||
-        (layout.format != kv::Format::Int8 && layout.format != kv::Format::BFloat16))
+        (layout.format != kv::Format::Int8 && layout.format != kv::Format::BFloat16 &&
+         layout.format != kv::Format::Int4Hadamard))
       throw std::invalid_argument("no KV store kernel for the layout's value order");
+    if (layout.format == kv::Format::Int4Hadamard)
+      return verify ? "verify_attention_q4h_store_kv2_g8" : "prefill_attention_q4h_store_kv2_g8";
     return verify ? (bf16 ? "verify_attention_bf16_store_kv2_vt" : "verify_attention_q8_store_kv2_vt")
                   : (bf16 ? "prefill_attention_bf16_store_kv2_vt" : "prefill_attention_q8_store_kv2_vt");
   }
@@ -251,7 +255,7 @@ PrefillAttentionPlan PagedAttention::prefillPlan(
                          "prefill_attention_q4h_split_kv2_g8",
                          small ? "prefill_attention_q4h_split_kv4_g4_r2"
                          : large ? "prefill_attention_q4h_split_kv4_g4_r16"
-                                 : "prefill_attention_q4h_split_kv4_g4")
+                                 : "prefill_attention_q4h_split_kv4_g4", "prefill_attention_q4h_sparse_kv2_g12")
               : layout.format == kv::Format::BFloat16
               ? pipeline(kernel, "prefill_attention_bf16_split",
                          "prefill_attention_bf16_split_kv2_g8",
@@ -267,7 +271,7 @@ PrefillAttentionPlan PagedAttention::prefillPlan(
               ? pipeline(kernel, "prefill_attention_q4h_reduce", "prefill_attention_q4h_reduce_kv2_g8",
                          small ? "prefill_attention_q4h_reduce_kv4_g4_r2"
                          : large ? "prefill_attention_q4h_reduce_kv4_g4_r16"
-                                 : "prefill_attention_q4h_reduce_kv4_g4")
+                                 : "prefill_attention_q4h_reduce_kv4_g4", "prefill_attention_q4h_sparse_reduce_kv2_g12")
               : pipeline(kernel, "prefill_attention_reduce", "prefill_attention_reduce_kv2_g8",
                          small ? "prefill_attention_reduce_kv4_g4_r2"
                          : large ? "prefill_attention_reduce_kv4_g4_r16"
@@ -301,7 +305,8 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
                          "verify_attention_q4_0_split_kv2_g8", "verify_attention_q4_0_split_kv4_g4")
               : layout.format == kv::Format::Int4Hadamard
               ? pipeline(kernel, "verify_attention_q4h_split",
-                         "verify_attention_q4h_split_kv2_g8", "verify_attention_q4h_split_kv4_g4")
+                         "verify_attention_q4h_split_kv2_g8", "verify_attention_q4h_split_kv4_g4",
+                         "verify_attention_q4h_sparse_kv2_g12")
               : layout.format == kv::Format::BFloat16
               ? pipeline(kernel, "verify_attention_bf16_split",
                          "verify_attention_bf16_split_kv2_g8",
@@ -311,7 +316,7 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
                          "verify_attention_q8_split_kv4_g4", "verify_attention_q8_sparse_kv2_g12"),
           kv::usesHadamard(layout.format)
               ? pipeline(kernel, "verify_attention_q4h_reduce", "verify_attention_q4h_reduce_kv2_g8",
-                         "verify_attention_q4h_reduce_kv4_g4")
+                         "verify_attention_q4h_reduce_kv4_g4", "verify_attention_q4h_sparse_reduce_kv2_g12")
               : pipeline(kernel, "verify_attention_reduce", "verify_attention_reduce_kv2_g8",
                          "verify_attention_reduce_kv4_g4", "verify_attention_sparse_reduce_kv2_g12"),
           // A sparse lane's list fills only the first of the plan's splits.
@@ -325,7 +330,8 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
            kv::kVerifyRows * (queryHeads / layout.kvHeads), lanes},
           layout.valuesTokenMajor,
           pipeline(kernel, {}, {}, {},
-                   layout.format == kv::Format::BFloat16 ? "verify_attention_bf16_sparse_located_kv2_g12"
+                   layout.format == kv::Format::Int4Hadamard ? "verify_attention_q4h_sparse_located_kv2_g12"
+                   : layout.format == kv::Format::BFloat16 ? "verify_attention_bf16_sparse_located_kv2_g12"
                                                          : "verify_attention_q8_sparse_located_kv2_g12"),
           storePipeline(layout, true),
           {uint64_t{lanes} * 2 * kv::kVerifyRows * layout.kvHeads, 1, 1},
@@ -375,7 +381,8 @@ void PagedAttention::addPrefillProjection(
   const FullPrefillParams params{tokens, stride};
   graph.add(qkNormKernel(kv::usesHadamard(layout.format)
                          ? pipeline(kernel, "prefill_attention_qkv_q4h",
-                                    "prefill_attention_qkv_q4h_kv2_g8", "prefill_attention_qkv_q4h_kv4_g4")
+                                    "prefill_attention_qkv_q4h_kv2_g8", "prefill_attention_qkv_q4h_kv4_g4",
+                                    "prefill_attention_qkv_q4h_kv2_g12")
                          : pipeline(kernel, "prefill_attention_qkv",
                                   "prefill_attention_qkv_kv2_g8", "prefill_attention_qkv_kv4_g4", "prefill_attention_qkv_kv2_g12"),
                          queryNorm, keyNorm, layout.headDimension),
@@ -424,7 +431,8 @@ void PagedAttention::addVerifyProjection(
   requireBytes(chunkValues, staging.valueBytes(layout.headDimension), "attention value");
   graph.add(qkNormKernel(kv::usesHadamard(layout.format)
                          ? pipeline(kernel, "verify_attention_qkv_q4h",
-                                    "verify_attention_qkv_q4h_kv2_g8", "verify_attention_qkv_q4h_kv4_g4")
+                                    "verify_attention_qkv_q4h_kv2_g8", "verify_attention_qkv_q4h_kv4_g4",
+                                    "verify_attention_qkv_q4h_kv2_g12")
                          : pipeline(kernel, "verify_attention_qkv",
                                   "verify_attention_qkv_kv2_g8", "verify_attention_qkv_kv4_g4", "verify_attention_qkv_kv2_g12"),
                          queryNorm, keyNorm, layout.headDimension),

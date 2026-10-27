@@ -250,6 +250,15 @@ public:
               keys[d] = key(d);
               *valueOf<int8_t>(lane, head, token, d) = value(d);
             }
+          } else if (plan_.shape.format == kv::Format::Int4Hadamard) {
+            *scale(lane, SPLASH_KV_KEY_SCALES, head, token) = 0.006f * (1 + float((token + head) % 9) / 16);
+            *scale(lane, SPLASH_KV_VALUE_SCALES, head, token) = 0.007f * (1 + float((token * 5 + head) % 11) / 16);
+            auto *keys = keyRow<uint8_t>(lane, head, token);
+            auto *values = valueOf<uint8_t>(lane, head, token, 0);
+            for (uint32_t d = 0; d < dimensions; d += 2) {
+              keys[d / 2] = uint8_t((key(d) % 8 & 15) | (key(d + 1) % 8 & 15) << 4);
+              values[d / 2] = uint8_t((value(d) % 8 & 15) | (value(d + 1) % 8 & 15) << 4);
+            }
           } else if (kv::isQ4_0(plan_.shape.format)) {
             auto *keys = slab<SplashQ4Block>(lane, SPLASH_KV_KEYS, token);
             auto *values = slab<SplashQ4Block>(lane, SPLASH_KV_VALUES, token);
@@ -336,12 +345,15 @@ public:
   template <typename T>
   [[nodiscard]] T *keyRow(uint32_t lane, uint32_t head, uint32_t token) const {
     return slab<T>(lane, SPLASH_KV_KEYS, token) +
-           splash_kv_key_element(head, token % kv::kPageTokens, 0);
+           splash_kv_key_element(head, token % kv::kPageTokens, 0) /
+               (plan_.shape.format == kv::Format::Int4Hadamard ? 2 : 1);
   }
   template <typename T>
   [[nodiscard]] T *valueOf(uint32_t lane, uint32_t head, uint32_t token, uint32_t dimension) const {
-    return slab<T>(lane, SPLASH_KV_VALUES, token) +
-           pages_.valueElement(head, token % kv::kPageTokens, dimension);
+    const uint64_t element = plan_.shape.format == kv::Format::Int4Hadamard
+                                 ? splash_kv_key_element(head, token % kv::kPageTokens, dimension) / 2
+                                 : pages_.valueElement(head, token % kv::kPageTokens, dimension);
+    return slab<T>(lane, SPLASH_KV_VALUES, token) + element;
   }
   [[nodiscard]] float *scale(uint32_t lane, uint32_t tensor, uint32_t head,
                              uint32_t token) const {
@@ -384,7 +396,8 @@ inline void moveBlock(kv::Layout layout, uint32_t layer, const HostKvExtents &fr
   if (!layout.valuesTokenMajor)
     throw std::invalid_argument("a block of values in dimension order is not one run");
   constexpr uint32_t tokens = SPLASH_ATTENTION_BLOCK_TOKENS;
-  const uint64_t elementBytes = layout.format == kv::Format::Int8 ? 1 : 2;
+  const uint64_t elementBytes = layout.format == kv::Format::BFloat16 ? 2 : 1;
+  const uint64_t packed = layout.format == kv::Format::Int4Hadamard ? 2 : 1;
   const auto move = [&](uint32_t tensor, uint64_t source, uint64_t target, uint64_t bytes) {
     std::byte *moved = from.slab<std::byte>(layer, tensor, fromPage) + source;
     std::copy_n(moved, bytes, to.slab<std::byte>(layer, tensor, toPage) + target);
@@ -393,10 +406,10 @@ inline void moveBlock(kv::Layout layout, uint32_t layer, const HostKvExtents &fr
   for (uint32_t head = 0; head < layout.kvHeads; ++head) {
     // Token-major values sit where keys do (HostKvExtents::valueElement).
     for (const uint32_t tensor : {SPLASH_KV_KEYS, SPLASH_KV_VALUES})
-      move(tensor, splash_kv_key_element(head, fromPlace * tokens, 0) * elementBytes,
-           splash_kv_key_element(head, toPlace * tokens, 0) * elementBytes,
-           uint64_t{tokens} * layout.headDimension * elementBytes);
-    if (layout.format == kv::Format::Int8)
+      move(tensor, splash_kv_key_element(head, fromPlace * tokens, 0) * elementBytes / packed,
+           splash_kv_key_element(head, toPlace * tokens, 0) * elementBytes / packed,
+           uint64_t{tokens} * layout.headDimension * elementBytes / packed);
+    if (layout.format != kv::Format::BFloat16)
       for (const uint32_t tensor : {SPLASH_KV_KEY_SCALES, SPLASH_KV_VALUE_SCALES})
         move(tensor, splash_kv_scale_element(head, fromPlace * tokens) * sizeof(float),
              splash_kv_scale_element(head, toPlace * tokens) * sizeof(float), tokens * sizeof(float));

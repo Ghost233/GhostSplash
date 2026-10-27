@@ -48,6 +48,7 @@ parser.set_defaults(
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
     prompt_lookup="on", compact_draft_head="off", fast_topk="off",
+    experimental_quantized_ffn="off",  # The FP16 cache experiment is 4B-only.
 )
 args = parser.parse_args(sys.argv[12:])
 serve_options.check_serve_arguments(parser, args)

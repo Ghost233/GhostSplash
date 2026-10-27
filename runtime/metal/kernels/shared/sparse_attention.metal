@@ -177,14 +177,16 @@ inline SplashSparseList splash_sparse_list(device const uint *lists, device cons
   }
 SPARSE_VERIFY_SPLIT(verify_attention_q8_sparse_kv2_g12, 2, 12, int8_t)
 SPARSE_VERIFY_SPLIT(verify_attention_bf16_sparse_kv2_g12, 2, 12, bfloat)
+SPARSE_VERIFY_SPLIT(verify_attention_q4h_sparse_kv2_g12, 2, 12, uchar)
 SPARSE_VERIFY_LOCATED_SPLIT(verify_attention_q8_sparse_located_kv2_g12, 2, 12, int8_t)
 SPARSE_VERIFY_LOCATED_SPLIT(verify_attention_bf16_sparse_located_kv2_g12, 2, 12, bfloat)
+SPARSE_VERIFY_LOCATED_SPLIT(verify_attention_q4h_sparse_located_kv2_g12, 2, 12, uchar)
 #undef SPARSE_VERIFY_LOCATED_SPLIT
 #undef SPARSE_VERIFY_SPLIT
 #undef SPARSE_VERIFY_SPLIT_BODY
 
 // Combines the splits that took entries of the lane's list.
-#define SPARSE_VERIFY_REDUCE(Name, Heads, Group)                               \
+#define SPARSE_VERIFY_REDUCE(Name, Heads, Group, Rotate)                       \
   kernel void Name(                                                            \
       device const float *partials [[buffer(0)]],                              \
       device const float *statistics [[buffer(1)]],                            \
@@ -196,6 +198,7 @@ SPARSE_VERIFY_LOCATED_SPLIT(verify_attention_bf16_sparse_located_kv2_g12, 2, 12,
     constexpr uint Rows = SPLASH_TARGET_VERIFY_ROWS;                           \
     threadgroup float weights[SplashVerifyMaximumSplits];                      \
     threadgroup float group_values[8];                                         \
+    threadgroup float rotation[Rotate ? SplashKvHeadDimension : 1];           \
     constant SplashVerifyAttentionParams &lane = params[group.z];              \
     const uint fused_row = group.y;                                            \
     const SplashAttentionTile tile =                                           \
@@ -206,12 +209,13 @@ SPARSE_VERIFY_LOCATED_SPLIT(verify_attention_bf16_sparse_located_kv2_g12, 2, 12,
     const uint count =                                                         \
         splash_sparse_list_count(counts, lane.block_stride, lane.block_list,   \
                                  tile.first_position, tile.active_rows);       \
-    splash_attention_combine_splits<Group, Rows>(                              \
+    splash_attention_combine_splits<Group, Rows, Rotate>(                      \
         partials, statistics, output + tile.offset, tile.active_rows,          \
         splash_sparse_written_splits(count, tile.splits), tile.first_slot,     \
-        fused_row, thread_index, weights, group_values);                       \
+        fused_row, thread_index, weights, group_values, rotation);             \
   }
-SPARSE_VERIFY_REDUCE(verify_attention_sparse_reduce_kv2_g12, 2, 12)
+SPARSE_VERIFY_REDUCE(verify_attention_sparse_reduce_kv2_g12, 2, 12, false)
+SPARSE_VERIFY_REDUCE(verify_attention_q4h_sparse_reduce_kv2_g12, 2, 12, true)
 #undef SPARSE_VERIFY_REDUCE
 
 // Prefill: group.x is the KV head, group.y the query tile and group.z the
@@ -244,9 +248,10 @@ SPARSE_VERIFY_REDUCE(verify_attention_sparse_reduce_kv2_g12, 2, 12)
   }
 SPARSE_PREFILL_SPLIT(prefill_attention_q8_sparse_kv2_g12, 2, 12, int8_t)
 SPARSE_PREFILL_SPLIT(prefill_attention_bf16_sparse_kv2_g12, 2, 12, bfloat)
+SPARSE_PREFILL_SPLIT(prefill_attention_q4h_sparse_kv2_g12, 2, 12, uchar)
 #undef SPARSE_PREFILL_SPLIT
 
-#define SPARSE_PREFILL_REDUCE(Name, Heads, Group)                              \
+#define SPARSE_PREFILL_REDUCE(Name, Heads, Group, Rotate)                      \
   kernel void Name(                                                            \
       device const float *partials [[buffer(0)]],                              \
       device const float *statistics [[buffer(1)]],                            \
@@ -258,6 +263,7 @@ SPARSE_PREFILL_SPLIT(prefill_attention_bf16_sparse_kv2_g12, 2, 12, bfloat)
     constexpr uint Rows = SPLASH_PREFILL_ATTENTION_TILE_ROWS;                  \
     threadgroup float weights[SplashPrefillMaximumSplits];                     \
     threadgroup float group_values[8];                                         \
+    threadgroup float rotation[Rotate ? SplashKvHeadDimension : 1];           \
     const uint fused_row = group.y;                                            \
     const SplashAttentionTile tile =                                           \
         splash_prefill_attention_tile<Heads, Group>(params, group.x, group.z); \
@@ -267,10 +273,11 @@ SPARSE_PREFILL_SPLIT(prefill_attention_bf16_sparse_kv2_g12, 2, 12, bfloat)
     const uint count = splash_sparse_list_count(                               \
         counts, params.block_stride, params.block_list + group.z,              \
         tile.first_position, tile.active_rows);                                \
-    splash_attention_combine_splits<Group, Rows>(                              \
+    splash_attention_combine_splits<Group, Rows, Rotate>(                      \
         partials, statistics, output + tile.offset, tile.active_rows,          \
         splash_sparse_written_splits(count, tile.splits), tile.first_slot,     \
-        fused_row, thread_index, weights, group_values);                       \
+        fused_row, thread_index, weights, group_values, rotation);             \
   }
-SPARSE_PREFILL_REDUCE(prefill_attention_sparse_reduce_kv2_g12, 2, 12)
+SPARSE_PREFILL_REDUCE(prefill_attention_sparse_reduce_kv2_g12, 2, 12, false)
+SPARSE_PREFILL_REDUCE(prefill_attention_q4h_sparse_reduce_kv2_g12, 2, 12, true)
 #undef SPARSE_PREFILL_REDUCE

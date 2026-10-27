@@ -5,7 +5,7 @@ set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 launcher_allow_baseline=0
 . "$repo/dev/tools/launcher_kv.sh"
-splash_parse_launcher_options "$@"
+splash_parse_launcher_options --experimental-quantized-ffn on "$@"
 binary="$repo/build/splash"
 model_dir=/Users/ghost233/.lmstudio/models/unsloth/Qwen3.5-4B-GGUF
 model_id=unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL
@@ -24,14 +24,13 @@ done
 unset SPLASH_API_KEY
 echo "KV format: $kv_format"
 exec "$repo/.venv/bin/python" -u - "$repo" "$model_dir" "$model_id" "$host" "$port" \
-    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" "$binary" <<'PY'
+    "$max_context" "$max_memory" "$max_cache_disk" "$queue_size" "$kv_format" "$binary" "$experimental_quantized_ffn" <<'PY'
 import os
 import socket
 import sys
 from pathlib import Path
 
-repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, *binaries = sys.argv[1:]
-binary = binaries[0] if binaries else str(Path(repo) / "build/splash")
+repo, model_dir, model_id, host, port, context, memory, cache_disk, queue, kv_format, binary, experimental_quantized_ffn = sys.argv[1:]
 repo = Path(repo)
 draft_dir = repo / "install/models-local/drafts/qwen35-4b-dflash/source"
 if not (draft_dir / "model.safetensors").is_file():
@@ -56,6 +55,7 @@ command = [
     "--binary", binary, "--host", host, "--port", str(port),
     "--max-context", context, "--max-memory", memory, "--max-cache-disk", cache_disk,
     "--queue-size", queue, "--kv-format", kv_format, "--disable-ane", "--no-webui",
+    "--experimental-quantized-ffn", experimental_quantized_ffn,
 ]
 os.chdir(repo)
 os.execv(command[0], command)

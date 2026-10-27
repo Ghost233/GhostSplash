@@ -386,21 +386,22 @@ void failsTheLanesOfUnreadBlocks(MetalBackend &backend) {
 // value scales (int8 only).
 template <typename T>
 std::vector<std::byte> recordOf(const test::AttentionFixture &fixture, uint32_t lane, uint32_t block) {
-  constexpr bool scaled = std::is_same_v<T, int8_t>;
+  constexpr bool scaled = sizeof(T) == 1;
   constexpr uint32_t tokens = SPLASH_ATTENTION_BLOCK_TOKENS, dimensions = SPLASH_KV_HEAD_DIMENSION;
   const uint32_t heads = fixture.plan().shape.kvHeads, first = block * tokens;
+  const uint32_t packed = fixture.plan().shape.format == kv::Format::Int4Hadamard ? 2 : 1;
   std::vector<std::byte> record;
   const auto append = [&](const void *data, size_t bytes) {
     const auto *from = static_cast<const std::byte *>(data);
     record.insert(record.end(), from, from + bytes);
   };
   for (uint32_t head = 0; head < heads; ++head)
-    append(fixture.keyRow<T>(lane, head, first), tokens * dimensions * sizeof(T));
+    append(fixture.keyRow<T>(lane, head, first), tokens * dimensions * sizeof(T) / packed);
   if (scaled)
     for (uint32_t head = 0; head < heads; ++head)
       append(fixture.scale(lane, SPLASH_KV_KEY_SCALES, head, first), tokens * sizeof(float));
   for (uint32_t head = 0; head < heads; ++head)
-    append(fixture.valueOf<T>(lane, head, first, 0), tokens * dimensions * sizeof(T));
+    append(fixture.valueOf<T>(lane, head, first, 0), tokens * dimensions * sizeof(T) / packed);
   if (scaled)
     for (uint32_t head = 0; head < heads; ++head)
       append(fixture.scale(lane, SPLASH_KV_VALUE_SCALES, head, first), tokens * sizeof(float));
@@ -409,11 +410,12 @@ std::vector<std::byte> recordOf(const test::AttentionFixture &fixture, uint32_t 
 
 // Overwrites the K/V of a lane's page in the pool.
 template <typename T> void overwrite(const test::AttentionFixture &fixture, uint32_t lane, uint32_t page) {
+  const uint32_t packed = fixture.plan().shape.format == kv::Format::Int4Hadamard ? 2 : 1;
   for (uint32_t token = page * kv::kPageTokens; token < (page + 1) * kv::kPageTokens; ++token)
     for (uint32_t head = 0; head < fixture.plan().shape.kvHeads; ++head) {
-      std::memset(fixture.keyRow<T>(lane, head, token), 0x5a, SPLASH_KV_HEAD_DIMENSION * sizeof(T));
-      std::memset(fixture.valueOf<T>(lane, head, token, 0), 0x5a, SPLASH_KV_HEAD_DIMENSION * sizeof(T));
-      if constexpr (std::is_same_v<T, int8_t>)
+      std::memset(fixture.keyRow<T>(lane, head, token), 0x5a, SPLASH_KV_HEAD_DIMENSION * sizeof(T) / packed);
+      std::memset(fixture.valueOf<T>(lane, head, token, 0), 0x5a, SPLASH_KV_HEAD_DIMENSION * sizeof(T) / packed);
+      if constexpr (sizeof(T) == 1)
         for (const uint32_t tensor : {SPLASH_KV_KEY_SCALES, SPLASH_KV_VALUE_SCALES})
           *fixture.scale(lane, tensor, head, token) = 1e6f;
     }
@@ -528,6 +530,7 @@ int main(int argc, const char *argv[]) {
       failsTheLanesOfUnreadBlocks(backend);
       attendsThroughLocations<int8_t>(backend, kv::Format::Int8);
       attendsThroughLocations<uint16_t>(backend, kv::Format::BFloat16);
+      attendsThroughLocations<uint8_t>(backend, kv::Format::Int4Hadamard);
       refusesWhatItCannotPlace(argv[1]);
       std::cout << "kv_block_cache_test: PASS\n";
     } catch (const std::exception &error) {

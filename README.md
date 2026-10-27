@@ -28,13 +28,40 @@ BF16/F16 张量、融合 MoE gate/up 专家和 Q5_0/Q5_1 支持，具体范围�
 ### 本地模型启动器
 
 本地启动脚本复用 LM Studio 模型目录，并为不同模型保留独立配置。
-目前保留 3 个模型的 4 个启动脚本：
+目前保留 7 个模型的 9 个 `.sh` 启动脚本：
 
 | 模型 | 启动脚本 |
 | --- | --- |
 | Swift 1.5 Qwen3.8 27B IQ3_S | [swift1527bsplash.sh](swift1527bsplash.sh) / [swift1527biq3ssplash.sh](swift1527biq3ssplash.sh) |
 | Tiel MiniPlus | [tielminiplus35ba3bsplash.sh](tielminiplus35ba3bsplash.sh) |
-| Coder390 27B | [coder39027bsplash.sh](coder39027bsplash.sh) |
+| Qwen3.5 4B | [qwen3.54bsplash.sh](qwen3.54bsplash.sh) / [qwen3.54bdflashsplash.sh](qwen3.54bdflashsplash.sh) |
+| Qwen3.8 27B MLX 4-bit | [qwen3827bmlx4bitsplash.sh](qwen3827bmlx4bitsplash.sh) |
+| D3 lite | [d3litesplash.sh](d3litesplash.sh) |
+| D3 mini | [d3minisplash.sh](d3minisplash.sh) |
+| Swift 1.5 Flash Next Q2_0 | [swift15flashnextsplash.sh](swift15flashnextsplash.sh) |
+
+Flash Next 入口使用 INT8 稀疏 KV、262144 上下文和 48 GiB 内存预算。
+可传 `--kv-format q4h` 使用 Q4H 稀疏 KV，覆盖内存、块缓存和 SSD 暂存路径；
+Q4_0 两种格式仍不支持。Q4H 使用现有 H256 Q/K、H64 V 及 FP32 scale 协议。
+布局与验证范围见 [Flash Next Q4H 说明](docs/flash-next-q4h-2026-10-21.md)。
+`--expert-memory off` 强制专家权重全量驻留；`--ple-memory 128M` 将 PLE 全表留在
+GGUF 所在的 SSD，仅保留有限行缓存和必要工作区。`--ple-memory off` 会加载整张表，
+与 SSD 卸载相反。草稿绑定本机 Q8_0 GGUF 的 BF16 转换产物，原文件保留。
+首次准备转换产物使用：
+
+```sh
+.venv/bin/python -m dev.tools.dequantize_dflash2_gguf \
+  /Users/ghost233/.lmstudio/models/incoai/Qwen3.8-Flash-Next-DFlash2-GGUF/Qwen3.8-Flash-Next-DFlash2-Q8_0.gguf \
+  install/models-local/drafts/flash-next-dflash2-q8_0/bf16 \
+  --target /Users/ghost233/.lmstudio/models/ukisai/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-GGUF/Swift-Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf
+sh swift15flashnextsplash.sh
+```
+
+两个 Qwen3.5 4B 入口默认开启 `--experimental-quantized-ffn on`，
+保留量化 FFN 权重，不建立整层常驻 FP16 FFN 缓存。
+可传 `--experimental-quantized-ffn off` 关闭；使用旧 `--baseline` 构建时也必须关闭。
+其余入口显式设置为 `off`：该实验仅支持普通 Qwen3.5 4B 生成，
+27B 和 Tiel 原本就不建立这份 4B FFN 缓存。
 
 Swift 27B 的单请求 Dense 入口为 [swift27bdense.command](swift27bdense.command)。
 默认 Q4H KV、并发 1，复用上述 IQ3_S-mtp 文件和本机已缓存的配套 DFlash2。
@@ -66,9 +93,8 @@ Bonsai、Swift Bonsai、Ornith、Qwen Distill 和普通 Tiel 的本地模型目�
 所有自建启动器默认传入 `--no-webui`，关闭内置聊天页面，只提供 API，
 本机 API 地址为 `http://127.0.0.1:端口/v1`。
 模型权重、Python 虚拟环境、生成的模型安装目录和编译产物不随 Git 分支迁移。
-Coder390 还需要在 `install/models-local/drafts/coder390-dflash2-fp8/bf16/`
-准备转换后的 draft；新目录可复用已验证的 BF16 副本，或用下面的命令从作者的
-FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）转换：
+Coder390、Julia、Laya、Kev 和两个 MiniPlus V3 模型的本地权重已删除，
+对应启动器已移除。历史记录和 draft 转换工具保留：
 
 ```bash
 .venv/bin/python dev/tools/dequantize_coder390_dflash2.py /path/to/fp8-source \
@@ -95,7 +121,7 @@ FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）�
   真实模型的生成质量仍需单独验证。
 - **Coder390**：增加作者发布的逐张量 FP8 E4M3 DFlash2 draft 到 BF16 的
   [转换工具](dev/tools/dequantize_coder390_dflash2.py)及对应测试。
-  启动器使用转换后的 draft；历史使用官方 DFlash2 的测速结果与作者 draft 的结果
+  历史测试使用转换后的 draft；使用官方 DFlash2 的测速结果与作者 draft 的结果
   在记录中分别注明。
 
 ### MoE 单实例内存压力控制（实验）

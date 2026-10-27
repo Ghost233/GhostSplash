@@ -227,7 +227,8 @@ struct Layout final {
   // (SPLASH_ATTENTION_LOCATION_BLOCK_BITS), so that a block read back sits at
   // its own place in a page of the hot block cache.
   [[nodiscard]] constexpr bool spillable() const noexcept {
-    return (format == Format::Int8 || format == Format::BFloat16) && indexDimension && valuesTokenMajor &&
+    return (format == Format::Int8 || format == Format::BFloat16 || format == Format::Int4Hadamard) &&
+           indexDimension && valuesTokenMajor &&
            kPageTokens == SPLASH_ATTENTION_BLOCK_TOKENS << SPLASH_ATTENTION_LOCATION_BLOCK_BITS;
   }
 

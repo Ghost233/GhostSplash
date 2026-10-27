@@ -5,4 +5,5 @@ set -eu
 host=0.0.0.0
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 exec sh "$repo/swift1527biq3ssplash.sh" --host "$host" --kv-format int8 \
-    --queue-size 4 --prompt-lookup off --compact-draft-head off "$@"
+    --queue-size 4 --prompt-lookup off --compact-draft-head off \
+    --experimental-quantized-ffn off "$@"

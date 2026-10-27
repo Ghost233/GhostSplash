@@ -23,14 +23,16 @@ SUPPORTED = {
     GGMLQuantizationType.F32,
     GGMLQuantizationType.Q4_K,
     GGMLQuantizationType.Q6_K,
+    GGMLQuantizationType.Q8_0,
 }
 
 
 def draft_config(source, target):
     if source.require("general.architecture", str) != "dflash":
         raise ValueError("source is not a DFlash GGUF")
-    if target.require("general.architecture", str) != "qwen35":
-        raise ValueError("target must be a Qwen3.5/3.8 dense GGUF")
+    architecture = target.require("general.architecture", str)
+    if architecture not in ("qwen35", "qwen4exp"):
+        raise ValueError("target must be a Qwen3.5/3.8 dense or Flash Next GGUF")
     for key in ("tokens", "token_type", "merges"):
         if (
             source.values["tokenizer.ggml." + key]
@@ -51,8 +53,8 @@ def draft_config(source, target):
     captures = [
         int(layer) - 1 for layer in source.require("dflash.target_layers", list)
     ]
-    native_layers = target.positive("qwen35.block_count") - target.values.get(
-        "qwen35.nextn_predict_layers", 0
+    native_layers = target.positive(architecture + ".block_count") - target.values.get(
+        architecture + ".nextn_predict_layers", 0
     )
     if (
         not captures
@@ -60,7 +62,7 @@ def draft_config(source, target):
         or any(not 0 <= i < native_layers for i in captures)
     ):
         raise ValueError("invalid draft target-layer indices")
-    if config["hidden_size"] != target.positive("qwen35.embedding_length"):
+    if config["hidden_size"] != target.positive(architecture + ".embedding_length"):
         raise ValueError("draft hidden size differs from target")
     if (
         source.require("dflash.attention.causal", bool)
@@ -275,7 +277,7 @@ def convert(source, destination, target):
                 "source_sha256": source_digest,
                 "target_gguf": str(target.resolve()),
                 "target_bytes": target.stat().st_size,
-                "algorithm": "llama.cpp gguf-py F32/Q4_K/Q6_K dequantization; BF16 round-to-nearest-even; GGUF shape axes reversed; target layer IDs minus one",
+                "algorithm": "llama.cpp gguf-py F32/Q4_K/Q6_K/Q8_0 dequantization; BF16 round-to-nearest-even; GGUF shape axes reversed; target layer IDs minus one",
                 "gguf_version": version("gguf"),
                 "output_sha256": digest.hexdigest(),
                 "output_bytes": pending.with_name("model.safetensors").stat().st_size,
