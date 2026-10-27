@@ -113,6 +113,17 @@ __attribute__((noinline)) void moe_gate_up_column(device bfloat *x, uint rows, u
       output[out + ulong(row) * N + origin + simd_lane] =
           bfloat(float(bfloat(sums[row])) * splash_silu(float(gate[row * GGUF_STAGED_COLUMNS + simd_lane])));
 }
+// Keep format-specific matrix loops out of the runtime-format kernel: the
+// combined loop graph can keep Metal's backend optimizer past the Ready deadline.
+// The caller still owns the accumulator and the threadgroup barrier, including
+// when the gate and up simdgroups choose different formats.
+template <class F, ushort Rows, class Acc>
+__attribute__((noinline)) void moe_gate_up_accumulate(device bfloat *x, MoeGgufSegment s, uint K, uint origin,
+                                                     threadgroup half *my, threadgroup half2 *table,
+                                                     uint simd_lane, thread Acc &acc) {
+  staged_accumulate<F, Rows, GGUF_STAGED_COLUMNS, GGUF_STAGED_STEP>(
+      x, s.w0, s.w1, s.meta, K, origin, my, table, simd_lane, 0, K / GGUF_STAGED_STEP, 0, acc);
+}
 template <ushort Rows, ushort Tables>
 kernel void moe_expert_gguf_gate_up(device bfloat *input [[buffer(0)]],
                                     device const MoeTileDescriptor *tiles [[buffer(1)]],
@@ -165,8 +176,7 @@ kernel void moe_expert_gguf_gate_up(device bfloat *input [[buffer(0)]],
     auto acc = staged_accumulator<R, GGUF_STAGED_COLUMNS, GGUF_STAGED_STEP>(x, K, my);
     gguf_zero(acc);
     quant_format_switch(s.format, [&](auto f) {
-      staged_accumulate<decltype(f), R, GGUF_STAGED_COLUMNS, GGUF_STAGED_STEP>(
-          x, s.w0, s.w1, s.meta, K, origin, my, table, simd_lane, 0, K / GGUF_STAGED_STEP, 0, acc);
+      moe_gate_up_accumulate<decltype(f), R>(x, s, K, origin, my, table, simd_lane, acc);
     });
     if (!up) gguf_elements(acc, [&](uint row, uint column, float v) { gate[row * GGUF_STAGED_COLUMNS + column] = bfloat(v); });
     threadgroup_barrier(mem_flags::mem_threadgroup);

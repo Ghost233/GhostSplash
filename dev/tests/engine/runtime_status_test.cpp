@@ -65,6 +65,53 @@ MemoryAuditResult audit(const EngineMemoryPlan &memoryPlan) {
   return auditActualMemory(memoryPlan, actual);
 }
 
+void testDisabledPressureReportsOnlyLocalReadiness() {
+  WeightsSnapshot weights;
+  const auto status = [&] {
+    const auto json = runtimeStatusJson(plan(), {}, {}, {}, {}, {}, {}, {}, {}, true,
+        {}, {}, {}, weights, {}, ThermalState::Nominal);
+    const auto start = json.find("\"moe_memory_pressure\":");
+    const auto end = json.find(",\"expert_ple_adaptive\":", start);
+    return json.substr(start, end - start);
+  };
+  require(status() == "\"moe_memory_pressure\":{\"enabled\":false,\"mode\":\"off\","
+                      "\"model_ready\":true,\"growth_allowed\":false,\"reason\":\"disabled\"}",
+          "disabled pressure diagnostics retained cross-instance roles or implied enabled control");
+  weights.released = true;
+  require(status().find("\"model_ready\":false") != std::string::npos,
+          "released weights were reported as model ready with pressure control off");
+  weights.released = false;
+  weights.restoring = true;
+  require(status().find("\"model_ready\":false") != std::string::npos,
+          "partially restored weights were reported as model ready");
+
+}
+
+void testLocalPressureReadinessAndPassiveAccounting() {
+  RuntimeFeatureSnapshot features;
+  features.processPhysicalFootprintBytes = 5678;
+  MemoryGovernorSnapshot governor;
+  governor.pressureControlEnabled = true;
+  governor.automaticMinimumBytes = 100;
+  governor.automaticMaximumBytes = 300;
+  governor.automaticQuotaBytes = 200;
+  governor.automaticActualBytes = 180;
+  governor.pendingAutomaticBytes = 20;
+  governor.normalStableMilliseconds = 30'000;
+  governor.blockCooldownMilliseconds = 1;
+  governor.automaticGrowthReason = "block_cooldown";
+  metal::MetalMemoryStats metal;
+  metal.allocatedBytes = 1234;
+  const auto json = runtimeStatusJson(plan(), {}, metal, {}, {}, {}, {}, {}, governor,
+      true, {}, {}, {}, {}, {}, ThermalState::Nominal, std::nullopt, std::nullopt, std::nullopt, features);
+  require(json.find("\"moe_memory_pressure\":{\"enabled\":true,\"mode\":\"local\",\"model_ready\":true,\"growth_allowed\":false") != std::string::npos &&
+          json.find("\"normal_stable_milliseconds\":30000,\"block_cooldown_milliseconds\":1") != std::string::npos &&
+          json.find("\"automatic_quota_bytes\":200,\"automatic_actual_bytes\":180,\"automatic_pending_bytes\":20") != std::string::npos &&
+          json.find("\"allocated_bytes\":1234,\"current_bytes\":1234,\"peak_bytes\":1234,\"process_physical_footprint_bytes\":5678") != std::string::npos &&
+          json.find("\"role\":") == std::string::npos && json.find("\"group\":") == std::string::npos,
+          "local status lost cooldown, independent model readiness or passive accounting scopes");
+}
+
 // A representative status document, every section of it set, and the golden
 // copy of the whole document that the server's reading of it is tested on
 // (dev/tests/server/test_status_contract.py).
@@ -103,6 +150,41 @@ void testStartupFeaturesStatus() {
   require(quantized.find("\"experimental_quantized_ffn\":true") != std::string::npos &&
           quantized.find("\"ffn_cache_bytes\":0") != std::string::npos,
           "status lost the loaded quantized FFN state or cache allocation");
+}
+
+void testExpertStorageStatus() {
+  RuntimeFeatureSnapshot features;
+  features.expertStorage.emplace();
+  auto &e = *features.expertStorage;
+  e.weightBytes = 1000;
+  e.residentLayoutBytes = 1100;
+  e.contiguous.minimumBytes = 600;
+  e.resizable.minimumBytes = 700;
+  e.resizable.fullBytes = 1200;
+  e.resizable.chunks.push_back({100, 128, 4, 1, 10});
+  const auto status = [&] {
+    MemoryGovernorSnapshot governor;
+    governor.chargedBytes = 100; governor.localReservedBytes = 20; governor.untrackedReserveBytes = 30;
+    return runtimeStatusJson(plan(), {}, {}, {}, {}, {}, {}, {}, governor, true, {}, {}, {}, {}, {}, {},
+        std::nullopt, std::nullopt, std::nullopt, features);
+  };
+  const auto unloaded = status();
+  require(unloaded.find("\"minimum_required_bytes\":null") != std::string::npos &&
+          unloaded.find("\"allocated_bytes\":null") != std::string::npos &&
+          unloaded.find("\"capacity_ratio\":null") != std::string::npos,
+          "unknown expert requirements were reported as known zero");
+  e.layout = "addressed";
+  e.budgetBytes = 900; e.allocatedBytes = 850; e.auxiliaryBytes = 350;
+  e.capacityWeightBytes = 500; e.residentWeightBytes = 250;
+  const auto loaded = status();
+  require(loaded.find("\"charged_bytes\":100") != std::string::npos &&
+          loaded.find("\"local_reserved_bytes\":20,\"untracked_reserve_bytes\":30") != std::string::npos &&
+          loaded.find("\"weight_bytes\":1000") != std::string::npos &&
+          loaded.find("\"contiguous_floor_bytes\":600") != std::string::npos &&
+          loaded.find("\"resizable_floor_bytes\":700") != std::string::npos &&
+          loaded.find("\"capacity_ratio\":0.5,\"resident_ratio\":0.25") != std::string::npos &&
+          loaded.find("\"allocation_bytes\":128,\"slots\":4,\"minimum_chunks\":1,\"maximum_chunks\":10") != std::string::npos,
+          "expert status conflated byte capacity, residency or layout ranges");
 }
 
 void testCleanRuntimeStatus(const char *goldenPath) {
@@ -333,7 +415,7 @@ void testCleanRuntimeStatus(const char *goldenPath) {
                   std::string::npos &&
               tokenMajorStatus.find("\"value_layout\":\"token_major\"") != std::string::npos,
           "token-major values were reported dimension-major");
-  require(json.find("\"schema_version\":6") != std::string::npos &&
+  require(json.find("\"schema_version\":7") != std::string::npos &&
               json.find("\"ready\":true") != std::string::npos,
           "status readiness/schema is wrong");
   require(json.find("\"ready\":true,\"maximum_context_tokens\":102400,") !=
@@ -608,7 +690,7 @@ void testResourceWaitDiagnostics() {
       memoryPlan, {}, {}, {}, {}, {}, {}, {}, {}, true, {}, wait,
       NativeLoopTiming{1843.25}, {}, {}, {});
   require(ticked.find("\"loop\":{\"max_tick_ms\":1843.25}") != std::string::npos &&
-              ticked.find("\"schema_version\":6") != std::string::npos,
+              ticked.find("\"schema_version\":7") != std::string::npos,
           "the loop's longest tick is missing, or changed the status schema");
 }
 
@@ -665,15 +747,17 @@ void testStreamedExpertsStatus() {
                               .p50Milliseconds = 0.512, .p95Milliseconds = 2.048, .p99Milliseconds = 8.192},
                      .resume = {.count = 500, .totalMilliseconds = 48.5, .maximumMilliseconds = 12.5,
                                 .p50Milliseconds = 0.128, .p95Milliseconds = 0.128, .p99Milliseconds = 16.384}};
+  experts.uses[1].ghostHits = 11;
+  experts.uses[1].readWaitNanoseconds = 5700000;
   experts.failure = "injected";
   const std::string none = "{\"p50\":0,\"p95\":0,\"p99\":0,\"max\":0,\"total\":0,\"samples\":0}";
   require(status(experts).find(
               "\"streamed_experts\":{\"arena_bytes\":17179869184,\"staging_bytes\":452984832,\"slots\":8192,"
               "\"experts\":25088,\"resident\":8000,\"prefill\":{\"loads\":0,\"routed\":0,\"read\":0,\"prefetched\":0,"
-              "\"read_ahead\":0,\"hit_rate\":0,\"read_bytes\":0,\"host_steps\":{\"pickup_ms\":" +
+              "\"read_ahead\":0,\"hit_rate\":0,\"ghost_hits\":0,\"read_wait_ms\":0,\"read_bytes\":0,\"host_steps\":{\"pickup_ms\":" +
               none + ",\"work_ms\":" + none + ",\"resume_ms\":" + none +
               "}},\"decode\":{\"loads\":480,\"routed\":4000,\"read\":1000,\"prefetched\":600,"
-              "\"read_ahead\":900,\"hit_rate\":0.75,\"read_bytes\":1973000000,\"host_steps\":"
+              "\"read_ahead\":900,\"hit_rate\":0.75,\"ghost_hits\":11,\"read_wait_ms\":5.7,\"read_bytes\":1973000000,\"host_steps\":"
               "{\"pickup_ms\":{\"p50\":0.032,\"p95\":0.032,\"p99\":0.064,\"max\":0.09,\"total\":11.5,"
               "\"samples\":500},\"work_ms\":{\"p50\":0.512,\"p95\":2.048,\"p99\":8.192,\"max\":9.5,"
               "\"total\":240,\"samples\":500},\"resume_ms\":{\"p50\":0.128,\"p95\":0.128,\"p99\":16.384,"
@@ -800,6 +884,9 @@ void testStreamedTableStatus() {
   table.cacheCapacityRows = 18000000;
   table.cachedRows = 1200;
   table.uses[1] = {10, 1280, 1000, 750, 250, {10, 12.5, 3.25, 1.024, 2.048, 4.096}};
+  table.uses[1].reusedEvictedRows = 7;
+  table.uses[1].readWaitNanoseconds = 123000000;
+  table.uses[1].consumedPrefetchedRows = 3;
   table.readBytes = 22500;
   table.prefetchRequestedRows = 32768;
   table.prefetchReadRows = 30000;
@@ -810,6 +897,7 @@ void testStreamedTableStatus() {
                     "\"cache_bytes\":2147483648,\"cache_capacity_rows\":18000000,\"cached_rows\":1200,"
                     "\"evictions\":0,\"prefill\":{\"stages\":0,") != std::string::npos &&
               json.find("\"decode\":{\"stages\":10,\"requested_rows\":1280,\"unique_rows\":1000,"
+                        "\"consumed_prefetched_rows\":3,\"reused_evicted_rows\":7,\"read_wait_ms\":123,"
                         "\"hit_rows\":750,\"read_rows\":250,\"hit_rate\":0.75,\"stage_ms\":{\"p50\":1.024,"
                         "\"p95\":2.048,\"p99\":4.096,\"max\":3.25,\"total\":12.5,\"samples\":10}}") !=
                   std::string::npos &&
@@ -817,7 +905,7 @@ void testStreamedTableStatus() {
                         "\"samples\":0},\"prefetch_requested_rows\":32768,") != std::string::npos &&
               json.find("\"prefetch_read_rows\":30000,\"prefetch_dropped_rows\":0,\"poisoned\":true,"
                         "\"failure\":\"injected\"}") != std::string::npos &&
-              json.find("\"schema_version\":6,") != std::string::npos,
+              json.find("\"schema_version\":7,") != std::string::npos,
           "the streamed table's status is missing or inaccurate");
 }
 
@@ -956,6 +1044,9 @@ int main(int argc, char **argv) {
     return 2;
   }
   try {
+    testDisabledPressureReportsOnlyLocalReadiness();
+    testLocalPressureReadinessAndPassiveAccounting();
+    testExpertStorageStatus();
     testCleanRuntimeStatus(argv[1]);
     testStartupFeaturesStatus();
     testCurrentReadinessAndSimultaneousPeak();

@@ -66,6 +66,8 @@ std::string resourceTimeoutMessage(metal::AllocationFailure failure) {
   std::string message = "memory did not become available within the resource wait limit";
   if (failure == metal::AllocationFailure::HostPressure)
     message += ": macOS is short of memory; close memory-heavy applications";
+  if (failure == metal::AllocationFailure::GrowthDeferred)
+    message += ": local memory admission remained unavailable";
   return message;
 }
 
@@ -551,6 +553,8 @@ bool Engine::admitQueued(double now) {
       }) >= model::ExecutionLimits::maximumBatchWidth;
   bool laneSought = false;
   const auto waitForLane = [&](uint64_t id, Request &active) {
+    if (requestStartsPaused_)
+      return admit(active, now);
     if (!laneSought && !pendingSharedPrefill(active, cachedTokens(active))) {
       laneSought = true;
       if (preemptBelow(active.request.priority, now))
@@ -766,6 +770,12 @@ uint32_t Engine::awaitedBoundary(const Request &producer, uint32_t end) const {
 
 bool Engine::admit(Request &active, double now) {
   const bool resuming = scheduler_.suspended(active.request.id);
+  if (!resuming && requestStartsPaused_) {
+    active.refusedResources = true;
+    scheduler_.waitForResources(active.request.id);
+    deferResourceRetry(active, now, {.allocationFailure = metal::AllocationFailure::HostPressure});
+    return false;
+  }
   ModelRequest modelRequest = active.request.modelView();
   modelRequest.prompt = active.exactTokens;
   auto cachePrompt = modelRequest.prompt;
@@ -2016,7 +2026,8 @@ Engine::Verdict Engine::judge(const Denial &denial, uint64_t requestId) const {
   // host refuses when its pressure lifts; only a lane that cannot fit on its
   // own has hit the capacity.
   if (anotherResident(requestId) ||
-      denial.allocationFailure == metal::AllocationFailure::HostPressure)
+      (denial.allocationFailure == metal::AllocationFailure::HostPressure ||
+       denial.allocationFailure == metal::AllocationFailure::GrowthDeferred))
     return Verdict::Yield;
   return Verdict::Fail;
 }
@@ -2038,7 +2049,8 @@ auto Engine::allocate(Attempt &&attempt, bool inService, ReclaimClass upTo,
   Denial &denial = result.denial;
   while (memoryDenied(admission)) {
     const bool paused =
-        admission.allocationFailure == metal::AllocationFailure::HostPressure;
+        admission.allocationFailure == metal::AllocationFailure::HostPressure ||
+        admission.allocationFailure == metal::AllocationFailure::GrowthDeferred;
     CacheReclaimResult reclaimed;
     if constexpr (std::is_same_v<Admission, StateAdmission>)
       reclaimed = paused ? reuseCachedStateWhilePaused(upTo) : reclaimForState(upTo);
@@ -2075,7 +2087,7 @@ auto Engine::allocate(Attempt &&attempt, bool inService, ReclaimClass upTo,
     denial.pending = denial.pending || transferPending(admission);
     // Memory on its way back ends the shortage without the residents.
     if (memoryDenied(admission) && !denial.pending && !optional)
-      allocationFailed_ = true;
+      allocationFailed_ = admission.allocationFailure != metal::AllocationFailure::GrowthDeferred;
   }
   return result;
 }
@@ -2203,7 +2215,8 @@ void Engine::suspendForGrowth(Request &active, uint64_t workEnd,
   // resumes when its pressure lifts; any other limit only once memory is
   // freed, so it counts as a failure the drain waits out.
   drainEndMilliseconds_ = now + config_.resourceWaitTimeoutMilliseconds;
-  allocationFailed_ = failure != metal::AllocationFailure::HostPressure;
+  allocationFailed_ = failure != metal::AllocationFailure::HostPressure &&
+                      failure != metal::AllocationFailure::GrowthDeferred;
   ++counters_.resourceSuspensions;
 }
 

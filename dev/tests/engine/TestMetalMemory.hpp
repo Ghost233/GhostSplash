@@ -13,6 +13,11 @@ namespace splash::test {
   return statistics;
 }
 
+[[nodiscard]] inline HostMemoryStats &hostStatistics() noexcept {
+  static HostMemoryStats statistics;
+  return statistics;
+}
+
 } // namespace splash::test
 
 // The memory governor and the control pass read nothing from the backend but
@@ -22,8 +27,14 @@ namespace splash::test {
 namespace splash::metal {
 
 struct MetalBackend::Impl {};
-MetalBackend::MetalBackend(std::string, double, double)
+MetalBackend::MetalBackend(std::string, double, double, bool)
     : impl_(std::make_unique<Impl>()) {}
+HostMemoryStats MetalBackend::hostMemoryStats() const noexcept { return test::hostStatistics(); }
+
+uint64_t MetalBackend::allocationBytes(uint64_t bytes) const noexcept {
+  return (bytes + 16383) / 16384 * 16384;
+}
+
 MetalBackend::~MetalBackend() = default;
 MetalMemoryStats MetalBackend::memoryStats() const noexcept {
   return test::metalStatistics();

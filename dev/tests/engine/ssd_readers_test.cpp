@@ -165,6 +165,29 @@ void finishWaitsForTheEnd() {
   }
 }
 
+// Releasing a stopped batch releases its task's captures before its owner
+// goes away, including the disk-slot leases a tier's restores hold.
+void stopReleasesReaderContexts() {
+  constexpr unsigned readers = 8;
+  SsdReaders pool(readers);
+  for (unsigned round = 0; round < 512; ++round) {
+    std::atomic<unsigned> entered{0};
+    std::atomic<bool> release{false};
+    auto payload = std::make_shared<int>(1);
+    const std::weak_ptr<int> retained = payload;
+    auto batch = pool.start(readers, [payload, &entered, &release](size_t) {
+      ++entered;
+      while (!release.load()) std::this_thread::yield();
+    }, readers);
+    payload.reset();
+    while (entered.load() != readers) std::this_thread::yield();
+    release = true;
+    pool.stop(*batch);
+    batch.reset();
+    require(retained.expired(), "stopped SSD readers retained a task's context");
+  }
+}
+
 void stopLeavesTheRestUnread() {
   SsdReaders pool(4);
   Runs runs(100);
@@ -351,6 +374,7 @@ int main() {
     retriesAFailedTaskOnce();
     backgroundRunsOnItsReaders();
     finishWaitsForTheEnd();
+    stopReleasesReaderContexts();
     stopLeavesTheRestUnread();
     haltLeavesTheTakenRunning();
     runNowPassesTheBackground();

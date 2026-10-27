@@ -3,9 +3,11 @@ import io
 import json
 import os
 import selectors
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -120,6 +122,191 @@ class NativeRunnerTests(unittest.TestCase):
         self.assertFalse(result["passed"])
         with self.assertRaises(ProcessLookupError):
             os.kill(result["pid"], 0)
+
+    def test_wall_timeout_stops_a_silent_child_and_cannot_be_reused(self):
+        result, output = self.run_check(
+            "import time; print('waiting', flush=True); time.sleep(30)",
+            timeout=0.3,
+            heartbeat=0.05,
+        )
+        self.assertLess(result["exit_code"], 0)
+        self.assertFalse(result["passed"])
+        self.assertIn("TimeoutExpired", result["tool_error"])
+        self.assertEqual(result["timeout_seconds"], 0.3)
+        self.assertIn("waiting", Path(result["log"]).read_text())
+        self.assertIn("HEARTBEAT", output)
+        self.assertFalse(list(self.directory.glob("*.passed.json")))
+        with self.assertRaises(ProcessLookupError):
+            os.kill(result["pid"], 0)
+
+    def test_timeout_stops_an_output_descendant_after_its_parent_exits(self):
+        other = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(30)"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        descendant = None
+        try:
+            result, _ = self.run_check(
+                "import os, signal, time\n"
+                "if os.fork() == 0:\n"
+                " signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+                " print('descendant', os.getpid(), flush=True)\n"
+                " for _ in range(600):\n"
+                "  print('still active', flush=True); time.sleep(.05)\n"
+                "else:\n"
+                " raise SystemExit(0)\n",
+                timeout=0.4,
+            )
+            self.assertEqual(result["exit_code"], 0)
+            self.assertFalse(result["passed"])
+            self.assertIn("TimeoutExpired", result["tool_error"])
+            log = Path(result["log"]).read_text()
+            descendant = int(log.split("descendant ", 1)[1].splitlines()[0])
+            until = time.monotonic() + 2
+            while True:
+                try:
+                    os.kill(descendant, 0)
+                except ProcessLookupError:
+                    break
+                if time.monotonic() >= until:
+                    self.fail("the timed-out descendant survived group cleanup")
+                time.sleep(0.01)
+            self.assertIsNone(other.poll())
+            self.assertFalse(list(self.directory.glob("*.passed.json")))
+        finally:
+            if descendant is not None:
+                try:
+                    os.kill(descendant, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            other.terminate()
+            other.wait(timeout=5)
+
+    def test_timeout_is_part_of_the_reusable_result_identity(self):
+        first, _ = self.run_check("print('ok')")
+        bounded, output = self.run_check("print('ok')", timeout=2, reuse=True)
+        self.assertTrue(bounded["passed"])
+        self.assertNotEqual(first["fingerprint"], bounded["fingerprint"])
+        self.assertNotIn("REUSE", output)
+        self.assertEqual(bounded["identity"]["timeout_seconds"], 2)
+        reused, output = self.run_check("print('ok')", timeout=2, reuse=True)
+        self.assertEqual(bounded["result_file"], reused["result_file"])
+        self.assertIn("REUSE", output)
+
+    def test_timeout_stops_a_descendant_that_closed_its_output(self):
+        pid_file = self.root / "descendant.pid"
+        other = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(30)"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        descendant = None
+        try:
+            result, _ = self.run_check(
+                "import os, signal, sys, time\n"
+                "from pathlib import Path\n"
+                "signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))\n"
+                "if os.fork() == 0:\n"
+                " signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+                " os.close(1); os.close(2)\n"
+                f" Path({str(pid_file)!r}).write_text(str(os.getpid()))\n"
+                " time.sleep(30); os._exit(0)\n"
+                "else:\n"
+                f" while not Path({str(pid_file)!r}).exists(): time.sleep(.01)\n"
+                " print('descendant ready', flush=True)\n"
+                " time.sleep(30)\n",
+                timeout=0.4,
+            )
+            descendant = int(pid_file.read_text())
+            self.assertEqual(result["exit_code"], 0)
+            self.assertFalse(result["passed"])
+            self.assertIn("TimeoutExpired", result["tool_error"])
+            self.assertIn("descendant ready", Path(result["log"]).read_text())
+            until = time.monotonic() + 2
+            while True:
+                try:
+                    os.kill(descendant, 0)
+                except ProcessLookupError:
+                    break
+                if time.monotonic() >= until:
+                    self.fail("the detached-output descendant survived group cleanup")
+                time.sleep(0.01)
+            self.assertIsNone(other.poll())
+            self.assertFalse(list(self.directory.glob("*.passed.json")))
+        finally:
+            if descendant is not None:
+                try:
+                    os.kill(descendant, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            other.terminate()
+            other.wait(timeout=5)
+
+    def test_nonpositive_or_nonfinite_timeout_is_rejected_before_execution(self):
+        for timeout in (0, -1, float("inf"), float("nan")):
+            with (
+                self.subTest(timeout=timeout),
+                self.assertRaisesRegex(ValueError, "finite positive"),
+            ):
+                self.run_check("raise SystemExit(0)", timeout=timeout)
+        self.assertFalse(self.directory.exists())
+
+    def test_cli_timeout_returns_failure_and_retains_the_real_child_exit(self):
+        bootstrap = (
+            "from dev.tools import run_native_test as runner; "
+            "runner.machine_identity = lambda: {'complete': True, 'gpu': 'test'}; "
+            "raise SystemExit(runner.main())"
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                bootstrap,
+                "--directory",
+                str(self.directory),
+                "--timeout",
+                "0.3",
+                "--",
+                sys.executable,
+                "-c",
+                "import time; print('ready', flush=True); time.sleep(30)",
+            ],
+            cwd=runner.ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 128 + signal.SIGTERM, result.stderr)
+        records = list(self.directory.glob("*.json"))
+        self.assertEqual(len(records), 1)
+        record = json.loads(records[0].read_text())
+        self.assertEqual(record["exit_code"], -signal.SIGTERM)
+        self.assertFalse(record["passed"])
+        self.assertIn("TimeoutExpired", record["tool_error"])
+
+    def test_cli_rejects_invalid_timeout_values(self):
+        for value in ("0", "-1", "inf", "nan"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(Path(runner.__file__)),
+                        "--timeout",
+                        value,
+                        "--",
+                        sys.executable,
+                        "-c",
+                        "raise SystemExit(0)",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("--timeout requires a finite positive", result.stderr)
 
 
 class MachineIdentityTests(unittest.TestCase):

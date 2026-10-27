@@ -2,14 +2,46 @@
 
 #include "engine/ReclaimClass.hpp"
 #include "metal/MetalBackend.hpp"
+#include "model/ExpertStoreStats.hpp"
+#include "model/StorageGrowth.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <string>
+#include <string_view>
 
 namespace splash::engine {
 
 struct EngineMemoryBreakdown;
+
+enum class AutomaticStorageKind : uint8_t { ExpertBlock, PleBlock };
+struct AutomaticStorageBlock final {
+  AutomaticStorageKind kind = AutomaticStorageKind::ExpertBlock;
+  uint64_t grossBlocks = 0, candidate = 0, contributionBytes = 0, auxiliaryBytes = 0;
+  bool operator==(const AutomaticStorageBlock &) const = default;
+};
+struct MemoryPolicyObservation final {
+  enum class Pressure : uint8_t { Unknown, Normal, Warning, Critical };
+  Pressure pressure = Pressure::Unknown;
+  // Counts Critical/Unknown observations, including a short event that has
+  // ended before the next safe point. Repeated Warning is not an interruption.
+  uint64_t unsafeSequence = 0;
+  [[nodiscard]] static constexpr bool interruptsRecovery(Pressure pressure) noexcept {
+    return pressure == Pressure::Critical || pressure == Pressure::Unknown;
+  }
+  [[nodiscard]] static constexpr uint64_t record(uint64_t previous, Pressure observed) noexcept {
+    const uint64_t sequence = (previous >> 2) + interruptsRecovery(observed);
+    // Unknown invalidates recovery without erasing the last effective OS
+    // signal; required work must still obey a preceding Critical notification.
+    const uint64_t level = observed == Pressure::Unknown ? previous & 3 : uint64_t(observed);
+    return (sequence << 2) | level;
+  }
+};
+struct MemoryPolicySources final {
+  std::function<uint64_t()> milliseconds;
+  std::function<MemoryPolicyObservation()> pressure;
+};
 
 struct HostMemoryPages {
   // Mach's free_count, which includes the speculative pages.
@@ -111,6 +143,23 @@ struct MemoryGovernorSnapshot {
   // Allocation need not ask: admission names the host as the cause of every
   // refusal the host shares.
   bool hostGrowthAllowed = true;
+  // In-flight local RAII admissions, distinct from allocation and any future
+  // cross-process grant. The reserve is the configured untracked allowance.
+  uint64_t localReservedBytes = 0;
+  uint64_t untrackedReserveBytes = 0;
+  // Returned automatic storage stays outside elastic KV/state headroom.
+  // It is neither actual allocation nor a pending shared/local grant.
+  uint64_t automaticStorageReleasedBytes = 0, automaticStorageWithheldBytes = 0;
+  bool requestStartsPaused = false;
+  std::string_view automaticStorageReason = "off";
+  uint64_t elasticLimitBytes = 0, elasticHeadroomBytes = 0;
+  bool pressureControlEnabled = false;
+  uint64_t automaticMinimumBytes = 0, automaticMaximumBytes = 0, automaticQuotaBytes = 0;
+  std::optional<uint64_t> automaticActualBytes;
+  // The legacy status field now counts sufficient-headroom stability in
+  // either Normal or Warning, without changing the reported pressure level.
+  uint64_t pendingAutomaticBytes = 0, normalStableMilliseconds = 0, blockCooldownMilliseconds = 0;
+  std::string_view automaticGrowthReason = "off";
 };
 
 // Critical pressure evicts every unpinned entry and takes what a request
@@ -183,6 +232,10 @@ private:
 class MemoryGovernor final {
 public:
   using HostMemoryProvider = std::function<std::optional<HostMemory>()>;
+  using AllocationDriver = std::function<void(std::string_view, uint64_t, const std::function<void()> &)>;
+  void setAllocationDriver(AllocationDriver driver) { allocationDriver_ = std::move(driver); }
+  void setPressureProvider(std::function<MemoryPressure()> provider) { pressureProvider_ = std::move(provider); }
+
 
   // Metal memory outside the backend's buffers (pipelines, driver
   // allocations) is charged only beyond untrackedReserveBytes, the part of
@@ -212,7 +265,18 @@ public:
   // service needs the bytes (setServing), while macOS warns, inside the
   // warning margin or while it holds for the recovery margin for a waiting
   // request (setRequestWaiting).
-  [[nodiscard]] metal::AllocationAdmission allocationAdmission() noexcept;
+  [[nodiscard]] metal::AllocationAdmission allocationAdmission(std::string purpose = "runtime_required", bool mandatory = true);
+  [[nodiscard]] metal::AllocationAdmission automaticStorageAdmission(std::string purpose,
+                                                                    uint64_t finalStorageGrowth);
+  [[nodiscard]] metal::AllocationAdmission automaticStorageAdmission(std::string purpose, AutomaticStorageBlock block);
+  // Store mutation guard: one matching receiver may consume the active plan.
+  [[nodiscard]] bool consumeAutomaticStorageBlock(const AutomaticStorageBlock &block);
+  void enablePressureControl(MemoryPolicySources sources = {});
+  void setNonBackendHostHeld(std::function<uint64_t()> provider);
+  void publishAccounting(std::string lifecycle = {});
+  void setAutomaticStorageMinimum(uint64_t minimum) { automaticStorageMinimumBytes_ = minimum; }
+  void resetAutomaticGrowth() noexcept { normalSince_.reset(); growthReason_ = "headroom_observation"; }
+  [[nodiscard]] uint64_t actualBytes() const noexcept;
   // Marks the reservations that follow as memory a request in service needs,
   // until it is cleared, and returns the mark it replaced, which a scope
   // that sets it restores (Serving). Neither the host's margins nor macOS's
@@ -227,6 +291,37 @@ public:
   // has run short.
   void setRequestWaiting(bool waiting) noexcept;
   void setPressure(MemoryPressure pressure) noexcept;
+  [[nodiscard]] bool requestStartsPaused() const noexcept {
+    return pressureManaged_ && (systemPressure_ == MemoryPressure::Critical || automaticStorageInsufficient_ ||
+        automaticStorageMinimumBytes_ > automaticStorageMaximumBytes_);
+  }
+  void withholdReleasedAutomaticStorage(uint64_t bytes) noexcept;
+  // Owner-thread store accounting: expert Metal plus automatic PLE committed
+  // bytes, excluding fixed stores and unrelated/global allocation.
+  void setAutomaticStorageQuota(uint64_t quota, uint64_t maximum,
+                               std::function<uint64_t()> actual);
+  [[nodiscard]] uint64_t automaticStorageQuotaBytes() const noexcept { return automaticStorageQuotaBytes_; }
+  [[nodiscard]] uint64_t automaticStorageMaximumBytes() const noexcept { return automaticStorageMaximumBytes_; }
+  // Called after fixed images are back, before any released expert payload.
+  // A floor that cannot fit still goes through Required admission and the
+  // original resource wait; target selection itself is no restore progress.
+  [[nodiscard]] model::StorageRestorePlan planAutomaticStorageRestore(
+      const model::ExpertCacheRange &range, uint64_t retainedBytes,
+      uint64_t workspaceBytes, uint64_t otherAutomaticBytes);
+  // Owner-thread command-free callback. It may touch owned stores, but it
+  // performs no coordination IO and holds no store lock across admission.
+  void setAutomaticStorageControl(std::function<void(const MemoryGovernorSnapshot &)> control) {
+    automaticStorageControl_ = std::move(control);
+  }
+  void controlAutomaticStorage();
+  // Decision reasons are static literals so noexcept snapshots allocate nothing.
+  void automaticStorageDecision(bool insufficient, std::string_view reason) noexcept {
+    automaticStorageInsufficient_ = insufficient;
+    automaticStorageReason_ = reason;
+  }
+  // Command-free transfer of an admitted store between Metal and host RAM.
+  // The caller charges all host-cache growth through allocationAdmission.
+  void setHostHeldBytes(uint64_t bytes);
   // The outcome of the engine's last reclaim pass with a target. While one
   // finds nothing left to release, the hold for the recovery margin is
   // waived: growth proceeds as with no request waiting, since only other
@@ -285,7 +380,7 @@ private:
   // allocationAdmission's reservation, or nothing with the cause of the
   // refusal in failure.
   [[nodiscard]] std::optional<Reservation>
-  tryReserve(uint64_t bytes, metal::AllocationFailure &failure);
+  tryReserve(uint64_t bytes, metal::AllocationFailure &failure, bool elastic, bool automaticBlock = false);
   [[nodiscard]] uint64_t
   chargedBytes(bool refreshDevice = false) const noexcept;
   [[nodiscard]] std::optional<HostMemory> sampleHost() const noexcept;
@@ -299,6 +394,31 @@ private:
   snapshot(const std::optional<HostMemory> &hostMemory, const HostState &host) const noexcept;
   void release(uint64_t bytes) noexcept;
 
+  uint64_t localReservedBytes() const noexcept;
+  void refreshHostHeld();
+  void observeAutomaticGrowth(const std::optional<HostMemory> &host);
+  [[nodiscard]] uint64_t policyNow() const;
+  [[nodiscard]] bool automaticStorageFits(uint64_t contribution) const noexcept;
+  [[nodiscard]] std::optional<uint64_t> sampleAutomaticStorage() const noexcept;
+  [[nodiscard]] metal::AllocationAdmission makeAdmission(std::string purpose, bool mandatory,
+                                                        std::optional<uint64_t> finalStorageGrowth,
+                                                        std::optional<AutomaticStorageBlock> block = std::nullopt);
+  std::function<uint64_t()> hostHeldProvider_;
+  bool pressureManaged_ = false;
+  MemoryPolicySources memoryPolicy_;
+  std::optional<uint64_t> normalSince_;
+  uint64_t policyNow_ = 0, nextAutomaticAt_ = 0, pressureSequence_ = 0;
+  uint64_t pendingAutomaticBytes_ = 0, automaticStorageMinimumBytes_ = 0;
+  std::string_view growthReason_ = "off";
+  AllocationDriver allocationDriver_;
+  std::function<MemoryPressure()> pressureProvider_;
+  bool allocationScope_ = false;
+  uint64_t allocationPeak_ = 0;
+  bool allocationMandatory_ = true;
+  bool allocationElastic_ = false;
+  bool automaticStorageInsufficient_ = false;
+  std::string_view automaticStorageReason_ = "off";
+  std::function<void(const MemoryGovernorSnapshot &)> automaticStorageControl_;
   metal::MetalBackend &backend_;
   uint64_t limitBytes_ = 0;
   uint64_t hostReserveBytes_ = 0;
@@ -307,6 +427,12 @@ private:
   uint64_t untrackedReserveBytes_ = 0;
   uint64_t hostHeldBytes_ = 0;
   uint64_t reservedBytes_ = 0;
+  uint64_t automaticStorageReleasedBytes_ = 0, automaticStorageWithheldBytes_ = 0;
+  uint64_t automaticStorageQuotaBytes_ = 0, automaticStorageMaximumBytes_ = 0;
+  std::function<uint64_t()> automaticStorageActual_;
+  bool automaticStorageContributionActive_ = false;
+  std::optional<AutomaticStorageBlock> automaticBlock_;
+  bool automaticBlockConsumed_ = false;
   bool serving_ = false;
   bool requestWaiting_ = false;
   uint64_t deniedReservations_ = 0;

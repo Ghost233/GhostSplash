@@ -53,8 +53,7 @@ constexpr auto kStartupMemoryRecoveryPoll = std::chrono::seconds(1);
 class MemoryPressureMonitor final {
 public:
   explicit MemoryPressureMonitor(std::function<void()> notify)
-      : pending_(std::make_shared<std::atomic<engine::MemoryPressure>>(
-            engine::MemoryPressure::Normal)),
+      : pending_(std::make_shared<std::atomic<uint64_t>>(0)),
         queue_(dispatch_queue_create("com.splash.memory-pressure",
                                      DISPATCH_QUEUE_SERIAL)) {
     source_ = dispatch_source_create(
@@ -72,7 +71,12 @@ public:
         pressure = engine::MemoryPressure::Critical;
       else if (event & DISPATCH_MEMORYPRESSURE_WARN)
         pressure = engine::MemoryPressure::Warning;
-      pending->store(pressure, std::memory_order_release);
+      const uint64_t level = uint32_t(pressure) + 1;
+      auto before = pending->load(std::memory_order_acquire);
+      uint64_t after;
+      do {
+        after = engine::MemoryPolicyObservation::record(before, engine::MemoryPolicyObservation::Pressure(level));
+      } while (!pending->compare_exchange_weak(before, after, std::memory_order_acq_rel));
       notify();
     });
     dispatch_activate(source_);
@@ -100,12 +104,29 @@ public:
   [[nodiscard]] engine::MemoryPressure pressure() const noexcept {
     // Notifications select individual processes and may arrive late. Sample
     // the current system level at the same safe points as host availability.
-    return engine::querySystemMemoryPressure().value_or(
-        pending_->load(std::memory_order_acquire));
+    const auto observed = policyObservation();
+    const uint64_t level = observed.pressure == engine::MemoryPolicyObservation::Pressure::Unknown ?
+        pending_->load(std::memory_order_acquire) & 3 : uint32_t(observed.pressure);
+    return level ? engine::MemoryPressure(level - 1) : engine::MemoryPressure::Normal;
+  }
+  [[nodiscard]] engine::MemoryPolicyObservation policyObservation() const noexcept {
+    const auto pressure = engine::querySystemMemoryPressure();
+    const auto level = pressure ? engine::MemoryPolicyObservation::Pressure(uint32_t(*pressure) + 1) :
+                                 engine::MemoryPolicyObservation::Pressure::Unknown;
+    {
+      auto before = pending_->load(std::memory_order_acquire);
+      uint64_t after;
+      do {
+        after = engine::MemoryPolicyObservation::record(before, level);
+      } while (!pending_->compare_exchange_weak(before, after, std::memory_order_acq_rel));
+    }
+    const auto value = pending_->load(std::memory_order_acquire);
+    return {pressure ? engine::MemoryPolicyObservation::Pressure(value & 3) :
+                       engine::MemoryPolicyObservation::Pressure::Unknown, value >> 2};
   }
 
 private:
-  std::shared_ptr<std::atomic<engine::MemoryPressure>> pending_;
+  std::shared_ptr<std::atomic<uint64_t>> pending_;
   dispatch_queue_t queue_;
   dispatch_source_t source_;
   dispatch_source_t timer_;
@@ -166,6 +187,7 @@ void printUsage(std::string_view executable) {
       " [--compact-draft-head on|off] [--compact-draft-ranking FILE]"
       " [--compact-draft-capacity ROWS] [--fast-topk on|off] [--relaunch-context TOKENS]"
       " [--ple-memory BYTES] [--expert-memory BYTES]"
+      " [--moe-memory-pressure off|on] [--host-memory-reserve auto|BYTES]"
       " [--verify-rows auto|all]");
   writeStderrLine("       " + command + " model-check mlx-affine none|safetensors CONFIG [DRAFT_CONFIG]");
   writeStderrLine("       " + command + " model-check gguf none|gguf CONFIG GGUF_METADATA [DRAFT_CONFIG]");
@@ -223,6 +245,11 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
   config.resources.relaunchContext = arguments.relaunchContext;
   config.resources.pleMemory = arguments.pleMemory;
   config.resources.expertMemory = arguments.expertMemory;
+  config.resources.moeMemoryPressure = arguments.moeMemoryPressure;
+  config.resources.hostMemoryReserveBytes = arguments.hostMemoryReserveBytes;
+  config.resources.expertPleMemoryBytes = arguments.expertPleMemoryBytes;
+  config.resources.expertPleAdaptive = arguments.expertPleAdaptive;
+  config.resources.expertPleRatio = arguments.expertPleRatio;
   config.resources.sparseKvMemory = arguments.sparseKvMemory;
   config.resources.kvSpillAlways = arguments.kvSpillAlways;
   config.resources.verifyRows = arguments.verifyRows;
@@ -319,6 +346,7 @@ int runNative(const engine::NativeArguments &arguments) {
     if (transport.shutdownRequested())
       return static_cast<int>(engine::NativeProcessExit::CleanEof);
     engine::RuntimeBootstrapConfig config = bootstrapConfig(arguments);
+    config.resources.memoryPolicy.pressure = [&] { return pressureMonitor.policyObservation(); };
     config.resources.memoryPressure = [&] { return pressureMonitor.pressure(); };
     config.resources.cancelled = [&] { return transport.shutdownRequested(); };
     config.nativeLoop.metrics = &metrics;
@@ -336,7 +364,7 @@ int runNative(const engine::NativeArguments &arguments) {
         throw;
       if (!reportedRecoveryWait) {
         logLine("Waiting for sufficient available memory to start; "
-                "the macOS reserve remains protected...");
+                  "the macOS reserve remains protected...");
         reportedRecoveryWait = true;
       }
       const auto resumeAt = std::min(now + kStartupMemoryRecoveryPoll, *recoveryDeadline);

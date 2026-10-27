@@ -19,6 +19,11 @@ def configuration_lines(args):
         yield f"  {flag} = {_text(value)}"
     automatic = {
         "max_memory",
+        "expert_ple_memory",
+        "expert_memory",
+        "host_memory_reserve",
+        "ple_memory",
+        "sparse_kv_memory",
         "max_context",
         "ane_ffn_share",
         "ane_ffn_minimum_rows",
@@ -44,7 +49,7 @@ def configuration_lines(args):
 
 
 def effective_lines(status, readiness, args=None):
-    yield "Startup effective state · snapshot at Ready; fallback is distinct from error"
+    yield "Startup effective state · native snapshot; control mode and model readiness are separate"
     yield f"  Context = {readiness.max_context_tokens} tokens"
     yield f"  Native concurrent capacity = {readiness.max_concurrent_requests} (queue limit is separate)"
     yield f"  Vision = {'on' if readiness.vision else 'off'}"
@@ -103,11 +108,81 @@ def effective_lines(status, readiness, args=None):
         f"reason={_text(recovery.get('reason') or 'none')}"
     )
 
+    pressure = status.get("moe_memory_pressure") or {}
+    yield (
+        f"  MoE memory pressure = {_text(pressure.get('mode', 'unknown'))}; "
+        f"model_ready={pressure.get('model_ready', 'unknown')}; "
+        f"growth_allowed={pressure.get('growth_allowed', 'unknown')}; "
+        f"reason={_text(pressure.get('reason') or 'none')}"
+    )
+    if pressure.get("enabled") is True:
+        yield (
+            f"  MoE recovery = stable={pressure.get('normal_stable_milliseconds', 'unknown')} ms; "
+            f"cooldown={pressure.get('block_cooldown_milliseconds', 'unknown')} ms"
+        )
+
+    adaptive = status.get("expert_ple_adaptive") or {}
+    enabled = adaptive.get("enabled")
+    adaptive_state = (
+        adaptive.get("state", "on")
+        if enabled is True
+        else "off"
+        if enabled is False
+        else "unknown"
+    )
+    yield (
+        f"  Expert/PLE adaptive = {adaptive_state}; ratio={_text(adaptive.get('ratio', 'unknown'))}; "
+        f"PLE={adaptive.get('ple_budget_bytes', 'unknown')} bytes; "
+        f"maximum={adaptive.get('ple_maximum_bytes', 'not applied' if enabled is False else 'unknown')} bytes; "
+        f"reason={_text(adaptive.get('failure') or adaptive.get('reason') or 'none')}"
+    )
+
+    experts = status.get("expert_storage") or {}
+
+    def expert_value(key):
+        value = experts.get(key)
+        return "unknown" if value is None else value
+
+    def expert_ratio(key):
+        value = experts.get(key)
+        return "unknown" if value is None else f"{100 * value:.2f}%"
+
+    yield (
+        f"  Expert storage = {expert_value('layout')}; "
+        f"full_weights={expert_value('weight_bytes')} bytes; "
+        f"resident_layout={expert_value('resident_layout_bytes')} bytes; "
+        f"contiguous_floor={expert_value('contiguous_floor_bytes')} bytes; "
+        f"resizable_floor={expert_value('resizable_floor_bytes')} bytes; "
+        f"resizable_full={expert_value('resizable_full_bytes')} bytes"
+    )
+    yield (
+        f"  Expert allocation = budget={expert_value('budget_bytes')} bytes; "
+        f"allocated={expert_value('allocated_bytes')} bytes; "
+        f"auxiliary={expert_value('auxiliary_bytes')} bytes; "
+        f"current_floor={expert_value('current_floor_bytes')} bytes; "
+        f"minimum_required={expert_value('minimum_required_bytes')}"
+    )
+    yield (
+        f"  Expert weights = capacity={expert_value('capacity_weight_bytes')} bytes "
+        f"({expert_ratio('capacity_ratio')}); "
+        f"resident={expert_value('resident_weight_bytes')} bytes "
+        f"({expert_ratio('resident_ratio')}); hit rate is reported per use in /status"
+    )
+
     identity = status.get("identity", {})
     yield f"  KV = {_text(identity.get('kv', {}).get('format', 'unknown'))}"
     yield f"  Build = {_text(identity.get('cache', {}).get('build_id', 'unknown'))}"
     governor = status.get("memory_governor", {})
     yield f"  Metal budget = {governor.get('limit_bytes', 'unknown')} bytes"
+    actual = status.get("memory_actual", {})
+    yield f"  Metal allocated = {actual.get('allocated_bytes', 'unknown')} bytes"
+    footprint = actual.get("process_physical_footprint_bytes")
+    yield f"  Process physical footprint = {'unknown' if footprint is None else footprint} bytes"
+    yield (
+        f"  Local memory charge = {governor.get('charged_bytes', 'unknown')} bytes; "
+        f"untracked reserve={governor.get('untracked_reserve_bytes', 'unknown')} bytes; "
+        f"pending local admission={governor.get('local_reserved_bytes', 'unknown')} bytes"
+    )
     if status.get("model_kind") == "modern-bert":
         encoder = status.get("features", {}).get("encoder_option_queries")
         yield f"  Encoder option queries = {'on' if encoder is True else 'off' if encoder is False else 'unknown'}"

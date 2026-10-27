@@ -2,6 +2,7 @@
 #include "StderrLine.hpp"
 
 #include <algorithm>
+#include <mach/mach.h>
 #include <cmath>
 #include <limits>
 #include <sstream>
@@ -83,7 +84,8 @@ std::optional<StartupRetryWindow::Clock::time_point>
 StartupRetryWindow::retryUntil(const RuntimeBootstrapReport &failure,
                                Clock::time_point now) {
   if (failure.resourceFailure != RuntimeResourceFailure::HostCapacity &&
-      failure.resourceFailure != RuntimeResourceFailure::DriverAllocation)
+      failure.resourceFailure != RuntimeResourceFailure::DriverAllocation &&
+      failure.resourceFailure != RuntimeResourceFailure::GrowthDeferred)
     return std::nullopt;
   const std::pair reached{failure.stage, failure.resourceStage};
   if (!deadline_ || reached > reached_) {
@@ -143,6 +145,11 @@ std::string RuntimeBootstrap::statusJson(const RuntimeMetricsSnapshot &metrics,
   features.ffnCacheBytes = context.model.targetFfnCacheAllocatedBytes();
   features.experimentalQuantizedFfn = context.model.ffnOptions.mode == model::FfnWeightMode::Quantized;
   features.optional = model_->optionalFeatureReport();
+  features.expertStorage = resources_->expertStorageSnapshot();
+  task_vm_info_data_t process{};
+  mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
+  if (task_info(mach_task_self(), TASK_VM_INFO, reinterpret_cast<task_info_t>(&process), &count) == KERN_SUCCESS)
+    features.processPhysicalFootprintBytes = process.phys_footprint;
   return runtimeStatusJson(
       resources_->memoryPlan(), nativeLoop_->statusSnapshot(), backend.memoryStats(),
       report_.warmup, report_.memoryAudit, metrics, model_->telemetry(),
@@ -150,7 +157,7 @@ std::string RuntimeBootstrap::statusJson(const RuntimeMetricsSnapshot &metrics,
       healthy, healthy ? std::string{} : backend.unhealthyReason(),
       nativeLoop_->resourceWaitSnapshot(), loop, nativeLoop_->weightsSnapshot(),
       resources_->aneFfnSnapshot(), thermalState_.state(), resources_->streamedTableStats(),
-      resources_->streamedExpertStats(), resources_->kvSpillStatus(), features);
+      resources_->streamedExpertStats(), resources_->kvSpillStatus(), features, resources_->expertPleStatusJson());
 }
 
 void RuntimeBootstrap::sampleThermalState() {
@@ -340,8 +347,9 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
     // runtime allocates keeps its own message, which says what to do.
     std::string refusal;
     const metal::AllocationResult arenas =
-        resources->memoryGovernor().allocationAdmission()(
-            budget.sharedPrefillBytes + budget.sharedDecodeBytes, [&] {
+        resources->startupAllocationAdmission("startup_arenas")(
+            config.resources.moeMemoryPressure ? resources->runtimeCreationBytes()
+                                               : budget.sharedPrefillBytes + budget.sharedDecodeBytes, [&] {
               try {
                 modelRuntime = model::createRuntime(resources->modelContext());
               } catch (const metal::MetalAllocationError &error) {
@@ -352,7 +360,7 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
     if (!arenas) {
       throw metal::MetalAllocationError(
           refusal.empty() ? std::string("unable to admit model arenas: ") +
-                                metal::allocationFailureName(arenas.failure)
+                                (arenas.detail.empty() ? metal::allocationFailureName(arenas.failure) : arenas.detail)
                           : refusal,
           arenas.failure);
     }
@@ -372,7 +380,11 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
     connectToGovernor(config.nativeLoop.engine, resources->memoryGovernor());
     config.nativeLoop.engine.spill = resources->spillConfig();
     config.nativeLoop.weights = &resources->releasableMemory();
-    config.nativeLoop.weightAdmission = resources->memoryGovernor().allocationAdmission();
+    config.nativeLoop.weightAdmission = resources->memoryGovernor().allocationAdmission("restore_weights");
+    config.nativeLoop.cancelPendingMemory = [owner = resources.get()] { owner->cancelPendingGrowth(); };
+    config.nativeLoop.memoryAccountingChanged = [owner = resources.get()] {
+      owner->publishMemoryAccounting(owner->releasableMemory().released() ? "released" : "ready");
+    };
     config.nativeLoop.engineFailed = [owner = resources.get()] { owner->engineFailed(); };
     // The parser and engine consume the same resolved ceiling. In automatic
     // mode it cannot be known until resource planning has measured the device.
@@ -392,7 +404,8 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
 
   RuntimeResources *resourcesPointer = resources.get();
   model::RuntimeModel *modelPointer = modelRuntime.get();
-  RuntimeBootstrapReport report = requireWarmupAndAnnounce(
+  RuntimeBootstrapReport report;
+  const auto warmup = [&] { report = requireWarmupAndAnnounce(
       resources->memoryPlan(), *modelRuntime,
       [resourcesPointer, modelPointer] {
         resourcesPointer->backend().checkOperation();
@@ -407,12 +420,23 @@ std::unique_ptr<RuntimeBootstrap> RuntimeBootstrap::start(
         static_cast<void>(resourcesPointer->cache().releaseEmptyExtents(true));
         return report;
       },
-      *nativeLoop);
+      *nativeLoop); };
+  if (config.resources.moeMemoryPressure) {
+    const auto &budget = resources->memoryPlan().breakdown();
+    const uint64_t actual = resources->memoryGovernor().actualBytes();
+    const uint64_t additional = budget.minimumRequiredBytes > actual ? budget.minimumRequiredBytes - actual : 1;
+    const auto admitted = resources->startupAllocationAdmission("startup_warmup")(additional, warmup);
+    if (!admitted) {
+      base.resourceFailure = resourceAllocationFailure(admitted.failure);
+      fail(std::move(base), RuntimeBootstrapStage::MaximumPrefill, admitted.detail.empty() ? metal::allocationFailureName(admitted.failure) : admitted.detail);
+    }
+  } else warmup();
 
   // The per-operation guard RuntimeResources installed is only for startup:
   // once Ready, the engine meets memory pressure between its ticks.
   resources->backend().setOperationGuard({});
   resources->beginServing();
+  resources->publishMemoryAccounting("ready");
   return std::unique_ptr<RuntimeBootstrap>(
       new RuntimeBootstrap(std::move(resources), std::move(modelRuntime),
                            std::move(nativeLoop), std::move(report)));

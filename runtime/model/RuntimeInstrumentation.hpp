@@ -2,9 +2,12 @@
 
 #include "metal/abi/KvExtent.h"
 #include "model/Runtime.hpp"
+#include "model/ExpertStore.hpp"
 
 #include <cstddef>
+#include <array>
 #include <cstdint>
+#include <functional>
 #include <span>
 #include <vector>
 
@@ -15,6 +18,34 @@ namespace splash::model {
 // these; production binaries never link it.
 class RuntimeInstrumentation final {
 public:
+  // Runs on the owner after a submitted command commits, before Engine can
+  // end its requests or a next command reuses the arenas. The items' page
+  // lists are owned copies; every other span expires with this callback.
+  using CommitObserver = std::function<void(const Runtime &, WorkKind,
+      std::span<const ModelBatchItem>, std::span<const ModelStepResult>)>;
+  static void setCommitObserver(Runtime &runtime, CommitObserver observer);
+  [[nodiscard]] static uint32_t stateLane(const Runtime &runtime, uint64_t requestId);
+  struct ExpertDispatch final {
+    uint32_t block, rows;
+    ops::MoePhase phase;
+    std::span<const uint16_t> input;
+    std::span<const uint32_t> selected;
+    std::span<const float> weights;
+  };
+  using ExpertObserver = std::function<void(const ExpertStore &, const ExpertDispatch &)>;
+  // After the actual routing and final repack, before this dispatch consumes
+  // the mapped experts. No callback exists in a production store object.
+  static void setExpertObserver(ExpertStore &store, ExpertObserver observer);
+  struct ExpertProjection final {
+    gguf::Repack source;
+    uint64_t firstRow = 0, rows = 0;
+    std::array<metal::MetalBuffer, 3> planes;
+  };
+  // Resolves an addressed entry against its owning MetalBuffer, checks the
+  // GPU table's address, and returns CPU-visible views of the actual planes.
+  // GPU addresses are compared as integers, never cast to host pointers.
+  [[nodiscard]] static std::array<ExpertProjection, 3>
+  expertProjections(const ExpertStore &store, uint32_t block, uint32_t expert);
   // The PLE rows the last decode step gathered for batch lane `lane`'s
   // verify rows, each row's heads' in order (Qwen3.8-Flash-Next), until the
   // next decode step; none for a target without them.

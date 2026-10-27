@@ -825,6 +825,11 @@ def main_args(**overrides):
             "binary": "splash",
             "ple_memory": None,
             "expert_memory": None,
+            "moe_memory_pressure": "off",
+            "host_memory_reserve": None,
+            "expert_ple_memory": None,
+            "expert_ple_policy": "static",
+            "expert_ple_ratio": "1:20",
             "sparse_kv_memory": None,
             "kv_format": "int8",
             "state_format": "fp32",
@@ -912,7 +917,8 @@ class Harness:
         **frontend_options,
     ):
         self.tokenizer = tokenizer or FakeTokenizer()
-        runtime.pending_limit = queue_size
+        if getattr(runtime, "pending_limit", None) != queue_size:
+            runtime.pending_limit = queue_size
         self.backend = backend_api.NativeBackend(
             runtime,
             self.tokenizer,

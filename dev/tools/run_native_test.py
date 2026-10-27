@@ -114,13 +114,14 @@ def input_files(command, extra, root):
     return sorted({p.resolve() for p in paths if p.is_file()})
 
 
-def fingerprint(command, files, machine):
+def fingerprint(command, files, machine, *, timeout=None):
     inputs = {str(path): digest(path) for path in files}
     identity = {
         "command": command,
         "cwd": str(Path.cwd()),
         "inputs": inputs,
         "machine": machine,
+        "timeout_seconds": timeout,
         "validation": {
             k: v
             for k, v in os.environ.items()
@@ -132,11 +133,15 @@ def fingerprint(command, files, machine):
     return key, identity
 
 
-def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
+def run(
+    command, *, directory, extra=(), reuse=False, heartbeat=15, timeout=None, root=ROOT
+):
+    if timeout is not None and (not math.isfinite(timeout) or timeout <= 0):
+        raise ValueError("timeout must be a finite positive number of seconds")
     directory.mkdir(parents=True, exist_ok=True)
     machine = machine_identity()
     files = input_files(command, extra, root)
-    key, identity = fingerprint(command, files, machine)
+    key, identity = fingerprint(command, files, machine, timeout=timeout)
     cached = directory / (key + ".passed.json")
     if reuse and machine["complete"] and cached.is_file():
         try:
@@ -167,6 +172,7 @@ def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
         "fingerprint": key,
         "start_utc": datetime.now(UTC).isoformat(),
         "exit_code": None,
+        "timeout_seconds": timeout,
         "log": str(log_path.resolve()),
         "result_file": str(result_path.resolve()),
         "inputs_unchanged": False,
@@ -187,6 +193,7 @@ def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
         record["source_commit"] = None
     print(f"START {shlex.join(command)} log={log_path}", flush=True)
     started = time.monotonic()
+    deadline = None if timeout is None else started + timeout
     last_output = started
     next_heartbeat = started + heartbeat
     process = None
@@ -204,9 +211,13 @@ def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
             slave = None
             selector.register(master, selectors.EVENT_READ)
             while selector.get_map() or process.poll() is None:
-                for event, _ in selector.select(
-                    timeout=min(0.2, max(0, next_heartbeat - time.monotonic()))
-                ):
+                now = time.monotonic()
+                wait = min(0.2, max(0, next_heartbeat - now))
+                if deadline is not None:
+                    if now >= deadline:
+                        raise subprocess.TimeoutExpired(command, timeout)
+                    wait = min(wait, deadline - now)
+                for event, _ in selector.select(timeout=wait):
                     try:
                         data = os.read(event.fd, 65536)
                     except OSError as error:
@@ -232,13 +243,27 @@ def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
             record["exit_code"] = process.wait()
     except BaseException as error:
         record["tool_error"] = repr(error)
-        if process is not None and process.poll() is None:
-            os.killpg(process.pid, signal.SIGTERM)
+        if process is not None:
             try:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                cleanup_until = time.monotonic() + 5
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    pass
+                # The parent's exit and PTY EOF do not prove its descendants
+                # are gone: a descendant may have redirected its output.
+                time.sleep(max(0, cleanup_until - time.monotonic()))
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
                 process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGKILL)
-                process.wait()
+            except (OSError, subprocess.TimeoutExpired) as cleanup_error:
+                record["cleanup_error"] = repr(cleanup_error)
         record["exit_code"] = process.returncode if process else None
     finally:
         os.close(master)
@@ -247,7 +272,9 @@ def run(command, *, directory, extra=(), reuse=False, heartbeat=15, root=ROOT):
     record["elapsed_seconds"] = time.monotonic() - started
     record["end_utc"] = datetime.now(UTC).isoformat()
     try:
-        record["inputs_unchanged"] = fingerprint(command, files, machine)[0] == key
+        record["inputs_unchanged"] = (
+            fingerprint(command, files, machine, timeout=timeout)[0] == key
+        )
     except OSError as error:
         record["input_error"] = str(error)
     record["log_sha256"] = digest(log_path)
@@ -281,17 +308,27 @@ def main():
         help="reuse only a matching, complete successful result",
     )
     parser.add_argument("--heartbeat", type=float, default=15)
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        help="stop the owned command group after this many wall-clock seconds",
+    )
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command or not math.isfinite(args.heartbeat) or args.heartbeat <= 0:
         parser.error("a command and a positive heartbeat interval are required")
+    if args.timeout is not None and (
+        not math.isfinite(args.timeout) or args.timeout <= 0
+    ):
+        parser.error("--timeout requires a finite positive number of seconds")
     result = run(
         command,
         directory=args.directory,
         extra=args.input,
         reuse=args.reuse,
         heartbeat=args.heartbeat,
+        timeout=args.timeout,
     )
     code = result["exit_code"]
     return (

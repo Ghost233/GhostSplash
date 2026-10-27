@@ -22,7 +22,7 @@ SANITIZER_CONFIG_DIGEST := $(shell printf '%s\0' $(CONFIG_DIGEST) \
 	$(call shell-quote,$(ENGINE_SANITIZER_CXXFLAGS)) \
 	| shasum -a 256 | cut -c1-16)
 # Control-plane tests compile the runtime sources they check: their sanitizer
-# builds cannot use the unsanitized engine library, and none links a framework.
+# builds cannot use the unsanitized engine library.
 CACHE_SOURCES := \
 	runtime/engine/KvPool.cpp \
 	runtime/engine/KvCache.cpp \
@@ -175,6 +175,7 @@ TEST_QWEN4B_CANDIDATES := $(ENGINE_TEST_BUILD)/qwen4b-operator-candidates
 TEST_DRAFTER_FC_BENCHMARK := $(ENGINE_TEST_BUILD)/drafter-fc-precision-benchmark
 TEST_GGUF_MOE_BENCHMARK := $(ENGINE_TEST_BUILD)/gguf-moe-benchmark
 TEST_MODEL_RUNTIME_ORACLE := $(ENGINE_TEST_BUILD)/model-runtime-oracle
+TEST_INSTRUMENTED_EXPERT_OBJECT := $(ENGINE_TEST_BUILD)/ExpertStoreInstrumented.o
 WEIGHT_DIGESTS := $(ENGINE_TEST_BUILD)/weight-digests
 TEST_VISION_ENCODER_TEST := $(ENGINE_TEST_BUILD)/vision-encoder
 TEST_Q8_AIR := $(ENGINE_TEST_BUILD)/q8-paged-kv.air
@@ -238,7 +239,7 @@ TEST_CPU_TARGETS := $(TEST_OPTIONAL_FEATURES) $(TEST_FFN_POLICY) $(TEST_DRAFT_BL
 	$(TEST_NATIVE_LOOP_TEST) \
 	$(TEST_FD_TRANSPORT_TEST) \
 	$(TEST_BOOTSTRAP_TEST) \
-	$(TEST_NATIVE_ARGUMENTS_TEST) \
+	$(TEST_NATIVE_ARGUMENTS_TEST) $(TEST_RESOURCES_TEST) \
 	$(TEST_METRICS_TEST) \
 	$(TEST_MEMORY_AUDIT_TEST) \
 	$(TEST_MEMORY_GOVERNOR_TEST) \
@@ -285,7 +286,7 @@ TEST_METAL_TARGETS += $(TEST_GGUF_IQ1S_REPLAY) $(TEST_MODERN_BERT) $(TEST_D3)
 
 # Keep every output that uses a flag set together, including standalone
 # benchmarks, real-model tests and intermediate test AIRs/metallibs.
-TEST_CONFIG_TARGETS := $(TEST_OBSERVED_METAL_OBJECT) $(TEST_PIPELINE_PROBE) $(TEST_QWEN4B_FFN_CHECK) $(TEST_QWEN4B_MATRIX_NATIVE) $(MATRIX_ATTENTION_OBJECT) $(filter-out $(LIB) $(HOST_STEP_LIB),$(sort $(TEST_CPU_TARGETS) $(TEST_METAL_TARGETS))) \
+TEST_CONFIG_TARGETS := $(TEST_OBSERVED_METAL_OBJECT) $(TEST_INSTRUMENTED_EXPERT_OBJECT) $(TEST_PIPELINE_PROBE) $(TEST_QWEN4B_FFN_CHECK) $(TEST_QWEN4B_MATRIX_NATIVE) $(MATRIX_ATTENTION_OBJECT) $(filter-out $(LIB) $(HOST_STEP_LIB),$(sort $(TEST_CPU_TARGETS) $(TEST_METAL_TARGETS))) \
 	$(TEST_MODEL_RUNTIME_ORACLE) $(TEST_VISION_ENCODER_TEST) \
 	$(TEST_DECODE_PROFILE) $(TEST_TEACHER_LOGITS) $(TEST_ATTENTION_SWEEP) \
 	$(TEST_GGUF_PROJECTION_BENCHMARK) $(TEST_GGUF_MOE_BENCHMARK) $(TEST_QWEN4B_CANDIDATES) $(TEST_DRAFTER_FC_BENCHMARK) \
@@ -359,7 +360,9 @@ $(TEST_NATIVE_LOOP_TEST): $(NATIVE_RUNTIME_SOURCES) \
 $(TEST_METRICS_TEST): dev/tests/engine/runtime_metrics_test.cpp
 $(TEST_MEMORY_GOVERNOR_TEST): runtime/metal/DeviceCapabilities.cpp \
 		runtime/engine/MemoryPlan.cpp runtime/engine/MemoryGovernor.cpp \
+		runtime/model/SparseRowStore.cpp runtime/model/SsdReaders.cpp runtime/model/WeightSource.cpp \
 		dev/tests/engine/memory_governor_test.cpp
+$(TEST_NATIVE_LOOP_TEST) $(TEST_MEMORY_GOVERNOR_TEST) $(TEST_ENGINE_TEST): ENGINE_TEST_CXXFLAGS += -fobjc-arc -framework Foundation
 $(TEST_Q8_CPU_TEST): dev/tests/engine/q8_paged_kv_test.cc
 $(TEST_LEGACY_WEIGHT_CACHE): dev/tests/engine/legacy_weight_cache_test.cpp
 
@@ -447,7 +450,7 @@ $(TEST_GGUF_PLANNER): dev/tests/engine/gguf_planner_test.mm $(ENGINE_LIBRARY)
 $(TEST_GGUF_PREPARATION): dev/tests/engine/gguf_preparation_test.mm $(ENGINE_LIBRARY)
 $(TEST_BOOTSTRAP_TEST): dev/tests/engine/runtime_bootstrap_test.mm \
 		dev/tests/engine/ProtocolPeer.cpp $(ENGINE_LIBRARY)
-$(TEST_RESOURCES_TEST): dev/tests/engine/runtime_resources_test.mm \
+$(TEST_RESOURCES_TEST): dev/tests/engine/runtime_resources_test.mm dev/tests/engine/ProtocolPeer.cpp \
 		$(ENGINE_LIBRARY) $(LIB)
 $(TEST_KV_PAGE_TIER_TEST): dev/tests/engine/kv_page_tier_test.mm \
 		$(ENGINE_LIBRARY)
@@ -500,10 +503,12 @@ $(TEST_METAL_BACKEND_TEST): dev/tests/engine/metal_backend_test.mm \
 $(TEST_HANDOFF_TEST): dev/tests/engine/handoff_test.mm $(ENGINE_LIBRARY)
 $(TEST_VISION_ENCODER_TEST): dev/tests/engine/vision_encoder_test.mm \
 		$(ENGINE_LIBRARY)
-$(TEST_MODEL_RUNTIME_ORACLE): dev/tests/engine/model_runtime_oracle_test.mm \
+$(TEST_MODEL_RUNTIME_ORACLE): dev/tests/engine/model_runtime_oracle_test.mm dev/tests/engine/ProtocolPeer.cpp \
 		dev/tools/LoadOptions.hpp \
 		$(ENGINE_INSTRUMENTED_METAL_OBJECT) $(ENGINE_INSTRUMENTED_ANE_OBJECT) \
-		$(ENGINE_INSTRUMENTED_RUNTIME_OBJECT) $(ENGINE_LIBRARY) $(LIB) $(BUILD_ID_HEADER)
+		$(ENGINE_INSTRUMENTED_RUNTIME_OBJECT) $(TEST_INSTRUMENTED_EXPERT_OBJECT) $(ENGINE_LIBRARY) $(LIB) $(BUILD_ID_HEADER)
+$(TEST_INSTRUMENTED_EXPERT_OBJECT): runtime/model/ExpertStore.cpp $(ENGINE_TEST_HEADERS) | $(ENGINE_TEST_BUILD)
+	$(RUN_CONFIGURED) $(CXX) $(ENGINE_TEST_CXXFLAGS) -DSPLASH_RUNTIME_INSTRUMENTATION=1 -c $< -o $@
 # The oracle remembers the split's calibration under the build, as the engine does.
 $(TEST_MODEL_RUNTIME_ORACLE): ENGINE_TEST_CXXFLAGS += -include $(BUILD_ID_HEADER)
 $(TEST_DECODE_PROFILE): dev/benchmarks/decode_profile.mm \
@@ -655,6 +660,7 @@ test-engine-cpu: $(TEST_CPU_TARGETS) $(TEST_ATTENTION_SWEEP) $(TEST_BACKEND_BENC
 	$(TEST_FD_TRANSPORT_TEST)
 	$(TEST_BOOTSTRAP_TEST)
 	$(TEST_NATIVE_ARGUMENTS_TEST) dev/tests/engine/native_command_golden.txt $(MODEL_CONFIGS)
+	$(TEST_RESOURCES_TEST) unused --expert-metadata
 	$(TEST_METRICS_TEST)
 	$(TEST_MEMORY_AUDIT_TEST)
 	$(TEST_MEMORY_GOVERNOR_TEST)
@@ -667,7 +673,7 @@ test-gguf-iq1s-replay: $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_IQ1S_REPLAY) $(TEST_PRODUCTION_LIB) $(IQ1S_RNG_FIXTURE) 128
 
 test-engine-metal: test-gguf-iq1s-replay
-test-engine-metal: $(TEST_METAL_TARGETS)
+test-engine-metal: $(TEST_METAL_TARGETS) $(TEST_PIPELINE_PROBE)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_D3) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_MODERN_BERT) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_COMPACT_PROJECTION) $(TEST_PRODUCTION_LIB)
@@ -689,9 +695,14 @@ test-engine-metal: $(TEST_METAL_TARGETS)
 	$(NATIVE_TEST_RUNNER) $(TEST_ANE_FFN) $(LIB) faults
 	$(NATIVE_TEST_RUNNER) $(TEST_ANE_FFN) $(LIB) program
 	$(NATIVE_TEST_RUNNER) $(TEST_ANE_PROGRAM_FAULTS) $(LIB)
+	# Cover the serving shader compilation path as well as the numerical probes.
+	MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=0 $(NATIVE_TEST_RUNNER) $(TEST_PIPELINE_PROBE) $(LIB) \
+		moe_expert_gguf_m32_gate_up moe_expert_gguf_m32_gate_up_mixed
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_MOE) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_MOE_E512) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_EXPERT_STORE) $(LIB)
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_EXPERT_STORE) $(LIB) --pressure-shrink
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_EXPERT_STORE) $(LIB) --released-target
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_KV_BLOCK_CACHE) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_KV_HISTORY_STREAM) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_QWEN4_KERNELS) $(LIB)
@@ -699,6 +710,21 @@ test-engine-metal: $(TEST_METAL_TARGETS)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_ATTENTION_PLAN) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_LINEAR_PLAN) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB)
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-critical
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-shrink
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-release
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-current-restore
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-current-restore-ple
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-writer
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-status
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-static
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-warning
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-manual
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-resident
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-off
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_RESOURCES_TEST) $(LIB) --local-ple-pressure-partial
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_KV_PAGE_TIER_TEST) $(TEST_METAL_BACKEND_LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_MODEL_LOADING_TEST) $(TEST_METAL_BACKEND_LIB) $(LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_QWEN_STATE_TEST) $(TEST_Q8_LIB)
@@ -844,6 +870,7 @@ $(TEST_STATUS_TEST) $(TEST_STATUS_ASAN): runtime/metal/DeviceCapabilities.cpp \
 
 $(filter %-asan-ubsan,$(SANITIZER_CONFIG_TARGETS)): SANITIZERS := address,undefined
 $(filter %-tsan,$(SANITIZER_CONFIG_TARGETS)): SANITIZERS := thread
+$(TEST_ENGINE_ASAN) $(TEST_ENGINE_TSAN): ENGINE_SANITIZER_CXXFLAGS += -fobjc-arc -framework Foundation
 $(SANITIZER_CONFIG_TARGETS): | $(ENGINE_SANITIZER_BUILD)
 	$(RUN_CONFIGURED) $(CXX) $(ENGINE_SANITIZER_CXXFLAGS) -fsanitize=$(SANITIZERS) \
 		$(TEST_INPUTS) -o $@
@@ -889,6 +916,8 @@ test-sanitizers: $(SANITIZER_CONFIG_TARGETS)
 	$(ASAN_TEST_ENV) $(TEST_MEMORY_PLAN_ASAN)
 	$(ASAN_TEST_ENV) $(TEST_MEMORY_AUDIT_ASAN)
 	$(ASAN_TEST_ENV) $(TEST_STATUS_ASAN) dev/tests/engine/status_golden.json
+
+
 
 # The Metal tests of the components whose host steps share their state with
 # the engine thread and the SSD readers, the hot block cache and the history

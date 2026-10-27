@@ -1,6 +1,8 @@
 #include "model/ModelSizing.hpp"
 
 #include "model/DraftCheckpoint.hpp"
+#include "model/GgufPreparation.hpp"
+#include "model/SsdReaders.hpp"
 #include "model/ExpertStore.hpp"
 #include "model/GgufTarget.hpp"
 #include "model/ModelFactory.hpp"
@@ -28,7 +30,8 @@ uint64_t loadedBytes(std::span<const gguf::Image> images) {
 // lets stream does, and what each such part adds where it loads instead,
 // the routed experts' slot table with them.
 template <class Layout, class Plan>
-StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::PlanOptions streams) {
+StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::PlanOptions streams, bool resizableExperts,
+                               bool boundedHostMemory) {
   streams.streamExperts = streams.streamExperts && layout.ffnKind == QwenFfnKind::SparseMoe;
   StreamableWeights result;
   std::vector<gguf::Image> streamed;
@@ -44,11 +47,18 @@ StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::Pl
     streamed = plan(streams);
   }
   result.loadedBytes = loadedBytes(streamed);
+  if (boundedHostMemory)
+    for (const auto &image : streamed) {
+      result.loadingTemporaryBytes = std::max(result.loadingTemporaryBytes, imageWriteTemporaryBytes(image));
+      result.expertReaderTemporaryBytes = std::max(result.expertReaderTemporaryBytes,
+                                                  expertReadTemporaryBytes(image, kSsdReaders + 1));
+    }
   for (const gguf::Image &image : streamed)
     if (image.streamedRows) {
       result.tableBytes = loadedBytes(plan({.streamExperts = streams.streamExperts})) - result.loadedBytes;
       const SparseRowStoreOptions rows = streamedTableRows(layout);
       result.tableRowBytes = image.streamedRows->rowBytes;
+      result.tableRows = image.streamedRows->rows;
       result.tableFloorBytes = SparseRowStore::workingBytes(image.streamedRows->rowBytes, rows.prefetchRows,
                                                             rows.stageRows) +
                                SparseRowStore::cacheBytesFor(1, image.streamedRows->rowBytes);
@@ -59,7 +69,23 @@ StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::Pl
     StreamedBlocks blocks;
     blocks.blocks = gguf::streamedExperts(std::span(streamed).first(layout.layers));
     result.expertFloorBytes = ExpertStore::minimumBytes(
-        blocks, {layout.hiddenSize, layout.experts, layout.expertsPerToken, layout.expertIntermediateSize});
+        blocks, {layout.hiddenSize, layout.experts, layout.expertsPerToken, layout.expertIntermediateSize}, resizableExperts);
+  }
+  if (layout.ffnKind == QwenFfnKind::SparseMoe) {
+    const auto diagnostic = streams.streamExperts ? streamed :
+        plan({.streamExperts = true, .streamTable = streams.streamTable});
+    StreamedBlocks blocks;
+    blocks.blocks = gguf::streamedExperts(std::span(diagnostic).first(layout.layers));
+    const ops::MoeShape shape{layout.hiddenSize, layout.experts, layout.expertsPerToken,
+                              layout.expertIntermediateSize};
+    ExpertStorageSnapshot info;
+    info.contiguous = ExpertStore::storageRange(blocks, shape);
+    info.resizable = ExpertStore::storageRange(blocks, shape, true);
+    info.weightBytes = info.contiguous.weightBytes;
+    info.residentSlotTableBytes = residentExpertSlotsBytes(layout.experts);
+    info.residentLayoutBytes = loadedBytes(plan({.streamTable = streams.streamTable})) - loadedBytes(diagnostic) +
+                               residentExpertSlotsBytes(layout.experts);
+    result.expertStorage = std::move(info);
   }
   return result;
 }
@@ -67,7 +93,8 @@ StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::Pl
 } // namespace
 
 StreamableWeights streamableWeights(const std::filesystem::path &root, const ModelDescriptor &descriptor,
-                                    gguf::PlanOptions streams, FfnLoadOptions ffn) {
+                                    gguf::PlanOptions streams, FfnLoadOptions ffn, bool resizableExperts,
+                                    bool boundedHostMemory) {
   requireFfnLoadOptions(ffn);
   StreamableWeights result = std::visit(
       [&](const auto &layout) {
@@ -77,7 +104,7 @@ StreamableWeights streamableWeights(const std::filesystem::path &root, const Mod
           const auto plan = [&](gguf::PlanOptions options) {
             return gguf::planImages(target.file(), layout.ggufArchitecture, layout, options);
           };
-          StreamableWeights weights = targetWeights(layout, plan, streams);
+          StreamableWeights weights = targetWeights(layout, plan, streams, resizableExperts, boundedHostMemory);
           using Layout = std::remove_cvref_t<decltype(layout)>;
           if constexpr (std::is_same_v<Layout, Qwen3_5_4BLayout> ||
                         std::is_same_v<Layout, Qwen3_5_4BDFlashLayout> ||
@@ -104,14 +131,27 @@ StreamableWeights streamableWeights(const std::filesystem::path &root, const Mod
           const SafetensorsCheckpoint checkpoint(directory);
           return targetWeights(
               layout, [&](gguf::PlanOptions options) { return safetensors::planImages(checkpoint, layout, options); },
-              streams);
+              streams, resizableExperts, boundedHostMemory);
         } else {
           throw std::invalid_argument(std::string(layout.family) + " loads from a GGUF only");
         }
       },
       descriptor.target);
-  if (descriptor.hasDraft()) result.loadedBytes += draftImageBytes(root / "draft", descriptor.draft);
-  if (descriptor.hasVision()) result.loadedBytes += visionImageBytes(descriptor.vision);
+  if (descriptor.hasDraft()) {
+    result.loadedBytes += draftImageBytes(root / "draft", descriptor.draft);
+    if (boundedHostMemory) {
+      const SafetensorsCheckpoint checkpoint(root / "draft");
+      for (const auto &image : planDraftImages(checkpoint, descriptor.draft))
+        result.loadingTemporaryBytes = std::max(result.loadingTemporaryBytes, imageWriteTemporaryBytes(image));
+    }
+  }
+  if (descriptor.hasVision()) {
+    result.loadedBytes += visionImageBytes(descriptor.vision);
+    if (boundedHostMemory) {
+      const auto loader = planVisionLoader(root, descriptor);
+      result.loadingTemporaryBytes = std::max(result.loadingTemporaryBytes, loader->image().temporaryBytes);
+    }
+  }
   return result;
 }
 

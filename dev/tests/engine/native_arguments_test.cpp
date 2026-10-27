@@ -139,6 +139,25 @@ void testTargetOnlyModelDirectory() {
   }, "only supports Qwen3.5-4B generation", "experimental FFN accepted a Kev decision model");
 }
 
+void testMoePressureArguments() {
+  ModelDirectory model;
+  const auto defaults = parse(model, {"auto", "auto"});
+  require(!defaults.moeMemoryPressure && !defaults.hostMemoryReserveBytes,
+          "MoE pressure control did not default off");
+  rejects([&] { static_cast<void>(parse(model, {"auto", "auto", "--host-memory-reserve", "1024"})); },
+          "requires --moe-memory-pressure on", "manual reserve enabled without pressure control");
+  rejects([&] { static_cast<void>(parse(model, {"auto", "auto", "--moe-memory-pressure", "on", "--expert-memory", "1024"})); },
+          "requires --expert-memory auto", "fixed experts accepted pressure control");
+  rejects([&] { static_cast<void>(parse(model, {"auto", "auto", "--moe-memory-pressure", "on"})); },
+          "requires a resizable MoE model", "dense model accepted pressure control");
+  const auto configs = modelConfigs / "qwen3.6-35b-a3b";
+  for (const auto &file : {std::filesystem::path("config.json"), std::filesystem::path("draft/config.json")})
+    std::filesystem::copy_file(configs / file, model.path() / file, std::filesystem::copy_options::overwrite_existing);
+  const auto enabled = parse(model, {"auto", "auto", "--moe-memory-pressure", "on", "--host-memory-reserve", "3221225472"});
+  require(enabled.moeMemoryPressure && enabled.hostMemoryReserveBytes == 3 * engine::kGiB && !enabled.expertPleAdaptive,
+          "MoE without PLE did not accept pressure control and a manual reserve");
+}
+
 void testServerCommandLines(const char *path) {
   const ModelDirectory model;
   constexpr uint64_t kGiB = uint64_t{1} << 30;
@@ -243,6 +262,15 @@ void testServerCommandLines(const char *path) {
       {"expert_memory_off", [](NativeArguments &read) { read.expertMemory = {StreamedSetting::Mode::Off, 0}; }},
       // Auto is the engine's default, which the server leaves out.
       {"expert_memory_auto", [](NativeArguments &) {}},
+      {"expert_ple_memory", [](NativeArguments &read) { read.expertPleMemoryBytes = 20 * kGiB; }},
+      {"expert_ple_memory_auto", [](NativeArguments &) {}},
+      {"expert_ple_adaptive", [](NativeArguments &read) { read.expertPleMemoryBytes = 20 * kGiB; read.expertPleAdaptive = true; }},
+      {"expert_ple_ratio", [](NativeArguments &read) { read.expertPleMemoryBytes = 20 * kGiB; read.expertPleAdaptive = true; read.expertPleRatio = 10; }},
+      {"expert_ple_memory_parts", [](NativeArguments &read) {
+         read.expertPleMemoryBytes = 20 * kGiB;
+         read.expertMemory = {StreamedSetting::Mode::Size, 15 * kGiB};
+         read.pleMemory = {StreamedSetting::Mode::Size, kGiB};
+       }},
       {"sparse_kv_memory", [](NativeArguments &read) { read.sparseKvMemory = 1200 * (kGiB >> 10); }},
   };
   // Every field but the model inspected from the directory, whose RoPE
@@ -278,6 +306,8 @@ void testServerCommandLines(const char *path) {
            read.optionalFeatures.compactCapacity == meant.optionalFeatures.compactCapacity &&
            read.optionalFeatures.compactRanking == meant.optionalFeatures.compactRanking &&
            read.pleMemory == meant.pleMemory && read.expertMemory == meant.expertMemory &&
+           read.expertPleMemoryBytes == meant.expertPleMemoryBytes &&
+           read.expertPleAdaptive == meant.expertPleAdaptive && read.expertPleRatio == meant.expertPleRatio &&
            read.sparseKvMemory == meant.sparseKvMemory && read.kvSpillAlways == meant.kvSpillAlways &&
            read.verifyRows == meant.verifyRows;
   };
@@ -324,6 +354,9 @@ void testStreamedMemoryAndSpill() {
               !automatic.sparseKvMemory && !automatic.kvSpillAlways,
           "auto did not leave the stores to the planner");
   require(parse(model, {"auto", "auto", "--kv-spill", "always"}).kvSpillAlways, "--kv-spill always was not read");
+  require(parse(model, {"auto", "auto", "--expert-ple-memory", "4096", "--expert-ple-memory", "auto"})
+                  .expertPleMemoryBytes == 0,
+          "an explicit auto did not reset a previous shared-pool cap");
 }
 
 // A command line the server never writes is refused with what is wrong.
@@ -334,6 +367,9 @@ void testRefusals() {
     rejects([&] { static_cast<void>(parse(model, arguments)); }, expected,
             "the engine read a command line it must refuse");
   };
+  for (const char *bytes : {"0", "off", "-1", "bad", ""})
+    refuses({"auto", "auto", "--expert-ple-memory", bytes},
+            "--expert-ple-memory requires a positive byte count or auto");
   refuses({"auto", "auto", "--kv-format", "fp16"},
           "--kv-format requires int8, bf16, q4h, q4_0 or q4_0_unrotated");
   // An option's missing value fails its check.
@@ -384,6 +420,10 @@ void testRefusals() {
   refuses({"auto", "auto", "--compact-draft-ranking"}, "--compact-draft-ranking requires a file");
   for (const char *rows : {"budget", "every", "ALL", ""})
     refuses({"auto", "auto", "--verify-rows", rows}, "--verify-rows requires auto or all");
+  refuses({"auto", "auto", "--expert-ple-policy", "adaptive"}, "requires --expert-ple-memory");
+  refuses({"auto", "auto", "--expert-ple-policy", "adaptive", "--expert-ple-memory", "21474836480", "--ple-memory", "off"}, "both stores auto");
+  refuses({"auto", "auto", "--expert-ple-policy", "on"}, "requires static or adaptive");
+  refuses({"auto", "auto", "--expert-ple-ratio", "1:15"}, "requires 1:20 or 1:10");
   // The server passes bytes, auto or off.
   for (const char *size : {"0", "2G", "OFF", ""})
     refuses({"auto", "auto", "--ple-memory", size}, "--ple-memory requires a positive byte count, auto or off");
@@ -484,6 +524,7 @@ int main(int argc, char **argv) {
                              "SPLASH_PROMPT_LOOKUP_MIN_MATCH", "SPLASH_COMPACT_DRAFT_CAPACITY"})
       setenv(name, "invalid", 1);
     testServerCommandLines(argv[1]);
+    testMoePressureArguments();
     testNeuralEngine();
     testVerifyRows();
     testStreamedMemoryAndSpill();

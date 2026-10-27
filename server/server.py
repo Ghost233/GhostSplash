@@ -1684,6 +1684,8 @@ def _native_command(args, model_root, relaunch_context=None):
             "--experimental-quantized-ffn only supports Qwen3.5-4B generation"
         )
     if getattr(args, "decision_type", None) in ("laya", "vllm-d3"):
+        if args.moe_memory_pressure == "on":
+            raise ValueError("--moe-memory-pressure on requires a resizable MoE model")
         if any(
             getattr(args, key) == "on"
             for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
@@ -1752,6 +1754,9 @@ def _native_command(args, model_root, relaunch_context=None):
         ("compact-draft-capacity", 98304),
         ("compact-draft-ranking", None),
         ("fast-topk", "off"),
+        ("moe-memory-pressure", "off"),
+        ("expert-ple-policy", "static"),
+        ("expert-ple-ratio", "1:20"),
     ):
         value = getattr(args, flag.replace("-", "_"))
         if value != default:
@@ -1771,6 +1776,8 @@ def _native_command(args, model_root, relaunch_context=None):
     for flag, value in (
         ("--ple-memory", args.ple_memory),
         ("--expert-memory", args.expert_memory),
+        ("--host-memory-reserve", args.host_memory_reserve),
+        ("--expert-ple-memory", args.expert_ple_memory),
         ("--sparse-kv-memory", args.sparse_kv_memory),
     ):
         if value is not None:

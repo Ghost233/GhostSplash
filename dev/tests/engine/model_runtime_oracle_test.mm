@@ -1,8 +1,12 @@
 #include "LinearNumerics.hpp"
+#include "GgufFormatReference.hpp"
+#include "ProtocolPeer.hpp"
+#include "TestFiles.hpp"
 #include "TestChecks.hpp"
 #include "TestKvTier.hpp"
 #include "ane/ProgramInstrumentation.hpp"
 #include "engine/KvPool.hpp"
+#include "engine/Bootstrap.hpp"
 #include "engine/RuntimeResources.hpp"
 #include "engine/MemoryGovernor.hpp"
 #include "engine/MemoryPlan.hpp"
@@ -13,6 +17,7 @@
 #include "model/KvCopyRead.hpp"
 #include "model/KvHistoryStream.hpp"
 #include "model/ModelSizing.hpp"
+#include "model/GgufPreparation.hpp"
 #include "model/Runtime.hpp"
 #include "model/Qwen4Exp.hpp"
 #include "model/Qwen4Steps.hpp"
@@ -29,6 +34,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -50,6 +56,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <mach/mach.h>
 
 using namespace splash;
 using namespace splash::engine;
@@ -223,10 +230,11 @@ CommittedState committedState(const model::Runtime &executor, const model::QwenS
                               uint32_t lane) {
   const auto &metadata = states.metadata(lane);
   const metal::MetalBuffer &cell = states.current(lane).stateBase;
-  require(static_cast<bool>(cell.contents()), "a committed GDN cell is not CPU-visible");
+  require(!cell.sizeBytes() || static_cast<bool>(cell.contents()), "a committed GDN cell is not CPU-visible");
   const auto *cellBytes = static_cast<const uint8_t *>(cell.contents());
-  CommittedState state{metadata.lengths, metadata.pendingRows, {cellBytes, cellBytes + cell.sizeBytes()},
+  CommittedState state{metadata.lengths, metadata.pendingRows, {},
                        model::RuntimeInstrumentation::pendingGdnRows(executor, metadata.requestId), {}};
+  if (cell.sizeBytes()) state.cell.assign(cellBytes, cellBytes + cell.sizeBytes());
   // A ring's keys are [head][slot][dimension] and its values [head][dimension]
   // [slot]; position p is slot p % window.
   const auto layout = states.layout().draft;
@@ -259,6 +267,7 @@ void requireSameCommittedState(const CommittedState &left, const CommittedState 
           label + ": the logical state differs");
   require(left.cell == right.cell, label + ": the GDN cell differs");
   require(!left.retained.empty() && left.retained == right.retained, label + ": the retained GDN rows differ");
+  require(left.rings.size() == right.rings.size(), label + ": the draft ring count differs");
   for (size_t ring = 0; ring < left.rings.size(); ++ring)
     require(ring < right.rings.size() && left.rings[ring] == right.rings[ring],
             label + ": the draft " + (ring % 2 ? "values" : "keys") + " of layer " + std::to_string(ring / 2) +
@@ -3146,6 +3155,8 @@ public:
   // The request's prompt from what it committed to token `end`, one command.
   SpillStep prefill(SpillRequest &request, uint32_t end) {
     const uint32_t position = request.committed;
+    std::cout << "spill_prefill_begin request=" << request.id << " from=" << position << " to=" << end
+              << " spills=" << request.spills << std::endl;
     ensure(request, end);
     if (request.holdsIndexPages())
       require(runtime_->reserveHistoryStaging(request.id, pagesFor(end)).granted(),
@@ -3156,6 +3167,7 @@ public:
                          .decodeStage = DecodeStage::Regular};
     const std::array items{item(request, position, end - position, input)};
     std::vector<ModelStepResult> results = runtime_->submit(plan, items, {})->wait();
+    std::cout << "spill_prefill_completed request=" << request.id << " to=" << end << std::endl;
     require(results.size() == 1 && results[0].consumedPromptTokens == end - position,
             "a spill run's prefill result mismatch");
     lastResults_ = results;
@@ -3172,6 +3184,7 @@ public:
 
   // A decode cycle of the requests together, in lanes in their order.
   std::vector<SpillStep> decode(std::span<SpillRequest *const> requests) {
+    std::cout << "spill_decode_begin lanes=" << requests.size() << std::endl;
     BatchPlan plan{.kind = WorkKind::Decode, .decodeStage = DecodeStage::Regular};
     std::vector<ModelBatchItem> items;
     for (SpillRequest *request : requests) {
@@ -3199,6 +3212,7 @@ public:
                        digestOf(model::RuntimeInstrumentation::lastLogits(*runtime_, static_cast<uint32_t>(lane)))});
     }
     for (SpillRequest *request : requests) spill(*request);
+    std::cout << "spill_decode_completed lanes=" << requests.size() << std::endl;
     return steps;
   }
 
@@ -3702,11 +3716,491 @@ void warmupEos(model::RuntimeContext context, model::LoadedModel &model) {
             << " decode_stop=" << decodeStop << '\n';
 }
 
+template <class T>
+void requireReplayTensor(const std::vector<T> &expected, const std::vector<T> &actual,
+                         const std::string &tensor, uint64_t width = 1) {
+  require(expected.size() == actual.size(), tensor + ": shape differs");
+  for (size_t index = 0; index < expected.size(); ++index) {
+    if constexpr (std::is_floating_point_v<T>)
+      require(std::isfinite(expected[index]) && std::isfinite(actual[index]),
+              tensor + ": nonfinite row=" + std::to_string(index / width) + " index=" + std::to_string(index % width));
+    if (std::memcmp(&expected[index], &actual[index], sizeof(T)))
+      fail(tensor + ": first difference row=" + std::to_string(index / width) + " index=" +
+           std::to_string(index % width) + " expected=" + std::to_string(expected[index]) +
+           " actual=" + std::to_string(actual[index]));
+  }
+}
+
+struct MemoryOracleDeadline final {
+  using Clock = std::chrono::steady_clock;
+  std::function<Clock::time_point()> now;
+  Clock::time_point until;
+
+  explicit MemoryOracleDeadline(std::chrono::seconds length,
+      std::function<Clock::time_point()> source = Clock::now)
+      : now(std::move(source)), until(now() + length) {}
+  [[nodiscard]] bool expired() const { return now() >= until; }
+  void requireWithin(std::string_view label) const {
+    require(!expired(), std::string(label) + " exceeded its original deadline");
+  }
+  [[nodiscard]] std::function<bool()> cancellingWhile(const std::atomic<bool> &active,
+      std::function<bool()> previous) const {
+    return [this, &active, previous = std::move(previous)] {
+      return (previous && previous()) || (active.load() && expired());
+    };
+  }
+};
+
+template <class Run>
+auto completeMemoryOracleBefore(const MemoryOracleDeadline &deadline, std::string_view label, Run run) {
+  deadline.requireWithin(label);
+  auto result = run();
+  deadline.requireWithin(label);
+  return result;
+}
+
+struct MemoryOracleLogits final {
+  uint32_t rows;
+  std::vector<float> values;
+};
+
+MemoryOracleLogits captureMemoryOracleLogits(std::span<const float> scratch, WorkKind kind,
+    bool hasDraft, uint32_t verifyRows, uint32_t vocabulary, const std::string &label) {
+  const uint32_t rows = kind == WorkKind::Prefill || !hasDraft ? 1 : verifyRows;
+  require(rows && vocabulary && uint64_t{rows} * vocabulary <= scratch.size(), label + ": invalid logit shape");
+  const auto logits = scratch.first(uint64_t{rows} * vocabulary);
+  for (size_t index = 0; index < logits.size(); ++index)
+    if (!std::isfinite(logits[index]))
+      fail(label + ": nonfinite row=" + std::to_string(index / vocabulary) +
+          " index=" + std::to_string(index % vocabulary) + " value=" + std::to_string(logits[index]));
+  return {rows, {logits.begin(), logits.end()}};
+}
+
+// Copy only committed positions; speculative and never-written page tails
+// are deliberately excluded. PageStorage maps the CPU spans, never GPU VAs.
+std::vector<uint8_t> committedKv(const kv::PageStorage &pages, std::span<const uint32_t> table, uint64_t tokens) {
+  const auto layout = pages.layout();
+  std::vector<uint8_t> bytes;
+  const auto append = [&](std::span<const std::byte> span) {
+    const auto *begin = reinterpret_cast<const uint8_t *>(span.data());
+    bytes.insert(bytes.end(), begin, begin + span.size());
+  };
+  for (uint64_t logical = 0; logical * kv::kPageTokens < tokens; ++logical) {
+    require(logical < table.size(), "committed KV has no physical page");
+    const uint32_t count = std::min<uint64_t>(kv::kPageTokens, tokens - logical * kv::kPageTokens);
+    for (uint32_t layer = 0; layer < layout.attentionLayers; ++layer) {
+      const auto tensors = pages.layerSpans(table[logical], layer);
+      for (uint32_t tensor = 0; tensor < tensors.size(); ++tensor) {
+        const auto span = tensors[tensor];
+        if (span.empty()) continue;
+        const bool dimensionMajor = tensor == SPLASH_KV_VALUES && !layout.valuesTokenMajor &&
+            layout.format != kv::Format::Int4Hadamard && !kv::isQ4_0(layout.format);
+        const uint32_t lines = layout.kvHeads * (dimensionMajor ? layout.headDimension : 1);
+        const uint64_t stride = span.size() / lines;
+        for (uint32_t line = 0; line < lines; ++line)
+          append(span.subspan(line * stride, stride / kv::kPageTokens * count));
+      }
+    }
+    for (const auto index : pages.indexSpans(table[logical]))
+      append(index.first(uint64_t{count / SPLASH_ATTENTION_BLOCK_TOKENS} * layout.indexDimension * 2));
+  }
+  return bytes;
+}
+
+struct MemoryReplayCommit final {
+  struct Dispatch final {
+    uint32_t block, rows;
+    ops::MoePhase phase;
+    std::vector<uint16_t> input;
+    std::vector<uint32_t> selected;
+    std::vector<float> weights;
+  };
+  WorkKind kind;
+  uint32_t rows;
+  CommittedState state;
+  std::vector<float> logits;
+  std::vector<uint8_t> kv, window;
+  std::vector<Dispatch> dispatches;
+};
+
+void requireMemoryReplay(const std::vector<MemoryReplayCommit> &expected,
+                         const std::vector<MemoryReplayCommit> &actual,
+                         const std::string &phase, uint32_t vocabulary) {
+  require(!expected.empty() && expected.size() == actual.size(), phase + ": command schedule differs");
+  for (size_t command = 0; command < expected.size(); ++command) {
+    const auto &a = expected[command], &b = actual[command];
+    const std::string prefix = phase + "/command=" + std::to_string(command) + "/";
+    require(a.kind == b.kind && a.rows == b.rows && a.state.lengths == b.state.lengths &&
+        a.state.pendingRows == b.state.pendingRows, prefix + "committed lengths or pending rows differ");
+    requireReplayTensor(a.state.cell, b.state.cell, prefix + "GDN cell");
+    requireReplayTensor(a.state.retained, b.state.retained, prefix + "pending GDN tape");
+    require(a.state.rings.size() == b.state.rings.size(), prefix + "draft ring count differs");
+    for (size_t ring = 0; ring < a.state.rings.size(); ++ring)
+      requireReplayTensor(a.state.rings[ring], b.state.rings[ring], prefix + "draft/ring=" + std::to_string(ring));
+    requireReplayTensor(a.kv, b.kv, prefix + "committed KV");
+    requireReplayTensor(a.window, b.window, prefix + "draft context window");
+    require(a.dispatches.size() == b.dispatches.size(), prefix + "expert dispatch schedule differs");
+    for (size_t dispatch = 0; dispatch < a.dispatches.size(); ++dispatch) {
+      const auto &x = a.dispatches[dispatch], &y = b.dispatches[dispatch];
+      const auto name = prefix + "expert/block=" + std::to_string(x.block) + "/";
+      require(x.block == y.block && x.rows == y.rows && x.phase == y.phase, name + "dispatch shape differs");
+      requireReplayTensor(x.input, y.input, name + "normalized hidden input", x.input.size() / x.rows);
+      requireReplayTensor(x.selected, y.selected, name + "selected experts", x.selected.size() / x.rows);
+      requireReplayTensor(x.weights, y.weights, name + "routing weights", x.weights.size() / x.rows);
+    }
+    requireReplayTensor(a.logits, b.logits, prefix + "logits", vocabulary);
+    std::cout << "memory_exact_replay=" << phase << " command=" << command << " logit_rows=" << a.rows
+              << " full_logit_elements=" << a.logits.size() << " logit_digest=" << digestOf(a.logits)
+              << " committed_kv_bytes=" << a.kv.size() << " gdn_bytes=" << a.state.cell.size()
+              << " pending_gdn_bytes=" << a.state.retained.size() << " draft_rings=" << a.state.rings.size()
+              << " draft_window_bytes=" << a.window.size() << " dispatches=" << a.dispatches.size() << " exact=true\n";
+  }
+}
+
+// One guarded native owner, one request at a time, the same quantized
+// weights/draft and exact verify-all arithmetic through each transition.
+// This selector never enters the default oracle's multi-lane/F32 suite.
+void localMemoryLifecycle(const char *metallib, const std::filesystem::path &root,
+                           uint32_t contextTokens, uint64_t maximumMemory, kv::Format format,
+                           ops::GdnStateFormat stateFormat, uint64_t manualPle) {
+  require(contextTokens && maximumMemory, "local lifecycle requires explicit --max-context and --max-memory");
+  const test::TemporaryDirectory scratch("memory-oracle");
+  std::cout << "owned-scratch-root " << scratch.path().string() << std::endl;
+  const MemoryOracleDeadline startupDeadline(std::chrono::seconds(30));
+  std::atomic<bool> startupActive{true};
+  RuntimeResourcesConfig config;
+  config.cancelled = startupDeadline.cancellingWhile(startupActive, config.cancelled);
+  config.modelRoot = root; config.metallibPath = metallib;
+  config.model = model::servedFor(model::inspectModelRoot(root), contextTokens);
+  config.buildId = "model-runtime-oracle " SPLASH_BUILD_ID;
+  config.maximumMemoryBytes = maximumMemory;
+  config.kvFormat = format; config.stateFormat = stateFormat;
+  config.moeMemoryPressure = true;
+  config.verifyRows = model::VerifyRows::All;
+  config.aneFfn.enabled = false;
+  config.idleReleaseSeconds = std::numeric_limits<double>::infinity();
+  if (manualPle) config.pleMemory = {StreamedSetting::Mode::Size, manualPle};
+  std::atomic<uint64_t> clock{0}, event{0}, injectedSpare{UINT64_MAX};
+  std::atomic<bool> warning{false};
+  config.hostMemory = [&]() -> std::optional<HostMemory> {
+    auto measured = queryHostMemory();
+    if (measured) {
+      measured->available = std::min(measured->available, injectedSpare.load());
+      measured->spare = std::min(measured->spare, injectedSpare.load());
+    }
+    return measured;
+  };
+  config.memoryPressure = [&] {
+    const auto actual = querySystemMemoryPressure();
+    require(actual.has_value() && *actual != MemoryPressure::Critical,
+            "real host pressure is unknown or Critical; bounded oracle stopped");
+    return warning || *actual == MemoryPressure::Warning ? MemoryPressure::Warning : MemoryPressure::Normal;
+  };
+  config.memoryPolicy = {[&] { return clock.load(); }, [&] {
+    return MemoryPolicyObservation{MemoryPolicyObservation::Pressure(uint32_t(config.memoryPressure()) + 1), event.load()};
+  }};
+  RuntimeMetrics metrics;
+  RuntimeBootstrapConfig start;
+  start.resources = config; start.nativeLoop.metrics = &metrics;
+  start.nativeLoop.engine.maxContext = contextTokens;
+  start.nativeLoop.engine.resourceWaitTimeoutMilliseconds = 15'000;
+  std::vector<uint8_t> wireOutput;
+  std::unique_ptr<RuntimeBootstrap> owner;
+  while (!owner) {
+    try {
+      owner = completeMemoryOracleBefore(startupDeadline, "bounded startup", [&] {
+        return RuntimeBootstrap::start(start, [&](std::span<const uint8_t> bytes) {
+          wireOutput.insert(wireOutput.end(), bytes.begin(), bytes.end());
+        }, [] { return "{}"; });
+      });
+    } catch (const RuntimeBootstrapError &error) {
+      if (error.report().resourceFailure != RuntimeResourceFailure::GrowthDeferred ||
+          startupDeadline.expired()) throw;
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+  startupDeadline.requireWithin("bounded startup return");
+  startupActive = false;
+  auto &resources = owner->resources();
+  auto context = resources.modelContext();
+  auto &runtime = dynamic_cast<model::Runtime &>(owner->modelRuntime());
+  auto *store = context.model.expertStore();
+  require(store && resources.expertStorageSnapshot()->layout == "addressed",
+          "local lifecycle requires a resizable addressed expert store");
+  const auto range = resources.expertStorageSnapshot()->resizable;
+  const uint64_t floor = range.minimumBytes;
+  const std::string plan = resources.memoryPlan().toStatusJson();
+  const auto originalLimits = resources.memoryGovernor().snapshot();
+  const uint64_t fixedPle = context.model.streamedTable() ? context.model.streamedTable()->committedBytes() : 0;
+  const auto wait = [&](const auto &ready, const std::string &message) {
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+    while (!ready()) {
+      require(std::chrono::steady_clock::now() < until, message + ": " + owner->statusJson(metrics.snapshot(), {}));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  };
+  const auto report = [&](std::string_view phase) {
+    require(resources.memoryPlan().toStatusJson() == plan, "reclaim changed the immutable global/KV/state plan");
+    const auto actual = resources.actualMemoryReport(runtime.actualRuntimeMemory());
+    const auto governor = resources.memoryGovernor().snapshot();
+    require(governor.limitBytes == originalLimits.limitBytes &&
+        governor.elasticLimitBytes <= originalLimits.elasticLimitBytes && actual.backendAllocatedBytes <= governor.limitBytes,
+        "reclaim raised a KV/state ceiling or exceeded the unchanged local/global cap");
+    const auto raw = queryHostMemory();
+    task_vm_info_data_t process{};
+    mach_msg_type_number_t processCount = TASK_VM_INFO_COUNT;
+    const bool physicalKnown = task_info(mach_task_self(), TASK_VM_INFO,
+        reinterpret_cast<task_info_t>(&process), &processCount) == KERN_SUCCESS;
+    std::cout << "memory_phase=" << phase << " expert_allocated=" << store->allocatedBytes()
+              << " ple_host_allocated=" << (context.model.streamedTable() ? context.model.streamedTable()->committedBytes() : 0)
+              << " metal_allocated=" << actual.backendAllocatedBytes << " required_host=" << actual.requiredHostBytes
+              << " local_charge=" << governor.chargedBytes << " local_reserved=" << governor.localReservedBytes
+              << " pending_automatic=" << governor.pendingAutomaticBytes << " raw_spare_estimate=" << (raw ? raw->spare : 0)
+              << " guarded_spare_estimate=" << governor.hostSpareBytes
+              << " process_physical_footprint=" << (physicalKnown ? std::to_string(process.phys_footprint) : "unknown") << '\n';
+    std::cout << "memory_status=" << owner->statusJson(metrics.snapshot(), {}) << '\n';
+  };
+  // Verify a complete selected expert's encoded planes in each streamed
+  // layer per request. CPU reference repack is bounded to one expert; Wf is
+  // null, so no full-model (or full-expert) F32 expansion is made.
+  const uint32_t layers = std::visit([](const auto &target) { return target.layers; }, config.model.target);
+  const uint32_t experts = std::visit([](const auto &target) { return target.experts; }, config.model.target);
+  std::vector<uint8_t> checked(layers, 0);
+  std::vector<uint32_t> routedTrace;
+  std::vector<MemoryReplayCommit::Dispatch> pendingDispatches;
+  uint64_t checkedBytes = 0;
+  model::RuntimeInstrumentation::setExpertObserver(*store, [&](const model::ExpertStore &source,
+      const model::RuntimeInstrumentation::ExpertDispatch &dispatch) {
+    const uint32_t validRows = dispatch.phase == ops::MoePhase::Prefill ? std::min<uint32_t>(8, dispatch.rows) : dispatch.rows;
+    const auto input = dispatch.input.first(dispatch.input.size() / dispatch.rows * validRows);
+    const auto selected = dispatch.selected.first(dispatch.selected.size() / dispatch.rows * validRows);
+    const auto weights = dispatch.weights.first(dispatch.weights.size() / dispatch.rows * validRows);
+    pendingDispatches.push_back({dispatch.block, validRows, dispatch.phase,
+        {input.begin(), input.end()}, {selected.begin(), selected.end()}, {weights.begin(), weights.end()}});
+    routedTrace.push_back(dispatch.block); routedTrace.push_back(dispatch.rows);
+    routedTrace.insert(routedTrace.end(), dispatch.selected.begin(), dispatch.selected.end());
+    if (checked.at(dispatch.block)) return;
+    const auto expert = std::ranges::find_if(dispatch.selected, [&](uint32_t value) { return value < experts; });
+    require(expert != dispatch.selected.end(), "real dispatch selected no routed expert");
+    const auto projections = model::RuntimeInstrumentation::expertProjections(source, dispatch.block, *expert);
+    for (size_t projection = 0; projection < projections.size(); ++projection) {
+      const auto &p = projections[projection];
+      const uint64_t bytes = p.rows * gguf_reference::rowBytes(gguf_reference::Fmt(p.source.format), p.source.columns);
+      require(bytes <= (16ULL << 20), "selected expert exceeds bounded encoded-plane oracle scratch");
+      std::vector<uint8_t> native(bytes);
+      model::readRepackRows(p.source, p.firstRow, p.rows, native.data());
+      const auto expected = gguf_reference::repack(gguf_reference::Fmt(p.source.format), native, p.rows, p.source.columns, nullptr);
+      const std::array<const std::vector<uint8_t> *, 3> planes{&expected.w0, &expected.w1, &expected.meta};
+      for (size_t plane = 0; plane < p.planes.size(); ++plane) {
+        const auto &actual = p.planes[plane];
+        if (!actual.sizeBytes()) continue;
+        require(actual.contents() && actual.sizeBytes() <= planes[plane]->size(), "selected plane is not a bounded CPU-visible owning view");
+        const auto *data = static_cast<const uint8_t *>(actual.contents());
+        requireReplayTensor(std::vector<uint8_t>(planes[plane]->begin(), planes[plane]->begin() + actual.sizeBytes()),
+            std::vector<uint8_t>(data, data + actual.sizeBytes()), "expert/block=" + std::to_string(dispatch.block) +
+            "/id=" + std::to_string(*expert) + "/projection=" + std::to_string(projection) + "/plane=" + std::to_string(plane));
+        checkedBytes += actual.sizeBytes();
+      }
+    }
+    checked[dispatch.block] = true;
+  });
+  std::vector<MemoryReplayCommit> commits;
+  std::optional<MemoryOracleDeadline> requestDeadline;
+  model::RuntimeInstrumentation::setCommitObserver(runtime, [&](const model::Runtime &executed, WorkKind kind,
+      std::span<const ModelBatchItem> items, std::span<const ModelStepResult> results) {
+    require(items.size() == 1 && results.size() == 1 && results[0].failure.empty(), "bounded native commit failed");
+    if (kind == WorkKind::Prefill && !results[0].consumedPromptTokens) return;
+    const uint32_t lane = model::RuntimeInstrumentation::stateLane(executed, items[0].requestId);
+    const uint32_t verified = kind == WorkKind::Decode && config.model.hasDraft() ?
+        model::RuntimeInstrumentation::lastVerifyRows(executed, 0) : 0;
+    auto logits = captureMemoryOracleLogits(model::RuntimeInstrumentation::lastLogits(executed, 0), kind,
+        config.model.hasDraft(), verified, config.model.capabilities.vocabularySize,
+        "request=" + std::to_string(items[0].requestId) + "/command=" + std::to_string(commits.size()) + "/logits");
+    MemoryReplayCommit sample{kind, logits.rows, committedState(executed, context.stateStorage, lane), std::move(logits.values), {}, {}, std::exchange(pendingDispatches, {})};
+    sample.kv = committedKv(context.kvPages, items[0].pageTable, sample.state.lengths.targetTokens);
+    const auto &window = context.stateStorage.window(lane);
+    if (window) {
+      const auto *data = static_cast<const uint8_t *>(window.contents());
+      const auto width = context.stateStorage.layout().draft.contextWidth;
+      const uint64_t count = std::min<uint64_t>(sample.state.lengths.windowEnd, model::ExecutionLimits::draftContextTokens);
+      for (uint64_t position = sample.state.lengths.windowEnd - count; position < sample.state.lengths.windowEnd; ++position) {
+        const auto slot = position % model::ExecutionLimits::draftContextTokens;
+        sample.window.insert(sample.window.end(), data + slot * (width / 2), data + (slot + 1) * (width / 2));
+        const uint64_t at = draft_context_codes_bytes(width) + slot * (width / SPLASH_DRAFT_CONTEXT_GROUP) * 4;
+        sample.window.insert(sample.window.end(), data + at, data + at + (width / SPLASH_DRAFT_CONTEXT_GROUP) * 4);
+      }
+    }
+    commits.push_back(std::move(sample));
+    requestDeadline->requireWithin("bounded generation capture");
+  });
+  const auto generate = [&](uint64_t id, std::string_view phase) {
+    requestDeadline.emplace(std::chrono::seconds(15));
+    commits.clear(); checkedBytes = 0; routedTrace.clear(); pendingDispatches.clear(); std::ranges::fill(checked, false);
+    protocol::RequestFrame frame;
+    frame.requestId = id; frame.promptTokens = {1, 2, 3, 4, 5, 6, 7, 8}; frame.logicalMaxOutputTokens = 16;
+    frame.sampling.seed = 314159; frame.cacheSalt = {id, 0};
+    frame.absoluteDeadlineUnixMicros = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count() + 15'000'000;
+    frame.remainingDeadlineMicros = 15'000'000;
+    wireOutput.clear();
+    require(owner->nativeLoop().receive(protocol::peer::serialize(frame)), "bounded generation refused its public native frame");
+    auto nextControl = std::chrono::steady_clock::time_point{};
+    while (owner->nativeLoop().snapshot().completed < id) {
+      for (const auto &event : protocol::peer::decodeEvents(wireOutput))
+        if (const auto *error = std::get_if<protocol::ErrorEvent>(&event)) fail("bounded generation: " + error->code + ": " + error->message);
+      require(owner->nativeLoop().engineHealthy(), "bounded generation stopped its native engine");
+      static_cast<void>(completeMemoryOracleBefore(*requestDeadline, "bounded generation tick/capture",
+          [&] {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= nextControl && !owner->nativeLoop().commandInFlight()) {
+              // Match the service transport's command-free pressure timer.
+              // tick alone cannot clear a start paused by an earlier deficit.
+              static_cast<void>(owner->controlPass(config.memoryPressure()));
+              nextControl = now + std::chrono::milliseconds(500);
+            }
+            return owner->nativeLoop().tick();
+          }));
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    require(checkedBytes && std::ranges::any_of(commits, [](const auto &c) { return c.kind == WorkKind::Decode; }),
+            "bounded run did not observe actual expert planes and decode commits");
+    std::cout << "memory_generation=" << phase << " commands=" << commits.size() << " expert_plane_bytes=" << checkedBytes
+              << " routed_trace_entries=" << routedTrace.size() << " checked_streamed_layers=" << std::ranges::count(checked, 1) << '\n';
+    report(phase);
+    auto captured = commits;
+    requestDeadline->requireWithin("bounded generation return/capture");
+    return captured;
+  };
+  const auto grow = [&] {
+    const uint64_t before = store->allocatedBytes();
+    wait([&] { const auto group = resources.memoryGovernor().evaluate();
+      if (group.automaticGrowthReason == "headroom_observation" || group.automaticGrowthReason == "block_cooldown")
+        clock = clock.load() + std::max<uint64_t>(30'000 - std::min<uint64_t>(30'000, group.normalStableMilliseconds), group.blockCooldownMilliseconds);
+      const auto result = resources.growAutomaticStorageOne(range.fullBytes, fixedPle);
+      require(bool(result) || result.failure == metal::AllocationFailure::GrowthDeferred, "bounded real growth refused its local host/budget guard: " + result.detail);
+      return store->allocatedBytes() > before;
+    }, "one optional real expert block was not admitted");
+    const uint64_t delta = store->allocatedBytes() - before;
+    require(std::ranges::any_of(range.chunks, [&](const auto &chunk) { return chunk.allocationBytes == delta; }), "one grow call allocated more than one real chunk");
+  };
+  report("floor"); grow();
+  const uint64_t larger = store->allocatedBytes();
+  const auto expected = generate(1, "larger");
+  warning = true; ++event; clock += 1;
+  const auto original = resources.memoryGovernor().snapshot();
+  const uint64_t warningThreshold = resources.memoryGovernor().snapshot().hostSpareReserveBytes + kHostWarningMarginBytes;
+  injectedSpare = warningThreshold > larger - floor ? warningThreshold - (larger - floor) : 0;
+  wait([&] { static_cast<void>(owner->controlPass(config.memoryPressure())); return store->allocatedBytes() == floor; }, "Warning did not release the real optional expert chunk");
+  require(resources.memoryGovernor().snapshot().automaticStorageReleasedBytes - original.automaticStorageReleasedBytes == larger - floor,
+          "Warning release receipt differs from actual expert allocation");
+  warning = false; ++event; injectedSpare = UINT64_MAX; clock += 1;
+  requireMemoryReplay(expected, generate(2, "shrunk"), "shrunk", config.model.capabilities.vocabularySize);
+  grow(); requireMemoryReplay(expected, generate(3, "regrown"), "regrown", config.model.capabilities.vocabularySize);
+  require(owner->nativeLoop().receive(protocol::peer::serialize(protocol::ReleaseRequestFrame{91})) &&
+          owner->nativeLoop().weightsSnapshot().released, "native public release did not release its own weights");
+  report("released");
+  const uint64_t retained = store->allocatedBytes();
+  uint64_t expertRestores = 0;
+  resources.memoryGovernor().setAllocationDriver([&](std::string_view purpose, uint64_t bytes,
+      const std::function<void()> &allocate) {
+    if (purpose == "restore_weights" && !context.model.images->released() && store->released()) {
+      require(store->stats().budgetBytes == floor && bytes == floor - retained &&
+          (!context.model.streamedTable() || context.model.streamedTable()->committedBytes() == fixedPle),
+          "real expert payload preceded current smaller target selection or recharged retained PLE/helpers");
+      ++expertRestores;
+      std::cout << "memory_expert_restore_payload=" << bytes << " retained_helpers=" << retained << " selected_floor=" << floor << '\n';
+    }
+    allocate();
+  });
+  requireMemoryReplay(expected, generate(4, "smaller-restored"), "smaller-restored", config.model.capabilities.vocabularySize);
+  resources.memoryGovernor().setAllocationDriver({});
+  require(expertRestores == 1 && store->allocatedBytes() == floor && owner->nativeLoop().weightsSnapshot().restores == 1 &&
+      (!context.model.streamedTable() || context.model.streamedTable()->committedBytes() == fixedPle),
+      "restore did not retain PLE exactly once and select the current smaller expert floor");
+  model::RuntimeInstrumentation::setCommitObserver(runtime, {});
+  model::RuntimeInstrumentation::setExpertObserver(*store, {});
+  owner.reset();
+  std::cout << "memory_cleanup=owner_destroyed\n";
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
   try {
-    bool imagesOnly = false, warmupEosOnly = false, prefillGroupsOnly = false, spillOnly = false;
+    if (argc == 2 && std::string_view(argv[1]) == "--memory-oracle-self-test") {
+      auto now = MemoryOracleDeadline::Clock::time_point{};
+      const MemoryOracleDeadline startup(std::chrono::seconds(30), [&] { return now; });
+      std::weak_ptr<int> lateOwner;
+      rejects([&] {
+        static_cast<void>(completeMemoryOracleBefore(startup, "bounded startup", [&] {
+          auto owner = std::make_shared<int>(1);
+          lateOwner = owner;
+          now += std::chrono::seconds(31);
+          return owner;
+        }));
+      }, "bounded startup exceeded its original deadline", "successful startup escaped its original 30-second deadline");
+      require(lateOwner.expired(), "late successful startup retained its owner instead of cleaning it up");
+      std::atomic<bool> active{true};
+      bool previouslyCancelled = false;
+      const auto cancelled = startup.cancellingWhile(active, [&] { return previouslyCancelled; });
+      require(cancelled(), "startup callback did not cancel an expired startup");
+      active = false;
+      require(!cancelled(), "completed startup poisoned later request waits with its old deadline");
+      previouslyCancelled = true;
+      require(cancelled(), "startup deadline composition overwrote the original cancellation source");
+      now = {};
+      const MemoryOracleDeadline request(std::chrono::seconds(15), [&] { return now; });
+      rejects([&] {
+        static_cast<void>(completeMemoryOracleBefore(request, "bounded generation tick/capture", [&] {
+          now += std::chrono::seconds(16);
+          return true;
+        }));
+      }, "bounded generation tick/capture exceeded its original deadline", "successful final tick/capture escaped the 15-second deadline");
+      CommittedState expected;
+      expected.pendingRows = 1;
+      expected.retained = {0x35};
+      CommittedState changed = expected;
+      changed.rings = {{0x42}};
+      rejects([&] { requireSameCommittedState(expected, changed, "restore"); },
+              "draft ring count", "restore accepted a different committed draft shape");
+      const std::vector<float> row{1, 2, 3, 4, 5, 6};
+      const auto ordinary = captureMemoryOracleLogits(row, WorkKind::Decode, false, 0, 3, "ordinary");
+      require(ordinary.rows == 1 && ordinary.values == std::vector<float>({1, 2, 3}),
+              "ordinary decode lost row zero when VerifyRows was empty");
+      const auto staleOrdinary = captureMemoryOracleLogits(row, WorkKind::Decode, false, 2, 3, "ordinary");
+      require(staleOrdinary.rows == 1 && staleOrdinary.values == ordinary.values,
+              "ordinary decode copied stale extra VerifyRows rows");
+      auto changedOrdinary = row; changedOrdinary[1] = 7;
+      rejects([&] {
+        requireReplayTensor(ordinary.values,
+            captureMemoryOracleLogits(changedOrdinary, WorkKind::Decode, false, 0, 3, "ordinary").values,
+            "ordinary logits", 3);
+      }, "row=0 index=1", "ordinary decode's empty VerifyRows hid a real row-zero divergence");
+      const auto drafted = captureMemoryOracleLogits(row, WorkKind::Decode, true, 2, 3, "draft");
+      require(drafted.rows == 2 && drafted.values == row, "draft-backed decode lost its valid verify rows");
+      auto nonfiniteCapture = row; nonfiniteCapture[4] = std::numeric_limits<float>::infinity();
+      rejects([&] {
+        static_cast<void>(captureMemoryOracleLogits(nonfiniteCapture, WorkKind::Decode, true, 2, 3,
+            "request=77/command=2/logits"));
+      }, "request=77/command=2/logits: nonfinite row=1 index=1",
+          "real capture seam lost the first nonfinite request/command/row/index");
+      nonfiniteCapture[0] = std::numeric_limits<float>::quiet_NaN();
+      rejects([&] {
+        static_cast<void>(captureMemoryOracleLogits(nonfiniteCapture, WorkKind::Decode, false, 0, 3,
+            "request=78/command=3/logits"));
+      }, "request=78/command=3/logits: nonfinite row=0 index=0",
+          "ordinary capture seam lost the first nonfinite row-zero value");
+      auto different = row; different[4] = 7;
+      rejects([&] { requireReplayTensor(row, different, "logits", 3); }, "row=1 index=1",
+              "full-logit oracle lost the first differing row/index");
+      different = row; different[0] = std::numeric_limits<float>::quiet_NaN();
+      rejects([&] { requireReplayTensor(row, different, "logits", 3); }, "nonfinite row=0 index=0",
+              "full-logit oracle accepted a nonfinite value");
+      std::cout << "memory oracle CPU diagnostics passed\n";
+      return 0;
+    }
+    bool imagesOnly = false, warmupEosOnly = false, prefillGroupsOnly = false, spillOnly = false, localLifecycle = false;
+    uint64_t maximumMemory = 0;
     SpillOptions spill;
     kv::Format format = kv::Format::Int8;
     ops::GdnStateFormat stateFormat = ops::GdnStateFormat::Float32;
@@ -3731,13 +4225,18 @@ int main(int argc, char **argv) {
     // (1); --spill-only stops after it.
     model::ModelLoadOptions loadOptions;
     if (argc < 3)
-      fail("usage: model-runtime-oracle METALLIB MODEL_ROOT [--kv-format int8|bf16] [--state-format fp32|bf16] "
+      fail("usage: model-runtime-oracle METALLIB MODEL_ROOT [--kv-format int8|bf16|q4h] [--state-format fp32|bf16] "
            "[--ane-ffn-share SHARE] [--ane-ffn-fault EVALUATION] [--ple-memory SIZE] "
            "[--expert-memory SIZE] [--max-context TOKENS] [--spill-tokens N] [--spill-window PAGES] "
-           "[--spill-buffers 1|2] [--images-only | --warmup-eos-only | --prefill-groups-only | --spill-only]");
+           "[--spill-buffers 1|2] [--local-memory-lifecycle --max-memory SIZE] [--images-only | --warmup-eos-only | --prefill-groups-only | --spill-only]");
     for (int i = 3; i < argc; ++i) {
       const std::string_view option(argv[i]);
-      if (option == "--images-only") imagesOnly = true;
+      if (option == "--local-memory-lifecycle") localLifecycle = true;
+      else if (option == "--max-memory" && i + 1 < argc) {
+        maximumMemory = tools::parseBytes(argv[++i]);
+        require(maximumMemory != 0, "--max-memory takes a positive byte size");
+      }
+      else if (option == "--images-only") imagesOnly = true;
       else if (option == "--warmup-eos-only") warmupEosOnly = true;
       else if (option == "--prefill-groups-only") prefillGroupsOnly = true;
       else if (option == "--spill-only") spillOnly = true;
@@ -3755,8 +4254,9 @@ int main(int argc, char **argv) {
       }
       else if (option == "--kv-format" && i + 1 < argc) {
         const std::string_view value(argv[++i]);
-        if (value != "int8" && value != "bf16") fail("invalid KV format");
-        format = value == "int8" ? kv::Format::Int8 : kv::Format::BFloat16;
+        if (value != "int8" && value != "bf16" && value != "q4h") fail("invalid KV format");
+        format = value == "int8" ? kv::Format::Int8
+               : value == "q4h" ? kv::Format::Int4Hadamard : kv::Format::BFloat16;
       } else if (option == "--state-format" && i + 1 < argc) {
         const std::string_view value(argv[++i]);
         if (value != "fp32" && value != "bf16") fail("invalid state format");
@@ -3783,6 +4283,14 @@ int main(int argc, char **argv) {
         maxContext = static_cast<uint32_t>(parsed);
       } else fail("unknown model-runtime-oracle option");
     }
+    if (localLifecycle) {
+      require(!imagesOnly && !warmupEosOnly && !prefillGroupsOnly && !spillOnly && !givenAneFfnShare &&
+                  !aneFfnFault && !loadOptions.expertMemoryBytes,
+              "local lifecycle uses auto experts, disabled ANE and a single unchanged native schedule");
+      localMemoryLifecycle(argv[1], argv[2], maxContext, maximumMemory, format, stateFormat, loadOptions.streamedTableBytes);
+      return 0;
+    }
+    require(!maximumMemory, "--max-memory belongs to --local-memory-lifecycle");
     metal::MetalBackend backend(argv[1]);
     const auto &device = backend.capabilities();
     if (const auto error = device.validationError())

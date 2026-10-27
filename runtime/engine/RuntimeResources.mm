@@ -1,4 +1,5 @@
 #include "engine/RuntimeResources.hpp"
+#include "engine/Json.hpp"
 #include "AwakeClock.hpp"
 #include "Checked.hpp"
 #include "StderrLine.hpp"
@@ -392,7 +393,7 @@ void reportStreamedStores(const model::LoadedModel &loaded, const model::Streama
   if (const model::ExpertStore *store = loaded.expertStore()) {
     const model::ExpertStoreStats stats = store->stats();
     logLine("Routed experts stream from their files: ", stats.slots, " slots for ", stats.experts, " experts (",
-            stats.slots * 100 / std::max<uint64_t>(stats.experts, 1), "%) in ", stats.arenaBytes / kMiB, " MiB",
+            double(stats.capacityWeightBytes) * 100 / std::max<uint64_t>(stats.weightBytes, 1), " weight-byte %) in ", stats.arenaBytes / kMiB, " MiB",
             automatic(experts, "--expert-memory"), ".");
   } else if (streamable.expertBytes && experts.mode == StreamedSetting::Mode::Auto) {
     logLine("Routed experts load with their layers: memory holds their ", streamable.expertBytes / kMiB,
@@ -576,6 +577,40 @@ RuntimeResourcesError::RuntimeResourcesError(RuntimeResourceStage stage,
     : std::runtime_error(std::move(message)), stage_(stage), failure_(failure),
       budgetDescription_(std::move(budgetDescription)) {}
 
+namespace {
+metal::AllocationAdmission startupAdmission(MemoryGovernor &governor, std::string purpose,
+                                             const std::function<bool()> &cancelled = {}) {
+  return [&governor, purpose = std::move(purpose), cancelled](uint64_t bytes, const std::function<void()> &allocate) {
+    if (cancelled && cancelled())
+      return metal::AllocationResult{metal::AllocationFailure::GrowthDeferred, "startup allocation cancelled"};
+    return governor.allocationAdmission(purpose)(bytes, allocate);
+  };
+}
+} // namespace
+
+metal::AllocationAdmission RuntimeResources::startupAllocationAdmission(std::string purpose) {
+  return startupAdmission(*memoryGovernor_, std::move(purpose));
+}
+
+uint64_t RuntimeResources::runtimeCreationBytes() const {
+  return model::runtimeCreationBytes(model_, operators_, kvPages_->layout().format, stateStorage_->layout().target.format,
+      model::StreamedParts::loaded(model_, blockCache_ != nullptr), optionalFeatures_);
+}
+
+void RuntimeResources::publishMemoryAccounting(std::string lifecycle) {
+  if (pressureManaged_ && model_.expertStore()->released() && lifecycle == "released")
+    expertRestoreTargetBytes_ = 0;
+  if (pressureManaged_ && !model_.expertStore()->released()) {
+    const uint64_t actual = model_.expertStore()->allocatedBytes() +
+        (automaticPle_ ? model_.streamedTable()->committedBytes() : 0);
+    if (actual > memoryGovernor_->automaticStorageQuotaBytes() && actual <= memoryGovernor_->automaticStorageMaximumBytes())
+      memoryGovernor_->setAutomaticStorageQuota(actual, memoryGovernor_->automaticStorageMaximumBytes(),
+          [this] { return model_.expertStore()->allocatedBytes() +
+              (automaticPle_ ? model_.streamedTable()->committedBytes() : 0); });
+  }
+  memoryGovernor_->publishAccounting(std::move(lifecycle));
+}
+
 RuntimeResources::RuntimeResources(
     PersistentCacheFiles persistentCache,
     std::unique_ptr<metal::MetalBackend> backend, std::shared_ptr<model::SsdReaders> readers,
@@ -603,12 +638,38 @@ RuntimeResources::RuntimeResources(
       releasableMemory_({model_.images.get(), model_.expertStore()}, idleSplit(aneFfn_.get())),
       aneFfnOutcome_(std::move(aneFfnOutcome)), spillAlways_(spillAlways), verifyRows_(verifyRows) {}
 
+namespace {
+void requirePressureConfiguration(const RuntimeResourcesConfig &config) {
+  if (!config.moeMemoryPressure) {
+    if (config.hostMemoryReserveBytes)
+      throw RuntimeResourcesError(RuntimeResourceStage::Configuration,
+                                  "--host-memory-reserve SIZE requires --moe-memory-pressure on");
+    return;
+  }
+  if (!std::visit([](const auto &layout) { return layout.experts != 0; }, config.model.target))
+    throw RuntimeResourcesError(RuntimeResourceStage::Configuration,
+                                "--moe-memory-pressure on requires a resizable MoE model");
+  if (config.expertMemory.mode != StreamedSetting::Mode::Auto)
+    throw RuntimeResourcesError(RuntimeResourceStage::Configuration,
+                                "--moe-memory-pressure on requires --expert-memory auto");
+  if (config.hostMemoryReserveBytes && !*config.hostMemoryReserveBytes)
+    throw RuntimeResourcesError(RuntimeResourceStage::Configuration,
+                                "--host-memory-reserve requires a positive byte count");
+}
+} // namespace
+
+
 std::unique_ptr<RuntimeResources>
 RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                          uint32_t requestedContextTokens) {
   const auto startupStarted = AwakeClock::now();
   RuntimeResourcesConfig config = inputConfig;
   config.optionalFeatures.validate();
+  if (config.expertPleAdaptive && config.expertPleRatio != 10 && config.expertPleRatio != 20)
+    throw std::invalid_argument("--expert-ple-ratio requires 1:20 or 1:10");
+  if (config.expertPleAdaptive && (!config.expertPleMemoryBytes ||
+      config.expertMemory.mode != StreamedSetting::Mode::Auto || config.pleMemory.mode != StreamedSetting::Mode::Auto))
+    throw std::invalid_argument("--expert-ple-policy adaptive requires --expert-ple-memory SIZE and both stores auto");
   if (config.optionalFeatures.compactDraftHead)
     static_cast<void>(model::readCompactRanking(config.optionalFeatures.compactRanking,
                                                 config.model.capabilities.vocabularySize));
@@ -633,10 +694,11 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
         "host memory and volume probes, build id and a merge-aligned image "
         "patch limit no larger than the protocol's are required");
   }
+  requirePressureConfiguration(config);
   std::unique_ptr<metal::MetalBackend> backend;
   try {
     backend = std::make_unique<metal::MetalBackend>(config.metallibPath.string(),
-                                                    config.idleReleaseSeconds);
+        config.idleReleaseSeconds, metal::kCommandTimeoutSeconds, config.moeMemoryPressure);
   } catch (const metal::MetalAllocationError &error) {
     throw RuntimeResourcesError(RuntimeResourceStage::BackendCreation,
                                 error.what(), {},
@@ -725,7 +787,36 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   const uint64_t kvSlotBytes = model::SlotFile::slotBytesFor(kvFormat.payloadBytes());
   const uint64_t hardBudgetBytes = EngineMemoryPolicy::hardBudgetBytes(
       device.recommendedMaxWorkingSetBytes, config.maximumMemoryBytes);
+  model::LoadedModel loaded;
+  std::unique_ptr<MemoryGovernor> memoryGovernor;
+  if (config.moeMemoryPressure) {
+    try {
+    memoryGovernor = std::make_unique<MemoryGovernor>(*backend, hardBudgetBytes, hostReserveBytes,
+        config.hostMemoryReserveBytes.value_or(EngineMemoryPolicy::hostSpareReserveBytes(device.physicalMemoryBytes)),
+        config.hostMemory, model::kPipelineReserveBytes + model::kRuntimeOverheadReserveBytes);
+    memoryGovernor->setServing(true);
+    memoryGovernor->setAllocationDriver(config.allocationDriver);
+    if (config.moeMemoryPressure) memoryGovernor->setPressureProvider(config.memoryPressure);
+    if (config.memoryPressure) memoryGovernor->setPressure(config.memoryPressure());
+    memoryGovernor->setNonBackendHostHeld([&loaded] {
+      return loaded.nonBackendHostBytes();
+    });
+    memoryGovernor->enablePressureControl(config.memoryPolicy);
+    backend->setAllocationAdmission(memoryGovernor->allocationAdmission("managed_buffer"),
+                                     memoryGovernor->allocationAdmission("backend_spin", false));
+    const auto prepared = startupAdmission(*memoryGovernor, "startup_backend", config.cancelled)(
+        backend->allocationBytes(sizeof(uint32_t)), [&] { backend->prepareResidency(); });
+    if (!prepared) throw RuntimeResourcesError(RuntimeResourceStage::BackendCreation,
+        prepared.detail.empty() ? metal::allocationFailureName(prepared.failure) : prepared.detail, {}, resourceAllocationFailure(prepared.failure));
+    } catch (const metal::MetalAllocationError &error) {
+      throw RuntimeResourcesError(RuntimeResourceStage::BackendCreation, error.what(), {},
+                                  resourceAllocationFailure(error.failure()));
+    }
+  }
   model::StreamableWeights streamable;
+  uint64_t requiredHostBytes = 0;
+  uint64_t automaticPleMaximumBytes = 0;
+  uint64_t residentPleBytes = 0;
   // The arenas of the loaded model by what streams of it, and those of a
   // runtime whose K/V spills, which only a block-sparse target with a
   // spillable layout may have; none before it loads.
@@ -759,8 +850,11 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
                                 uint64_t stagingBytes, uint64_t aneFfnBytes) {
     return planStreamedMemory(
         {.hardBudgetBytes = hardBudgetBytes,
+         .expertPleMemoryBytes = config.expertPleMemoryBytes,
+         .expertPleAdaptive = config.expertPleAdaptive && experts.mode == StreamedSetting::Mode::Auto && table.mode == StreamedSetting::Mode::Auto,
+         .expertPleRatio = config.expertPleRatio,
          .fixedBytes = streamable.loadedBytes + model::kPipelineReserveBytes + model::kRuntimeOverheadReserveBytes +
-                       stagingBytes + aneFfnBytes,
+                       stagingBytes + aneFfnBytes + requiredHostBytes,
          .arenaBytes = arenaBytes,
          .spillArenaBytes = spillArenaBytes,
          .laneStateBytes = stateLayout.laneBytes(),
@@ -813,8 +907,14 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   // gives the arenas, which take from all that the experts stream through.
   const auto storesOf = [&](const StreamedMemoryPlan &plan, bool floors) {
     const bool experts = floors && plan.expertBytes && config.expertMemory.mode == StreamedSetting::Mode::Auto;
-    return model::ModelLoadOptions{.streamedTableBytes = plan.tableBytes,
-                                   .expertMemoryBytes = experts ? streamable.expertFloorBytes : plan.expertBytes,
+    const bool table = config.moeMemoryPressure && streamable.tableBytes && config.pleMemory.mode == StreamedSetting::Mode::Auto;
+    return model::ModelLoadOptions{.streamedTableBytes = table ? streamable.tableFloorBytes : plan.tableBytes,
+                                   .expertMemoryBytes = (config.moeMemoryPressure || experts) ? streamable.expertFloorBytes : plan.expertBytes,
+                                   .resizableExperts = config.expertPleAdaptive || config.moeMemoryPressure,
+                                   .boundedHostMemory = config.moeMemoryPressure,
+                                   .optionalExpertRestore = config.moeMemoryPressure ? memoryGovernor->allocationAdmission("restore_expert_optional", false) : metal::AllocationAdmission{},
+                                   .maximumPleCacheBytes = automaticPleMaximumBytes ? automaticPleMaximumBytes :
+                                       config.expertPleAdaptive ? config.expertPleMemoryBytes / (config.expertPleRatio + 1) : 0,
                                    .readers = readers, .ffn = config.ffnLoading};
   };
   model::ModelLoadOptions loadOptions;
@@ -823,12 +923,44 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     // planned.
     streamable = model::streamableWeights(
         config.modelRoot, config.model,
-        {.streamExperts = true, .streamTable = config.pleMemory.mode != StreamedSetting::Mode::Off},
-        config.ffnLoading);
+        {.streamExperts = true, .streamTable = config.expertPleMemoryBytes || config.pleMemory.mode != StreamedSetting::Mode::Off},
+        config.ffnLoading, config.expertPleAdaptive || config.moeMemoryPressure, config.moeMemoryPressure);
+    if (config.moeMemoryPressure && (!streamable.expertStorage ||
+        !streamable.expertStorage->resizable.minimumBytes || streamable.expertStorage->resizable.chunks.empty()))
+      throw std::invalid_argument("--moe-memory-pressure on requires a resizable MoE model");
+    if (config.moeMemoryPressure && !streamable.tableBytes && config.pleMemory.mode == StreamedSetting::Mode::Off)
+      residentPleBytes = model::streamableWeights(config.modelRoot, config.model,
+          {.streamExperts = true, .streamTable = true}, config.ffnLoading, true, true).tableBytes;
+    uint64_t requiredHost = config.moeMemoryPressure ? streamable.expertReaderTemporaryBytes : 0;
+    if (config.moeMemoryPressure && streamable.tableBytes) {
+      const auto rows = std::visit([](const auto &layout) { return model::streamedTableRows(layout); }, config.model.target);
+      const uint64_t plannedWorking = model::SparseRowStore::workingBytes(streamable.tableRowBytes, rows.prefetchRows, rows.stageRows);
+      const uint64_t boundedWorking = model::SparseRowStore::boundedWorkingBytes(streamable.tableRowBytes, rows.prefetchRows, rows.stageRows);
+      if (boundedWorking > plannedWorking) requiredHost += boundedWorking - plannedWorking;
+    }
+    requiredHostBytes = requiredHost;
+    if (config.moeMemoryPressure && streamable.tableBytes && config.pleMemory.mode == StreamedSetting::Mode::Auto) {
+      if (!streamable.tableRows) throw std::invalid_argument("automatic PLE requires model row geometry");
+      const auto rows = std::visit([](const auto &layout) { return model::streamedTableRows(layout); }, config.model.target);
+      automaticPleMaximumBytes = model::SparseRowStore::maximumResizableBytes(*streamable.tableRows,
+          static_cast<uint32_t>(streamable.tableRowBytes), rows.prefetchRows, rows.stageRows);
+      if (config.expertPleMemoryBytes)
+        automaticPleMaximumBytes = std::min(automaticPleMaximumBytes, config.expertPleMemoryBytes / (config.expertPleRatio + 1));
+      streamable.tableFloorBytes = model::SparseRowStore::minimumResizableBytes(automaticPleMaximumBytes,
+          static_cast<uint32_t>(streamable.tableRowBytes), rows.prefetchRows, rows.stageRows, streamable.tableRows);
+    } else if (config.expertPleAdaptive) {
+      if (!streamable.expertBytes || !streamable.tableBytes)
+        throw std::invalid_argument("adaptive expert/PLE requires both streamable routed experts and a PLE table");
+      const auto rows = std::visit([](const auto &layout) { return model::streamedTableRows(layout); }, config.model.target);
+      streamable.tableFloorBytes = model::SparseRowStore::minimumResizableBytes(
+          config.expertPleMemoryBytes / (config.expertPleRatio + 1), static_cast<uint32_t>(streamable.tableRowBytes),
+          rows.prefetchRows, rows.stageRows);
+    }
     if (!streamable.tableRefusal.empty()) {
-      if (config.pleMemory.mode == StreamedSetting::Mode::Size)
+      if (config.pleMemory.mode == StreamedSetting::Mode::Size || config.expertPleMemoryBytes)
         throw RuntimeResourcesError(RuntimeResourceStage::Configuration,
-                                    "--ple-memory cannot stream the PLE table: " + streamable.tableRefusal);
+                                    std::string(config.expertPleMemoryBytes ? "--expert-ple-memory" : "--ple-memory") +
+                                        " cannot stream the PLE table: " + streamable.tableRefusal);
       logLine("The PLE table loads with the weights: ", streamable.tableRefusal, " (--ple-memory auto).");
     }
     reportIgnoredSetting("--ple-memory", config.pleMemory, streamable.tableBytes, config.model.name, "PLE table",
@@ -861,7 +993,6 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
   // One plan owner is used both before allocation and during encoding. The
   // engine lends it to model execution without inspecting its plans.
   ops::ExecutionPlans operators(device);
-  model::LoadedModel loaded;
   // The runtime's lane state and arenas as the model loaded, with its K/V in
   // memory and where it spills.
   model::ModelMemoryPlan modelMemoryPlan, spillModelMemoryPlan;
@@ -877,7 +1008,16 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
       // row cache the audit's budget for Metal leaves out.
       loaded = {};
       backend->restartPeaks();
-      loaded = model::loadModel(*backend, config.modelRoot, config.model, loadOptions);
+      const auto allocate = [&] { loaded = model::loadModel(*backend, config.modelRoot, config.model, loadOptions); };
+      if (config.moeMemoryPressure) {
+        const uint64_t peak = streamable.loadedBytes +
+            (loadOptions.expertMemoryBytes ? loadOptions.expertMemoryBytes : streamable.expertBytes) +
+            (loadOptions.streamedTableBytes ? loadOptions.streamedTableBytes : streamable.tableBytes) +
+            streamable.loadingTemporaryBytes + requiredHostBytes;
+        const auto admitted = startupAdmission(*memoryGovernor, "startup_weights", config.cancelled)(peak, allocate);
+        if (!admitted)
+          throw metal::MetalAllocationError(admitted.detail.empty() ? metal::allocationFailureName(admitted.failure) : admitted.detail, admitted.failure);
+      } else allocate();
       requireLoadedModel(loaded);
       const std::chrono::duration<double> loading = AwakeClock::now() - started;
       logLine("Weights loaded ", again ? "again " : "", "in ", std::fixed, std::setprecision(2), loading.count(),
@@ -938,10 +1078,25 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
         stagingBytes,
         aneFfnBytes,
         loaded.streamedTable() ? loaded.streamedTable()->committedBytes() : 0,
+        loaded.requiredHostBytes(),
     };
+    if (config.expertPleAdaptive) {
+      const auto *experts = loaded.expertStore();
+      if (!experts || !loaded.streamedTable() || experts->allocatedBytes() > loadOptions.expertMemoryBytes)
+        throw std::invalid_argument("adaptive expert/PLE requires bounded streamed stores");
+      // Reserve the complete assigned pool, including chunk-rounding slack.
+      // Repartitioning then changes no KV/state/dynamic budget at runtime.
+      footprint.targetWeightsBytes += loadOptions.expertMemoryBytes - experts->allocatedBytes();
+      footprint.streamedTableBytes = loadOptions.streamedTableBytes;
+    }
     ModelMemoryProfile modelProfile{
         loaded.name(), loaded.maximumContextTokens(), loaded.targetKvLayout(config.kvFormat), footprint,
         config.stateFormat, streamed.plan ? streamed.plan->spill : KvSpillPlan{}};
+    modelProfile.expertPleMemoryBytes = config.expertPleMemoryBytes;
+    if (streamed.plan) {
+      modelProfile.expertPlannedBytes = streamed.plan->expertBytes ? streamed.plan->expertBytes : streamable.expertBytes;
+      modelProfile.plePlannedBytes = streamed.plan->tableBytes ? streamed.plan->tableBytes : streamable.tableBytes;
+    }
     EngineMemoryPlanResult result = evaluateEngineMemoryPlan(device, modelProfile, config.maximumMemoryBytes);
     if (streamed.plan || !result.plan)
       return result;
@@ -976,6 +1131,13 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     }
   }
   reportStreamedStores(loaded, streamable, config.expertMemory, config.pleMemory);
+  if (config.expertPleMemoryBytes && planned.plan) {
+    const auto &pool = *planned.plan;
+    logLine("Expert/PLE shared pool: limit ", config.expertPleMemoryBytes,
+            " bytes; planned experts ", pool.expertBytes ? pool.expertBytes : streamable.expertBytes,
+            "; planned PLE ", pool.tableBytes ? pool.tableBytes : streamable.tableBytes,
+            "; KV, state and workspaces use the global budget separately.");
+  }
   reportVerifyRows(loaded, config.verifyRows);
   // The model's side of the split (startAneFfn).
   const AneFfnModel splitModel =
@@ -1065,7 +1227,10 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     // only beyond them, and elastic state and KV never grow into them. The
     // split only moves bytes from KV to fixed runtime memory, so the governor
     // is the same with it or without.
-    auto memoryGovernor = std::make_unique<MemoryGovernor>(*backend, memoryPlan.breakdown(), config.hostMemory);
+    if (!memoryGovernor)
+      memoryGovernor = std::make_unique<MemoryGovernor>(*backend, memoryPlan.breakdown(), config.hostMemory);
+    memoryGovernor->setAllocationDriver(config.allocationDriver);
+    if (config.moeMemoryPressure) memoryGovernor->setPressureProvider(config.memoryPressure);
     if (config.memoryPressure)
       memoryGovernor->setPressure(config.memoryPressure());
     // What the start allocates, the KV runway, the arenas and the warmup, is
@@ -1112,13 +1277,39 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     const uint64_t poolExtents = std::min<uint64_t>(
         (budget.hardBudgetBytes + idExtentBytes - 1) / idExtentBytes,
         std::numeric_limits<uint32_t>::max() / budget.kvExtentPages);
-    auto kvPages = std::make_unique<kv::PageStorage>(
-        *backend, memoryGovernor->allocationAdmission(), kvLayout,
+    std::unique_ptr<kv::PageStorage> kvPages;
+    std::unique_ptr<KvPool> kvPool;
+    std::unique_ptr<model::QwenStateStorage> stateStorage;
+    std::unique_ptr<model::KvBlockCache> blockCache;
+    std::unique_ptr<model::KvHistoryStream> historyStream;
+    const auto allocateStorage = [&] {
+    kvPages = std::make_unique<kv::PageStorage>(
+        *backend, memoryGovernor->allocationAdmission("kv_required"), kvLayout,
         static_cast<uint32_t>(poolExtents * budget.kvExtentPages), budget.kvExtentPages);
-    auto kvPool = std::make_unique<KvPool>(*kvPages, model::ExecutionLimits::warmupKvPages);
-    auto stateStorage = std::make_unique<model::QwenStateStorage>(
-        *backend, memoryGovernor->allocationAdmission(), loaded.stateLayout(config.stateFormat),
+    kvPool = std::make_unique<KvPool>(*kvPages, model::ExecutionLimits::warmupKvPages);
+    stateStorage = std::make_unique<model::QwenStateStorage>(
+        *backend, memoryGovernor->allocationAdmission("state_required"), loaded.stateLayout(config.stateFormat),
         disk.states);
+    if (spill.enabled) {
+      blockCache = std::make_unique<model::KvBlockCache>(
+          *backend, memoryGovernor->allocationAdmission("kv_required"), kvLayout, budget.kvExtentPages,
+          model::KvBlockCacheOptions{.laneSlots = static_cast<uint32_t>(spill.laneSlots),
+                                     .targetBytes = spill.hotTargetBytes,
+                                     .readers = readers,
+                                     .format = kvFormat});
+      historyStream = std::make_unique<model::KvHistoryStream>(
+          *backend, memoryGovernor->allocationAdmission("kv_required"), kvLayout, budget.kvExtentPages, readers, kvFormat,
+          spill.stagingBuffers);
+    }
+
+    };
+    if (config.moeMemoryPressure) {
+      const uint64_t actual = backend->memoryStats().allocatedBytes +
+          loaded.hostHeldBytes();
+      const uint64_t required = budget.minimumRequiredBytes > actual ? budget.minimumRequiredBytes - actual : 1;
+      const auto admitted = startupAdmission(*memoryGovernor, "startup_storage", config.cancelled)(required, allocateStorage);
+      if (!admitted) throw metal::MetalAllocationError(admitted.detail.empty() ? metal::allocationFailureName(admitted.failure) : admitted.detail, admitted.failure);
+    } else allocateStorage();
     std::unique_ptr<KvPageTier> kvTier;
     if (disk.kv)
       kvTier = std::make_unique<KvPageTier>(*kvPages, kvFormat, disk.kv, readers);
@@ -1128,22 +1319,6 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     auto cache = std::make_unique<engine::Cache>(*kvPool, kvTier.get(), disk.budget, spillPolicy);
     if (disk.space)
       cache->setDiskMeasure([space = disk.space.get()] { space->measure(); });
-    // A target whose KV spills reads it back through one hot block cache and
-    // one history stream, which take KV memory from the governor.
-    std::unique_ptr<model::KvBlockCache> blockCache;
-    std::unique_ptr<model::KvHistoryStream> historyStream;
-    if (spill.enabled) {
-      blockCache = std::make_unique<model::KvBlockCache>(
-          *backend, memoryGovernor->allocationAdmission(), kvLayout, budget.kvExtentPages,
-          model::KvBlockCacheOptions{.laneSlots = static_cast<uint32_t>(spill.laneSlots),
-                                     .targetBytes = spill.hotTargetBytes,
-                                     .readers = readers,
-                                     .format = kvFormat});
-      historyStream = std::make_unique<model::KvHistoryStream>(
-          *backend, memoryGovernor->allocationAdmission(), kvLayout, budget.kvExtentPages, readers, kvFormat,
-          spill.stagingBuffers);
-    }
-
     if (stateStorage->actualAllocatedBytes() != 0) {
       throw std::runtime_error("lane state was allocated eagerly");
     }
@@ -1166,6 +1341,67 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
         std::move(kvTier), std::move(disk.space), std::move(kvPool), std::move(cache),
         std::move(aneFfn.split), std::move(aneFfn.outcome), std::move(blockCache),
         std::move(historyStream), config.kvSpillAlways, config.verifyRows));
+    result->expertStorage_ = streamable.expertStorage;
+    result->expertPleRatio_ = config.expertPleRatio;
+    if (config.expertPleAdaptive) {
+      const auto &budget = result->memoryPlan_.breakdown();
+      result->expertPleManagedBytes_ = budget.expertPlannedBytes + budget.plePlannedBytes;
+      result->expertPlePolicy_.emplace(config.expertPleMemoryBytes, result->expertPleManagedBytes_,
+                                      config.moeMemoryPressure ? result->model_.expertStore()->stats().minimumBytes : streamable.expertFloorBytes,
+                                      streamable.tableFloorBytes, config.expertPleRatio);
+    }
+    if (config.moeMemoryPressure) {
+      result->pressureManaged_ = true;
+      result->automaticPle_ = automaticPleMaximumBytes != 0;
+      result->automaticPleFloorBytes_ = result->automaticPle_ ? streamable.tableFloorBytes : 0;
+      result->expertMaximumBytes_ = streamable.expertStorage->resizable.fullBytes;
+      result->automaticPleMaximumBytes_ = automaticPleMaximumBytes;
+      auto *experts = result->model_.expertStore();
+      auto *ple = result->model_.streamedTable();
+      result->expertCurrentQuotaBytes_ = experts->allocatedBytes();
+      result->pleCurrentQuotaBytes_ = ple ?
+          (config.pleMemory.mode == StreamedSetting::Mode::Size ? loadOptions.streamedTableBytes : ple->committedBytes()) : 0;
+      result->fixedResidentPleBytes_ = ple ? 0 : std::max(streamable.tableBytes, residentPleBytes);
+      const uint64_t fixedPle = result->automaticPle_ ? 0 :
+          result->pleCurrentQuotaBytes_ + result->fixedResidentPleBytes_;
+      const uint64_t pool = std::min(config.expertPleMemoryBytes ? config.expertPleMemoryBytes : hardBudgetBytes,
+                                     hardBudgetBytes);
+      result->expertPleManagedBytes_ = result->expertCurrentQuotaBytes_ +
+          (result->automaticPle_ ? result->pleCurrentQuotaBytes_ : 0);
+      const uint64_t nonAutomaticMinimum = result->memoryPlan_.breakdown().minimumRequiredBytes - result->expertPleManagedBytes_;
+      const uint64_t maximum = std::min({pool - std::min(pool, fixedPle),
+          result->expertMaximumBytes_ + automaticPleMaximumBytes,
+          hardBudgetBytes - std::min(hardBudgetBytes, nonAutomaticMinimum)});
+      result->memoryGovernor_->setAutomaticStorageQuota(result->expertPleManagedBytes_, maximum,
+          [owner = result.get()] {
+            const auto *store = owner->model_.expertStore();
+            return (store ? store->allocatedBytes() : 0) +
+                (owner->automaticPle_ ? owner->model_.streamedTable()->committedBytes() : 0);
+          });
+      result->memoryGovernor_->setAutomaticStorageMinimum(experts->stats().minimumBytes + result->automaticPleFloorBytes_);
+      result->constrainExpertPlePolicy();
+      experts->setGrowthGuard([governor = result->memoryGovernor_.get()](const model::StorageGrowthPlan &plan) {
+        return governor->consumeAutomaticStorageBlock({AutomaticStorageKind::ExpertBlock, 1, plan.candidate,
+            plan.contributionBytes, plan.auxiliaryBytes});
+      });
+      if (result->automaticPle_)
+        ple->setGrowthGuard([governor = result->memoryGovernor_.get()](const model::StorageGrowthPlan &plan) {
+          return governor->consumeAutomaticStorageBlock({AutomaticStorageKind::PleBlock, 1, plan.candidate,
+              plan.contributionBytes, plan.auxiliaryBytes});
+        });
+      result->memoryGovernor_->setAutomaticStorageControl([owner = result.get()](const MemoryGovernorSnapshot &memory) {
+        owner->controlExpertMemory(memory);
+      });
+      result->releasableMemory_.setRestorePreparation([owner = result.get()](model::WeightMemory &part) {
+        if (&part == owner->model_.expertStore()) owner->prepareExpertRestore();
+      });
+    }
+    if (config.moeMemoryPressure) {
+      result->memoryGovernor_->setNonBackendHostHeld([owner = result.get()] {
+        return owner->model_.nonBackendHostBytes();
+      });
+      result->memoryGovernor_->publishAccounting("loaded");
+    }
     result->optionalFeatures_ = config.optionalFeatures;
     result->adoptPersistentCache();
     startupTimings.storageSeconds = std::chrono::duration<double>(AwakeClock::now() - storageStarted).count();
@@ -1219,6 +1455,7 @@ void RuntimeResources::adoptPersistentCache() {
 
 void RuntimeResources::beginServing() {
   memoryGovernor_->setServing(false);
+  memoryGovernor_->publishAccounting("ready");
   CacheDirectory *directory = persistentCache_.directory.get();
   if (!directory)
     return;
@@ -1319,9 +1556,497 @@ std::optional<KvSpillStatus> RuntimeResources::kvSpillStatus() const {
   return result;
 }
 
+void RuntimeResources::controlExpertMemory(const MemoryGovernorSnapshot &memory) {
+  auto *store = model_.expertStore();
+  if (!store || store->released()) {
+    memoryGovernor_->resetAutomaticGrowth();
+    memoryGovernor_->automaticStorageDecision(false, "weights_released");
+    return;
+  }
+  const bool critical = memory.systemPressure == MemoryPressure::Critical;
+  if (critical || !memory.hostMeasurementValid)
+    memoryGovernor_->resetAutomaticGrowth();
+  const uint64_t reserve = memory.hostSpareReserveBytes;
+  const auto deficit = [reserve](const MemoryGovernorSnapshot &sample) {
+    const uint64_t target = reserve + std::min(kHostWarningMarginBytes, UINT64_MAX - reserve);
+    return sample.hostSpareBytes < target ? target - sample.hostSpareBytes : 0;
+  };
+  if (!critical && (!memory.hostMeasurementValid || !reserve)) {
+    memoryGovernor_->automaticStorageDecision(memory.requestStartsPaused,
+        !memory.hostMeasurementValid ? "telemetry_unavailable" : "local_reserve_unknown");
+    return;
+  }
+  const uint64_t shortfall = critical ? UINT64_MAX : deficit(memory);
+  if (!shortfall) {
+    memoryGovernor_->automaticStorageDecision(false,
+        memory.systemPressure == MemoryPressure::Warning ? "warning_reserve_satisfied" : "reserve_satisfied");
+    growAutomaticStorage();
+    return;
+  }
+  const auto stats = store->stats();
+  const uint64_t before = store->allocatedBytes();
+  auto *ple = automaticPle_ ? model_.streamedTable() : nullptr;
+  const uint64_t beforePle = ple ? ple->committedBytes() : 0;
+  if (before < stats.minimumBytes) throw std::logic_error("expert allocation is below its execution floor");
+  if (beforePle < automaticPleFloorBytes_) throw std::logic_error("PLE allocation is below its execution floor");
+  const uint64_t optionalE = before - stats.minimumBytes;
+  const uint64_t optionalP = beforePle - automaticPleFloorBytes_;
+  const uint64_t donation = std::min(shortfall, optionalE + optionalP);
+  // Share the deficit between the two actual optional stores. Rounding may
+  // release a full chunk; a later pass samples the host again before acting.
+  const uint64_t pleDonation = optionalP ? std::min(optionalP,
+      static_cast<uint64_t>(static_cast<unsigned __int128>(donation) * optionalP / (optionalE + optionalP))) : 0;
+  const uint64_t target = before - std::min(optionalE, donation - pleDonation);
+  const uint64_t targetPle = beforePle - pleDonation;
+  expertCurrentQuotaBytes_ = pressureQuotaEstablished_ ? std::min(expertCurrentQuotaBytes_, target) : target;
+  if (ple) pleCurrentQuotaBytes_ = pressureQuotaEstablished_ ? std::min(pleCurrentQuotaBytes_, targetPle) : targetPle;
+  expertPleManagedBytes_ = expertCurrentQuotaBytes_ + (ple ? pleCurrentQuotaBytes_ : 0);
+  if (memoryGovernor_->automaticStorageMaximumBytes()) {
+    pressureQuotaEstablished_ = true;
+    memoryGovernor_->setAutomaticStorageQuota(expertPleManagedBytes_, memoryGovernor_->automaticStorageMaximumBytes(),
+        [this] { const auto *experts = model_.expertStore();
+          return (experts ? experts->allocatedBytes() : 0) +
+              (automaticPle_ ? model_.streamedTable()->committedBytes() : 0); });
+  }
+  bool failed = false;
+  if (target < before) {
+    try { store->shrink(target); }
+    catch (const std::bad_alloc &) { failed = true; }
+  }
+  if (ple && targetPle < beforePle) {
+    try { ple->resize(targetPle); }
+    catch (const std::bad_alloc &) { failed = true; }
+    memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+  }
+  const uint64_t after = store->allocatedBytes();
+  const uint64_t afterPle = ple ? ple->committedBytes() : 0;
+  if (after > before || after < stats.minimumBytes)
+    throw std::logic_error("expert pressure shrink violated its physical allocation bounds");
+  if (afterPle > beforePle || afterPle < automaticPleFloorBytes_)
+    throw std::logic_error("PLE pressure shrink violated its physical allocation bounds");
+  memoryGovernor_->withholdReleasedAutomaticStorage(before - after + beforePle - afterPle);
+  constrainExpertPlePolicy();
+  memoryGovernor_->publishAccounting();
+  const auto fresh = memoryGovernor_->evaluate();
+  const bool insufficient = critical || !fresh.hostMeasurementValid || deficit(fresh) != 0;
+  memoryGovernor_->automaticStorageDecision(insufficient,
+      failed ? "shrink_allocation_failed" :
+      after == stats.minimumBytes && afterPle == automaticPleFloorBytes_ && insufficient ? "minimum_insufficient" :
+      after == before && afterPle == beforePle && insufficient ? "no_release_progress" :
+      critical ? "critical_floor" : "warning_reserve_deficit");
+}
+
+void RuntimeResources::prepareExpertRestore() {
+  auto *experts = model_.expertStore();
+  memoryGovernor_->resetAutomaticGrowth();
+  memoryGovernor_->publishAccounting("restoring");
+  auto *ple = automaticPle_ ? model_.streamedTable() : nullptr;
+  if (ple) {
+    uint64_t ceiling = std::min(memoryGovernor_->automaticStorageQuotaBytes(),
+        memoryGovernor_->automaticStorageMaximumBytes());
+    const uint64_t target = std::max(automaticPleFloorBytes_, ceiling - std::min(ceiling, experts->stats().minimumBytes));
+    const uint64_t before = ple->committedBytes();
+    if (target < before) {
+      try { ple->resize(target); }
+      catch (const std::bad_alloc &) {
+        pleCurrentQuotaBytes_ = ple->committedBytes();
+        memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+        memoryGovernor_->withholdReleasedAutomaticStorage(before - std::min(before, ple->committedBytes()));
+        memoryGovernor_->publishAccounting();
+        throw metal::MetalAllocationError("PLE donation for expert restore awaits memory");
+      }
+      memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+      memoryGovernor_->withholdReleasedAutomaticStorage(before - ple->committedBytes());
+      memoryGovernor_->publishAccounting();
+    }
+    pleCurrentQuotaBytes_ = ple->committedBytes();
+  }
+  // Staging and bounded reader scratch are either part of the missing floor
+  // or retained already; restore itself needs no additional payload workspace.
+  const auto plan = memoryGovernor_->planAutomaticStorageRestore(expertStorage_->resizable,
+      experts->allocatedBytes(), 0, ple ? ple->committedBytes() : 0);
+  expertRestoreTargetBytes_ = plan.targetBytes;
+  expertCurrentQuotaBytes_ = plan.targetBytes;
+  expertPleManagedBytes_ = plan.targetBytes + (ple ? ple->committedBytes() : 0);
+  experts->prepareRestore(plan.targetBytes);
+  constrainExpertPlePolicy();
+}
+
+void RuntimeResources::constrainExpertPlePolicy() {
+  if (pressureManaged_ && automaticPle_ && expertPlePolicy_ &&
+      expertPlePolicy_->constrainManagedBytes(memoryGovernor_->automaticStorageQuotaBytes(),
+          model_.streamedTable()->committedBytes())) {
+    expertPleTransferMilliseconds_ = 0;
+    expertPleTransferBlocks_ = 0;
+  }
+}
+
+void RuntimeResources::growAutomaticStorage() {
+  const uint64_t maximum = memoryGovernor_->automaticStorageMaximumBytes();
+  if (maximum < model_.expertStore()->stats().minimumBytes + automaticPleFloorBytes_) {
+    memoryGovernor_->resetAutomaticGrowth();
+    return;
+  }
+  constrainExpertPlePolicy();
+  if (expertPlePolicy_) {
+    // Do not change the experiment's allocation while a paced transfer or
+    // its existing cost evaluation is outstanding.
+    if (expertPlePolicy_->pendingTarget() || expertPlePolicy_->trialPending()) return;
+    const uint64_t ple = std::min(automaticPleMaximumBytes_, expertPlePolicy_->targetPleBytes());
+    static_cast<void>(growAutomaticStorageOne(std::min(expertMaximumBytes_, maximum - ple), ple));
+    return;
+  }
+  uint64_t ple = automaticPle_ ? std::clamp(maximum / (expertPleRatio_ + 1), automaticPleFloorBytes_, automaticPleMaximumBytes_) : 0;
+  const uint64_t restoringTarget = expertMaximumBytes_;
+  const uint64_t experts = std::min({expertMaximumBytes_, maximum - ple, restoringTarget});
+  if (automaticPle_) ple = std::min(automaticPleMaximumBytes_, maximum - experts);
+  auto *store = model_.expertStore();
+  auto *table = automaticPle_ ? model_.streamedTable() : nullptr;
+  if (!store->planGrowOne(experts) && (!table || !table->planGrowOne(ple))) {
+    // A continuous pool ratio can leave both category slices a fraction of
+    // one real block. Let one owner use the combined rounded allowance.
+    for (unsigned offset = 0; offset < 2; ++offset) {
+      const bool receivingPle = (offset == 0) == nextGrowthPle_;
+      const uint64_t other = receivingPle ? store->allocatedBytes() : table ? table->committedBytes() : 0;
+      if (other >= maximum) continue;
+      const uint64_t receiving = receivingPle ? maximum - other : std::min(maximum - other, restoringTarget);
+      const auto next = receivingPle ? (table ? table->planGrowOne(receiving) : std::nullopt) : store->planGrowOne(receiving);
+      if (!next) continue;
+      static_cast<void>(growAutomaticStorageOne(receivingPle ? other : receiving,
+          receivingPle ? maximum - other : other));
+      return;
+    }
+  }
+  static_cast<void>(growAutomaticStorageOne(experts, ple));
+}
+
+metal::AllocationResult RuntimeResources::growAutomaticStorageOne(uint64_t expertTargetBytes, uint64_t pleTargetBytes) {
+  auto *experts = model_.expertStore();
+  auto *ple = automaticPle_ ? model_.streamedTable() : nullptr;
+  if (!pressureManaged_ || !experts || releasableMemory_.released()) return metal::AllocationFailure::GrowthDeferred;
+  const auto memory = memoryGovernor_->evaluate();
+  if (!memory.hostMeasurementValid || memory.systemPressure == MemoryPressure::Critical) {
+    memoryGovernor_->resetAutomaticGrowth();
+    return metal::AllocationFailure::HostPressure;
+  }
+  const uint64_t maximum = memoryGovernor_->automaticStorageMaximumBytes();
+  const uint64_t eTarget = std::min({expertTargetBytes, expertMaximumBytes_, experts->allocatedBytes() + memory.headroomBytes});
+  const uint64_t pTarget = ple ? std::min({pleTargetBytes, automaticPleMaximumBytes_, ple->committedBytes() + memory.headroomBytes}) : 0;
+  if (eTarget > maximum || pTarget > maximum - eTarget)
+    throw std::invalid_argument("automatic store targets exceed the original local ceiling");
+  for (unsigned offset = 0; offset < 2; ++offset) {
+    const bool receivingPle = (offset == 0) == nextGrowthPle_;
+    const auto plan = receivingPle ? (ple ? ple->planGrowOne(pTarget) : std::nullopt) : experts->planGrowOne(eTarget);
+    if (!plan) continue;
+    const AutomaticStorageBlock block{receivingPle ? AutomaticStorageKind::PleBlock : AutomaticStorageKind::ExpertBlock,
+        1, plan->candidate, plan->contributionBytes, plan->auxiliaryBytes};
+    model::StorageGrowthReceipt receipt;
+    metal::AllocationResult result;
+    try {
+      result = memoryGovernor_->automaticStorageAdmission(receivingPle ? "ple_optional" : "expert_optional", block)(
+          plan->peakBytes, [&] {
+            receipt = receivingPle ? ple->growOne(*plan) : experts->growOne(*plan);
+            if (receipt.grossBlocks != 1 || receipt.contributionBytes != plan->contributionBytes)
+              throw metal::MetalAllocationError("automatic block receipt does not match its plan", metal::AllocationFailure::PlanInsufficient);
+          });
+    } catch (const std::bad_alloc &) {
+      result = {metal::AllocationFailure::DriverRejected, "automatic block metadata allocation failed"};
+    } catch (const std::invalid_argument &error) {
+      result = {metal::AllocationFailure::PlanInsufficient, error.what()};
+    }
+    const uint64_t quota = memoryGovernor_->automaticStorageQuotaBytes();
+    if (ple) {
+      if (receivingPle) {
+        pleCurrentQuotaBytes_ = std::min(std::max(pleCurrentQuotaBytes_, plan->beforeBytes + plan->contributionBytes),
+            quota - std::min(quota, experts->allocatedBytes()));
+        expertCurrentQuotaBytes_ = quota - pleCurrentQuotaBytes_;
+      } else {
+        expertCurrentQuotaBytes_ = std::min(std::max(expertCurrentQuotaBytes_, plan->beforeBytes + plan->contributionBytes),
+            quota - std::min(quota, ple->committedBytes()));
+        pleCurrentQuotaBytes_ = quota - expertCurrentQuotaBytes_;
+      }
+    } else expertCurrentQuotaBytes_ = quota;
+    expertPleManagedBytes_ = quota;
+    if (receipt.grossBlocks) lastGrowth_ = receipt;
+    if (result) { nextGrowthPle_ = !receivingPle; expertPleFailure_.clear(); }
+    else if (result.failure != metal::AllocationFailure::GrowthDeferred) expertPleFailure_ = result.detail;
+    memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+    constrainExpertPlePolicy();
+    return result;
+  }
+  memoryGovernor_->resetAutomaticGrowth();
+  return metal::AllocationFailure::GrowthDeferred;
+}
+
+bool RuntimeResources::rebalancePressureExpertPle(double now, uint64_t pleTarget) {
+  auto *experts = model_.expertStore();
+  auto *ple = model_.streamedTable();
+  const uint64_t quota = memoryGovernor_->automaticStorageQuotaBytes();
+  const uint64_t expertTarget = quota - pleTarget;
+  const auto receiving = expertPleReceivingPle_ ? ple->planGrowOne(pleTarget) : experts->planGrowOne(expertTarget);
+  const auto finish = [&] {
+    if (expertPleTransferBlocks_)
+      expertPlePolicy_->applied(now, ple->committedBytes(), expertPleTransferMilliseconds_);
+    else expertPlePolicy_->abandonTransfer(ple->committedBytes());
+    expertPleTransferMilliseconds_ = 0;
+    expertPleTransferBlocks_ = 0;
+  };
+  if (!receiving) { finish(); return false; }
+  // Donation is useful only once the same local gate is ready for a real
+  // receiver. The allocation itself checks fresh pressure again.
+  if (memoryGovernor_->evaluate().automaticGrowthReason != "ready") return false;
+  const auto started = AwakeClock::now();
+  const uint64_t beforeE = experts->allocatedBytes(), beforeP = ple->committedBytes();
+  const uint64_t actual = beforeE + beforeP;
+  const uint64_t free = quota - std::min(quota, actual);
+  const uint64_t donation = receiving->contributionBytes - std::min(receiving->contributionBytes, free);
+  bool donorFailed = false;
+  try {
+    if (donation) {
+      if (expertPleReceivingPle_)
+        experts->shrink(std::max(experts->stats().minimumBytes, beforeE - std::min(beforeE, donation)));
+      else
+        ple->resize(std::max(pleTarget, beforeP - std::min(beforeP, donation)));
+    }
+  } catch (const std::exception &error) {
+    expertPleFailure_ = error.what();
+    donorFailed = true;
+  }
+  const uint64_t afterE = experts->allocatedBytes(), afterP = ple->committedBytes();
+  if (afterE > beforeE || afterP > beforeP)
+    throw std::logic_error("adaptive donor grew before receiving admission");
+  const uint64_t released = beforeE - afterE + beforeP - afterP;
+  memoryGovernor_->withholdReleasedAutomaticStorage(released);
+  memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+  memoryGovernor_->publishAccounting();
+  backend_->beginMemoryEpoch();
+  metal::AllocationResult result;
+  if (!donorFailed && afterE + afterP <= quota && receiving->contributionBytes <= quota - afterE - afterP)
+    result = growAutomaticStorageOne(expertPleReceivingPle_ ? afterE : expertTarget,
+        expertPleReceivingPle_ ? pleTarget : afterP);
+  else result = {metal::AllocationFailure::EngineBudget, "adaptive donor did not release the receiving block"};
+  expertPleTransferMilliseconds_ += std::chrono::duration<double, std::milli>(AwakeClock::now() - started).count();
+  if (result) {
+    ++expertPleTransferBlocks_;
+    const auto next = expertPleReceivingPle_ ? ple->planGrowOne(pleTarget) : experts->planGrowOne(expertTarget);
+    if (!next) finish();
+  } else if (result.failure != metal::AllocationFailure::GrowthDeferred && result.failure != metal::AllocationFailure::HostPressure) {
+    if (expertPleFailure_.empty()) expertPleFailure_ = result.detail;
+    expertPlePolicy_->abandonTransfer(ple->committedBytes());
+    expertPlePolicy_->stop();
+    expertPleTransferBlocks_ = 0;
+    expertPleTransferMilliseconds_ = 0;
+  }
+  return released || bool(result);
+}
+
+bool RuntimeResources::rebalanceExpertPle(double now, const model::ModelMemoryActual &modelMemory) {
+  const auto auditLocal = [&] {
+    const auto *experts = model_.expertStore();
+    const RuntimeStoreQuotaView stores{
+        .expertQuotaBytes = expertCurrentQuotaBytes_, .pleQuotaBytes = pleCurrentQuotaBytes_,
+        .maximumBytes = memoryGovernor_->automaticStorageMaximumBytes() +
+            (automaticPle_ ? 0 : pleCurrentQuotaBytes_),
+        .expertAllocatedBytes = experts ? experts->allocatedBytes() : 0};
+    expertPleAudit_ = auditRuntimeMemory(memoryPlan_, actualMemoryReport(modelMemory, true, true), stores);
+  };
+  if (pressureManaged_ && memoryGovernor_->automaticStorageMaximumBytes()) {
+    if (releasableMemory_.released() || now - expertPleLastSample_ < 1) return false;
+    auditLocal();
+    constrainExpertPlePolicy();
+    // A failed pressure shrink may still own bytes above the new category
+    // quota. Keep its actual audit visible and let the control pass retry;
+    // do not start an adaptive transfer from that incomplete donation.
+    if (!expertPleAudit_->valid) {
+      if (expertPlePolicy_) expertPlePolicy_->pause();
+      expertPleLastSample_ = now;
+      return false;
+    }
+    if (!expertPlePolicy_) { expertPleLastSample_ = now; return false; }
+  }
+  if (!expertPlePolicy_ || expertPlePolicy_->stopped() || releasableMemory_.released() ||
+      now - expertPleLastSample_ < 1) return false;
+  expertPleLastSample_ = now;
+  const auto governor = memoryGovernor_->snapshot();
+  const bool localGrowthAllowed = governor.hostMeasurementValid &&
+      governor.systemPressure != MemoryPressure::Critical &&
+      (governor.automaticGrowthReason == "ready" || governor.automaticGrowthReason == "headroom_observation" ||
+       governor.automaticGrowthReason == "block_cooldown");
+  if (pressureManaged_ ? !localGrowthAllowed : !governor.hostGrowthAllowed || governor.pressure != MemoryPressure::Normal) {
+    expertPlePolicy_->pause(); return false;
+  }
+  auto *experts = model_.expertStore();
+  auto *ple = model_.streamedTable();
+  const auto e = experts->stats();
+  const auto p = ple->stats();
+  for (uint32_t phase = 0; phase < 2; ++phase) {
+    const auto &eu = e.uses[phase];
+    const auto &pu = p.uses[phase];
+    const ExpertPleSample sample{pu.stages, eu.read, eu.ghostHits, eu.readWaitNanoseconds,
+                                pu.readRows + pu.consumedPrefetchedRows, pu.reusedEvictedRows, pu.readWaitNanoseconds,
+                                p.cachedRows, p.cacheCapacityRows, pu.requestedRows};
+    const auto old = pressureManaged_ ? p.cacheBytes : memoryPlan_.breakdown().plePlannedBytes;
+    const bool pending = expertPlePolicy_->pendingTarget().has_value();
+    const auto target = expertPlePolicy_->observe(now, phase == 1, sample, old,
+        pressureManaged_ ? std::optional(memoryGovernor_->automaticStorageQuotaBytes()) : std::nullopt);
+    if (!target) continue;
+    if (pressureManaged_) {
+      if (!pending) {
+        expertPleReceivingPle_ = *target > ple->committedBytes();
+        expertPleTransferMilliseconds_ = 0;
+        expertPleTransferBlocks_ = 0;
+      }
+      const bool changed = rebalancePressureExpertPle(now, *target);
+      auditLocal();
+      return changed;
+    }
+    // Validate the old constant-PLE epoch before starting the next one.
+    const auto before = auditRuntimeMemory(memoryPlan_, actualMemoryReport(modelMemory, true, true));
+    if (!before.valid) throw std::runtime_error("adaptive pre-transfer audit failed: " + before.describe());
+    const auto started = AwakeClock::now();
+    try {
+      // Donation completes before growth; every intermediate store footprint
+      // stays inside the frozen managed total and the configured pool cap.
+      if (*target < old) {
+        ple->resize(*target);
+        memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+        backend_->beginMemoryEpoch();
+        const uint64_t growth = expertPleManagedBytes_ - *target - experts->allocatedBytes();
+        const auto admitted = memoryGovernor_->allocationAdmission("expert_optional", false)(growth, [&] { experts->resize(expertPleManagedBytes_ - *target); });
+        if (!admitted) throw metal::MetalAllocationError("adaptive expert growth was refused", admitted.failure);
+      } else {
+        experts->resize(expertPleManagedBytes_ - *target);
+        backend_->beginMemoryEpoch();
+        const uint64_t growth = *target - ple->committedBytes();
+        const auto admitted = memoryGovernor_->allocationAdmission("ple_optional", false)(growth, [&] { ple->resize(*target); });
+        if (!admitted) throw metal::MetalAllocationError("adaptive PLE growth was refused", admitted.failure);
+        memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+      }
+      if (experts->allocatedBytes() > expertPleManagedBytes_ - *target || ple->committedBytes() > *target)
+        throw std::logic_error("adaptive expert/PLE physical allocation exceeds its assigned budget");
+      memoryPlan_.setExpertPleSplit(expertPleManagedBytes_ - *target, *target);
+      const double milliseconds = std::chrono::duration<double, std::milli>(AwakeClock::now() - started).count();
+      expertPlePolicy_->applied(now, *target, milliseconds);
+      logLine("Expert/PLE adaptive: experts ", expertPleManagedBytes_ - *target, "; PLE ", *target,
+              "; pool ", memoryPlan_.breakdown().expertPleMemoryBytes, "; KV budget unchanged.");
+    } catch (const std::exception &error) {
+      const uint64_t actualE = experts->allocatedBytes(), actualP = ple->committedBytes();
+      if (actualE > expertPleManagedBytes_ || actualP > expertPleManagedBytes_ - actualE) throw;
+      const uint64_t safePle = std::clamp(old, actualP, expertPleManagedBytes_ - actualE);
+      memoryPlan_.setExpertPleSplit(expertPleManagedBytes_ - safePle, safePle);
+      memoryGovernor_->setHostHeldBytes(model_.nonBackendHostBytes());
+      expertPleFailure_ = error.what();
+      const auto *allocation = dynamic_cast<const metal::MetalAllocationError *>(&error);
+      if (allocation && allocation->failure() == metal::AllocationFailure::GrowthDeferred)
+        expertPlePolicy_->pause();
+      else expertPlePolicy_->stop();
+      logLine("Expert/PLE adaptive stopped: ", expertPleFailure_);
+      // Cache entries may have been evicted, but their source and all bound
+      // addresses remain valid. Freeze at the safe physical split reached.
+    }
+    expertPleAudit_ = auditRuntimeMemory(memoryPlan_, actualMemoryReport(modelMemory, true, true));
+    if (!expertPleAudit_->valid) throw std::runtime_error("adaptive post-transfer audit failed: " + expertPleAudit_->describe());
+    return true;
+  }
+  return false;
+}
+
+std::string RuntimeResources::expertPleStatusJson() const {
+  std::ostringstream out;
+  out << "{\"enabled\":" << (expertPlePolicy_ ? "true" : "false")
+      << ",\"state\":\"" << (!expertPlePolicy_ ? "off" : expertPlePolicy_->stopped() ? "stopped" : "adaptive") << "\""
+      << ",\"ratio\":\"1:" << expertPleRatio_ << "\""
+      << ",\"managed_bytes\":" << expertPleManagedBytes_;
+  if (expertPlePolicy_) {
+    const auto &p = *expertPlePolicy_;
+    out << ",\"ple_minimum_bytes\":" << p.minimumPleBytes() << ",\"ple_maximum_bytes\":" << p.maximumPleBytes()
+        << ",\"initial_ple_bytes\":" << p.initialPleBytes() << ",\"target_ple_bytes\":" << p.targetPleBytes()
+        << ",\"adjustments\":" << p.adjustments() << ",\"rollbacks\":" << p.rollbacks()
+        << ",\"cooldown_until_seconds\":" << p.cooldownUntil() << ",\"reason\":" << json::quote(p.reason())
+        << ",\"last_decision\":" << json::quote(p.lastDecision())
+        << ",\"measurement_ready\":" << (p.costReady() ? "true" : "false")
+        << ",\"measurement_phase\":\"" << (p.costIsDecode() ? "decode" : "prefill") << "\""
+        << ",\"blocking_ms_per_work_row\":" << p.lastCost()
+        << ",\"reference_blocking_ms_per_work_row\":" << p.referenceCost()
+        << ",\"resize_ms\":" << p.resizeMilliseconds()
+        << ",\"trial_pending\":" << (p.trialPending() ? "true" : "false");
+  }
+  out << ",\"expert_allocated_bytes\":" << (model_.expertStore() ? model_.expertStore()->allocatedBytes() : 0)
+      << ",\"ple_committed_bytes\":" << (model_.streamedTable() ? model_.streamedTable()->committedBytes() : 0)
+      << ",\"expert_budget_bytes\":" << (pressureManaged_ ? expertCurrentQuotaBytes_ : memoryPlan_.breakdown().expertPlannedBytes)
+      << ",\"ple_budget_bytes\":" << (pressureManaged_ ? pleCurrentQuotaBytes_ + fixedResidentPleBytes_ : memoryPlan_.breakdown().plePlannedBytes);
+  if (pressureManaged_) {
+    const auto *experts = model_.expertStore();
+    const uint64_t actualE = experts ? experts->allocatedBytes() : 0;
+    const uint64_t actualP = model_.streamedTable() ? model_.streamedTable()->committedBytes() : 0;
+    std::optional<uint64_t> residentPleActual = fixedResidentPleBytes_;
+    if (fixedResidentPleBytes_ && model_.images->released()) {
+      const auto images = model_.images->contents();
+      if (std::ranges::all_of(images, [](const auto &image) { return image.bytes.empty(); })) residentPleActual = 0;
+      else residentPleActual = std::nullopt;
+    }
+    out << ",\"pressure_managed\":true,\"automatic_ple\":" << (automaticPle_ ? "true" : "false")
+        << ",\"current_quota_bytes\":" << expertPleManagedBytes_
+        << ",\"maximum_bytes\":" << (memoryGovernor_->automaticStorageMaximumBytes() ?
+            memoryGovernor_->automaticStorageMaximumBytes() :
+            std::min(memoryPlan_.breakdown().hardBudgetBytes, expertStorage_->resizable.fullBytes))
+        << ",\"automatic_actual_bytes\":" << actualE + (automaticPle_ ? actualP : 0)
+        << ",\"last_growth_contribution_bytes\":" << lastGrowth_.contributionBytes
+        << ",\"last_growth_gross_blocks\":" << lastGrowth_.grossBlocks
+        << ",\"expert_store_budget_bytes\":" << (experts ? experts->stats().budgetBytes : 0)
+        << ",\"expert_restore_target_bytes\":" << expertRestoreTargetBytes_
+        << ",\"ple_fixed_bytes\":" << (automaticPle_ ? "0" : residentPleActual ?
+            std::to_string(actualP + *residentPleActual) : "null")
+        << ",\"ple_resident_bytes\":" << (residentPleActual ? std::to_string(*residentPleActual) : "null")
+        << ",\"ple_resident_requirement_bytes\":" << fixedResidentPleBytes_
+        << ",\"pressure_reason\":" << json::quote(memoryGovernor_->snapshot().automaticStorageReason)
+        << ",\"receiving\":\"paced_grant_required\"";
+  }
+  out
+      << ",\"runtime_audit\":" << (expertPleAudit_ ? expertPleAudit_->toStatusJson() : "null")
+      << ",\"failure\":" << json::quote(expertPleFailure_) << '}';
+  return out.str();
+}
+
 std::optional<model::SparseRowStats> RuntimeResources::streamedTableStats() const {
   if (const model::SparseRowStore *table = model_.streamedTable()) return table->stats();
   return std::nullopt;
+}
+
+std::optional<model::ExpertStorageSnapshot> RuntimeResources::expertStorageSnapshot() const {
+  if (!expertStorage_) return std::nullopt;
+  auto result = *expertStorage_;
+  result.minimumRequiredBytes = memoryPlan_.breakdown().minimumRequiredBytes;
+  if (const auto *store = model_.expertStore()) {
+    const auto stats = store->stats();
+    result.layout = stats.resizable ? "addressed" : "contiguous";
+    result.released = stats.released;
+    result.budgetBytes = stats.budgetBytes;
+    result.allocatedBytes = stats.allocatedBytes;
+    result.auxiliaryBytes = stats.auxiliaryBytes;
+    result.capacityWeightBytes = stats.capacityWeightBytes;
+    result.residentWeightBytes = stats.residentWeightBytes;
+    result.currentFloorBytes = stats.minimumBytes;
+  } else {
+    result.layout = "resident";
+    result.released = model_.images->released();
+    result.budgetBytes = result.residentLayoutBytes;
+    result.currentFloorBytes = result.residentLayoutBytes;
+    if (!result.released) {
+      result.allocatedBytes = result.residentLayoutBytes;
+      result.capacityWeightBytes = result.residentWeightBytes = result.weightBytes;
+      result.auxiliaryBytes = result.residentLayoutBytes - result.weightBytes;
+    } else {
+      const auto images = model_.images->contents();
+      if (std::ranges::all_of(images, [](const auto &image) { return image.bytes.empty(); })) {
+        result.allocatedBytes = result.auxiliaryBytes = result.residentSlotTableBytes;
+        result.capacityWeightBytes = result.residentWeightBytes = 0;
+      }
+      // During a partial image restore, expert bytes in shared layer images
+      // have no independent allocation count. Keep them unknown until ready.
+    }
+  }
+  return result;
 }
 
 std::optional<model::ExpertStoreStats> RuntimeResources::streamedExpertStats() const {
@@ -1344,7 +2069,7 @@ AneFfnSnapshot RuntimeResources::aneFfnSnapshot() const {
 }
 
 ActualMemoryReport RuntimeResources::actualMemoryReport(
-    const model::ModelMemoryActual &modelMemory, bool refresh) const {
+    const model::ModelMemoryActual &modelMemory, bool refresh, bool storeEpoch) const {
   ActualMemoryReport report;
   report.targetWeightsBytes = model_.targetActualAllocatedBytes();
   report.draftWeightsBytes = model_.draft.actualAllocatedBytes;
@@ -1365,13 +2090,15 @@ ActualMemoryReport RuntimeResources::actualMemoryReport(
   if (const auto table = streamedTableStats()) report.streamedTableBytes = table->cacheBytes;
   // Optional warmup may end with a rolled-back allocation and no subsequent
   // command. Refresh the current counts after that rollback; peaks stay intact.
-  metal::MetalMemoryStats memory = refresh ? backend_->refreshMemoryStats() : backend_->memoryStats();
+  metal::MetalMemoryStats memory = storeEpoch ? backend_->memoryEpochStats() :
+      refresh ? backend_->refreshMemoryStats() : backend_->memoryStats();
   report.backendAllocatedBytes = memory.allocatedBytes;
   report.deviceCurrentAllocatedBytes = memory.deviceCurrentAllocatedBytes;
   report.devicePeakAllocatedBytes = memory.devicePeakAllocatedBytes;
   // A capacity-limited warmup can roll back a partial allocation before it
   // returns a result; the backend's own high-water mark keeps it.
   report.backendPeakAllocatedBytes = memory.peakAllocatedBytes;
+  report.requiredHostBytes = model_.requiredHostBytes();
   return report;
 }
 

@@ -119,8 +119,11 @@ void SsdReaders::halt(Batch &batch) {
 void SsdReaders::stop(Batch &batch) {
   halt(batch);
   batch.wait();
-  const std::lock_guard lock(mutex_);
+  std::unique_lock lock(mutex_);
   std::erase_if(background_, [&](const std::shared_ptr<Batch> &queued) { return queued.get() == &batch; });
+  // A task can report its end before its reader releases the batch and its
+  // captures, including disk-slot leases. Drain those references too.
+  drained_.wait(lock, [&] { return batch.working_ == 0; });
 }
 
 void SsdReaders::finish(Batch &batch) {
@@ -216,6 +219,8 @@ void SsdReaders::readerLoop() {
     work(batch, background);
     lock.lock();
     --batch->working_;
+    batch.reset();
+    drained_.notify_all();
   }
 }
 

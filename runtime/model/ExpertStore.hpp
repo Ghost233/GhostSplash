@@ -71,6 +71,7 @@
 #include "model/GgufImage.hpp"
 #include "model/SsdReaders.hpp"
 #include "model/WeightMemory.hpp"
+#include "model/StorageGrowth.hpp"
 #include "ops/MoE.hpp"
 
 #include <cstdint>
@@ -102,6 +103,10 @@ struct ExpertStoreOptions final {
   // The most bytes one arena takes: the device's largest buffer
   // (maxBufferLength) when zero or more.
   uint64_t bufferBytes = 0;
+  // Individually releasable addressed chunks; adjusted only between commands.
+  bool resizable = false;
+  bool boundedReadScratch = false;
+  metal::AllocationAdmission optionalRestore;
 };
 
 class ExpertStore final : public ops::MoeExpertStream, public WeightMemory {
@@ -123,22 +128,44 @@ public:
   void bind(uint32_t block, ops::BlockMoeWeights &weights);
   void addLoad(metal::CommandGraph &graph, std::span<const ops::MoeLoadPart> parts, uint32_t block) const override;
   [[nodiscard]] ExpertStoreStats stats() const;
+  [[nodiscard]] uint64_t allocatedBytes() const;
+  [[nodiscard]] uint64_t hostAllocatedBytes() const noexcept;
+  // Stops read-ahead, retains slots in unchanged chunks, and changes the
+  // physical arena capacity within this total store budget. No command may
+  // be in flight. The original addressed slot table remains bound.
+  void resize(uint64_t memoryBytes);
+  // Pressure returns only donating chunks. A retry after partial failure
+  // never allocates receiving chunks, even if actual bytes already fit.
+  void shrink(uint64_t memoryBytes);
+  [[nodiscard]] std::optional<StorageGrowthPlan> planGrowOne(uint64_t maximumBytes) const;
+  [[nodiscard]] StorageGrowthReceipt growOne(const StorageGrowthPlan &plan);
+  void setGrowthGuard(StorageGrowthGuard guard);
+  // Select while released, before payload allocation. Only the execution
+  // floor is restored immediately; optional chunks use planGrowOne/growOne.
+  void prepareRestore(uint64_t targetBytes);
   // The arena and the staging, while no command is in flight; restore()
   // takes both back in one part and reads the experts of the sizes of one
   // block again.
   [[nodiscard]] bool released() const noexcept override;
   void release() override;
   [[nodiscard]] bool restore(const metal::AllocationAdmission &admit) override;
+  // Before allocation: one arena per format/shape group for the contiguous
+  // range, or the exact individually addressed chunks for the resizable
+  // range. A device-induced contiguous split's floor is reported by stats().
+  [[nodiscard]] static ExpertCacheRange storageRange(const StreamedBlocks &blocks, ops::MoeShape shape,
+                                                     bool resizable = false);
   // The bytes a store of these blocks allocates besides its arenas: its
   // staging, slot tables, jobs and the decode prediction's buffers.
-  [[nodiscard]] static uint64_t fixedBytes(const StreamedBlocks &blocks, ops::MoeShape shape);
+  [[nodiscard]] static uint64_t fixedBytes(const StreamedBlocks &blocks, ops::MoeShape shape, bool resizable = false);
   // The smallest store of these blocks (ExpertStoreOptions::memoryBytes),
   // which the constructor refuses a byte less than: its fixed bytes, a
   // block's experts of each streamed size and every expert of a size of one
   // block.
-  [[nodiscard]] static uint64_t minimumBytes(const StreamedBlocks &blocks, ops::MoeShape shape);
+  [[nodiscard]] static uint64_t minimumBytes(const StreamedBlocks &blocks, ops::MoeShape shape, bool resizable = false);
 
 private:
+  friend class RuntimeInstrumentation;
+  void resize(uint64_t memoryBytes, bool allowGrowth);
   struct Impl;
   std::shared_ptr<Impl> impl_;
 };

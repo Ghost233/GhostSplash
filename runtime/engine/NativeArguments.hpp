@@ -67,6 +67,12 @@ struct NativeArguments final {
   // (RuntimeResourcesConfig::pleMemory, expertMemory).
   StreamedSetting pleMemory;
   StreamedSetting expertMemory;
+  bool moeMemoryPressure = false;
+  std::optional<uint64_t> hostMemoryReserveBytes;
+  // Shared expert/PLE storage cap; zero leaves their planning uncapped.
+  uint64_t expertPleMemoryBytes = 0;
+  bool expertPleAdaptive = false;
+  uint32_t expertPleRatio = 20;
   // --sparse-kv-memory BYTES|auto: the target of a block-sparse target's hot
   // block cache; none, auto, its floor (RuntimeResourcesConfig::sparseKvMemory).
   std::optional<uint64_t> sparseKvMemory;

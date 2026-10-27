@@ -293,6 +293,8 @@ struct RuntimeFeatureSnapshot final {
   uint64_t ffnCacheBytes = 0;
   bool experimentalQuantizedFfn = false;
   model::OptionalFeatureReport optional;
+  std::optional<model::ExpertStorageSnapshot> expertStorage;
+  std::optional<uint64_t> processPhysicalFootprintBytes;
 };
 
 // A spill-capable target's KV on the SSD cache as /status reports it
@@ -318,6 +320,7 @@ struct KvSpillStatus final {
     const std::optional<model::SparseRowStats> &streamedTable = std::nullopt,
     const std::optional<model::ExpertStoreStats> &streamedExperts = std::nullopt,
     const std::optional<KvSpillStatus> &kvSpill = std::nullopt,
-    const std::optional<RuntimeFeatureSnapshot> &features = std::nullopt);
+    const std::optional<RuntimeFeatureSnapshot> &features = std::nullopt,
+    std::string_view expertPleAdaptive = "null");
 
 } // namespace splash::engine

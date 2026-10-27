@@ -1400,6 +1400,22 @@ void commandBufferBoundaries(const std::string &metallibPath) {
             "an explicit boundary changed host step order, GPU bindings, or backend health");
     require(BackendInstrumentation::lastCommandBuffers(backend) == 3,
             "explicit and host boundaries were not counted together");
+    const std::vector<ComputeDispatch> large(2048, addition(buffer, count, one));
+    *value = 0;
+    {
+        MethodReplacement commits(probe, @selector(commit), reinterpret_cast<IMP>(&observeBoundaryCommit));
+        originalBoundaryCommit = commits.original;
+        boundaryCaller = std::this_thread::get_id(); boundaryCommits = 0;
+        (void)backend.submitCommandAsync(large).wait();
+        require(boundaryCommits > 1 && BackendInstrumentation::lastCommandBuffers(backend) == boundaryCommits,
+                "a large GPU graph was not divided into counted command buffers");
+    }
+    require(*value == large.size(), "automatic GPU boundaries changed dispatch order or lost work");
+    event.signal(1);
+    *value = 0;
+    (void)backend.submitCommandAsync(Command{large, events}).wait();
+    require(*value == large.size() && BackendInstrumentation::lastCommandBuffers(backend) == 1,
+            "automatic slicing changed a command with an external event wait");
     std::cout << "PASS explicit GPU boundaries, host steps and refused foreign waits\n";
 }
 
@@ -2107,7 +2123,7 @@ void hostStepAfterALongWait(const std::string &metallibPath) {
 void watchdogFollowsHostSteps(const std::string &metallibPath) {
     // The reason the backend gave up a command of `steps` host steps of
     // `each`, empty while it stays healthy.
-    const auto givenUp = [&](uint32_t steps, std::chrono::milliseconds each) {
+    const auto givenUp = [&](uint32_t steps, std::chrono::milliseconds each, HostStepGpu gpu) {
         MetalBackend backend(metallibPath, kResidencyKeepAliveSeconds, kShortCommandTimeoutSeconds);
         MetalBuffer buffer = sharedBuffer(backend, sizeof(uint32_t));
         auto *value = static_cast<volatile uint32_t *>(buffer.contents());
@@ -2116,7 +2132,8 @@ void watchdogFollowsHostSteps(const std::string &metallibPath) {
         const std::vector<ComputeDispatch> dispatches(steps + 1, addition(buffer, count, one));
         std::vector<EventStep> events;
         for (uint32_t step = 1; step <= steps; ++step)
-            events.push_back({step, {}, 0, EventStep::Kind::Host, [each] { std::this_thread::sleep_for(each); }});
+            events.push_back({step, {}, 0, EventStep::Kind::Host,
+                              [each] { std::this_thread::sleep_for(each); }, {}, gpu});
         std::atomic<bool> done{false};
         std::thread checks([&] {
             while (!done) {
@@ -2136,13 +2153,70 @@ void watchdogFollowsHostSteps(const std::string &metallibPath) {
         require(!backend.healthy() || *value == steps + 1, "a command completed without its work");
         return backend.healthy() ? std::string() : backend.unhealthyReason();
     };
-    const std::string progressing = givenUp(8, std::chrono::milliseconds(50));
+    for (HostStepGpu gpu : {HostStepGpu::Idle, HostStepGpu::Awake}) {
+        const std::string progressing = givenUp(8, std::chrono::milliseconds(50), gpu);
+        require(progressing.empty(),
+                "a command whose host steps each ended within the timeout was given up: " + progressing);
+        const std::string stalled = givenUp(1, std::chrono::milliseconds(300), gpu);
+        require(stalled.find("completion timed out") != std::string::npos,
+                "a host step longer than the timeout was not given up: " + stalled);
+    }
+    std::cout << "PASS the watchdog follows a command's host steps\n";
+}
+
+// GPU buffers can complete between waits on an external agent without a
+// host step. A long sequence of such progress must not look like one stall.
+void watchdogFollowsGpuBuffers(const std::string &metallibPath) {
+    const auto givenUp = [&](uint32_t steps, std::chrono::milliseconds each) {
+        MetalBackend backend(metallibPath, kResidencyKeepAliveSeconds, kShortCommandTimeoutSeconds);
+        MetalBuffer buffer = sharedBuffer(backend, sizeof(uint32_t));
+        auto *value = static_cast<volatile uint32_t *>(buffer.contents());
+        *value = 0;
+        const uint32_t count = 1, one = 1;
+        const std::vector<ComputeDispatch> dispatches(steps + 1, addition(buffer, count, one));
+        const SharedEvent event = backend.newSharedEvent();
+        id<MTLSharedEvent> native = (__bridge id<MTLSharedEvent>)event.nativeHandle();
+        std::vector<EventStep> events;
+        for (uint32_t step = 1; step <= steps; ++step) {
+            events.push_back({step, event, 2 * step - 1, EventStep::Kind::Signal});
+            events.push_back({step, event, 2 * step, EventStep::Kind::Wait});
+        }
+        std::atomic<bool> agentOk{true}, completed{false}, done{false};
+        std::thread agent([&] {
+            for (uint32_t step = 1; step <= steps; ++step) {
+                if (!waitFor([&] { return native.signaledValue >= 2 * step - 1; }, std::chrono::seconds(5))) {
+                    agentOk = false;
+                    return;
+                }
+                std::this_thread::sleep_for(each);
+                event.signal(2 * step);
+            }
+        });
+        std::thread checks([&] {
+            while (!done) {
+                try { backend.checkHealth(); } catch (const MetalBackendError &) {}
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+        });
+        try {
+            (void)backend.submitCommandAsync(Command{dispatches, events}, [&] { completed = true; }).wait();
+        } catch (const MetalBackendError &) {
+        }
+        done = true;
+        checks.join();
+        agent.join();
+        require(agentOk && waitFor([&] { return completed.load(); }, std::chrono::seconds(5)),
+                "GPU progress test did not drain its command");
+        require(*value == steps + 1, "GPU progress changed dispatch order or dropped work");
+        return backend.healthy() ? std::string() : backend.unhealthyReason();
+    };
+    const std::string progressing = givenUp(8, std::chrono::milliseconds(30));
     require(progressing.empty(),
-            "a command whose host steps each ended within the timeout was given up: " + progressing);
+            "completed GPU buffers were not counted as progress: " + progressing);
     const std::string stalled = givenUp(1, std::chrono::milliseconds(300));
     require(stalled.find("completion timed out") != std::string::npos,
-            "a host step longer than the timeout was not given up: " + stalled);
-    std::cout << "PASS the watchdog follows a command's host steps\n";
+            "a GPU buffer stalled past the original timeout was not given up");
+    std::cout << "PASS the watchdog follows completed GPU buffers and still bounds a stalled buffer\n";
 }
 
 // A backend destroyed while its runner is blocked on a step (the command
@@ -2413,6 +2487,19 @@ void run(const std::string &metallibPath) {
     require(stats.devicePeakAllocatedBytes >=
                 stats.deviceCurrentAllocatedBytes,
             "device peak allocation accounting regressed");
+    const auto lifetimePeak = backend.memoryStats().peakAllocatedBytes;
+    backend.beginMemoryEpoch();
+    require(backend.memoryEpochStats().peakAllocatedBytes == 0 &&
+                backend.memoryStats().peakAllocatedBytes == lifetimePeak,
+            "allocation epoch erased lifetime history or retained old live buffers");
+    auto epochBuffer = backend.allocateBuffer(8 * 1024 * 1024, BufferStorage::Shared, "epoch-test");
+    const auto epochPeak = backend.memoryEpochStats().peakAllocatedBytes;
+    require(epochPeak >= epochBuffer.allocatedBytes(), "epoch missed a new allocation");
+    epochBuffer = MetalBuffer{};
+    backend.beginMemoryEpoch();
+    require(backend.memoryEpochStats().peakAllocatedBytes == 0 &&
+                backend.memoryStats().peakAllocatedBytes >= epochPeak,
+            "second allocation epoch mixed histories or lost the global peak");
     // Restarted, both peaks are what is allocated now.
     backend.restartPeaks();
     stats = backend.memoryStats();
@@ -2451,12 +2538,17 @@ void run(const std::string &metallibPath) {
 
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
-        if (argc != 2 && !(argc == 3 && std::string(argv[2]) == "--boundaries")) {
-            std::cerr << "usage: metal_backend_test <test.metallib> [--boundaries]\n";
+        if (argc != 2 && !(argc == 3 && (std::string(argv[2]) == "--boundaries" ||
+                                        std::string(argv[2]) == "--gpu-progress"))) {
+            std::cerr << "usage: metal_backend_test <test.metallib> [--boundaries | --gpu-progress]\n";
             return 2;
         }
         try {
-            if (argc == 3) { commandBufferBoundaries(argv[1]); return 0; }
+            if (argc == 3) {
+                if (std::string(argv[2]) == "--gpu-progress") watchdogFollowsGpuBuffers(argv[1]);
+                else commandBufferBoundaries(argv[1]);
+                return 0;
+            }
             completionDoesNotWaitForMemoryTelemetry(argv[1]);
             terminalCommandRecovers(argv[1], false);
             terminalCommandRecovers(argv[1], false, true);
@@ -2490,6 +2582,7 @@ int main(int argc, const char *argv[]) {
             hostStepThen(argv[1]);
             hostStepAfterALongWait(argv[1]);
             watchdogFollowsHostSteps(argv[1]);
+            watchdogFollowsGpuBuffers(argv[1]);
             blockedHostStepRunnerStops(argv[1]);
             allocationDoesNotRequestResidency(argv[1]);
             residencyRacesTheHeartbeat(argv[1]);

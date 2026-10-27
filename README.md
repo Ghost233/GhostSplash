@@ -98,6 +98,16 @@ FP8 源目录（含 `manifest.json`、`config.json` 和 `model.safetensors`）�
   启动器使用转换后的 draft；历史使用官方 DFlash2 的测速结果与作者 draft 的结果
   在记录中分别注明。
 
+### MoE 单实例内存压力控制（实验）
+
+目标是由本地压力控制器管理当前实例的自动专家和自动 PLE 缓存。
+保留 `--moe-memory-pressure on` 独立开关，默认关闭，要求 `--expert-memory auto`。
+`--host-memory-reserve auto|SIZE` 设置本实例的系统预留目标，手动预算保持固定语义。
+
+2026-10-27 已改为单实例实现，Warning 下按真实余量缩容、保持或逐块恢复。
+有界 Tiel、资源释放与恢复校验已通过；真实 PLE 模型保留未验收。
+参数、状态和范围见[单实例内存压力控制](docs/moe-memory-control.md)。
+
 ### 性能记录
 
 保存 [本地模型测速与诊断记录](docs/local-model-speed-notes-2026-10-08.md)、

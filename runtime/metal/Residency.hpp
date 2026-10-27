@@ -71,6 +71,8 @@ public:
     });
   }
 
+  [[nodiscard]] id<MTLBuffer> kickTarget() const noexcept { return kickTarget_; }
+
   Residency(const Residency &) = delete;
   Residency &operator=(const Residency &) = delete;
 

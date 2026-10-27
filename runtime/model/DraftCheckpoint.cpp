@@ -134,7 +134,7 @@ WeightFile DraftCheckpointLoader::open(size_t index) {
                                                                          const metal::MetalBuffer &buffer) {
                          writeGgufImage(backend, buffer, planned->images[index]);
                          planned->checkpoint.checkUnchanged();
-                       }});
+                       }, 0, imageWriteTemporaryBytes(plan)});
 }
 
 WeightFile DraftCheckpointLoader::layer(uint32_t index) {

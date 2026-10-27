@@ -44,6 +44,10 @@ using TargetWeights = std::variant<Qwen3_8Weights, Qwen3_6MoeWeights, Qwen4ExpWe
 struct ModelLoadOptions final {
   uint64_t streamedTableBytes = 0;
   uint64_t expertMemoryBytes = 0;
+  bool resizableExperts = false;
+  bool boundedHostMemory = false;
+  metal::AllocationAdmission optionalExpertRestore;
+  uint64_t maximumPleCacheBytes = 0;
   std::shared_ptr<SsdReaders> readers;
   FfnLoadOptions ffn;
 };
@@ -80,11 +84,11 @@ struct LoadedModel final {
   [[nodiscard]] uint32_t maximumContextTokens() const noexcept {
     return descriptor.capabilities.maximumContextTokens;
   }
-  [[nodiscard]] uint64_t targetActualAllocatedBytes() const noexcept {
-    return std::visit([](const auto &weights) {
-      return weights.actualAllocatedBytes;
-    }, target);
-  }
+  uint64_t initialExpertAllocatedBytes = 0;
+  [[nodiscard]] uint64_t targetActualAllocatedBytes() const noexcept;
+  [[nodiscard]] uint64_t hostHeldBytes() const noexcept;
+  [[nodiscard]] uint64_t nonBackendHostBytes() const noexcept;
+  [[nodiscard]] uint64_t requiredHostBytes() const noexcept;
   [[nodiscard]] uint64_t targetFfnCacheAllocatedBytes() const noexcept {
     return std::visit([](const auto &weights) { return weights.ffnCacheAllocatedBytes; }, target);
   }
@@ -203,6 +207,10 @@ struct StreamedParts final {
 // The lane state and arenas of `model`'s geometry with `parts` streaming,
 // whatever streams of it as it loaded: one load plans them for every part
 // that may stream (engine::planStreamedMemory).
+[[nodiscard]] uint64_t runtimeCreationBytes(const LoadedModel &model,
+    const ops::ExecutionPlans &operators, kv::Format kvFormat, ops::GdnStateFormat stateFormat,
+    StreamedParts parts, const OptionalFeatures &features);
+
 [[nodiscard]] ModelMemoryPlan
 plannedRuntimeMemory(const LoadedModel &model,
                      const ops::ExecutionPlans &operators,

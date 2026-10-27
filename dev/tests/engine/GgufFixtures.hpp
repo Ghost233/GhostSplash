@@ -242,7 +242,8 @@ inline constexpr uint64_t kPleTableRows = 96;
 // and the output norm; with a QSA indexer, its tensors in each
 // full-attention layer; and with a PLE embedding, its tensors in the layer it
 // feeds and its table of kPleTableRows rows.
-inline std::vector<Tensor> targetTensors(const model::QwenTargetDimensions &g, const TensorTypes &types) {
+inline std::vector<Tensor> targetTensors(const model::QwenTargetDimensions &g, const TensorTypes &types,
+                                       bool allocatePayload = true) {
   std::vector<Tensor> tensors;
   const auto add = [&](std::string name, std::vector<uint64_t> dims) {
     const uint32_t type = typeOf(types, name);
@@ -250,7 +251,8 @@ inline std::vector<Tensor> targetTensors(const model::QwenTargetDimensions &g, c
     uint64_t elements = 1;
     for (uint64_t dim : dims) elements *= dim;
     tensors.push_back(
-        {name, std::move(dims), type, test_gguf::Bytes(elements / traits.blockElements * traits.blockBytes)});
+        {name, std::move(dims), type,
+         test_gguf::Bytes(allocatePayload ? elements / traits.blockElements * traits.blockBytes : 0)});
   };
   const uint64_t hidden = g.hiddenSize, valueRows = uint64_t{g.gdnValueHeads} * g.gdnHeadDimension;
   const uint64_t kvRows = uint64_t{g.attentionKvHeads} * g.attentionHeadDimension;

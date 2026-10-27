@@ -230,6 +230,9 @@ QwenTargetPrefillBuffers prefillBuffers(const PrefillArena &arena, uint32_t chun
 } // namespace
 
 struct Runtime::Impl {
+#ifdef SPLASH_RUNTIME_INSTRUMENTATION
+  RuntimeInstrumentation::CommitObserver commitObserver;
+#endif
   // An image by content: the fields a placement's span identifies it by.
   struct ImageKey final {
     uint64_t digestLo = 0;
@@ -2823,6 +2826,45 @@ Runtime::prefill(const BatchPlan &plan, std::span<const ModelBatchItem> items) {
 std::unique_ptr<ModelBatchTicket>
 Runtime::submit(const BatchPlan &plan, std::span<const ModelBatchItem> items,
                 std::function<void()> completion) {
+#ifdef SPLASH_RUNTIME_INSTRUMENTATION
+  if (impl_->commitObserver) {
+    class ObservedTicket final : public ModelBatchTicket {
+    public:
+      ObservedTicket(std::unique_ptr<ModelBatchTicket> ticket, std::function<void(std::span<const ModelStepResult>)> observe)
+          : ticket_(std::move(ticket)), observe_(std::move(observe)) {}
+      bool ready() const noexcept override { return ticket_->ready(); }
+      std::vector<ModelMaskRequest> takeMaskRequests() override { return ticket_->takeMaskRequests(); }
+      bool ownsMaskWait(uint64_t id) const noexcept override { return ticket_->ownsMaskWait(id); }
+      void abandonMask(uint64_t id) noexcept override { ticket_->abandonMask(id); }
+      std::vector<ModelStepResult> wait() override {
+        auto result = ticket_->wait();
+        observe_(result);
+        return result;
+      }
+      double wallMilliseconds() const noexcept override { return ticket_->wallMilliseconds(); }
+      double hostMilliseconds() const noexcept override { return ticket_->hostMilliseconds(); }
+      double streamMilliseconds() const noexcept override { return ticket_->streamMilliseconds(); }
+      bool prefillTimingIsRepresentative() const noexcept override { return ticket_->prefillTimingIsRepresentative(); }
+    private:
+      std::unique_ptr<ModelBatchTicket> ticket_;
+      std::function<void(std::span<const ModelStepResult>)> observe_;
+    };
+    std::vector<std::vector<uint32_t>> pages;
+    std::vector<ModelBatchItem> copied(items.begin(), items.end());
+    pages.reserve(items.size());
+    for (auto &item : copied) {
+      pages.emplace_back(item.pageTable.begin(), item.pageTable.end());
+      item.pageTable = pages.back();
+    }
+    auto ticket = plan.kind == WorkKind::Prefill ? prefillAsync(plan, items, std::move(completion)) :
+        decodeAsync(plan, items, std::move(completion));
+    return std::make_unique<ObservedTicket>(std::move(ticket),
+        [this, kind = plan.kind, observer = impl_->commitObserver, pages = std::move(pages),
+         copied = std::move(copied)](std::span<const ModelStepResult> result) {
+          observer(*this, kind, copied, result);
+        });
+  }
+#endif
   switch (plan.kind) {
   case WorkKind::Prefill:
     return prefillAsync(plan, items, std::move(completion));
@@ -3817,6 +3859,29 @@ ModelMemoryPlan plannedRuntimeMemory(const LoadedModel &model,
           plannedPrefillBytes(geometry, operators), decodeBytes};
 }
 
+uint64_t runtimeCreationBytes(const LoadedModel &model, const ops::ExecutionPlans &operators,
+                              kv::Format kvFormat, ops::GdnStateFormat stateFormat,
+                              StreamedParts parts, const OptionalFeatures &features) {
+  requireCompatibleModel(model);
+  features.validate();
+  const auto geometry = RuntimeGeometry::from(model, kvFormat, stateFormat, parts);
+  uint64_t bytes = 0;
+  const auto include = [&](uint64_t value) { bytes = checkedAdd(bytes, alignUp(value), "runtime allocation admission"); };
+  include(prefillArenaBytes(geometry, operators));
+  include(geometry.targetScratch.prefill);
+  include(decodeArenaBaseBytes(geometry, operators));
+  include(DecodeArena::gateScratchBytes(geometry, operators));
+  const auto linear = DecodeArena::linearScratchSize(geometry, operators);
+  for (const uint64_t value : {linear.input, linear.sums, linear.partials, linear.counters, linear.rotated}) include(value);
+  include(geometry.targetScratch.decode);
+  if (features.fastTopK) include(ops::Sampling::fastWorkspaceBytes(kLaneCount * kDecodeRows));
+  if (features.compactDraftHead)
+    include(std::visit([&](const auto &target) {
+      return CompactDraftHead::plannedBytes(target.logitsProjection, features.compactCapacity);
+    }, model.target));
+  return bytes;
+}
+
 bool budgetsVerifyRows(const LoadedModel &model, VerifyRows rows) noexcept {
   const bool moe =
       std::visit([](const auto &layout) { return layout.ffnKind == QwenFfnKind::SparseMoe; }, model.descriptor.target);
@@ -3828,6 +3893,14 @@ std::unique_ptr<RuntimeModel> createRuntime(RuntimeContext context) {
 }
 
 #ifdef SPLASH_RUNTIME_INSTRUMENTATION
+void RuntimeInstrumentation::setCommitObserver(Runtime &runtime, CommitObserver observer) {
+  runtime.impl_->commitObserver = std::move(observer);
+}
+
+uint32_t RuntimeInstrumentation::stateLane(const Runtime &runtime, uint64_t requestId) {
+  return runtime.impl_->requests.at(requestId).stateLane;
+}
+
 std::vector<uint32_t> RuntimeInstrumentation::lastTableRows(const Runtime &runtime, uint32_t lane) {
   return runtime.impl_->targetModel->verifyTableRows(lane);
 }
@@ -3858,6 +3931,7 @@ std::vector<uint8_t> RuntimeInstrumentation::pendingGdnRows(const Runtime &runti
   if (!entry.resident)
     throw std::logic_error("request is not resident");
   const QwenLaneMetadata &metadata = impl.states.metadata(entry.stateLane);
+  if (!impl.geometry.target.stateLayout.layers || !metadata.pendingRows) return {};
   const ops::GdnShape shape = impl.geometry.target.gdnShape();
   const uint32_t kvWidth = (shape.keyHeads + shape.valueHeads) * shape.headDimension;
   // Each field holds one row after another; the offset and row bytes of each.

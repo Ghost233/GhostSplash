@@ -80,6 +80,7 @@ struct BlockMoeWeights final {
   uint32_t slots = 0;
   const MoeExpertStream *stream = nullptr;
   uint32_t streamBlock = 0;
+  bool indirectSlots = false;
 };
 
 // One MoE step of a block a load serves: its plan, and its buffers once the

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HostMemory.hpp"
+
 // The image of a vision tower (MDFV0001, every tensor BF16), as
 // model/VisionLoader.cpp plans it from an MLX checkpoint or a GGUF mmproj, and
 // its writer. A BF16 tensor is copied; an F32 or F16 tensor is converted only
@@ -39,7 +41,9 @@ struct Plan {
   std::vector<Section> sections;
 };
 
+[[nodiscard]] uint64_t temporaryBytes(const Plan &plan);
+
 // Writes every byte of a bound plan into destination, which is its size.
-void writeVision(std::span<uint8_t> destination, const Plan &plan);
+void writeVision(std::span<uint8_t> destination, const Plan &plan, HostMemoryAdmission allocation = {});
 
 } // namespace splash::model::vision

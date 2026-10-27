@@ -6,6 +6,7 @@
 // and each part that may stream, whole and at its smallest store.
 
 #include "model/GgufImage.hpp"
+#include "model/ExpertStoreStats.hpp"
 #include "model/FfnLoadOptions.hpp"
 #include "model/ModelDescriptor.hpp"
 
@@ -20,6 +21,9 @@ struct StreamableWeights final {
   // target's without its routed experts or table, the draft's and the
   // vision tower's.
   uint64_t loadedBytes = 0;
+  uint64_t loadingTemporaryBytes = 0;
+  uint64_t expertReaderTemporaryBytes = 0;
+  std::optional<ExpertStorageSnapshot> expertStorage;
   // A MoE target's routed experts: what the model takes more where they
   // load with their layers, their planes in the images and their slot table
   // (residentExpertSlots), and the smallest store that streams them
@@ -34,6 +38,7 @@ struct StreamableWeights final {
   uint64_t tableBytes = 0;
   uint64_t tableFloorBytes = 0;
   uint64_t tableRowBytes = 0;
+  std::optional<uint64_t> tableRows;
   // Why the table cannot stream (gguf::tableRows), which then loads with
   // the weights: among loadedBytes, with no part of its own.
   std::string tableRefusal;
@@ -45,6 +50,7 @@ struct StreamableWeights final {
 // load.
 [[nodiscard]] StreamableWeights streamableWeights(const std::filesystem::path &root,
                                                   const ModelDescriptor &descriptor, gguf::PlanOptions streams,
-                                                  FfnLoadOptions ffn = {});
+                                                  FfnLoadOptions ffn = {}, bool resizableExperts = false,
+                                                  bool boundedHostMemory = false);
 
 } // namespace splash::model

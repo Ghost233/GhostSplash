@@ -1,0 +1,21 @@
+%% Historical design only. Superseded on 2026-10-27 by ADR 0005; not in the current implementation scope.
+flowchart TD
+    SYS["macOS pressure and headroom"]
+    LOCK["Leader lock and member records"]
+    subgraph A["Splash instance A"]
+        COORD["Elected coordinator thread"]
+        LOCAL_A["Local memory guard and model"]
+    end
+    subgraph B["Splash instance B"]
+        CLIENT_B["Coordinator client"]
+        LOCAL_B["Local memory guard and model"]
+    end
+    SYS --> COORD
+    SYS --> LOCAL_A
+    SYS --> LOCAL_B
+    COORD <--> CLIENT_B
+    COORD <--> LOCAL_A
+    CLIENT_B <--> LOCAL_B
+    COORD --- LOCK
+    CLIENT_B --- LOCK
+    linkStyle default stroke:#808080,stroke-width:2px

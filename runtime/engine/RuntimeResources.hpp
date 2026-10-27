@@ -3,6 +3,7 @@
 #include "ops/Vision.hpp"
 #include "engine/AneFfnStartup.hpp"
 #include "engine/MemoryPlan.hpp"
+#include "engine/ExpertPlePolicy.hpp"
 #include "engine/Cache.hpp"
 #include "engine/CacheDirectory.hpp"
 #include "engine/DiskSpace.hpp"
@@ -142,8 +143,11 @@ struct RuntimeResourcesConfig {
   // keeps both while the engine runs.
   double idleReleaseSeconds = metal::kResidencyKeepAliveSeconds;
   // Reclaimable host memory, sampled at every Metal operation during startup
-  // and by the governor afterwards.
+  // and by the governor afterwards. With pressure control on the elected
+  // IO thread also calls this provider, so it must be thread-safe.
   MemoryGovernor::HostMemoryProvider hostMemory = queryHostMemory;
+  // Native allocation outcome injection; production leaves this empty.
+  MemoryGovernor::AllocationDriver allocationDriver;
   // --ple-memory: a target's PLE n-gram table, which its GGUF holds, streams
   // from the file through a row cache of a size, or loads (off); auto leaves
   // it to the memory plan (planStreamedMemory). Ignored, with a warning, for
@@ -155,6 +159,12 @@ struct RuntimeResourcesConfig {
   // warning, for a dense target, and a size that holds every routed expert
   // loads them.
   StreamedSetting expertMemory;
+  bool moeMemoryPressure = false;
+  std::optional<uint64_t> hostMemoryReserveBytes;
+  // Independent combined cap for the routed experts and PLE storage.
+  uint64_t expertPleMemoryBytes = 0;
+  bool expertPleAdaptive = false;
+  uint32_t expertPleRatio = 20;
   // --sparse-kv-memory: the target of a spill-capable target's hot block
   // cache, at least its floor; none (auto) keeps its floor.
   std::optional<uint64_t> sparseKvMemory;
@@ -182,6 +192,8 @@ struct RuntimeResourcesConfig {
   // it only publishes a level. Bootstrap checks it at Metal operation
   // boundaries; after Ready the transport control handler keeps it current.
   std::function<MemoryPressure()> memoryPressure;
+  // IO-safe policy observation/clock; never the native request deadline clock.
+  MemoryPolicySources memoryPolicy;
   std::function<bool()> cancelled;
 };
 
@@ -190,11 +202,14 @@ enum class RuntimeResourceFailure {
   HostCapacity,
   EngineCapacity,
   DriverAllocation,
+  GrowthDeferred,
 };
 
 [[nodiscard]] constexpr RuntimeResourceFailure resourceAllocationFailure(
     metal::AllocationFailure failure) noexcept {
   switch (failure) {
+  case metal::AllocationFailure::GrowthDeferred:
+    return RuntimeResourceFailure::GrowthDeferred;
   case metal::AllocationFailure::HostPressure:
     return RuntimeResourceFailure::HostCapacity;
   case metal::AllocationFailure::EngineBudget:
@@ -263,6 +278,11 @@ public:
   // persistent tier's directory marks this process serving, on probation for
   // its first minute (CacheDirectory::beginServing).
   void beginServing();
+  [[nodiscard]] metal::AllocationAdmission startupAllocationAdmission(std::string purpose);
+  void publishMemoryAccounting(std::string lifecycle = {});
+  [[nodiscard]] uint64_t runtimeCreationBytes() const;
+  void cancelPendingGrowth() { memoryGovernor_->resetAutomaticGrowth(); }
+
   // The engine reported its own failure: within probation, the next start
   // finds a persistent tier emptied (CacheDirectory::engineFailed).
   void engineFailed() noexcept;
@@ -297,18 +317,24 @@ public:
   [[nodiscard]] std::optional<model::SparseRowStats> streamedTableStats() const;
   // The streamed routed experts' store (--expert-memory), if the model has one.
   [[nodiscard]] std::optional<model::ExpertStoreStats> streamedExpertStats() const;
+  [[nodiscard]] std::optional<model::ExpertStorageSnapshot> expertStorageSnapshot() const;
   // Which requests keep their KV on the SSD cache (EngineConfig::spill).
   [[nodiscard]] EngineSpillConfig spillConfig() const noexcept;
   // Spilling as it stands, for /status, none for a target that keeps its KV
   // in memory; engine thread.
   [[nodiscard]] std::optional<KvSpillStatus> kvSpillStatus() const;
 
+  // Engine thread, only at a command-free point with weights resident.
+  [[nodiscard]] bool rebalanceExpertPle(double nowSeconds, const model::ModelMemoryActual &modelMemory);
+  [[nodiscard]] std::string expertPleStatusJson() const;
+  // Owner-thread optional step, including local pacing and the real store guard.
+  [[nodiscard]] metal::AllocationResult growAutomaticStorageOne(uint64_t expertTargetBytes, uint64_t pleTargetBytes);
   [[nodiscard]] model::RuntimeContext modelContext() noexcept;
   // What the engine gives back while idle (NativeLoopConfig::weights): the
   // weight images, and the Neural Engine split's program if it runs one.
   [[nodiscard]] ReleasableMemory &releasableMemory() noexcept { return releasableMemory_; }
   [[nodiscard]] ActualMemoryReport
-  actualMemoryReport(const model::ModelMemoryActual &modelMemory, bool refresh = true) const;
+  actualMemoryReport(const model::ModelMemoryActual &modelMemory, bool refresh = true, bool storeEpoch = false) const;
   [[nodiscard]] RuntimeStartupTimings startupTimings() const noexcept { return startupTimings_; }
 
 private:
@@ -334,7 +360,33 @@ private:
   // tier (Cache::adopt) and opens its files for this one.
   void adoptPersistentCache();
   void stopProbation() noexcept;
+  void controlExpertMemory(const MemoryGovernorSnapshot &memory);
+  void growAutomaticStorage();
+  void constrainExpertPlePolicy();
+  bool rebalancePressureExpertPle(double now, uint64_t pleTarget);
+  void prepareExpertRestore();
 
+  std::optional<model::ExpertStorageSnapshot> expertStorage_;
+  std::optional<ExpertPlePolicy> expertPlePolicy_;
+  uint32_t expertPleRatio_ = 20;
+  uint64_t expertPleManagedBytes_ = 0;
+  bool pressureManaged_ = false;
+  // A future paced receipt must update the owner category caps explicitly.
+  bool pressureQuotaEstablished_ = false;
+  bool automaticPle_ = false;
+  uint64_t automaticPleFloorBytes_ = 0;
+  uint64_t expertMaximumBytes_ = 0, automaticPleMaximumBytes_ = 0;
+  bool nextGrowthPle_ = false;
+  model::StorageGrowthReceipt lastGrowth_;
+  uint64_t fixedResidentPleBytes_ = 0;
+  uint64_t expertCurrentQuotaBytes_ = 0, pleCurrentQuotaBytes_ = 0;
+  uint64_t expertRestoreTargetBytes_ = 0;
+  double expertPleLastSample_ = -1;
+  double expertPleTransferMilliseconds_ = 0;
+  uint64_t expertPleTransferBlocks_ = 0;
+  bool expertPleReceivingPle_ = false;
+  std::string expertPleFailure_;
+  std::optional<MemoryAuditResult> expertPleAudit_;
   model::OptionalFeatures optionalFeatures_;
   RuntimeStartupTimings startupTimings_;
   PersistentCacheFiles persistentCache_;

@@ -178,6 +178,24 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       result.pleMemory = parseStreamedSetting(option, value);
     } else if (option == "--expert-memory") {
       result.expertMemory = parseStreamedSetting(option, value);
+    } else if (option == "--moe-memory-pressure") {
+      result.moeMemoryPressure = parseSwitch(option, value);
+    } else if (option == "--host-memory-reserve") {
+      uint64_t bytes = 0;
+      if (value != "auto" && !parsePositive(value, bytes))
+        throw UsageError("--host-memory-reserve requires auto or a positive byte count");
+      result.hostMemoryReserveBytes = bytes ? std::optional<uint64_t>(bytes) : std::nullopt;
+    } else if (option == "--expert-ple-memory") {
+      uint64_t bytes = 0;
+      if (value != "auto" && !parsePositive(value, bytes))
+        throw UsageError("--expert-ple-memory requires a positive byte count or auto");
+      result.expertPleMemoryBytes = bytes;
+    } else if (option == "--expert-ple-policy") {
+      if (value != "static" && value != "adaptive") throw UsageError("--expert-ple-policy requires static or adaptive");
+      result.expertPleAdaptive = value == "adaptive";
+    } else if (option == "--expert-ple-ratio") {
+      if (value != "1:20" && value != "1:10") throw UsageError("--expert-ple-ratio requires 1:20 or 1:10");
+      result.expertPleRatio = value == "1:20" ? 20 : 10;
     } else if (option == "--sparse-kv-memory") {
       uint64_t bytes = 0;
       if (value != "auto" && !parsePositive(value, bytes))
@@ -248,6 +266,13 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--max-cache-disk-writes requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
   if (!result.cacheRoot.empty() && !result.persistentCache)
     throw UsageError("--cache-dir requires --persistent-cache on");
+  if (result.expertPleAdaptive && (!result.expertPleMemoryBytes ||
+      result.expertMemory.mode != StreamedSetting::Mode::Auto || result.pleMemory.mode != StreamedSetting::Mode::Auto))
+    throw UsageError("--expert-ple-policy adaptive requires --expert-ple-memory SIZE and both stores auto");
+  if (result.moeMemoryPressure && result.expertMemory.mode != StreamedSetting::Mode::Auto)
+    throw UsageError("--moe-memory-pressure on requires --expert-memory auto");
+  if (!result.moeMemoryPressure && result.hostMemoryReserveBytes)
+    throw UsageError("--host-memory-reserve SIZE requires --moe-memory-pressure on");
   result.modelRoot = requireModelRoot(argv[2]);
   model::ModelDescriptor inspected = model::inspectModelRoot(result.modelRoot);
   result.maxContext = parseMaxContext(argv[3]);
@@ -268,6 +293,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       throw UsageError("--relaunch-context requires an integer in [1, " +
                        std::to_string(result.model.capabilities.maximumContextTokens) + "]");
   }
+  if (result.moeMemoryPressure && !std::visit([](const auto &layout) { return layout.experts != 0; }, result.model.target))
+    throw UsageError("--moe-memory-pressure on requires a resizable MoE model");
   result.maxMemoryBytes = parseMaxMemory(argv[4]);
   return result;
 }

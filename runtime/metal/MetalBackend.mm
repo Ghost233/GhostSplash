@@ -155,6 +155,10 @@ constexpr auto kTicketWaitSlice = std::chrono::seconds(1);
 // The queue's outstanding command buffers; a command takes one, and one more
 // per buffer its event steps add (addedBuffers).
 constexpr NSUInteger kMaximumCommandBuffers = 512;
+// Bound a long graph's GPU submissions so completed work is observable by
+// the watchdog. Event steps keep their existing submission boundaries,
+// including the deferred-submission rules for foreign waits.
+constexpr size_t kDispatchesPerCommandBuffer = 256;
 // The most loads host_step_wait spins for: 60-190 ms on the M5 Max (0.23-0.71
 // us a load), longer than nearly every step's work.
 constexpr uint32_t kHostStepWaitLoads = 1u << 18;
@@ -178,6 +182,10 @@ NSUInteger addedBuffers(const EventStep &step) noexcept {
     case EventStep::Kind::Host: return step.gpu == HostStepGpu::Awake ? 2 : 1;
     }
     return 0;
+}
+
+bool automaticBufferBoundary(size_t after, size_t dispatches, std::span<const EventStep> events) {
+    return events.empty() && after < dispatches && after % kDispatchesPerCommandBuffer == 0;
 }
 
 // The command buffers a command of `dispatches` dispatches and these event
@@ -209,6 +217,11 @@ NSUInteger checkEvents(std::span<const EventStep> events, std::span<const Comput
         }))
         throw MetalBackendError("explicitly sliced Metal commands with foreign event waits need deferred submission");
     buffers += boundaries;
+    for (size_t after = kDispatchesPerCommandBuffer; after < dispatches.size();
+         after += kDispatchesPerCommandBuffer)
+        if (!dispatches[after - 1].commandBufferBoundaryAfter &&
+            automaticBufferBoundary(after, dispatches.size(), events))
+            ++buffers;
     if (buffers > kMaximumCommandBuffers)
         throw MetalBackendError("Metal command's event steps take more command "
                                 "buffers than its queue holds");
@@ -295,6 +308,8 @@ id<MTLLibrary> loadLibrary(id<MTLDevice> device, const std::string &metallibPath
 struct AllocationAccounting {
     std::atomic<uint64_t> allocatedBytes{0};
     std::atomic<uint64_t> peakAllocatedBytes{0};
+    std::atomic<uint64_t> epochPeakAllocatedBytes{0};
+    std::atomic<bool> epochActive{false};
 };
 
 struct MetalAllocation {
@@ -323,9 +338,10 @@ struct MetalAllocation {
         buffer = allocated;
         bytes = allocated.allocatedSize;
         if (auto kept = residency.lock()) kept->add(buffer, reach);
-        raisePeak(accounting->peakAllocatedBytes,
-                  accounting->allocatedBytes.fetch_add(
-                      bytes, std::memory_order_relaxed) + bytes);
+        const auto current = accounting->allocatedBytes.fetch_add(bytes, std::memory_order_relaxed) + bytes;
+        raisePeak(accounting->peakAllocatedBytes, current);
+        if (accounting->epochActive.load(std::memory_order_relaxed))
+            raisePeak(accounting->epochPeakAllocatedBytes, current);
     }
     // Lets the buffer go: it leaves the residency set and the accounting.
     void detach() noexcept {
@@ -361,6 +377,8 @@ struct BackendAsyncState {
     __strong id<MTLDevice> device = nil;
     mutable std::atomic<uint64_t> deviceCurrentAllocatedBytes{0};
     mutable std::atomic<uint64_t> devicePeakAllocatedBytes{0};
+    mutable std::atomic<uint64_t> deviceEpochPeakAllocatedBytes{0};
+    std::atomic<bool> memoryEpochActive{false};
     std::atomic<bool> healthy{true};
     mutable std::mutex healthMutex;
     std::string healthReason;
@@ -380,6 +398,8 @@ struct BackendAsyncState {
         uint64_t current = static_cast<uint64_t>(device.currentAllocatedSize);
         deviceCurrentAllocatedBytes.store(current, std::memory_order_relaxed);
         raisePeak(devicePeakAllocatedBytes, current);
+        if (memoryEpochActive.load(std::memory_order_relaxed))
+            raisePeak(deviceEpochPeakAllocatedBytes, current);
     }
 
     [[noreturn]] void throwUnhealthy() const {
@@ -439,7 +459,7 @@ struct BackendAsyncState {
         commandWatchdog.complete(sequence);
     }
 
-    // A host step of the command was taken up or returned at nowSeconds
+    // GPU work completed, or a host step was taken up or returned, at nowSeconds
     // (CommandWatchdog).
     void progressSubmission(uint64_t sequence, double nowSeconds) noexcept {
         std::lock_guard lock(gateMutex);
@@ -753,6 +773,7 @@ private:
 struct HostStepSpin {
     __strong id<MTLComputePipelineState> pipeline = nil;
     __strong id<MTLBuffer> releases = nil;
+    std::shared_ptr<MetalAllocation> managedAllocation;
     // The release value of the last spin encoded.
     uint32_t sequence = 0;
 };
@@ -951,6 +972,18 @@ struct MetalBackend::Impl {
     };
 
     std::function<void()> operationGuard;
+    AllocationAdmission allocationAdmission, optionalAdmission;
+    std::shared_ptr<HostMemoryAccounting> hostAccounting;
+    void admitBuffer(uint64_t bytes, const std::function<void()> &allocate, bool optional = false, std::string_view label = {}, bool metalPages = true) {
+        const auto &admit = optional && optionalAdmission ? optionalAdmission : allocationAdmission;
+        if (!admit) { allocate(); return; }
+        const uint64_t page = static_cast<uint64_t>(getpagesize());
+        const auto result = admit(metalPages ? (bytes + page - 1) / page * page : bytes, allocate);
+        if (!result) {
+            const std::string detail = result.detail.empty() ? allocationFailureName(result.failure) : result.detail;
+            throw MetalAllocationError(label.empty() ? detail : std::string(label) + ": " + detail, result.failure);
+        }
+    }
     std::function<void(const Command &)> submissionObserver;
     std::function<void(const CommandTimestampProfile &)> timestampObserver;
     __strong id<MTLCounterSet> timestampSet = nil;
@@ -968,6 +1001,9 @@ struct MetalBackend::Impl {
     __strong MTLSharedEventListener *eventListener = nil;
     // Allocations hold it weakly: they may outlive the backend.
     std::shared_ptr<Residency> residency;
+    std::shared_ptr<MetalAllocation> residencyAllocation;
+    double residencyKeepAliveSeconds = kResidencyKeepAliveSeconds;
+    __strong id<MTLComputePipelineState> residencyPipeline = nil;
     __strong id<MTLLibrary> library = nil;
     // Looked up for every dispatch when its command is prepared, which the
     // GPU may be waiting for; a hit allocates nothing. Used only by the
@@ -1180,6 +1216,17 @@ struct MetalBackend::Impl {
         return command;
     }
 
+    // Count only completed GPU work, at its GPU timestamp rather than at a
+    // possibly late callback. A stalled or failed buffer earns no progress.
+    void commitLeading(id<MTLCommandBuffer> command, uint64_t sequence) {
+        const auto state = asyncState;
+        [command addCompletedHandler:^(id<MTLCommandBuffer> ended) {
+            if (ended.status == MTLCommandBufferStatusCompleted)
+                state->progressSubmission(sequence, ended.GPUEndTime);
+        }];
+        [command commit];
+    }
+
     // Ends `command` with host step `step` (EventStep::Kind::Host) of a
     // command's `steps`, creating them with its first, appends it (and the
     // buffer that spins through an awake step) to `leading` and commits it,
@@ -1226,8 +1273,9 @@ struct MetalBackend::Impl {
         if (!next) failEncoding("unable to create Metal command buffer");
         [next encodeWaitForEvent:steps->ranEvent value:ready];
         steps->steps.push_back({ready, step.work, step.timed, step.then, command, next, 0.0, 0.0, released});
-        for (auto buffer = leading.end() - (released ? 2 : 1); buffer != leading.end(); ++buffer)
-            [*buffer commit];
+        commitLeading(command, sequence);
+        // The spin only keeps the GPU awake; it is not work progressing.
+        if (released) [leading.back() commit];
         hostStepRunner->add(steps, steps->steps.back());
         return next;
     }
@@ -1319,6 +1367,14 @@ struct MetalBackend::Impl {
                     nextSpinCheck = AwakeClock::now() + kHostStepSpinRecheck;
                     return;
                 }
+            } catch (const MetalAllocationError &error) {
+                if (error.failure() == AllocationFailure::GrowthDeferred) {
+                    nextSpinCheck = AwakeClock::now();
+                    return; // optional, and no callback waits for permission
+                }
+                logWarning("Metal host steps run without keeping the GPU awake (", error.what(),
+                           "), so the work after each step starts later");
+                nextSpinCheck = AwakeClock::time_point::max();
             } catch (const std::exception &error) {
                 logWarning("Metal host steps run without keeping the GPU awake (", error.what(),
                            "), so the work after each step starts later");
@@ -1332,9 +1388,16 @@ struct MetalBackend::Impl {
     HostStepSpin newHostStepSpin() {
         HostStepSpin spin;
         spin.pipeline = newPipeline(loadLibrary(device, hostStepLibraryPath), "host_step_wait");
-        spin.releases = newBuffer(kHostStepSeenOffset + 2 * sizeof(uint32_t), BufferStorage::Shared,
-                                  @"host-step releases");
-        std::memset(spin.releases.contents, 0, spin.releases.length);
+        admitBuffer(kHostStepSeenOffset + 2 * sizeof(uint32_t), [&] {
+            spin.releases = newBuffer(kHostStepSeenOffset + 2 * sizeof(uint32_t), BufferStorage::Shared,
+                                      @"host-step releases");
+            if (allocationAdmission) {
+                spin.managedAllocation = std::make_shared<MetalAllocation>();
+                spin.managedAllocation->accounting = accounting;
+                spin.managedAllocation->attach(spin.releases);
+            }
+            std::memset(spin.releases.contents, 0, spin.releases.length);
+        }, true);
         return spin;
     }
 
@@ -1465,7 +1528,7 @@ struct MetalBackend::Impl {
                                 signaled.signal(value);
                         }];
                         leading.push_back(command);
-                        [command commit];
+                        commitLeading(command, ticketState->sequence);
                         command = [queue commandBuffer];
                         bufferFirst = encoded;
                         if (!command) {
@@ -1535,10 +1598,11 @@ struct MetalBackend::Impl {
                     if (samples && !timestampEncoderBoundary)
                         [encoder sampleCountersInBuffer:samples atSampleIndex:index * 2 + 1 withBarrier:YES];
                     if (samples && timestampEncoderBoundary) { [encoder endEncoding]; encoder = nil; }
-                    if (dispatch.commandBufferBoundaryAfter) {
+                    if (dispatch.commandBufferBoundaryAfter ||
+                        automaticBufferBoundary(index + 1, dispatches.size(), events)) {
                         if (encoder) { [encoder endEncoding]; encoder = nil; }
                         leading.push_back(command);
-                        [command commit];
+                        commitLeading(command, ticketState->sequence);
                         command = [queue commandBuffer];
                         bufferFirst = index + 1;
                         if (!command) failEncoding("unable to create Metal command buffer");
@@ -1768,7 +1832,7 @@ CommandTiming CommandTicket::wait() {
 }
 
 MetalBackend::MetalBackend(std::string metallibPath, double residencyKeepAliveSeconds,
-                           double commandTimeoutSeconds)
+                           double commandTimeoutSeconds, bool deferResidencyAllocation)
     : impl_(std::make_unique<Impl>(commandTimeoutSeconds)) {
     @autoreleasepool {
         if (metallibPath.empty()) {
@@ -1814,9 +1878,11 @@ MetalBackend::MetalBackend(std::string metallibPath, double residencyKeepAliveSe
             std::filesystem::path(metallibPath).replace_filename(kHostStepLibrary).string();
         // Ending residency dispatches a kernel built here, so no pipeline or
         // driver program is compiled when a keep-alive lapses.
-        impl_->residency = std::make_shared<Residency>(
-            impl_->device, impl_->queue,
-            impl_->newPipeline(impl_->library, Residency::kKickPipeline), residencyKeepAliveSeconds);
+        impl_->residencyKeepAliveSeconds = residencyKeepAliveSeconds;
+        impl_->residencyPipeline = impl_->newPipeline(impl_->library, Residency::kKickPipeline);
+        if (!deferResidencyAllocation)
+            impl_->residency = std::make_shared<Residency>(impl_->device, impl_->queue,
+                                                         impl_->residencyPipeline, residencyKeepAliveSeconds);
     }
     impl_->sampleDeviceMemory();
 }
@@ -1852,6 +1918,55 @@ void MetalBackend::setOperationGuard(std::function<void()> guard) {
     impl_->operationGuard = std::move(guard);
 }
 
+HostMemoryAllocation MetalBackend::allocateHostMemory(uint64_t bytes, const std::function<void()> &allocate,
+                                                       bool temporary, const std::function<uint64_t()> &held) {
+    checkOperation();
+    if (!bytes) { allocate(); return {}; }
+    HostMemoryAllocation result;
+    impl_->admitBuffer(bytes, [&] {
+        if (!impl_->hostAccounting) impl_->hostAccounting = std::make_shared<HostMemoryAccounting>();
+        allocate();
+        const uint64_t actual = held ? held() : bytes;
+        result = HostMemoryAllocation(impl_->hostAccounting, actual, temporary);
+        if (actual > bytes)
+            throw MetalAllocationError("host payload exceeded its declared growth bound", AllocationFailure::PlanInsufficient);
+    }, false, "host-payload", false);
+    return result;
+}
+
+HostMemoryStats MetalBackend::hostMemoryStats() const noexcept {
+    if (!impl_->hostAccounting) return {};
+    const auto &host = *impl_->hostAccounting;
+    return {host.fixedBytes.load(std::memory_order_relaxed), host.temporaryBytes.load(std::memory_order_relaxed),
+            host.peakBytes.load(std::memory_order_relaxed)};
+}
+bool MetalBackend::managedAdmissionEnabled() const noexcept { return bool(impl_->allocationAdmission); }
+
+void MetalBackend::prepareResidency() {
+    checkOperation();
+    if (impl_->residency) return;
+    impl_->admitBuffer(sizeof(uint32_t), [&] {
+        impl_->residency = std::make_shared<Residency>(impl_->device, impl_->queue,
+            impl_->residencyPipeline, impl_->residencyKeepAliveSeconds);
+        impl_->residencyAllocation = std::make_shared<MetalAllocation>();
+        impl_->residencyAllocation->accounting = impl_->accounting;
+        impl_->residencyAllocation->attach(impl_->residency->kickTarget());
+        if (impl_->residencyAllocation->bytes > allocationBytes(sizeof(uint32_t)))
+            throw MetalAllocationError("residency target exceeds its admitted byte bound");
+        impl_->sampleDeviceMemory();
+    });
+}
+
+void MetalBackend::setAllocationAdmission(AllocationAdmission admission, AllocationAdmission optional) {
+    impl_->allocationAdmission = std::move(admission);
+    impl_->optionalAdmission = std::move(optional);
+}
+
+uint64_t MetalBackend::allocationBytes(uint64_t bytes) const noexcept {
+    const uint64_t page = static_cast<uint64_t>(getpagesize());
+    return bytes > UINT64_MAX - page + 1 ? UINT64_MAX : (bytes + page - 1) / page * page;
+}
+
 void MetalBackend::setWaitInterrupt(std::function<bool()> shuttingDown) {
     impl_->asyncState->waitInterrupt = std::move(shuttingDown);
 }
@@ -1867,6 +1982,8 @@ MetalBuffer MetalBackend::allocateBuffer(uint64_t bytes,
     }
     if (reach == BufferReach::Addressed && storage != BufferStorage::Shared)
         throw MetalBackendError("only a Shared Metal buffer is reached by its address");
+    MetalBuffer admitted;
+    impl_->admitBuffer(bytes, [&] {
     auto allocation = std::make_shared<MetalAllocation>();
     allocation->accounting = impl_->accounting;
     allocation->length = bytes;
@@ -1875,11 +1992,15 @@ MetalBuffer MetalBackend::allocateBuffer(uint64_t bytes,
     if (!label.empty()) allocation->label = checkedNSString(label, "buffer label");
     allocation->residency = impl_->residency;
     allocation->attach(impl_->newBuffer(bytes, storage, allocation->label));
+    if (impl_->allocationAdmission && allocation->bytes > allocationBytes(bytes))
+        throw MetalAllocationError("Metal allocation exceeds its admitted byte bound");
     impl_->sampleDeviceMemory();
     auto result = std::make_shared<MetalBuffer::Impl>();
     result->lengthBytes = bytes;
     result->allocation = std::move(allocation);
-    return MetalBuffer(std::move(result));
+    admitted = MetalBuffer(std::move(result));
+    }, false, label);
+    return admitted;
 }
 
 MetalBuffer MetalBackend::wrapSharedMemory(void *address, uint64_t bytes,
@@ -1895,6 +2016,8 @@ MetalBuffer MetalBackend::wrapSharedMemory(void *address, uint64_t bytes,
     if (bytes > impl_->capabilities.maxBufferLengthBytes) {
         throw MetalBackendError("Metal buffer exceeds maxBufferLength");
     }
+    MetalBuffer admitted;
+    impl_->admitBuffer(bytes, [&] {
     auto allocation = std::make_shared<MetalAllocation>();
     allocation->accounting = impl_->accounting;
     allocation->length = bytes;
@@ -1916,7 +2039,9 @@ MetalBuffer MetalBackend::wrapSharedMemory(void *address, uint64_t bytes,
     auto result = std::make_shared<MetalBuffer::Impl>();
     result->lengthBytes = bytes;
     result->allocation = std::move(allocation);
-    return MetalBuffer(std::move(result));
+    admitted = MetalBuffer(std::move(result));
+    });
+    return admitted;
 }
 
 void MetalBackend::releaseMemory(const MetalBuffer &buffer) {
@@ -1937,9 +2062,15 @@ void MetalBackend::restoreMemory(const MetalBuffer &buffer) {
     MetalAllocation &allocation = impl_->baseAllocation(buffer);
     if (allocation.buffer)
         throw MetalBackendError("Metal buffer memory is not released");
+    impl_->admitBuffer(allocation.length, [&] {
     allocation.attach(impl_->newBuffer(allocation.length, allocation.storage,
                                        allocation.label));
+    if (impl_->allocationAdmission && allocation.bytes > allocationBytes(allocation.length)) {
+        allocation.detach();
+        throw MetalAllocationError("restored Metal allocation exceeds its admitted byte bound");
+    }
     impl_->sampleDeviceMemory();
+    });
 }
 
 MetalBuffer MetalBackend::view(const MetalBuffer &base,
@@ -2050,11 +2181,35 @@ MetalMemoryStats MetalBackend::refreshMemoryStats() const noexcept {
     return memoryStats();
 }
 
+void MetalBackend::beginMemoryEpoch() {
+    if (commandInFlight()) throw std::logic_error("a memory epoch must begin between commands");
+    impl_->accounting->epochPeakAllocatedBytes.store(
+        impl_->accounting->allocatedBytes.load(std::memory_order_relaxed), std::memory_order_relaxed);
+    impl_->asyncState->deviceEpochPeakAllocatedBytes.store(0, std::memory_order_relaxed);
+    impl_->accounting->epochActive.store(true, std::memory_order_relaxed);
+    impl_->asyncState->memoryEpochActive.store(true, std::memory_order_relaxed);
+    impl_->sampleDeviceMemory();
+}
+
+MetalMemoryStats MetalBackend::memoryEpochStats() const noexcept {
+    auto result = refreshMemoryStats();
+    if (impl_->accounting->epochActive.load(std::memory_order_relaxed)) {
+        result.peakAllocatedBytes = impl_->accounting->epochPeakAllocatedBytes.load(std::memory_order_relaxed);
+        result.devicePeakAllocatedBytes = impl_->asyncState->deviceEpochPeakAllocatedBytes.load(std::memory_order_relaxed);
+    }
+    return result;
+}
+
 void MetalBackend::restartPeaks() noexcept {
     impl_->accounting->peakAllocatedBytes.store(
         impl_->accounting->allocatedBytes.load(std::memory_order_relaxed),
         std::memory_order_relaxed);
     impl_->asyncState->devicePeakAllocatedBytes.store(0, std::memory_order_relaxed);
+    if (impl_->accounting->epochActive.load(std::memory_order_relaxed)) {
+        impl_->accounting->epochPeakAllocatedBytes.store(
+            impl_->accounting->allocatedBytes.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        impl_->asyncState->deviceEpochPeakAllocatedBytes.store(0, std::memory_order_relaxed);
+    }
     impl_->sampleDeviceMemory();
 }
 

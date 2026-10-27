@@ -153,6 +153,9 @@ void appendStreamedTable(std::ostringstream &out, const std::optional<model::Spa
     const model::SparseRowStats::Use &counters = table->uses[use];
     out << ",\"" << kStreamedUses[use] << "\":{\"stages\":" << counters.stages
         << ",\"requested_rows\":" << counters.requestedRows << ",\"unique_rows\":" << counters.uniqueRows
+        << ",\"consumed_prefetched_rows\":" << counters.consumedPrefetchedRows
+        << ",\"reused_evicted_rows\":" << counters.reusedEvictedRows
+        << ",\"read_wait_ms\":" << double(counters.readWaitNanoseconds) / 1e6
         << ",\"hit_rows\":" << counters.hitRows << ",\"read_rows\":" << counters.readRows
         << ",\"hit_rate\":"
         << (counters.uniqueRows ? double(counters.hitRows) / double(counters.uniqueRows) : 0.0)
@@ -190,6 +193,8 @@ void appendStreamedExperts(std::ostringstream &out, const std::optional<model::E
         << ",\"read\":" << counters.read << ",\"prefetched\":" << counters.prefetched
         << ",\"read_ahead\":" << counters.readAhead << ",\"hit_rate\":"
         << (counters.routed ? double(counters.routed - counters.read) / double(counters.routed) : 0.0)
+        << ",\"ghost_hits\":" << counters.ghostHits
+        << ",\"read_wait_ms\":" << double(counters.readWaitNanoseconds) / 1e6
         << ",\"read_bytes\":" << counters.readBytes << ",\"host_steps\":{\"pickup_ms\":";
     appendLatency(out, counters.pickup);
     out << ",\"work_ms\":";
@@ -199,6 +204,42 @@ void appendStreamedExperts(std::ostringstream &out, const std::optional<model::E
     out << "}}";
   }
   out << ",\"failure\":" << json::quote(experts->failure) << '}';
+}
+
+void appendExpertStorage(std::ostringstream &out, const std::optional<model::ExpertStorageSnapshot> &storage) {
+  if (!storage) { out << "null"; return; }
+  const auto &e = *storage;
+  const auto value = [&](const std::optional<uint64_t> &bytes) {
+    if (bytes) out << *bytes; else out << "null";
+  };
+  const auto ratio = [&](const std::optional<uint64_t> &bytes) {
+    if (bytes && e.weightBytes) out << double(*bytes) / double(e.weightBytes); else out << "null";
+  };
+  out << "{\"layout\":" << json::quote(e.layout) << ",\"released\":" << boolean(e.released)
+      << ",\"weight_bytes\":" << e.weightBytes << ",\"resident_layout_bytes\":" << e.residentLayoutBytes
+      << ",\"contiguous_floor_bytes\":" << e.contiguous.minimumBytes
+      << ",\"contiguous_full_bytes\":" << e.contiguous.fullBytes
+      << ",\"resizable_floor_bytes\":" << e.resizable.minimumBytes
+      << ",\"resizable_full_bytes\":" << e.resizable.fullBytes
+      << ",\"resizable_fixed_bytes\":" << e.resizable.fixedBytes
+      << ",\"cache_chunks\":[";
+  for (size_t i = 0; i < e.resizable.chunks.size(); ++i) {
+    const auto &c = e.resizable.chunks[i];
+    if (i) out << ',';
+    out << "{\"weight_bytes\":" << c.weightBytes << ",\"allocation_bytes\":" << c.allocationBytes
+        << ",\"slots\":" << c.slots << ",\"minimum_chunks\":" << c.minimumChunks
+        << ",\"maximum_chunks\":" << c.maximumChunks << '}';
+  }
+  out << "],\"current_floor_bytes\":"; value(e.currentFloorBytes);
+  out << ",\"minimum_required_bytes\":"; value(e.minimumRequiredBytes);
+  out << ",\"budget_bytes\":"; value(e.budgetBytes);
+  out << ",\"allocated_bytes\":"; value(e.allocatedBytes);
+  out << ",\"auxiliary_bytes\":"; value(e.auxiliaryBytes);
+  out << ",\"capacity_weight_bytes\":"; value(e.capacityWeightBytes);
+  out << ",\"resident_weight_bytes\":"; value(e.residentWeightBytes);
+  out << ",\"capacity_ratio\":"; ratio(e.capacityWeightBytes);
+  out << ",\"resident_ratio\":"; ratio(e.residentWeightBytes);
+  out << '}';
 }
 
 // What the resolves of spilled K/V did (model::KvReadStats): the entries of
@@ -297,7 +338,7 @@ std::string runtimeStatusJson(
     const AneFfnSnapshot &aneFfn, ThermalState thermalState,
     const std::optional<model::SparseRowStats> &streamedTable,
     const std::optional<model::ExpertStoreStats> &streamedExperts, const std::optional<KvSpillStatus> &kvSpill,
-    const std::optional<RuntimeFeatureSnapshot> &features) {
+    const std::optional<RuntimeFeatureSnapshot> &features, std::string_view expertPleAdaptive) {
   const auto &resources = core.resources;
   const auto &scheduler = core.scheduler;
   const auto &pool = resources.pool;
@@ -367,7 +408,9 @@ std::string runtimeStatusJson(
       << "\"memory_plan\":" << plan.toStatusJson()
       << ",\"memory_actual\":{\"allocated_bytes\":" << metalMemory.allocatedBytes
       << ",\"current_bytes\":" << currentBytes
-      << ",\"peak_bytes\":" << peakBytes << "}"
+      << ",\"peak_bytes\":" << peakBytes
+      << ",\"process_physical_footprint_bytes\":"
+      << (features && features->processPhysicalFootprintBytes ? std::to_string(*features->processPhysicalFootprintBytes) : "null") << "}"
       << ",\"memory_governor\":{\"limit_bytes\":" << memoryGovernor.limitBytes
       << ",\"charged_bytes\":" << memoryGovernor.chargedBytes
       << ",\"headroom_bytes\":" << memoryGovernor.headroomBytes
@@ -381,10 +424,35 @@ std::string runtimeStatusJson(
       << ",\"host_reserve_bytes\":" << memoryGovernor.hostReserveBytes
       << ",\"host_spare_bytes\":" << memoryGovernor.hostSpareBytes
       << ",\"host_spare_reserve_bytes\":" << memoryGovernor.hostSpareReserveBytes
-      << ",\"host_headroom_bytes\":" << memoryGovernor.hostHeadroomBytes << "}"
+      << ",\"host_headroom_bytes\":" << memoryGovernor.hostHeadroomBytes
+      << ",\"local_reserved_bytes\":" << memoryGovernor.localReservedBytes
+      << ",\"untracked_reserve_bytes\":" << memoryGovernor.untrackedReserveBytes
+      << ",\"automatic_storage_released_bytes\":" << memoryGovernor.automaticStorageReleasedBytes
+      << ",\"automatic_storage_withheld_bytes\":" << memoryGovernor.automaticStorageWithheldBytes
+      << ",\"elastic_limit_bytes\":" << memoryGovernor.elasticLimitBytes
+      << ",\"elastic_headroom_bytes\":" << memoryGovernor.elasticHeadroomBytes
+      << ",\"request_starts_paused\":" << boolean(memoryGovernor.requestStartsPaused)
+      << ",\"automatic_storage_reason\":" << json::quote(memoryGovernor.automaticStorageReason)
+      << ",\"automatic_minimum_bytes\":" << memoryGovernor.automaticMinimumBytes
+      << ",\"automatic_maximum_bytes\":" << memoryGovernor.automaticMaximumBytes
+      << ",\"automatic_quota_bytes\":" << memoryGovernor.automaticQuotaBytes
+      << ",\"automatic_actual_bytes\":" << (memoryGovernor.automaticActualBytes ? std::to_string(*memoryGovernor.automaticActualBytes) : "null")
+      << ",\"automatic_pending_bytes\":" << memoryGovernor.pendingAutomaticBytes << "}"
       << ",\"memory_audit\":" << memoryAudit.toStatusJson()
       << ",\"weights\":";
   appendWeights(out, weights);
+  out << ",\"expert_storage\":";
+  appendExpertStorage(out, features ? features->expertStorage : std::nullopt);
+  out << ",\"moe_memory_pressure\":{\"enabled\":" << boolean(memoryGovernor.pressureControlEnabled)
+      << ",\"mode\":" << json::quote(memoryGovernor.pressureControlEnabled ? "local" : "off")
+      << ",\"model_ready\":" << boolean(ready && !weights.released && !weights.restoring)
+      << ",\"growth_allowed\":" << boolean(memoryGovernor.pressureControlEnabled && ready && !weights.released && !weights.restoring && memoryGovernor.automaticGrowthReason == "ready")
+      << ",\"reason\":" << json::quote(memoryGovernor.pressureControlEnabled ? memoryGovernor.automaticGrowthReason : "disabled");
+  if (memoryGovernor.pressureControlEnabled)
+    out << ",\"normal_stable_milliseconds\":" << memoryGovernor.normalStableMilliseconds
+        << ",\"block_cooldown_milliseconds\":" << memoryGovernor.blockCooldownMilliseconds;
+  out << '}';
+  out << ",\"expert_ple_adaptive\":" << expertPleAdaptive;
   out << ",\"streamed_table\":";
   appendStreamedTable(out, streamedTable);
   out << ",\"streamed_experts\":";

@@ -16,11 +16,11 @@ namespace {
 // A GGUF tensor of output x input weights, and the planes of its GGUF_FMT_*
 // format; what reads a float tensor checks its fp32 values.
 void requireSegment(const QuantizedSegment &segment, uint32_t output, uint32_t input, bool floatWeights,
-                    const std::string &name) {
+                    const std::string &name, bool addressed = false) {
   if (segment.isFloat() != floatWeights || (!floatWeights && segment.formatId >= GGUF_FMT_COUNT) ||
       segment.outputSize != output || segment.inputSize != input)
     throw std::invalid_argument(name + " does not match the plan");
-  if (!floatWeights) requireSegmentPlanes(segment, name);
+  if (!floatWeights && !addressed) requireSegmentPlanes(segment, name);
 }
 
 // Every weight the plan's dispatches read. The router runs through
@@ -38,7 +38,10 @@ void validate(const BlockMoeWeights &weights, MoeShape shape) {
   for (const auto &[projection, name, output, input] :
        {std::tuple{&weights.gate, "gate", intermediate, hidden}, std::tuple{&weights.up, "up", intermediate, hidden},
         std::tuple{&weights.down, "down", hidden, intermediate}}) {
-    requireSegment(projection->routed, weights.slots * output, input, false, std::string("MoE expert ") + name);
+    requireSegment(projection->routed, weights.slots * output, input, false, std::string("MoE expert ") + name, weights.indirectSlots);
+    if (weights.indirectSlots)
+      requireBytes(projection->routed.plane0, (uint64_t{weights.slots} - 1) * MOE_SLOT_ADDRESSES * sizeof(uint64_t) +
+                   3 * sizeof(uint64_t), "MoE addressed slots");
     requireSegment(projection->shared, output, input, false, std::string("MoE shared ") + name);
   }
 }
@@ -102,7 +105,7 @@ void addExperts(metal::CommandGraph &graph, const MoeScratch &scratch, const Blo
   const metal::IndirectGrid gateUpGrid{scratch.tileCount, offsetof(MoeTileCount, gate_up_grid)};
   const metal::IndirectGrid downGrid{scratch.tileCount, offsetof(MoeTileCount, down_grid)};
   const auto params = [&](const BlockExpertProjection &projection, uint32_t n, uint32_t k) {
-    return MoeGgufExpertParams{k, n, shape.experts, projection.routed.formatId, projection.shared.formatId};
+    return MoeGgufExpertParams{k, n, shape.experts, projection.routed.formatId | (weights.indirectSlots ? MOE_ADDRESSED_SLOTS : 0), projection.shared.formatId};
   };
   const auto pass = [&](const BlockExpertProjection &projection, bool up,
                         const metal::MetalBuffer &passInput,
@@ -132,8 +135,8 @@ void addExperts(metal::CommandGraph &graph, const MoeScratch &scratch, const Blo
                up.routed.plane0, up.routed.plane1Slot(), up.routed.meta,
                up.shared.plane0, up.shared.plane1Slot(), up.shared.meta,
                scratch.expertIntermediate, weights.slotTable},
-              MoeGgufGateUpParams{hidden, intermediate, shape.experts, gate.routed.formatId, gate.shared.formatId,
-                                  up.routed.formatId, up.shared.formatId},
+              MoeGgufGateUpParams{hidden, intermediate, shape.experts, gate.routed.formatId | (weights.indirectSlots ? MOE_ADDRESSED_SLOTS : 0), gate.shared.formatId,
+                                  up.routed.formatId | (weights.indirectSlots ? MOE_ADDRESSED_SLOTS : 0), up.shared.formatId},
               {group.gate_up_columns, tiles, 1}, gateUpGrid, {threads, 1, 1});
   } else {
     pass(weights.gate, false, scratch.groupedInput, scratch.expertOutput,

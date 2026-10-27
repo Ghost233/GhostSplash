@@ -36,6 +36,8 @@ struct NativeLoopConfig {
   // (MemoryGovernor::allocationAdmission), as memory the requests waiting for
   // them need (EngineConfig::serving).
   metal::AllocationAdmission weightAdmission;
+  std::function<void()> memoryAccountingChanged;
+  std::function<void()> cancelPendingMemory;
   // Told true when the engine takes a request while it holds none, and false
   // when its last request ends; the process keeps the Mac from idle sleep in
   // between (main.mm). It must not throw. Empty where nothing needs to know.
@@ -128,6 +130,7 @@ public:
   // The engine's (Engine::resourceWaitSnapshot), with the requests a refused
   // restore holds waiting for memory.
   [[nodiscard]] engine::ResourceWaitSnapshot resourceWaitSnapshot() const;
+  void setRequestStartsPaused(bool paused) noexcept { core_.setRequestStartsPaused(paused); }
   [[nodiscard]] double monotonicMilliseconds() const {
     return config_.monotonicMilliseconds();
   }

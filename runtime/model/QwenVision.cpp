@@ -79,7 +79,7 @@ QwenVisionWeights readVision(metal::MetalBackend &backend, WeightImages &images,
 // The loader checked its layout when it was built.
 QwenVisionWeights loadQwenVisionWeights(metal::MetalBackend &backend, WeightImages &images,
                                         const VisionLoader &source) {
-  return readVision(backend, images, source.image(), source.layout());
+  return readVision(backend, images, source.image(&backend), source.layout());
 }
 
 } // namespace splash::model

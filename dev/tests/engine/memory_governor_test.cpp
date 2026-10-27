@@ -2,9 +2,14 @@
 #include "TestMetalMemory.hpp"
 #include "TestModel.hpp"
 #include "engine/MemoryGovernor.hpp"
+#include "engine/ExpertPlePolicy.hpp"
+#include "model/SparseRowStore.hpp"
+#include "TestFiles.hpp"
 #include "engine/MemoryPlan.hpp"
 
 #include <cstdlib>
+#include <chrono>
+#include <thread>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -39,6 +44,461 @@ std::optional<HostMemory> hostMemory(std::optional<uint64_t> bytes) {
 void allocate(uint64_t bytes) {
   test::metalStatistics().allocatedBytes += bytes;
   test::metalStatistics().deviceCurrentAllocatedBytes += bytes;
+}
+
+// Returned automatic storage does not increase the elastic KV/state ceiling.
+void testReleasedAutomaticStorageDoesNotExpandElasticHeadroom() {
+  test::metalStatistics() = {};
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  require(static_cast<bool>(admit(governor, 6 * kGiB, [] { allocate(6 * kGiB); })),
+          "automatic-storage fixture did not allocate");
+  const auto before = governor.snapshot();
+  // A 1 GiB real chunk has been returned at a command-free point.
+  test::metalStatistics().allocatedBytes -= kGiB;
+  test::metalStatistics().deviceCurrentAllocatedBytes -= kGiB;
+  governor.withholdReleasedAutomaticStorage(kGiB);
+  const auto after = governor.snapshot();
+  const auto denied = governor.allocationAdmission("kv_required")(3 * kGiB, [] { allocate(3 * kGiB); });
+  require(!denied && denied.failure == metal::AllocationFailure::EngineBudget &&
+              after.limitBytes == before.limitBytes && after.chargedBytes == 5 * kGiB &&
+              after.headroomBytes == before.headroomBytes + kGiB && after.elasticHeadroomBytes == 2 * kGiB &&
+              after.elasticLimitBytes == 7 * kGiB && after.localReservedBytes == 0 &&
+              after.automaticStorageReleasedBytes == kGiB && after.automaticStorageWithheldBytes == kGiB,
+          "released automatic storage enlarged elastic KV/state headroom or changed actual charge/hard limit");
+  require(static_cast<bool>(governor.allocationAdmission("state_required")(2 * kGiB, [] { allocate(2 * kGiB); })),
+          "withholding took the preexisting KV/state headroom");
+  require(static_cast<bool>(governor.allocationAdmission("restore_weights")(kGiB, [] { allocate(kGiB); })),
+          "KV/state withholding reduced required nonautomatic weight/floor restore capacity");
+}
+
+void testNestedElasticAdmissionRetainsWithheldQuota() {
+  test::metalStatistics() = {};
+  allocate(5 * kGiB);
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.enablePressureControl();
+  governor.withholdReleasedAutomaticStorage(kGiB);
+  const auto denied = governor.allocationAdmission("kv_required")(3 * kGiB, [] {});
+  require(denied.failure == metal::AllocationFailure::EngineBudget,
+          "local KV admission consumed withheld expert quota");
+  require(bool(governor.allocationAdmission("restore_weights")(3 * kGiB, [&] {
+    const auto nested = governor.allocationAdmission("state_required")(3 * kGiB, [] {});
+    require(nested.failure == metal::AllocationFailure::EngineBudget,
+            "required parent bypassed the nested elastic ceiling");
+  })), "required weights lost original hard-budget headroom");
+  require(bool(governor.allocationAdmission("kv_required")(2 * kGiB, [&] {
+    require(bool(governor.allocationAdmission("managed_buffer")(2 * kGiB, [] { allocate(2 * kGiB); })),
+            "nested local buffer was charged twice");
+  })) && governor.snapshot().chargedBytes == 7 * kGiB && governor.snapshot().elasticHeadroomBytes == 0,
+          "local nested allocation lost or exceeded its peak reservation");
+}
+
+void testAutomaticDonationCannotBeRefilledByTheOtherStore() {
+  test::metalStatistics() = {};
+  allocate(7 * kGiB);
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.enablePressureControl();
+  governor.withholdReleasedAutomaticStorage(kGiB);
+  bool received = false;
+  const auto result = governor.allocationAdmission("ple_optional", false)(kGiB, [&] { received = true; });
+  require(!received && result.failure == metal::AllocationFailure::EngineBudget,
+          "unplanned PLE growth refilled released expert storage");
+}
+
+void testAutomaticPoolQuotaIsIndependentOfGlobalHeadroom() {
+  test::metalStatistics() = {};
+  allocate(7 * kGiB);
+  uint64_t automaticActual = 5 * kGiB;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 32 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.setAutomaticStorageQuota(5 * kGiB, 6 * kGiB, [&] { return automaticActual; });
+  bool received = false;
+  const auto result = governor.allocationAdmission("ple_optional", false)(kGiB, [&] {
+    received = true;
+    automaticActual += kGiB;
+    allocate(kGiB);
+  });
+  require(!received && result.failure == metal::AllocationFailure::EngineBudget &&
+              automaticActual == 5 * kGiB && governor.snapshot().chargedBytes == 7 * kGiB,
+          "automatic PLE exceeded its current shared store quota using unrelated global headroom");
+}
+
+void testCriticalBeforeRealPleReceiptRetainsItsHostPressureCause() {
+  struct ZeroRows final : model::RowReader {
+    void read(uint64_t, std::span<uint8_t> bytes) override { std::fill(bytes.begin(), bytes.end(), 0); }
+    void checkUnchanged() override {}
+    uint64_t size() const override { return 12'288 * 16; }
+  };
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  constexpr uint64_t rows = 12'288;
+  constexpr uint32_t rowBytes = 16, stageRows = 8;
+  const auto maximum = model::SparseRowStore::maximumResizableBytes(rows, rowBytes, 0, stageRows);
+  const auto floor = model::SparseRowStore::minimumResizableBytes(maximum, rowBytes, 0, stageRows, rows);
+  model::SparseRowStore store({"local-pressure-cause", rows, rowBytes, 0}, std::make_unique<ZeroRows>(),
+      {.cacheBytes = floor, .readers = std::make_shared<model::SsdReaders>(1), .stageRows = stageRows,
+       .maximumCacheBytes = maximum, .boundedWorkingMemory = true});
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kMiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  uint64_t now = 0, guardCalls = 0;
+  MemoryPressure pressure = MemoryPressure::Normal;
+  governor.setPressureProvider([&] { return pressure; });
+  governor.setNonBackendHostHeld([&] { return store.nonBackendHostBytes(); });
+  governor.setAutomaticStorageQuota(floor, maximum, [&] { return store.committedBytes(); });
+  governor.enablePressureControl({[&] { return now; }, [&] {
+    return MemoryPolicyObservation{MemoryPolicyObservation::Pressure(uint8_t(pressure) + 1), 0};
+  }});
+  store.setGrowthGuard([&](const model::StorageGrowthPlan &plan) {
+    ++guardCalls;
+    return governor.consumeAutomaticStorageBlock({AutomaticStorageKind::PleBlock, 1, plan.candidate,
+        plan.contributionBytes, plan.auxiliaryBytes});
+  });
+  governor.setAllocationDriver([&](std::string_view purpose, uint64_t, const std::function<void()> &allocate) {
+    if (purpose == "ple_optional") pressure = MemoryPressure::Critical;
+    allocate();
+  });
+  const auto plan = store.planGrowOne(maximum);
+  require(plan.has_value(), "bounded real PLE store has no next block");
+  const auto beforeHost = store.hostAllocatedBytes();
+  now = 30'000;
+  metal::AllocationResult result;
+  try {
+    result = governor.automaticStorageAdmission("ple_optional", {AutomaticStorageKind::PleBlock, 1, plan->candidate,
+        plan->contributionBytes, plan->auxiliaryBytes})(plan->peakBytes, [&] { static_cast<void>(store.growOne(*plan)); });
+  } catch (const std::invalid_argument &error) {
+    throw std::runtime_error("Critical real PLE veto became an invalid plan after " + std::to_string(guardCalls) +
+        " guard calls: " + error.what());
+  }
+  require(result.failure == metal::AllocationFailure::HostPressure && guardCalls == 1 &&
+              store.committedBytes() == floor && store.hostAllocatedBytes() == beforeHost &&
+              governor.snapshot().localReservedBytes == 0,
+          "Critical real PLE veto lost HostPressure or changed actual owned storage: " + result.detail);
+  // An actually stale plan must keep its own error, even if the same
+  // allocation boundary also observes Critical before calling the owner.
+  pressure = MemoryPressure::Normal;
+  governor.setPressure(pressure);
+  now = 60'000; static_cast<void>(governor.evaluate()); now = 90'000;
+  auto stale = *plan;
+  ++stale.revision;
+  rejects([&] {
+    static_cast<void>(governor.automaticStorageAdmission("ple_optional", {AutomaticStorageKind::PleBlock, 1, plan->candidate,
+        plan->contributionBytes, plan->auxiliaryBytes})(plan->peakBytes, [&] { static_cast<void>(store.growOne(stale)); }));
+  }, "PLE single-block plan is stale", "a genuine stale plan was relabeled as host pressure");
+  require(guardCalls == 1 && store.committedBytes() == floor && store.hostAllocatedBytes() == beforeHost,
+          "stale PLE metadata reached consumption or allocated payload");
+}
+
+void testLocalAutomaticBlockPacingAndFreshReceiverObservation() {
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  allocate(2 * kGiB);
+  uint64_t actual = kGiB, now = 0, sequence = 0;
+  bool measured = true;
+  MemoryPolicyObservation::Pressure observed = MemoryPolicyObservation::Pressure::Normal;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 16 * kGiB, 2 * kGiB, 2 * kGiB,
+      [&] { return measured ? hostMemory(64 * kGiB) : std::nullopt; }, 0);
+  governor.setAutomaticStorageQuota(actual, 10 * kGiB, [&] { return actual; });
+  governor.setAutomaticStorageMinimum(kGiB);
+  governor.enablePressureControl({[&] { return now; }, [&] { return MemoryPolicyObservation{observed, sequence}; }});
+  uint64_t candidate = 1;
+  const auto grow = [&](uint64_t net = kGiB) {
+    const AutomaticStorageBlock block{AutomaticStorageKind::ExpertBlock, 1, candidate++, net, 0};
+    return governor.automaticStorageAdmission("expert_optional", block)(kGiB, [&] {
+      if (!governor.consumeAutomaticStorageBlock(block))
+        throw metal::MetalAllocationError("receiver rejected stale block", metal::AllocationFailure::GrowthDeferred);
+      require(!governor.consumeAutomaticStorageBlock(block), "one receipt authorized multiple actual blocks");
+      actual += net; allocate(net);
+    });
+  };
+  now = 29'999;
+  require(!grow(), "local growth escaped its 30-second observation");
+  now = 30'000;
+  governor.setAllocationDriver([&](std::string_view, uint64_t, const std::function<void()> &allocate) {
+    ++sequence; // A brief Critical/Unknown event between safe-point samples.
+    allocate();
+  });
+  require(grow().failure == metal::AllocationFailure::GrowthDeferred && actual == kGiB,
+          "a cached permit survived an unsafe event before the actual receiving block");
+  governor.setAllocationDriver({});
+  static_cast<void>(governor.evaluate());
+  now = 59'999;
+  require(!grow(), "failed receipt reused the earlier stable observation");
+  now = 60'000;
+  require(bool(grow()) && actual == 2 * kGiB && governor.snapshot().pendingAutomaticBytes == kGiB,
+          "one local block did not retain its unresolved allocation reservation");
+  measured = false;
+  now = 65'000;
+  require(!grow() && governor.snapshot().pendingAutomaticBytes == kGiB,
+          "unknown telemetry retired growth before an effective post-allocation sample");
+  measured = true;
+  static_cast<void>(governor.evaluate());
+  now = 94'999;
+  require(!grow(), "missing telemetry did not restart stable observation");
+  now = 95'000;
+  require(bool(grow(0)) && actual == 2 * kGiB,
+          "a real gross block with zero net contribution was rejected");
+  static_cast<void>(governor.evaluate());
+  now = 99'999;
+  require(!grow(), "zero-net real block skipped the shared local cooldown");
+  now = 100'000;
+  require(bool(grow()), "one local block was not allowed at the exact 5-second completion boundary");
+  observed = MemoryPolicyObservation::Pressure::Unknown;
+  now = 105'000;
+  require(!grow(), "unknown pressure authorized optional growth");
+  observed = MemoryPolicyObservation::Pressure::Normal;
+  static_cast<void>(governor.evaluate());
+  now = 134'999;
+  require(!grow(), "unknown pressure preserved stable growth credit");
+  now = 135'000;
+  require(bool(grow()), "valid Normal did not recover after a new stable interval");
+}
+
+void testWarningRecoversByMeasuredHeadroomAndRechecksTheRealReceiver() {
+  using Observation = MemoryPolicyObservation;
+  const auto warning = Observation::record(0, Observation::Pressure::Warning);
+  require(warning == 2 && Observation::record(warning, Observation::Pressure::Warning) == 2,
+          "repeated Warning notifications restarted the recovery sequence");
+  const auto critical = Observation::record(warning, Observation::Pressure::Critical);
+  const auto unknown = Observation::record(critical, Observation::Pressure::Unknown);
+  require(critical == 7 && unknown == 11 &&
+              Observation::record(unknown, Observation::Pressure::Warning) == 10,
+          "Unknown telemetry erased an effective Critical signal or failed to invalidate recovery");
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  allocate(kGiB);
+  uint64_t actual = kGiB, now = 0, sequence = 0, spare = 10 * kGiB, allocations = 0;
+  MemoryPressure pressure = MemoryPressure::Warning;
+  auto observed = MemoryPolicyObservation::Pressure::Warning;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 16 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [&] { return hostMemory(spare); }, 0);
+  governor.setPressure(pressure);
+  governor.setPressureProvider([&] { return pressure; });
+  governor.setAutomaticStorageQuota(actual, 8 * kGiB, [&] { return actual; });
+  governor.enablePressureControl({[&] { return now; }, [&] { return MemoryPolicyObservation{observed, sequence}; }});
+  uint64_t candidate = 1;
+  const auto grow = [&] {
+    const AutomaticStorageBlock block{AutomaticStorageKind::ExpertBlock, 1, candidate++, kMiB, 0};
+    return governor.automaticStorageAdmission("expert_optional", block)(kMiB, [&] {
+      require(governor.consumeAutomaticStorageBlock(block), "Warning receiver lost its exact block permit");
+      const auto nested = governor.allocationAdmission("managed_buffer")(kMiB, [&] {
+        ++allocations; actual += kMiB; allocate(kMiB);
+      });
+      if (!nested) throw metal::MetalAllocationError(nested.detail, nested.failure);
+    });
+  };
+  for (now = 1000; now < 30'000; now += 1000) static_cast<void>(governor.evaluate());
+  now = 29'999;
+  require(!grow() && allocations == 0, "Warning growth skipped the original stable interval");
+  now = 30'000;
+  require(bool(grow()) && allocations == 1 && governor.snapshot().systemPressure == MemoryPressure::Warning &&
+              !governor.snapshot().hostGrowthAllowed,
+          "sustained Warning with sufficient measured headroom never recovered one real block");
+  require(governor.allocationAdmission("kv_optional", false)(kMiB, [] {}).failure == metal::AllocationFailure::HostPressure,
+          "automatic Warning recovery changed the original nonautomatic KV admission policy");
+  static_cast<void>(governor.evaluate());
+  now = 34'999;
+  require(!grow() && allocations == 1, "Warning recovery skipped the original block cooldown");
+  now = 35'000;
+  require(bool(grow()) && allocations == 2, "repeated Warning observations restarted recovery indefinitely");
+
+  // A truthful Warning in the hysteresis band holds, rather than growing or
+  // retaining the earlier high-headroom stability credit.
+  spare = 2 * kGiB + kHostRecoveryMarginBytes - 1;
+  now = 40'000;
+  require(!grow() && allocations == 2, "Warning below the recovery margin grew optional payload");
+  spare = 10 * kGiB;
+  static_cast<void>(governor.evaluate());
+  now = 69'999;
+  require(!grow() && allocations == 2, "low headroom retained earlier stable credit");
+  now = 70'000;
+  require(bool(grow()) && allocations == 3, "Warning did not restart its measured stable interval");
+
+  // Each late veto happens after admission and immediately before the
+  // actual storage owner consumes the plan; none may allocate payload.
+  for (unsigned veto = 0; veto < 4; ++veto) {
+    const auto before = allocations;
+    now += 30'000;
+    static_cast<void>(governor.evaluate());
+    governor.setAllocationDriver([&](std::string_view, uint64_t, const std::function<void()> &allocate) {
+      if (veto == 0) pressure = MemoryPressure::Critical;
+      else if (veto == 1) observed = MemoryPolicyObservation::Pressure::Unknown;
+      else if (veto == 2) spare = 2 * kGiB + kHostRecoveryMarginBytes - 1;
+      else ++sequence; // A brief Critical/Unknown event already ended.
+      allocate();
+    });
+    const auto denied = grow();
+    const auto cause = veto == 3 ? metal::AllocationFailure::GrowthDeferred : metal::AllocationFailure::HostPressure;
+    require(denied.failure == cause && allocations == before && governor.snapshot().localReservedBytes == 0,
+            "fresh unsafe Warning receiver observation allocated payload or retained its reservation");
+    pressure = MemoryPressure::Warning; observed = MemoryPolicyObservation::Pressure::Warning; spare = 10 * kGiB;
+    governor.setPressure(pressure); governor.setAllocationDriver({});
+    static_cast<void>(governor.evaluate());
+    now += 29'999;
+    require(!grow() && allocations == before, "late unsafe event retained stale recovery credit");
+    ++now;
+    require(bool(grow()) && allocations == before + 1,
+            "Warning did not recover after the replacement stable interval");
+  }
+}
+
+void testAutomaticQuotaCountsFinalStoreContributionNotTransientWorkspace() {
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  allocate(7 * kGiB);
+  uint64_t actual = 5 * kGiB, now = 0;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.setAutomaticStorageQuota(actual, 6 * kGiB, [&] { return actual; });
+  governor.withholdReleasedAutomaticStorage(kGiB);
+  governor.enablePressureControl({[&] { return now; }, [] {
+    return MemoryPolicyObservation{MemoryPolicyObservation::Pressure::Normal, 0};
+  }});
+  require(bool(governor.allocationAdmission("storage_workspace", false)(kGiB, [&] {
+    require(bool(governor.allocationAdmission("managed_buffer")(kGiB, [] { allocate(kGiB); })),
+            "workspace lost its outer local peak reservation");
+    test::metalStatistics().allocatedBytes -= kGiB; test::metalStatistics().deviceCurrentAllocatedBytes -= kGiB;
+    require(bool(governor.allocationAdmission("managed_buffer")(kGiB, [] { test::hostStatistics().temporaryBytes += kGiB; })),
+            "host workspace lost its local peak reservation");
+    require(governor.snapshot().chargedBytes == 8 * kGiB, "host workspace was not charged once");
+    test::hostStatistics().temporaryBytes -= kGiB;
+  })) && governor.snapshot().automaticStorageWithheldBytes == kGiB,
+          "transient workspace counted as final automatic growth");
+  now = 30'000;
+  const AutomaticStorageBlock block{AutomaticStorageKind::PleBlock, 1, 71, kGiB, 0};
+  governor.setAllocationDriver([](std::string_view, uint64_t, const std::function<void()> &allocate) {
+    allocate(); throw metal::MetalAllocationError("partial receipt", metal::AllocationFailure::DriverRejected);
+  });
+  const auto partial = governor.automaticStorageAdmission("ple_optional", block)(kGiB, [&] {
+    require(governor.consumeAutomaticStorageBlock(block), "exact partial block plan was refused");
+    actual += kGiB; allocate(kGiB);
+  });
+  require(partial.failure == metal::AllocationFailure::DriverRejected && actual == 6 * kGiB &&
+              governor.snapshot().chargedBytes == 8 * kGiB && governor.snapshot().automaticStorageWithheldBytes == 0,
+          "partial receipt fabricated rollback or miscounted its final contribution");
+}
+
+void testLocalRestoreSelectsRequiredFloorBeforePayloadAndQuota() {
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  allocate(1920 * kMiB);
+  uint64_t actual = 320 * kMiB;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 3000 * kMiB, 1, 1,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.enablePressureControl();
+  governor.setAutomaticStorageQuota(1000 * kMiB, 1200 * kMiB, [&] { return actual; });
+  model::ExpertCacheRange range;
+  range.minimumBytes = 512 * kMiB; range.fullBytes = 4096 * kMiB;
+  range.chunks = {{.allocationBytes = 128 * kMiB, .minimumChunks = 1, .maximumChunks = 2},
+                  {.allocationBytes = 256 * kMiB, .minimumChunks = 1, .maximumChunks = 2}};
+  const auto plan = governor.planAutomaticStorageRestore(range, 64 * kMiB, 32 * kMiB, 256 * kMiB);
+  require(plan.targetBytes == 512 * kMiB && plan.requiredBytes == 448 * kMiB && plan.peakBytes == 480 * kMiB &&
+              governor.snapshot().automaticQuotaBytes == 768 * kMiB &&
+              governor.snapshot().automaticActualBytes == actual && governor.snapshot().localReservedBytes == 0,
+          "local restore retained the old optional quota or counted retained PLE/helpers as new payload");
+}
+
+void testLocalAdaptiveTransferRequiresActualDonationAndOnePacedReceipt() {
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  std::vector<uint64_t> expertBlocks(28, 128 * kMiB);
+  uint64_t expert = 3584 * kMiB, ple = 512 * kMiB, now = 0;
+  allocate(expert);
+  test::hostStatistics().fixedBytes = ple;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.setPressure(MemoryPressure::Warning);
+  governor.setAutomaticStorageQuota(4 * kGiB, 4 * kGiB, [&] { return expert + ple; });
+  governor.enablePressureControl({[&] { return now; }, [] {
+    return MemoryPolicyObservation{MemoryPolicyObservation::Pressure::Warning, 0};
+  }});
+  const auto propose = [&](ExpertPlePolicy &policy) {
+    ExpertPleSample sample;
+    sample.pleCapacityRows = sample.pleCachedRows = 1000;
+    require(!policy.observe(0, false, sample, ple, 4 * kGiB), "empty local sample triggered a transfer");
+    for (unsigned window = 1; window <= 2; ++window) {
+      sample.units = window * 64; sample.pleReads = window * 100;
+      sample.pleReused = window * 32; sample.pleWaitNanoseconds = window * 100000000;
+      const auto target = policy.observe(window * 10, false, sample, ple, 4 * kGiB);
+      require(window == 1 ? !target : target == ple + 128 * kMiB,
+              "local quota observations did not retain the original adaptive thresholds");
+    }
+  };
+  ExpertPlePolicy policy(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+  propose(policy);
+  const AutomaticStorageBlock block{AutomaticStorageKind::PleBlock, 1, 711, 128 * kMiB, 0};
+  now = 29'999;
+  require(!governor.automaticStorageAdmission("ple_optional", block)(128 * kMiB, [] {}) &&
+              policy.adjustments() == 0 && !policy.trialPending(),
+          "an unreceived adaptive proposal escaped local stability or counted as applied");
+  now = 30'000;
+  require(governor.evaluate().automaticGrowthReason == "ready", "local adaptive gate did not stabilize");
+  const uint64_t before = expert + ple;
+  const auto donate = [&] {
+    const auto bytes = expertBlocks.back(); expertBlocks.pop_back(); expert -= bytes;
+    test::metalStatistics().allocatedBytes -= bytes; test::metalStatistics().deviceCurrentAllocatedBytes -= bytes;
+    governor.withholdReleasedAutomaticStorage(bytes);
+  };
+  donate();
+  const auto receive = [&](const AutomaticStorageBlock &candidate) {
+    return governor.automaticStorageAdmission("ple_optional", candidate)(128 * kMiB, [&] {
+      require(expert + ple == before - 128 * kMiB &&
+                  governor.snapshot().automaticStorageWithheldBytes == 128 * kMiB,
+              "receiving began before the donor actually returned its vector block");
+      require(governor.consumeAutomaticStorageBlock(candidate) && !governor.consumeAutomaticStorageBlock(candidate),
+              "an adaptive permit authorized more than one real receiving block");
+      ple += 128 * kMiB; test::hostStatistics().fixedBytes = ple;
+    });
+  };
+  require(bool(receive(block)) && expert + ple == before &&
+              governor.snapshot().automaticStorageWithheldBytes == 0 && governor.automaticStorageQuotaBytes() == before,
+          "a gross-one/net-zero transfer borrowed another category's budget or lost actual accounting");
+  policy.applied(30, ple, 1);
+  require(policy.adjustments() == 1 && policy.trialPending() && policy.cooldownUntil() == 60,
+          "real receiving did not start the existing measured-cost trial/cooldown");
+  static_cast<void>(governor.evaluate());
+  now = 34'999;
+  require(!governor.automaticStorageAdmission("ple_optional", {AutomaticStorageKind::PleBlock, 1, 712, 0, 0})(1, [] {}),
+          "a net-zero transfer bypassed the local 5-second block cooldown");
+  ExpertPlePolicy failed(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+  propose(failed);
+  now = 35'000;
+  donate();
+  governor.setAllocationDriver([](std::string_view, uint64_t, const std::function<void()> &allocate) {
+    allocate(); throw metal::MetalAllocationError("partial adaptive receiver", metal::AllocationFailure::DriverRejected);
+  });
+  const auto partial = receive({AutomaticStorageKind::PleBlock, 1, 713, 128 * kMiB, 0});
+  failed.abandonTransfer(ple);
+  failed.stop();
+  require(partial.failure == metal::AllocationFailure::DriverRejected && expert + ple == before &&
+              governor.snapshot().automaticStorageWithheldBytes == 0 && failed.adjustments() == 0 &&
+              !failed.trialPending() && !failed.pendingTarget(),
+          "partial receiving fabricated rollback, an applied trial, or reusable old target credit");
+  test::hostStatistics() = {};
+}
+
+void testRequiredScopeCannotLendItsPermissionToAnAutomaticBlock() {
+  test::metalStatistics() = {}; test::hostStatistics() = {};
+  allocate(3 * kGiB);
+  uint64_t actual = kGiB;
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 8 * kGiB, 2 * kGiB, 2 * kGiB,
+                          [] { return hostMemory(64 * kGiB); }, 0);
+  governor.enablePressureControl();
+  governor.setAutomaticStorageQuota(2 * kGiB, 2 * kGiB, [&] { return actual; });
+  const AutomaticStorageBlock block{AutomaticStorageKind::ExpertBlock, 1, 92, kGiB, 0};
+  require(bool(governor.allocationAdmission("restore_weights")(2 * kGiB, [&] {
+    const auto optional = governor.automaticStorageAdmission("expert_optional", block)(kGiB, [] {});
+    require(optional.failure == metal::AllocationFailure::PlanInsufficient,
+            "optional receiver borrowed its required parent's unpaced reservation");
+    require(bool(governor.allocationAdmission("managed_buffer")(kGiB, [] { allocate(kGiB); })),
+            "required payload waited for optional growth policy");
+  })), "required restore did not proceed before the optional stable interval");
 }
 
 // Available host memory is what macOS can hand out without swapping: free
@@ -203,6 +663,9 @@ void testAdvertisedContextIsGrantable() {
       metal::MetalBackend backend("unused");
       // The plan's governor, as a start and the runtime oracle build it.
       MemoryGovernor governor(backend, budget, [] { return hostMemory(200 * kGiB); });
+      require(governor.snapshot().untrackedReserveBytes == reserves &&
+              governor.snapshot().localReservedBytes == 0,
+              "configured untracked reserve was conflated with pending local admission");
       const uint32_t granted = grantKvPages(governor, budget);
       const std::string context = std::string(machine.name) + ", " +
                                   std::to_string(untracked / kMiB) +
@@ -235,6 +698,9 @@ void testReservationsAndAdmissionClasses() {
   MemoryGovernor governor(backend, limit, hostReserve, hostReserve,
                           [] { return hostMemory(hostReserve + 3 * kGiB); }, 0);
   const metal::AllocationResult held = admit(governor, limit - 1, [&] {
+    require(governor.snapshot().localReservedBytes == limit - 1 &&
+            governor.snapshot().untrackedReserveBytes == 0 && governor.snapshot().chargedBytes == 0,
+            "pending local admission was conflated with actual charge or untracked reserve");
     require(static_cast<bool>(admit(governor, 1)),
             "memory governor held more than the reserved bytes");
     const metal::AllocationResult over = admit(governor, 2);
@@ -243,6 +709,8 @@ void testReservationsAndAdmissionClasses() {
             "memory governor oversold its limit");
   });
   require(static_cast<bool>(held), "memory governor refused bytes under its limit");
+  require(governor.snapshot().localReservedBytes == 0,
+          "completed local admission remained reserved");
   const metal::AllocationResult driverDenied = admit(governor, 1024, [] {
     throw metal::MetalAllocationError("injected driver allocation denial");
   });
@@ -795,10 +1263,58 @@ void testSystemWarningGivesCacheBack() {
           "growth or the passes did not follow macOS back to normal pressure");
 }
 
+void testNonBackendHostSurvivesUnpublishedTrackedGrowth() {
+  test::metalStatistics() = {}; test::hostStatistics() = {.fixedBytes = 80 * kMiB};
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 400 * kMiB, 10 * kMiB, 10 * kMiB,
+                          [] { return hostMemory(100 * kGiB); }, 0);
+  governor.enablePressureControl();
+  governor.setNonBackendHostHeld([] { return 20 * kMiB; });
+  require(governor.snapshot().chargedBytes == 100 * kMiB && governor.actualBytes() == 100 * kMiB,
+          "non-backend 20 plus tracked 80 was not charged once");
+  require(bool(governor.allocationAdmission("required_host")(40 * kMiB, [&] {
+    test::hostStatistics().fixedBytes = 120 * kMiB;
+    governor.publishAccounting();
+    require(governor.actualBytes() == 140 * kMiB && governor.snapshot().localReservedBytes == 0,
+            "actual host allocation retained a duplicate peak reservation");
+  })), "local host growth was refused");
+  test::hostStatistics().temporaryBytes = 30 * kMiB;
+  require(governor.snapshot().chargedBytes == 170 * kMiB, "temporary host storage replaced fixed ownership");
+  test::hostStatistics().temporaryBytes = 0; test::hostStatistics().fixedBytes = 90 * kMiB;
+  governor.publishAccounting();
+  require(governor.actualBytes() == 110 * kMiB, "partial release fabricated full host rollback");
+  test::hostStatistics() = {};
+}
+
 } // namespace
 
 int main() {
   try {
+    testWarningRecoversByMeasuredHeadroomAndRechecksTheRealReceiver();
+    testCriticalBeforeRealPleReceiptRetainsItsHostPressureCause();
+    testLocalAdaptiveTransferRequiresActualDonationAndOnePacedReceipt();
+    testLocalRestoreSelectsRequiredFloorBeforePayloadAndQuota();
+    testLocalAutomaticBlockPacingAndFreshReceiverObservation();
+    testReleasedAutomaticStorageDoesNotExpandElasticHeadroom();
+    testNestedElasticAdmissionRetainsWithheldQuota();
+    testAutomaticDonationCannotBeRefilledByTheOtherStore();
+    testAutomaticPoolQuotaIsIndependentOfGlobalHeadroom();
+    testAutomaticQuotaCountsFinalStoreContributionNotTransientWorkspace();
+    testRequiredScopeCannotLendItsPermissionToAnAutomaticBlock();
+    {
+      test::metalStatistics() = {};
+      allocate(kGiB);
+      metal::MetalBackend backend("unused");
+      MemoryGovernor governor(backend, 4 * kGiB, kGiB, kGiB, [] { return hostMemory(100 * kGiB); }, 0, 512 * kMiB);
+      const auto before = governor.snapshot();
+      governor.setHostHeldBytes(kGiB);
+      require(governor.snapshot().chargedBytes == before.chargedBytes + 512 * kMiB,
+              "PLE host growth disappeared from governor accounting");
+      require(!admit(governor, 3 * kGiB), "host PLE bytes were ignored by engine admission");
+      governor.setHostHeldBytes(256 * kMiB);
+      require(governor.snapshot().chargedBytes == kGiB + 256 * kMiB,
+              "PLE donation was not returned to the governor");
+    }
     testHostAvailabilityCountsReclaimablePages();
     testAdvertisedContextIsGrantable();
     testReservationsAndAdmissionClasses();
@@ -816,6 +1332,7 @@ int main() {
     testRequestInServiceGrowsThroughHostPressure();
     testOptionalGrowthKeepsTheSpareReserve();
     testSystemWarningGivesCacheBack();
+    testNonBackendHostSurvivesUnpublishedTrackedGrowth();
     std::cout << "memory governor tests passed\n";
     return EXIT_SUCCESS;
   } catch (const std::exception &error) {

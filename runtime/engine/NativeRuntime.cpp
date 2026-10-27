@@ -138,6 +138,7 @@ bool NativeRuntime::releaseWeights() {
   if (config_.weights->released() || restoreStarted_ || !core_.idle())
     return false;
   config_.weights->release();
+  if (config_.memoryAccountingChanged) config_.memoryAccountingChanged();
   return true;
 }
 
@@ -148,7 +149,9 @@ bool NativeRuntime::restoreWeights() {
     // back, critical pressure and the engine's limit refuse it.
     const Serving serving(config_.engine.serving, !telemetry_.empty());
     restored = config_.weights->restore(config_.weightAdmission);
+    if (config_.memoryAccountingChanged) config_.memoryAccountingChanged();
   } catch (const metal::MetalAllocationError &refusal) {
+    if (config_.memoryAccountingChanged) config_.memoryAccountingChanged();
     return weightsRefused(refusal.failure());
   }
   restoreRefusedSince_.reset();
@@ -181,6 +184,7 @@ bool NativeRuntime::weightsRefused(metal::AllocationFailure failure) {
       return false;
   }
   config_.weights->release();
+  if (config_.memoryAccountingChanged) config_.memoryAccountingChanged();
   restoreStarted_.reset();
   restoreRefusedSince_.reset();
   if (telemetry_.empty()) {
@@ -575,8 +579,10 @@ void NativeRuntime::ended(uint64_t requestId, double now) {
   pendingMasks_.erase(requestId);
   telemetry_.erase(requestId);
   idleSinceMilliseconds_ = now;
-  if (telemetry_.empty() && config_.holdingRequests)
-    config_.holdingRequests(false);
+  if (telemetry_.empty()) {
+    if (config_.holdingRequests) config_.holdingRequests(false);
+    if (config_.cancelPendingMemory) config_.cancelPendingMemory();
+  }
 }
 
 uint64_t NativeRuntime::durationMicros(double startMilliseconds,

@@ -72,6 +72,35 @@ class StatusRouteTests(HarnessTestCase):
             },
         )
 
+    def test_status_preserves_expert_byte_accounting_and_unknown_requirements(self):
+        runtime = FakeRuntime()
+        experts = {
+            "layout": "contiguous",
+            "weight_bytes": 1000,
+            "capacity_weight_bytes": 500,
+            "resident_weight_bytes": 250,
+            "capacity_ratio": 0.5,
+            "resident_ratio": 0.25,
+            "allocated_bytes": 850,
+            "auxiliary_bytes": 350,
+            "minimum_required_bytes": None,
+        }
+        accounting = {
+            "charged_bytes": 1234,
+            "local_reserved_bytes": 20,
+            "untracked_reserve_bytes": 30,
+        }
+        runtime.status_event = native_peer.status_event(
+            2, expert_storage=experts, memory_governor=accounting
+        )
+        harness = self.harness(runtime)
+        status, _, payload = harness.request("GET", "/status")
+        self.assertEqual(status, 200)
+        snapshot = json.loads(payload)
+        self.assertEqual(snapshot["expert_storage"], experts)
+        for key, value in accounting.items():
+            self.assertEqual(snapshot["memory_governor"][key], value)
+
     def test_metrics_route_renders_the_engine_status(self):
         runtime = FakeRuntime()
         harness = self.harness(runtime)

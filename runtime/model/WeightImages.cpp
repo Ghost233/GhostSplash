@@ -22,7 +22,7 @@ WeightFile WeightImages::load(ImagePlan image) {
   image.write(contentsOf(buffer), buffer);
   WeightFile file(*backend_, buffer, image.component, image.magic, image.layer, image.type,
                   image.declaredBytes ? image.declaredBytes : buffer.sizeBytes(), contentIdentity_);
-  images_.push_back({std::move(image.component), std::move(buffer), std::move(image.write)});
+  images_.push_back({std::move(image.component), std::move(buffer), std::move(image.write), image.temporaryBytes});
   return file;
 }
 
@@ -46,7 +46,9 @@ bool WeightImages::restore(const metal::AllocationAdmission &admit) {
   if (!released_) throw std::logic_error("weights are not released");
   if (restored_ < images_.size()) {
     Image &image = images_[restored_];
-    const metal::AllocationResult admitted = admit(image.buffer.sizeBytes(), [&] {
+    const uint64_t bytes = accountTemporary_ ? (image.buffer.sizeBytes() + 16383) / 16384 * 16384 + image.temporaryBytes
+                                             : image.buffer.sizeBytes();
+    const metal::AllocationResult admitted = admit(bytes, [&] {
       backend_->restoreMemory(image.buffer);
       try {
         image.write(contentsOf(image.buffer), image.buffer);
@@ -58,7 +60,7 @@ bool WeightImages::restore(const metal::AllocationAdmission &admit) {
     });
     if (!admitted)
       throw metal::MetalAllocationError("unable to restore " + image.component + ": " +
-                                            metal::allocationFailureName(admitted.failure),
+                                            (accountTemporary_ && !admitted.detail.empty() ? admitted.detail : metal::allocationFailureName(admitted.failure)),
                                         admitted.failure);
     ++restored_;
   }

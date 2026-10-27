@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metal/DeviceCapabilities.hpp"
+#include "HostMemory.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -20,13 +21,17 @@ enum class AllocationFailure : uint8_t {
   EngineBudget,
   HostPressure,
   DriverRejected,
+  GrowthDeferred,
+  PlanInsufficient,
 };
 
 struct AllocationResult final {
   AllocationFailure failure = AllocationFailure::None;
+  std::string detail;
   // Granted.
   AllocationResult() noexcept = default;
-  AllocationResult(AllocationFailure reason) noexcept : failure(reason) {}
+  AllocationResult(AllocationFailure reason, std::string message = {}) noexcept
+      : failure(reason), detail(std::move(message)) {}
   [[nodiscard]] explicit operator bool() const noexcept {
     return failure == AllocationFailure::None;
   }
@@ -38,6 +43,8 @@ struct AllocationResult final {
   case AllocationFailure::None: return "none";
   case AllocationFailure::EngineBudget: return "engine memory budget exceeded";
   case AllocationFailure::HostPressure: return "host memory reserve protected";
+  case AllocationFailure::GrowthDeferred: return "local optional growth is deferred";
+  case AllocationFailure::PlanInsufficient: return "local allocation plan does not cover requested growth";
   case AllocationFailure::DriverRejected:
     return "Metal driver rejected allocation";
   }
@@ -368,8 +375,8 @@ private:
 
 // How long a command may go without progress before the backend gives up on
 // it by default, in time the Mac is awake (AwakeClock): from its commit, and
-// then from each of its host steps as the GPU work before it ends and as it
-// returns (CommandWatchdog).
+// then from completed GPU buffers and each of its host steps as the GPU
+// work before it ends and as it returns (CommandWatchdog).
 inline constexpr double kCommandTimeoutSeconds = 120.0;
 // How long every buffer stays wired after the last command by default (see
 // allocateBuffer), also the default of the engine's idle release
@@ -389,10 +396,22 @@ public:
   // progress (kCommandTimeoutSeconds).
   explicit MetalBackend(std::string metallibPath,
                         double residencyKeepAliveSeconds = kResidencyKeepAliveSeconds,
-                        double commandTimeoutSeconds = kCommandTimeoutSeconds);
+                        double commandTimeoutSeconds = kCommandTimeoutSeconds,
+                        bool deferResidencyAllocation = false);
   ~MetalBackend();
   // Invoked before allocations and submissions; may throw to stop bootstrap.
   void setOperationGuard(std::function<void()> guard);
+  // Applies to every positive buffer allocation, including internal buffers.
+  // The runtime keeps this gate after its startup guard is removed.
+  void setAllocationAdmission(AllocationAdmission admission, AllocationAdmission optional = {});
+  void prepareResidency();
+  // Owner-thread host payloads use the same local byte gate.
+  // Their owner publishes actual held capacity before confirming the scope.
+  [[nodiscard]] HostMemoryAllocation allocateHostMemory(uint64_t bytes, const std::function<void()> &allocate,
+      bool temporary = false, const std::function<uint64_t()> &held = {});
+  [[nodiscard]] HostMemoryStats hostMemoryStats() const noexcept;
+  [[nodiscard]] bool managedAdmissionEnabled() const noexcept;
+  [[nodiscard]] uint64_t allocationBytes(uint64_t bytes) const noexcept;
   // Asked between the slices of a ticket's wait(); true gives up the wait as
   // the watchdog does and marks the backend unhealthy: the process is
   // shutting down. Destroying or replacing a ticket still waits for its
@@ -487,6 +506,10 @@ public:
   // what memory held before, such as a load the caller discarded, no longer
   // counts. Called where nothing else allocates.
   void restartPeaks() noexcept;
+  // A command-free allocation epoch for a changed host/Metal split. These
+  // peaks are independent of memoryStats(), whose global history is retained.
+  void beginMemoryEpoch();
+  [[nodiscard]] MetalMemoryStats memoryEpochStats() const noexcept;
   // True from a submission until its ticket has been consumed: while memory
   // the command reaches through addresses must stay allocated.
   [[nodiscard]] bool commandInFlight() const noexcept;

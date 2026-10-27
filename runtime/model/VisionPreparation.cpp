@@ -39,6 +39,7 @@ bool convert(const SourceTensor &tensor, const uint8_t *source, uint16_t *destin
 
 // Source bytes and patch values of one task.
 struct Staging {
+  HostMemoryAllocation sourceAllocation, valuesAllocation;
   std::vector<uint8_t> source;
   std::vector<uint16_t> values;
 };
@@ -93,7 +94,29 @@ void addSectionTasks(uint8_t *image, const Section &s, uint32_t pixels,
 
 } // namespace
 
-void writeVision(std::span<uint8_t> destination, const Plan &plan) {
+namespace {
+struct Workspace final { uint64_t source = 0, values = 0, tasks = 0; };
+Workspace workspace(const Plan &plan) {
+  Workspace result;
+  for (const auto &section : plan.sections) {
+    const uint32_t columns = section.columns / section.inputs.size();
+    uint32_t widest = 0;
+    for (const auto &input : section.inputs) widest = std::max(widest, elementBytes(input.tensor));
+    const uint64_t row = uint64_t{columns} * widest + (section.patch ? uint64_t{section.columns} * 2 : 0);
+    const uint64_t batch = std::clamp<uint64_t>(kLoadStepBytes / row, 1, section.rows);
+    result.source = std::max(result.source, batch * columns * widest);
+    if (section.patch) result.values = std::max(result.values, batch * section.columns);
+    result.tasks += (section.rows + batch - 1) / batch;
+  }
+  return result;
+}
+} // namespace
+uint64_t temporaryBytes(const Plan &plan) {
+  const auto size = workspace(plan);
+  return (size.source + size.values * sizeof(uint16_t)) * std::min<uint64_t>(size.tasks, loadThreads());
+}
+
+void writeVision(std::span<uint8_t> destination, const Plan &plan, HostMemoryAdmission allocation) {
   if (destination.size() != plan.bytes) throw WeightStoreError("vision image destination size differs");
   const auto header = weightFileHeader(kVisionMagic, plan.depth, 0);
   std::vector<std::pair<uint64_t, uint64_t>> extents{{0, header.size()}};
@@ -105,6 +128,17 @@ void writeVision(std::span<uint8_t> destination, const Plan &plan) {
   for (const auto &s : plan.sections)
     addSectionTasks(destination.data(), s, plan.patchSize * plan.patchSize, tasks);
   std::vector<Staging> staging(loadThreads());
+  if (allocation) {
+    const auto size = workspace(plan);
+    const auto workers = std::min<uint64_t>(size.tasks, loadThreads());
+    for (uint64_t worker = 0; worker < workers; ++worker) {
+      auto &slot = staging[worker];
+      if (size.source) slot.sourceAllocation = allocation(size.source,
+          [&] { slot.source.resize(size.source); }, [&] { return slot.source.capacity(); });
+      if (size.values) slot.valuesAllocation = allocation(size.values * sizeof(uint16_t),
+          [&] { slot.values.resize(size.values); }, [&] { return slot.values.capacity() * sizeof(uint16_t); });
+    }
+  }
   parallelFor(tasks.size(), [&](size_t index, unsigned thread) { tasks[index](staging[thread]); });
 }
 

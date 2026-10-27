@@ -34,11 +34,14 @@
 #import <objc/runtime.h>
 
 #include <algorithm>
+#include <bit>
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <new>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -47,6 +50,17 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+// Fail only selected vector-sized allocations of this test thread. Driver
+// threads and the commands used to check recovery remain unaffected.
+thread_local size_t failingBytes = 0;
+thread_local int matchingAllocations = -1;
+void *operator new(size_t bytes) {
+  if (bytes == failingBytes && matchingAllocations >= 0 && matchingAllocations-- == 0) throw std::bad_alloc();
+  if (void *p = std::malloc(bytes ? bytes : 1)) return p;
+  throw std::bad_alloc();
+}
+void operator delete(void *p) noexcept { std::free(p); }
 
 namespace {
 
@@ -213,6 +227,288 @@ bool slotsHoldTheirExperts(const Model &m, const BlockMoeWeights &streamed, cons
     }
   }
   return true;
+}
+
+void checkWeightAccounting(const ExpertStore &store, const Model &reference) {
+  uint64_t fullLayerBytes = 0;
+  for (const auto &tensor : reference.routed)
+    fullLayerBytes += tensor.segment.plane0.sizeBytes() + tensor.segment.plane1.sizeBytes() +
+                      tensor.segment.meta.sizeBytes();
+  const uint64_t perExpert = fullLayerBytes / reference.shape.experts;
+  const auto stats = store.stats();
+  require(stats.weightBytes == 2 * fullLayerBytes &&
+          stats.capacityWeightBytes == (stats.released ? 0 : stats.slots * perExpert) &&
+          stats.residentWeightBytes == stats.resident * perExpert &&
+          stats.allocatedBytes == store.allocatedBytes() &&
+          stats.auxiliaryBytes + stats.capacityWeightBytes == stats.allocatedBytes,
+          "expert capacity or residency differs from independently repacked reference weight bytes");
+}
+
+void resizedExperts(MetalBackend &backend, const MoeShape &shape, const std::filesystem::path &directory, Fmt format = Q4K) {
+  const Model m = makeModel(backend, shape, format, true);
+  ExpertFile file(m, directory / "resizable-experts.bin");
+  const uint64_t small = ExpertStore::minimumBytes(file.blocks, shape, true);
+  auto options = storeOptions(2 * arenaBytes(m, shape.experts), file.blocks, shape);
+  options.memoryBytes += small;
+  options.resizable = true;
+  ExpertStore store(backend, file.blocks, shape, options);
+  std::array<BlockMoeWeights, 2> streamed{m.weights, m.weights};
+  for (uint32_t i = 0; i < 2; ++i) store.bind(i, streamed[i]);
+  Buffers b;
+  freshRows(backend, b, shape);
+  const auto plan = MoE::decodePlan(shape, 1, MoeConfig{});
+  const auto expected = runWeights(backend, m.weights, b, plan);
+  require(runWeights(backend, streamed[0], b, plan) == expected, "addressed expert output differs");
+  checkWeightAccounting(store, m);
+  const uint64_t before = store.allocatedBytes();
+  store.resize(small);
+  require(store.allocatedBytes() < before, "shrinking did not release expert allocations");
+  checkWeightAccounting(store, m);
+  for (uint32_t i = 0; i < 2; ++i)
+    require(runWeights(backend, streamed[i], b, plan) == expected, "expert resize changed decode output");
+  const auto prefill = prefillPlan(shape, 64);
+  const auto prefillExpected = runWeights(backend, m.weights, b, prefill);
+  require(runWeights(backend, streamed[0], b, prefill) == prefillExpected,
+          "resized addressed experts changed prefill values");
+  store.resize(options.memoryBytes);
+  require(store.allocatedBytes() == before, "growing did not restore physical capacity");
+  if (shape.experts == 16 && format == Q4K) {
+    unsigned failures = 0;
+    for (int after = 0; after < 8; ++after) {
+      store.resize(small);
+      failingBytes = size_t(shape.experts) * 2 * sizeof(uint32_t);
+      matchingAllocations = after;
+      try { store.resize(options.memoryBytes); }
+      catch (const std::bad_alloc &) { ++failures; }
+      matchingAllocations = -1;
+      require(runWeights(backend, streamed[0], b, plan) == expected,
+              "metadata allocation failure left unusable expert slots");
+    }
+    require(failures >= 6, "metadata allocation failure cases were not exercised");
+  }
+  store.release();
+  checkWeightAccounting(store, m);
+  require(store.restore(splash::test::admitAll), "resizable store failed to restore");
+  checkWeightAccounting(store, m);
+  require(runWeights(backend, streamed[1], b, plan) == expected, "resizable restore changed output");
+  const bool registerWeights = quant_register_tensor(m.weights.gate.routed.formatId, m.weights.gate.routed.inputSize) &&
+      quant_register_tensor(m.weights.up.routed.formatId, m.weights.up.routed.inputSize) &&
+      quant_register_tensor(m.weights.down.routed.formatId, m.weights.down.routed.inputSize);
+  if (format == Q4K && shape.experts == 16) require(registerWeights, "the register reference fixture is ineligible");
+  if (format == Q4K && registerWeights) {
+    const auto registerPlan = MoE::decodePlan(shape, 1, MoeConfig{.ggufTile = splash::ops::MoeGgufTile::Register});
+    const auto registerExpected = runWeights(backend, m.weights, b, registerPlan);
+    require(runWeights(backend, streamed[0], b, registerPlan) == registerExpected,
+            "addressed register-tile experts differ from their resident reference");
+  }
+  if (shape.experts == 384) {
+    auto single = file.blocks;
+    single.blocks.resize(1);
+    ExpertStore resident(backend, single, shape,
+        {.memoryBytes = ExpertStore::minimumBytes(single, shape, true), .readers = readers(), .resizable = true});
+    auto weights = m.weights;
+    resident.bind(0, weights);
+    require(runWeights(backend, weights, b, plan) == expected,
+            "addressed single-layout fill lost a non-power-of-two expert");
+  }
+}
+
+void singleBlockGrowthAndMinimumRestore(MetalBackend &backend, const std::filesystem::path &directory,
+                                       bool currentTarget = false) {
+  constexpr uint64_t limit = 128ULL << 20;
+  const auto boundedAdmission = [&](uint64_t bytes, const std::function<void()> &allocate) -> splash::metal::AllocationResult {
+    const auto host = backend.hostMemoryStats();
+    const auto held = backend.memoryStats().allocatedBytes + host.fixedBytes + host.temporaryBytes;
+    if (held > limit || bytes > limit - held) return splash::metal::AllocationFailure::EngineBudget;
+    allocate(); return {};
+  };
+  backend.setAllocationAdmission(boundedAdmission);
+  const MoeShape shape{256, 16, 4, 256};
+  const Model first = makeModel(backend, shape, Q4K, true), second = makeModel(backend, shape, Q80, true);
+  ExpertFile firstFile(first, directory / "single-q4.bin"), secondFile(second, directory / "single-q8.bin");
+  StreamedBlocks blocks = firstFile.blocks;
+  blocks.blocks.assign(4, firstFile.blocks.blocks.front());
+  blocks.blocks.insert(blocks.blocks.end(), 10, secondFile.blocks.blocks.front());
+  blocks.checks.push_back(secondFile.blocks.checks.front());
+  const auto range = ExpertStore::storageRange(blocks, shape, true);
+  require(range.chunks.size() == 2, "single-block fixture lost its two real format groups");
+  uint64_t optionalAttempts = 0;
+  ExpertStore store(backend, blocks, shape,
+      {.memoryBytes = range.minimumBytes, .readers = readers(), .resizable = true, .boundedReadScratch = true,
+       .optionalRestore = [&](uint64_t, const std::function<void()> &) -> splash::metal::AllocationResult {
+         ++optionalAttempts; return splash::metal::AllocationFailure::GrowthDeferred;
+       }});
+  std::vector<BlockMoeWeights> streamed(14);
+  for (uint32_t block = 0; block < streamed.size(); ++block) {
+    streamed[block] = block < 4 ? first.weights : second.weights; store.bind(block, streamed[block]);
+  }
+  Buffers b; freshRows(backend, b, shape);
+  const auto decode = MoE::decodePlan(shape, 1, MoeConfig{});
+  const auto firstExpected = runWeights(backend, first.weights, b, decode);
+  const auto secondExpected = runWeights(backend, second.weights, b, decode);
+  std::optional<splash::model::StorageGrowthPlan> permitted;
+  store.setGrowthGuard([&](const splash::model::StorageGrowthPlan &plan) { return permitted && plan == *permitted; });
+  for (unsigned step = 0; step < 2; ++step) {
+    permitted = store.planGrowOne(range.fullBytes);
+    require(permitted.has_value(), "expert floor had no legal optional group step");
+    const auto before = store.stats();
+    const auto receipt = store.growOne(*permitted);
+    require(receipt.grossBlocks == 1 && receipt.contributionBytes == range.chunks[permitted->group].allocationBytes &&
+                store.allocatedBytes() == before.allocatedBytes + receipt.contributionBytes &&
+                store.stats().slots == before.slots + range.chunks[permitted->group].slots,
+            "expert permit changed multiple format groups or more than one real arena chunk");
+    bool stale = false;
+    try { static_cast<void>(store.growOne(*permitted)); } catch (const std::invalid_argument &) { stale = true; }
+    require(stale, "expert step replay consumed an old capacity revision");
+    require(runWeights(backend, streamed[0], b, decode) == firstExpected &&
+                runWeights(backend, streamed[4], b, decode) == secondExpected,
+            "single expert step changed bound addresses or original bitwise output");
+  }
+  permitted.reset();
+  bool unplanned = false;
+  try { store.resize(range.fullBytes); } catch (const std::invalid_argument &) { unplanned = true; }
+  require(unplanned, "raw expert resize received unplanned optional chunks");
+  const auto retainedHost = store.hostAllocatedBytes();
+  store.release();
+  require(store.restore(splash::test::admitAll) && !store.released() && store.allocatedBytes() == range.minimumBytes &&
+              optionalAttempts == 0 && store.hostAllocatedBytes() == retainedHost,
+          "optional refusal rolled back the required floor or restored old above-floor chunks");
+  require(runWeights(backend, streamed[0], b, decode) == firstExpected &&
+              runWeights(backend, streamed[4], b, decode) == secondExpected,
+          "minimum restore changed bound addresses or original bitwise output");
+  if (!currentTarget) return;
+  const auto addressTable = streamed[0].gate.routed.plane0;
+  const auto slotTable = streamed[0].slotTable;
+  const uint64_t chosen = range.minimumBytes + range.chunks[0].allocationBytes + range.chunks[1].allocationBytes;
+  store.release();
+  const uint64_t retained = store.allocatedBytes();
+  store.prepareRestore(chosen);
+  require(store.allocatedBytes() == retained && store.stats().budgetBytes == chosen &&
+              streamed[0].gate.routed.plane0.sameView(addressTable) &&
+              streamed[0].slotTable.sameView(slotTable),
+          "released target preparation allocated payload or replaced a bound table");
+  unsigned allocations = 0;
+  uint64_t partial = 0;
+  backend.setAllocationAdmission([&](uint64_t bytes, const std::function<void()> &allocate) -> splash::metal::AllocationResult {
+    if (++allocations == 2) return splash::metal::AllocationFailure::DriverRejected;
+    const auto result = boundedAdmission(bytes, allocate);
+    partial = std::max(partial, store.allocatedBytes());
+    return result;
+  });
+  bool refused = false;
+  try { static_cast<void>(store.restore(splash::test::admitAll)); }
+  catch (const splash::metal::MetalAllocationError &) { refused = true; }
+  backend.setAllocationAdmission(boundedAdmission);
+  require(refused && partial > retained && store.released() && store.allocatedBytes() == retained &&
+              store.stats().capacityWeightBytes == 0 && store.hostAllocatedBytes() == retainedHost,
+          "partial expert restore claimed Ready or hid allocations instead of confirming rollback");
+  store.prepareRestore(range.minimumBytes + range.chunks[0].allocationBytes);
+  require(store.restore(splash::test::admitAll) && store.allocatedBytes() == range.minimumBytes,
+          "smaller current target could not retry after a partial refusal");
+  permitted = store.planGrowOne(range.minimumBytes + range.chunks[0].allocationBytes);
+  require(permitted.has_value() && store.growOne(*permitted).grossBlocks == 1 &&
+              store.allocatedBytes() == range.minimumBytes + range.chunks[0].allocationBytes,
+          "selected above-floor capacity did not receive one actual expert chunk");
+  store.release(); store.release(); store.prepareRestore(chosen);
+  require(store.restore(splash::test::admitAll), "repeat release lost the expert execution floor");
+  for (unsigned step = 0; step < 2; ++step) {
+    permitted = store.planGrowOne(chosen);
+    require(permitted.has_value() && store.growOne(*permitted).grossBlocks == 1,
+            "higher legal restore target did not retain separate real group steps");
+  }
+  require(store.allocatedBytes() == chosen && !store.planGrowOne(chosen) &&
+              streamed[0].gate.routed.plane0.sameView(addressTable) &&
+              streamed[0].slotTable.sameView(slotTable) &&
+              runWeights(backend, streamed[0], b, decode) == firstExpected &&
+              runWeights(backend, streamed[4], b, decode) == secondExpected,
+          "higher selected restore exceeded its target or changed bindings/bitwise decode");
+  const auto prefill = prefillPlan(shape, 64);
+  for (uint32_t block : {0u, 4u})
+    require(runWeights(backend, streamed[block], b, prefill) ==
+                runWeights(backend, block < 4 ? first.weights : second.weights, b, prefill),
+            "smaller release/restore changed the original bitwise prefill standard");
+}
+
+void pressureShrinkAfterPartialMetadataFailure(MetalBackend &backend, const std::filesystem::path &directory) {
+  const auto boundedAdmission = [&backend](uint64_t bytes, const std::function<void()> &allocate)
+      -> splash::metal::AllocationResult {
+    constexpr uint64_t limit = 256ULL << 20;
+    const uint64_t actual = backend.memoryStats().allocatedBytes;
+    if (actual > limit || bytes > limit - actual) return splash::metal::AllocationFailure::EngineBudget;
+    allocate();
+    return {};
+  };
+  backend.setAllocationAdmission(boundedAdmission);
+  const MoeShape shape{256, 16, 4, 256};
+  const Model first = makeModel(backend, shape, Q4K, true), second = makeModel(backend, shape, Q80, true);
+  ExpertFile firstFile(first, directory / "shrink-q4.bin"), secondFile(second, directory / "shrink-q8.bin");
+  StreamedBlocks blocks = firstFile.blocks;
+  blocks.blocks.assign(4, firstFile.blocks.blocks.front());
+  blocks.blocks.insert(blocks.blocks.end(), 10, secondFile.blocks.blocks.front());
+  blocks.checks.push_back(secondFile.blocks.checks.front());
+  const auto range = ExpertStore::storageRange(blocks, shape, true);
+  require(range.chunks.size() == 2, "partial shrink fixture did not have two real format groups");
+  Buffers b;
+  freshRows(backend, b, shape);
+  const auto plan = MoE::decodePlan(shape, 1, MoeConfig{});
+  const auto firstExpected = runWeights(backend, first.weights, b, plan);
+  const auto secondExpected = runWeights(backend, second.weights, b, plan);
+  bool coveredPartial = false;
+  // The second group's 160-slot owner/link vector is 640 bytes. The first
+  // group's 64-slot preparation cannot match it, so its donation commits.
+  {
+    ExpertStore store(backend, blocks, shape,
+        {.memoryBytes = range.fullBytes, .readers = readers(), .resizable = true});
+    std::vector<BlockMoeWeights> streamed(14);
+    for (uint32_t block = 0; block < streamed.size(); ++block) {
+      streamed[block] = block < 4 ? first.weights : second.weights;
+      store.bind(block, streamed[block]);
+    }
+    require(runWeights(backend, streamed[0], b, plan) == firstExpected,
+            "full addressed fixture changed expert values");
+    bool failed = false;
+    failingBytes = size_t(shape.experts) * 10 * sizeof(uint32_t);
+    matchingAllocations = 0;
+    try { store.shrink(range.minimumBytes); }
+    catch (const std::bad_alloc &) { failed = true; }
+    matchingAllocations = -1;
+    const uint64_t partial = store.allocatedBytes();
+    require(failed && partial < range.fullBytes && partial > range.minimumBytes,
+            "the selected second-group metadata failure did not leave a real partial donation");
+    coveredPartial = true;
+    for (uint32_t block = 0; block < streamed.size(); ++block)
+      require(runWeights(backend, streamed[block], b, plan) == (block < 4 ? firstExpected : secondExpected),
+              "partial donor commit left a freed expert descriptor or invalid slot mapping");
+    uint64_t receivingAllocations = 0;
+    backend.setAllocationAdmission([&](uint64_t, const std::function<void()> &) -> splash::metal::AllocationResult {
+      ++receivingAllocations;
+      return splash::metal::AllocationFailure::DriverRejected;
+    });
+    bool retryFailed = false;
+    try { store.shrink(partial); }
+    catch (const splash::metal::MetalAllocationError &) { retryFailed = true; }
+    backend.setAllocationAdmission(boundedAdmission);
+    require(!retryFailed && !receivingAllocations && store.allocatedBytes() == partial &&
+                store.allocatedBytes() >= range.minimumBytes,
+            "downward/equal pressure retry attempted receiving allocation after partial metadata failure");
+    const uint64_t maximumChunk = std::max(range.chunks[0].allocationBytes, range.chunks[1].allocationBytes);
+    const uint64_t smallDeficit = std::min(range.chunks[0].allocationBytes, range.chunks[1].allocationBytes) / 2;
+    store.shrink(partial - smallDeficit);
+    require(partial - store.allocatedBytes() >= smallDeficit && partial - store.allocatedBytes() <= maximumChunk,
+            "a fresh small Warning after partial Critical discarded more than one needed donor chunk");
+    store.shrink(range.minimumBytes);
+    require(store.allocatedBytes() == range.minimumBytes, "pressure retry did not reach the real group floors");
+    for (uint32_t block = 0; block < streamed.size(); ++block)
+      require(runWeights(backend, streamed[block], b, plan) == (block < 4 ? firstExpected : secondExpected),
+              "retried pressure shrink changed numerical output or bound expert mappings");
+    const auto prefill = prefillPlan(shape, 64);
+    for (uint32_t block : {0u, 4u})
+      require(runWeights(backend, streamed[block], b, prefill) ==
+                  runWeights(backend, block < 4 ? first.weights : second.weights, b, prefill),
+              "retried partial shrink changed the original bitwise prefill standard");
+  }
+  require(coveredPartial, "finite metadata fault positions did not exercise a partial mixed-group shrink");
+  backend.setAllocationAdmission({});
 }
 
 int streamedExperts(MetalBackend &backend, const MoeShape &shape, const std::filesystem::path &directory) {
@@ -871,19 +1167,128 @@ int streamedSourceChanges(const std::string &metallibPath, const MoeShape &shape
   return 0;
 }
 
+// Nonzero Q8_0 rows whose exact values are representable as either BF16 or
+// F16. Alternating source encodings and a stored projection reuse one fixed
+// reader workspace; resident planes are built by the independent reference.
+void boundedConvertedExperts(MetalBackend &backend, const std::filesystem::path &directory) {
+  const MoeShape shape{256, 16, 4, 256};
+  Model m = makeModel(backend, shape, Q80, true);
+  for (size_t p = 0; p < 3; ++p) {
+    auto &tensor = m.routed[p];
+    tensor.native.resize(uint64_t{tensor.rows} * tensor.columns / 32 * 34);
+    for (uint64_t block = 0; block < tensor.native.size() / 34; ++block) {
+      const __fp16 scale = __fp16(1.0F / 128.0F);
+      std::memcpy(tensor.native.data() + block * 34, &scale, 2);
+      for (uint32_t j = 0; j < 32; ++j) {
+        const int code = j == 0 ? 127 : j == 1 ? -127 : int((block * 31 + j * 17 + p * 13) % 255) - 127;
+        tensor.native[block * 34 + 2 + j] = uint8_t(int8_t(code));
+      }
+    }
+    tensor.segment = planeSegment(backend, Q80, repack(Q80, tensor.native, tensor.rows, tensor.columns, &tensor.values),
+                                  tensor.rows, tensor.columns);
+    m.formats[p] = Q80;
+  }
+  m.weights.gate.routed = m.routed[0].segment;
+  m.weights.up.routed = m.routed[1].segment;
+  m.weights.down.routed = m.routed[2].segment;
+  std::vector<uint8_t> bytes;
+  std::array<std::array<uint64_t, 3>, 3> offsets{};
+  for (size_t p = 0; p < 3; ++p)
+    for (size_t kind = 0; kind < 3; ++kind) {
+      offsets[p][kind] = bytes.size();
+      if (kind == 2) bytes.insert(bytes.end(), m.routed[p].native.begin(), m.routed[p].native.end());
+      else for (const float value : m.routed[p].values) {
+        const uint16_t bits = kind == 0 ? uint16_t(std::bit_cast<uint32_t>(value) >> 16)
+                                        : std::bit_cast<uint16_t>(__fp16(value));
+        bytes.push_back(uint8_t(bits)); bytes.push_back(uint8_t(bits >> 8));
+      }
+    }
+  const auto path = directory / "bounded-converted-experts.bin";
+  splash::test::writeFile(path, bytes);
+  const auto source = std::make_shared<splash::model::WeightSource>(path);
+  StreamedBlocks blocks;
+  for (uint32_t block = 0; block < 2; ++block) {
+    splash::model::gguf::StreamedExperts experts;
+    for (size_t p = 0; p < 3; ++p) {
+      const auto &tensor = m.routed[p];
+      const size_t kind = p == 2 ? 2 : (p + block) % 2;
+      auto &projection = experts.projections[p];
+      projection.format = Q80; projection.rows = tensor.rows; projection.columns = tensor.columns;
+      projection.sources.push_back({"converted-experts", kQuantFormats[Q80].ggml_type, offsets[p][kind], tensor.rows,
+                                     rowBytes(Q80, tensor.columns), {}, source.get()});
+      if (kind != 2) {
+        projection.sources.back().ggufFloatType = kind == 0 ? splash::model::ggml::kBF16 : splash::model::ggml::kF16;
+        projection.sources.back().ggufFloatRowBytes = tensor.columns * 2;
+      }
+    }
+    blocks.blocks.push_back(std::move(experts));
+  }
+  blocks.sources = source;
+  blocks.checks = {[source] { source->checkUnchanged(); }};
+  ExpertStoreOptions options{.memoryBytes = ExpertStore::minimumBytes(blocks, shape, true),
+      .readers = std::make_shared<splash::model::SsdReaders>(1), .resizable = true, .boundedReadScratch = true};
+  ExpertStore store(backend, blocks, shape, options);
+  std::array<BlockMoeWeights, 2> streamed{m.weights, m.weights};
+  for (uint32_t block = 0; block < 2; ++block) store.bind(block, streamed[block]);
+  const uint64_t host = store.hostAllocatedBytes();
+  require(host > 0, "converted experts did not allocate their bounded workspace");
+  Buffers buffers;
+  const auto decode = MoE::decodePlan(shape, 2, MoeConfig{});
+  const auto full = prefillPlan(shape, 64), tail = prefillPlan(shape, 17);
+  for (uint32_t block : {0, 1, 0, 1})
+    for (const auto *plan : {&full, &decode, &tail}) {
+      freshRows(backend, buffers, shape);
+      const auto expected = runWeights(backend, m.weights, buffers, *plan);
+      require(runWeights(backend, streamed[block], buffers, *plan) == expected,
+              "bounded BF16/F16/stored scratch reuse changed bitwise expert output or tail padding");
+      require(store.hostAllocatedBytes() == host, "reader grew host payload while consuming its fixed workspace");
+    }
+  store.release();
+  require(store.restore(splash::test::admitAll) && store.hostAllocatedBytes() == host,
+          "expert restore reallocated or lost retained reader workspace");
+  freshRows(backend, buffers, shape);
+  const auto restored = runWeights(backend, m.weights, buffers, tail);
+  require(runWeights(backend, streamed[1], buffers, tail) == restored,
+          "retained converted reader scratch changed restored tail output");
+  std::cout << "bounded nonzero BF16/F16/stored expert scratch, reuse and tails: bitwise PASS\n";
+}
+
 } // namespace
 
 int main(int argc, const char *argv[]) {
   @autoreleasepool {
-    if (argc != 2) {
+    if (argc != 2 && !(argc == 3 && (std::string_view(argv[2]) == "--bounded-scratch" ||
+                                   std::string_view(argv[2]) == "--single-block" ||
+                                   std::string_view(argv[2]) == "--released-target" ||
+                                   std::string_view(argv[2]) == "--pressure-shrink"))) {
       std::cerr << "usage: expert_store_test <metallib>\n";
       return 2;
     }
     try {
       MetalBackend backend(argv[1]);
       const splash::test::TemporaryDirectory directory("expert-store");
+      if (argc == 3 && std::string_view(argv[2]) == "--released-target") {
+        singleBlockGrowthAndMinimumRestore(backend, directory.path(), true);
+        std::cout << "expert released current-target tests passed\n";
+        return 0;
+      }
+      if (argc == 3 && std::string_view(argv[2]) == "--single-block") {
+        singleBlockGrowthAndMinimumRestore(backend, directory.path());
+        std::cout << "expert single-block growth and minimum restore tests passed\n";
+        return 0;
+      }
+      if (argc == 3 && std::string_view(argv[2]) == "--pressure-shrink") {
+        pressureShrinkAfterPartialMetadataFailure(backend, directory.path());
+        std::cout << "expert pressure retry tests passed\n";
+        return 0;
+      }
       int failures = 0;
+      boundedConvertedExperts(backend, directory.path());
+      if (argc == 3) return 0;
+      resizedExperts(backend, MoeShape{1024, 384, 4, 256}, directory.path());
       for (const MoeShape &shape : kShapes) {
+        for (const Fmt format : {IQ2S, IQ3S, IQ3XXS, Q4K, Q80, IQ4NL, MXFP4})
+          resizedExperts(backend, shape, directory.path(), format);
         printf("%u experts, top %u, hidden %u, %u wide:\n", shape.experts, shape.expertsPerToken, shape.hiddenSize,
                shape.expertIntermediateSize);
         failures += streamedExperts(backend, shape, directory.path()) +

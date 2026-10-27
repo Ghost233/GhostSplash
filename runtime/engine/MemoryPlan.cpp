@@ -1,4 +1,5 @@
 #include "engine/MemoryPlan.hpp"
+#include "engine/ExpertPlePolicy.hpp"
 #include "Checked.hpp"
 #include "engine/Json.hpp"
 #include "metal/abi/PagedAttention.h"
@@ -171,6 +172,16 @@ StreamedMemoryResult planParts(const StreamedMemoryInputs &in, const Part &exper
   // The floors: what loads, the arenas and the stores at their floors, a
   // lane's state and the KV runway, and a spill-capable target's spill
   // floors.
+  uint64_t storeFloors = 0;
+  if (!checkedAdd(experts.floor, table.floor, storeFloors)) return overflow();
+  if (in.expertPleMemoryBytes && storeFloors > in.expertPleMemoryBytes)
+    return {std::nullopt, "--expert-ple-memory of " + std::to_string(in.expertPleMemoryBytes) +
+                            " bytes is less than the expert and PLE stores require, " +
+                            std::to_string(storeFloors) + " bytes"};
+  int64_t storeRest = in.expertPleMemoryBytes
+                          ? static_cast<int64_t>(std::min<uint64_t>(in.expertPleMemoryBytes - storeFloors,
+                                                               std::numeric_limits<int64_t>::max()))
+                          : std::numeric_limits<int64_t>::max();
   uint64_t loaded = 0;
   for (const uint64_t bytes : {in.fixedBytes, arenaBytes, experts.floor, table.floor})
     if (!checkedAdd(loaded, bytes, loaded)) return overflow();
@@ -232,18 +243,22 @@ StreamedMemoryResult planParts(const StreamedMemoryInputs &in, const Part &exper
   plan.expertBytes = experts.streams ? experts.floor : 0;
   if (experts.automatic) {
     const auto above = static_cast<int64_t>(experts.all - experts.floor);
-    if (rest - allowance(false) - tableShare >= above) {
+    if (!in.expertPleAdaptive && rest - allowance(false) - tableShare >= above && storeRest - tableShare >= above) {
       rest -= above;
+      storeRest -= above;
     } else {
       expertsStream = true;
-      const int64_t bytes = std::clamp<int64_t>(rest - allowance(true) - tableShare, 0, above);
+      const int64_t bytes = std::clamp<int64_t>(
+          std::min(rest - allowance(true) - tableShare, storeRest - tableShare), 0, above);
       plan.expertBytes = experts.floor + static_cast<uint64_t>(bytes);
+      if (in.expertPleAdaptive) plan.expertBytes = std::min(plan.expertBytes, experts.all - 1);
       rest -= bytes;
+      storeRest -= bytes;
     }
   }
   plan.tableBytes = table.streams ? table.floor : 0;
   if (table.automatic) {
-    const int64_t kept = rest - allowance(expertsStream);
+    const int64_t kept = std::min(rest - allowance(expertsStream), storeRest);
     if (kept < static_cast<int64_t>(table.all - table.floor))
       plan.tableBytes = table.floor + static_cast<uint64_t>(std::clamp<int64_t>(kept, 0, tableShare));
   }
@@ -377,7 +392,18 @@ std::string_view ContextBounds::bound() const noexcept {
   return context == resident || disk >= spilled ? "memory" : "disk";
 }
 
-StreamedMemoryResult planStreamedMemory(const StreamedMemoryInputs &in) {
+StreamedMemoryResult planStreamedMemory(const StreamedMemoryInputs &raw) {
+  StreamedMemoryInputs in = raw;
+  if (in.expertPleAdaptive) {
+    if (!in.expertPleMemoryBytes || !in.experts.allBytes || !in.table.allBytes ||
+        in.experts.setting.mode != StreamedSetting::Mode::Auto || in.table.setting.mode != StreamedSetting::Mode::Auto)
+      return {std::nullopt, "adaptive expert/PLE requires an explicit pool, both stores present and auto"};
+    try {
+      const ExpertPlePolicy policy(in.expertPleMemoryBytes, in.expertPleMemoryBytes,
+                                   in.experts.floorBytes, in.table.floorBytes, in.expertPleRatio);
+      in.table.setting = {StreamedSetting::Mode::Size, policy.initialPleBytes()};
+    } catch (const std::invalid_argument &error) { return {std::nullopt, error.what()}; }
+  }
   if (!in.kvLayout.valid() || !in.windowTokens || in.requestedContextTokens > in.windowTokens ||
       (in.sparseKv && !in.sparseKv->laneSlots()))
     return {std::nullopt, "invalid memory planner inputs"};
@@ -400,7 +426,25 @@ StreamedMemoryResult planStreamedMemory(const StreamedMemoryInputs &in) {
   }
 }
 
+void EngineMemoryPlan::setExpertPleSplit(uint64_t experts, uint64_t ple) {
+  const uint64_t before = breakdown_.expertPlannedBytes + breakdown_.plePlannedBytes;
+  if (!breakdown_.expertPleMemoryBytes || experts > breakdown_.expertPleMemoryBytes ||
+      ple > breakdown_.expertPleMemoryBytes - experts || experts + ple != before)
+    throw std::invalid_argument("adaptive expert/PLE split must preserve its total and cap");
+  if (breakdown_.targetWeightsBytes < breakdown_.expertPlannedBytes ||
+      breakdown_.streamedTableBytes != breakdown_.plePlannedBytes)
+    throw std::invalid_argument("adaptive expert/PLE split requires charged store categories");
+  const uint64_t base = breakdown_.targetWeightsBytes - breakdown_.expertPlannedBytes;
+  breakdown_.expertPlannedBytes = model_.expertPlannedBytes = experts;
+  breakdown_.plePlannedBytes = model_.plePlannedBytes = ple;
+  breakdown_.targetWeightsBytes = model_.footprint.targetWeightsBytes = base + experts;
+  breakdown_.streamedTableBytes = model_.footprint.streamedTableBytes = ple;
+}
+
 std::optional<std::string> ModelMemoryProfile::validationError() const {
+  if (expertPleMemoryBytes &&
+      (expertPlannedBytes > expertPleMemoryBytes || plePlannedBytes > expertPleMemoryBytes - expertPlannedBytes))
+    return "expert_ple_pool_exceeded";
   if (name.empty()) return "model_name_required";
   if (!maximumContextTokens ||
       maximumContextTokens > kv::kMaximumLogicalTokens) {
@@ -435,7 +479,7 @@ uint64_t ModelMemoryProfile::fixedRuntimeBytes() const {
            footprint.runtime.sharedPrefillPlannedAllocatedBytes,
            footprint.runtime.sharedDecodePlannedAllocatedBytes,
            model::kPipelineReserveBytes, model::kRuntimeOverheadReserveBytes,
-           footprint.streamedTableBytes, footprint.aneFfnBytes, footprint.stateStagingBytes}) {
+           footprint.streamedTableBytes, footprint.requiredHostBytes, footprint.aneFfnBytes, footprint.stateStagingBytes}) {
     if (!checkedAdd(result, value, result)) {
       throw std::overflow_error("fixed runtime cost overflow");
     }
@@ -450,8 +494,12 @@ std::string EngineMemoryBreakdown::toStatusJson() const {
       << ','
       << "\"configured_memory_limit_bytes\":" << configuredMemoryLimitBytes
       << ',' << "\"working_set_margin_bytes\":" << workingSetMarginBytes << ','
-      << "\"hard_budget_bytes\":" << hardBudgetBytes << ','
-      << "\"target_weights_bytes\":" << targetWeightsBytes << ','
+      << "\"hard_budget_bytes\":" << hardBudgetBytes << ',';
+  if (expertPleMemoryBytes)
+    out << "\"expert_ple_pool\":{\"limit_bytes\":" << expertPleMemoryBytes
+        << ",\"expert_planned_bytes\":" << expertPlannedBytes
+        << ",\"ple_planned_bytes\":" << plePlannedBytes << "},";
+  out << "\"target_weights_bytes\":" << targetWeightsBytes << ','
       << "\"draft_weights_bytes\":" << draftWeightsBytes << ','
       << "\"vision_weights_bytes\":" << visionWeightsBytes << ','
       << "\"maximum_batch_width\":" << maximumBatchWidth << ','
@@ -581,6 +629,9 @@ evaluateEngineMemoryPlan(const DeviceCapabilities &device,
   breakdown.physicalMemoryBytes = device.physicalMemoryBytes;
   breakdown.recommendedWorkingSetBytes = device.recommendedMaxWorkingSetBytes;
   breakdown.configuredMemoryLimitBytes = maximumMemoryBytes;
+  breakdown.expertPleMemoryBytes = model.expertPleMemoryBytes;
+  breakdown.expertPlannedBytes = model.expertPlannedBytes;
+  breakdown.plePlannedBytes = model.plePlannedBytes;
   breakdown.targetWeightsBytes = model.footprint.targetWeightsBytes;
   breakdown.draftWeightsBytes = model.footprint.draftWeightsBytes;
   breakdown.visionWeightsBytes = model.footprint.visionWeightsBytes;
@@ -595,6 +646,7 @@ evaluateEngineMemoryPlan(const DeviceCapabilities &device,
   breakdown.stateStagingBytes = model.footprint.stateStagingBytes;
   breakdown.aneFfnBytes = model.footprint.aneFfnBytes;
   breakdown.streamedTableBytes = model.footprint.streamedTableBytes;
+  breakdown.requiredHostBytes = model.footprint.requiredHostBytes;
   breakdown.kvPageTokens = kv::kPageTokens;
 
   if (auto error = device.validationError()) {

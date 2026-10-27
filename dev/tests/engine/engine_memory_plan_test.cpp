@@ -1,5 +1,6 @@
 #include "TestChecks.hpp"
 #include "engine/MemoryPlan.hpp"
+#include "engine/ExpertPlePolicy.hpp"
 #include "TestModel.hpp"
 
 #include <array>
@@ -525,6 +526,114 @@ void testFlashNextOnTheThreeMacs() {
           "a larger Mac did not stream more experts");
 }
 
+// The independent pool caps only the two stores, leaving the larger global
+// budget available to KV and state.
+void testExpertPlePoolLeavesKvOutside() {
+  StreamedMemoryInputs inputs = kFlashNext.inputs(kM5Pro);
+  inputs.expertPleMemoryBytes = 20 * kGiB;
+  inputs.expertPleAdaptive = true;
+  const StreamedMemoryPlan adaptive = requirePlan(inputs);
+  require(adaptive.expertBytes == 20 * kGiB - 512 * kMiB && adaptive.tableBytes == 512 * kMiB,
+          "adaptive startup changed the specified initial PLE share");
+  inputs.expertPleRatio = 10;
+  require(requirePlan(inputs).tableBytes == 512 * kMiB, "wider ceiling must not preallocate more PLE at startup");
+  inputs.expertPleAdaptive = false;
+  const StreamedMemoryPlan plan = requirePlan(inputs);
+  require(plan.expertBytes == 20 * kGiB - 512 * kMiB && plan.tableBytes == 512 * kMiB,
+          "expert and PLE stores exceeded their independent 20 GiB pool");
+  const auto final = test::requireMemoryPlan(
+      deviceOf(kM5Pro), kFlashNext.profile(plan.expertBytes, plan.tableBytes, plan.spill));
+  require(final.breakdown().hardBudgetBytes > inputs.expertPleMemoryBytes &&
+              final.breakdown().dynamicBudgetBytes > 20 * kGiB,
+          "the store pool was incorrectly used as the global or KV budget");
+}
+
+void testExpertPlePoolStatus() {
+  auto profile = model();
+  profile.expertPleMemoryBytes = 3 * kGiB;
+  profile.expertPlannedBytes = 2 * kGiB;
+  profile.plePlannedBytes = 512 * kMiB;
+  const auto plan = test::requireMemoryPlan(device(), profile);
+  const auto json = plan.toStatusJson();
+  require(json.find("\"expert_ple_pool\":{\"limit_bytes\":3221225472,"
+                    "\"expert_planned_bytes\":2147483648,\"ple_planned_bytes\":536870912}") != std::string::npos,
+          "the shared pool's independent cap and planned charges are missing from status");
+  require(plan.breakdown().fixedRuntimeBytes == model().fixedRuntimeBytes(),
+          "the status metadata charged the stores twice");
+  auto operational = profile;
+  operational.footprint.streamedTableBytes = 512 * kMiB;
+  auto split = test::requireMemoryPlan(device(), operational);
+  const auto before = split.breakdown();
+  split.setExpertPleSplit(2 * kGiB + 128 * kMiB, 384 * kMiB);
+  require(split.breakdown().fixedRuntimeBytes == before.fixedRuntimeBytes &&
+              split.breakdown().dynamicBudgetBytes == before.dynamicBudgetBytes &&
+              split.breakdown().kvCapacityBytes == before.kvCapacityBytes &&
+              split.breakdown().plePlannedBytes == 384 * kMiB &&
+              split.breakdown().targetWeightsBytes == before.targetWeightsBytes + 128 * kMiB,
+          "changing the store split altered the KV budget or failed to update its category");
+  profile.plePlannedBytes = 2 * kGiB;
+  require(!evaluateEngineMemoryPlan(device(), profile, 0).plan,
+          "a profile whose stores exceed the pool was admitted");
+}
+
+void testExpertPlePoolBoundaries() {
+  auto inputs = kFlashNext.inputs(kM5Pro);
+  inputs.expertPleMemoryBytes = kFlashNext.experts.floorBytes + kFlashNext.table.floorBytes - 1;
+  const auto tooSmall = planStreamedMemory(inputs);
+  require(!tooSmall.plan && !tooSmall.requiredBytes &&
+              tooSmall.error.find("--expert-ple-memory") != std::string::npos,
+          "a shared pool below the stores' floors was not refused by name");
+  inputs.expertPleMemoryBytes = 20 * kGiB;
+  inputs.experts.setting = {StreamedSetting::Mode::Size, 12 * kGiB};
+  inputs.table.setting = {StreamedSetting::Mode::Size, 8 * kGiB};
+  auto plan = requirePlan(inputs);
+  require(plan.expertBytes == 12 * kGiB && plan.tableBytes == 8 * kGiB,
+          "explicit stores fitting the pool were changed");
+  --inputs.expertPleMemoryBytes;
+  require(!planStreamedMemory(inputs).plan, "conflicting explicit stores exceeded the pool");
+  inputs = kFlashNext.inputs(kM5Pro);
+  inputs.expertPleMemoryBytes = 20 * kGiB;
+  inputs.hotCacheBytes = 4 * kGiB;
+  plan = requirePlan(inputs);
+  require(plan.expertBytes == 20 * kGiB - 512 * kMiB && plan.tableBytes == 512 * kMiB &&
+              plan.spill.hotTargetBytes == 4 * kGiB,
+          "a separate KV cache target was charged to the expert/PLE pool");
+  inputs.hardBudgetBytes = 18 * kGiB;
+  inputs.hotCacheBytes.reset();
+  plan = requirePlan(inputs);
+  require(plan.expertBytes + plan.tableBytes < inputs.expertPleMemoryBytes,
+          "the pool bypassed the tighter global budget");
+
+  inputs = k35BQ2.inputs(kM5Pro);
+  inputs.expertPleMemoryBytes = inputs.experts.allBytes;
+  require(!requirePlan(inputs).expertBytes, "experts that fit the pool did not load whole");
+  --inputs.expertPleMemoryBytes;
+  require(requirePlan(inputs).expertBytes == inputs.expertPleMemoryBytes,
+          "whole experts were not counted against the pool");
+  inputs.experts.setting = {StreamedSetting::Mode::Off, 0};
+  require(!planStreamedMemory(inputs).plan, "an off override bypassed the pool");
+
+  inputs = kFlashNext.inputs(kM5Pro);
+  inputs.experts = {};
+  inputs.expertPleMemoryBytes = inputs.table.allBytes;
+  require(!requirePlan(inputs).tableBytes, "a PLE-only part that fits did not load whole");
+  --inputs.expertPleMemoryBytes;
+  require(requirePlan(inputs).tableBytes == 512 * kMiB,
+          "a PLE-only part bypassed the shared pool");
+  inputs.table.setting = {StreamedSetting::Mode::Off, 0};
+  require(!planStreamedMemory(inputs).plan, "whole PLE storage was not counted against the pool");
+  inputs.table = {};
+  requirePlan(inputs);
+
+  inputs = kFlashNext.inputs(kM5Pro);
+  inputs.expertPleMemoryBytes = std::numeric_limits<uint64_t>::max();
+  const auto large = requirePlan(inputs);
+  inputs.expertPleMemoryBytes = 0;
+  const auto automatic = requirePlan(inputs);
+  require(large.expertBytes == automatic.expertBytes && large.tableBytes == automatic.tableBytes,
+          "an oversized shared pool changed the automatic plan");
+}
+
 // Main's plan for the 35B on the three Macs: every routed expert loads with
 // its layer, and the KV holds main's context, pinned: the M6 229,369 tokens
 // beside the whole Q2_K_XL, the others the 256K window of UD-Q4_K_M.
@@ -891,8 +1000,113 @@ void testDeviceValidationMessageNamesWhatTheMacHas() {
           "an older macOS was not named against the macOS required");
 }
 
+void testLocalAdaptiveKeepsNormalObservationsWithinCurrentQuota() {
+  using splash::engine::ExpertPlePolicy;
+  using splash::engine::ExpertPleSample;
+  ExpertPlePolicy policy(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+  ExpertPleSample busy;
+  busy.pleCapacityRows = busy.pleCachedRows = 1000;
+  require(!policy.observe(0, false, busy, 512 * kMiB, 4 * kGiB),
+          "local adaptive skipped its first observation");
+  for (unsigned window = 1; window <= 2; ++window) {
+    busy.units = window * 64;
+    busy.pleReads = window * 100;
+    busy.pleReused = window * 32;
+    busy.pleWaitNanoseconds = window * 100000000;
+    const auto target = policy.observe(window * 10, false, busy, 512 * kMiB, 4 * kGiB);
+    require(window == 1 ? !target : target == 640 * kMiB,
+            "Normal local quota permanently paused or discarded the two adaptive observation windows");
+  }
+  require(policy.pendingTarget() == 640 * kMiB && !policy.trialPending() && policy.adjustments() == 0,
+          "an unreceived local proposal was counted as an applied trial");
+  require(policy.observe(30, true, {}, 512 * kMiB, 4 * kGiB) == 640 * kMiB,
+          "a pending paced transfer lost its original target before receipt");
+  require(!policy.observe(31, false, busy, 384 * kMiB, kGiB + 384 * kMiB) &&
+              !policy.pendingTarget() && policy.targetPleBytes() == 384 * kMiB &&
+              policy.maximumPleBytes() == 384 * kMiB && policy.adjustments() == 0,
+          "quota shrink retained an out-of-bound proposal or invented an applied transfer");
+  require(!policy.observe(32, false, busy, 384 * kMiB, 4 * kGiB) &&
+              policy.targetPleBytes() == 384 * kMiB && !policy.pendingTarget(),
+          "quota recovery resurrected the older larger adaptive target");
+  ExpertPlePolicy recovering(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+  ExpertPleSample next;
+  next.pleCapacityRows = next.pleCachedRows = 1000;
+  require(!recovering.observe(0, false, next, 512 * kMiB, 2 * kGiB), "empty recovering window moved PLE");
+  for (unsigned window = 1; window <= 2; ++window) {
+    next.units = window * 64; next.pleReads = window * 100;
+    next.pleReused = window * 32; next.pleWaitNanoseconds = window * 100000000;
+    const auto target = recovering.observe(window * 10, false, next, 512 * kMiB, (window + 2) * kGiB);
+    require(window == 1 ? !target : target == 640 * kMiB,
+            "Normal quota recovery repeatedly discarded the adaptive observation windows");
+  }
+
+  recovering.applied(20, 640 * kMiB, 3);
+  require(recovering.constrainManagedBytes(kGiB + 384 * kMiB, 384 * kMiB) &&
+              !recovering.trialPending() && !recovering.pendingTarget() &&
+              recovering.adjustments() == 1 && recovering.rollbacks() == 0 &&
+              recovering.cooldownUntil() == 50 && recovering.resizeMilliseconds() == 3,
+          "quota shrink erased measured cost/cooldown or fabricated an applied rollback");
+  recovering.constrainManagedBytes(4 * kGiB, 384 * kMiB);
+  require(recovering.targetPleBytes() == 384 * kMiB && recovering.cooldownUntil() == 50,
+          "quota recovery resurrected a target or cleared the original trial cooldown");
+
+}
+
 int main() {
   try {
+    testLocalAdaptiveKeepsNormalObservationsWithinCurrentQuota();
+    {
+      using splash::engine::ExpertPlePolicy;
+      ExpertPlePolicy policy(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+      require(policy.initialPleBytes() == 512 * kMiB, "adaptive PLE must start at 512 MiB");
+      require(policy.maximumPleBytes() == 1022611260, "1:20 must include both stores in its denominator");
+      ExpertPlePolicy wider(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 10);
+      require(wider.maximumPleBytes() == 1952257861, "1:10 PLE ceiling is pool / 11");
+      splash::engine::ExpertPleSample sample;
+      sample.pleCapacityRows = 10000;
+      sample.pleCachedRows = 10;
+      require(!policy.observe(0, true, sample, 512 * kMiB), "adaptive policy moved without observations");
+      sample.units = 64;
+      sample.expertMisses = 100;
+      sample.expertWaitNanoseconds = 100000000;
+      require(!policy.observe(10, true, sample, 512 * kMiB), "one window must not trigger a resize");
+      sample.units = 128;
+      sample.expertMisses = 200;
+      sample.expertWaitNanoseconds = 200000000;
+      require(policy.observe(20, true, sample, 512 * kMiB) == 384 * kMiB,
+              "unused PLE space should be offered to waiting experts after two windows");
+      policy.applied(20, 384 * kMiB, 1);
+      sample.units = 256;
+      require(!policy.observe(25, true, sample, 384 * kMiB), "resize cooldown was bypassed");
+      ExpertPlePolicy growing(20 * kGiB, 20 * kGiB, kGiB, 32 * kMiB, 20);
+      splash::engine::ExpertPleSample busy;
+      busy.pleCapacityRows = busy.pleCachedRows = 1000;
+      require(!growing.observe(0, false, busy, 512 * kMiB), "empty prefill observation moved a cache");
+      for (unsigned n = 1; n <= 2; ++n) {
+        busy.units = n * 64;
+        busy.pleReads = n * 100;
+        busy.pleReused = n * 32;
+        busy.pleWaitNanoseconds = n * 100000000;
+        const auto target = growing.observe(n * 10, false, busy, 512 * kMiB);
+        require(n == 1 ? !target : target == 640 * kMiB, "repeated PLE reads did not earn a bounded trial");
+      }
+      auto switched = growing;
+      switched.applied(20, 640 * kMiB, 1);
+      splash::engine::ExpertPleSample decode;
+      require(!switched.observe(21, true, decode, 640 * kMiB), "phase transition skipped sample collection");
+      decode.units = 64;
+      require(switched.observe(31, true, decode, 640 * kMiB) == 512 * kMiB,
+              "a prefill trial stranded the following decode phase");
+      growing.applied(20, 640 * kMiB, 1);
+      require(!growing.observe(30, false, busy, 640 * kMiB), "trial did not start a fresh window");
+      busy.units += 64;
+      busy.pleWaitNanoseconds += 500000000;
+      require(growing.observe(50, false, busy, 640 * kMiB) == 512 * kMiB,
+              "an expensive trial was not rolled back");
+      growing.applied(50, 512 * kMiB, 1);
+      require(growing.rollbacks() == 1 && growing.adjustments() == 2,
+              "trial and rollback status do not reflect applied changes");
+    }
     testUnifiedElasticBudget();
     testBf16BudgetAndStatus();
     testStateFormatStatus();
@@ -908,6 +1122,9 @@ int main() {
     testExtentSizeFollowsThePool();
     testHotBlockCacheIsDefinedOnce();
     testFlashNextOnTheThreeMacs();
+    testExpertPlePoolLeavesKvOutside();
+    testExpertPlePoolBoundaries();
+    testExpertPlePoolStatus();
     testDense35BKeepsMainsPlan();
     testDenseExplicitContextKeepsMainsExperts();
     testDenseExplicitContextStreamsExperts();

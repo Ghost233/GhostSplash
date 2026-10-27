@@ -16,6 +16,11 @@
 #define SPLASH_MOE_EXPERT_SLOTS 256u
 #define SPLASH_MOE_WIDE_EXPERT_SLOTS 512u
 
+// In adaptive stores the routed plane binding names nine GPU addresses per
+// slot (gate/up/down x three planes), rather than one contiguous weight slab.
+#define MOE_ADDRESSED_SLOTS 0x80000000u
+#define MOE_SLOT_ADDRESSES 9u
+
 struct MoeRouteParams {
   uint32_t rows;
   uint32_t input_size;

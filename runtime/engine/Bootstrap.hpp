@@ -139,7 +139,15 @@ public:
     [[nodiscard]] bool controlPass(MemoryPressure pressure) {
         sampleThermalState();
         resources_->cache().keepDiskLimit();
-        return memoryControl_.run(pressure);
+        const bool reclaimed = memoryControl_.run(pressure);
+        bool adjusted = false;
+        // The resource controller also records pressure pauses and discards
+        // measurement windows; its governor check still refuses all growth.
+        if (!nativeLoop_->commandInFlight() &&
+            !nativeLoop_->snapshot().activeRequests.empty())
+            adjusted = resources_->rebalanceExpertPle(nativeLoop_->monotonicMilliseconds() / 1000.0, model_->actualRuntimeMemory());
+        resources_->publishMemoryAccounting();
+        return reclaimed || adjusted;
     }
     // The status document, with the metrics and the loop timing the
     // transport keeps.

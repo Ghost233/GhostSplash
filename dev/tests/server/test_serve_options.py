@@ -192,6 +192,17 @@ OPTIONS = {
         {"auto": "auto", "all": "all"},
         ("", "budget", "every", "ALL"),
     ),
+    "--expert-ple-policy": values(
+        "--expert-ple-policy", {"static": "static"}, ("on", "off", "bad")
+    ),
+    "--expert-ple-ratio": values(
+        "--expert-ple-ratio", {"1:20": "1:20", "1:10": "1:10"}, ("1:15", "20", "bad")
+    ),
+    "--expert-ple-memory": values(
+        "--expert-ple-memory",
+        {"auto": None, "AUTO": None, "15G": 15 * 1024**3, "20G": 20 * 1024**3},
+        ("0", "off", "-1G", "bad", str(2**63)),
+    ),
     "--ple-memory": values(
         "--ple-memory",
         {
@@ -214,6 +225,16 @@ OPTIONS = {
             "16G": 16 * 1024**3,
         },
         ("0", "bad", "-2G"),
+    ),
+    "--moe-memory-pressure": values(
+        "--moe-memory-pressure",
+        {"on": "on", "off": "off"},
+        ("auto", "1", ""),
+    ),
+    "--host-memory-reserve": values(
+        "--host-memory-reserve",
+        {"auto": None},
+        ("0", "off", "bad"),
     ),
     "--sparse-kv-memory": values(
         "--sparse-kv-memory",
@@ -435,6 +456,39 @@ class ServeOptionsTests(unittest.TestCase):
                 self.assertEqual(args.prompt_lookup_min_match, 2)
                 self.assertEqual(args.compact_draft_capacity, 98304)
 
+    def test_moe_pressure_is_opt_in_and_manual_reserve_requires_it(self):
+        for parse, required in PARSERS:
+            args = parse(required)
+            self.assertEqual(args.moe_memory_pressure, "off")
+            self.assertIsNone(args.host_memory_reserve)
+            args = parse(
+                [*required, "--moe-memory-pressure=on", "--host-memory-reserve=3G"]
+            )
+            self.assertEqual(args.host_memory_reserve, 3 * 1024**3)
+            for options in (
+                ["--host-memory-reserve=3G"],
+                ["--moe-memory-pressure=on", "--expert-memory=4G"],
+                ["--moe-memory-pressure=on", "--expert-memory=off"],
+                ["--moe-memory-pressure=auto"],
+                ["--host-memory-reserve=off"],
+            ):
+                self.refuse(parse, [*required, *options])
+        args = api.parse_args(
+            [*SERVER_ARGS, "--moe-memory-pressure=on", "--host-memory-reserve=3G"]
+        )
+        command = api._native_command(args, args.model_root)
+        self.assertEqual(command[command.index("--moe-memory-pressure") + 1], "on")
+        self.assertEqual(
+            command[command.index("--host-memory-reserve") + 1], "3221225472"
+        )
+
+    def test_encoder_cannot_silently_ignore_moe_pressure(self):
+        args = api.parse_args([*SERVER_ARGS, "--moe-memory-pressure=on"])
+        for decision_type in ("laya", "vllm-d3"):
+            args.decision_type = decision_type
+            with self.assertRaisesRegex(ValueError, "requires a resizable MoE model"):
+                api._native_command(args, args.model_root)
+
     def test_compact_requires_an_explicit_file_and_file_alone_does_not_enable(self):
         for parse, required in PARSERS:
             self.assertIn(
@@ -506,6 +560,12 @@ class ServeOptionsTests(unittest.TestCase):
                 option.flag
                 for option in serve_options.SERVE_OPTIONS
                 if not option.secret
+                and option.flag
+                not in (
+                    "--expert-ple-policy",
+                    "--moe-memory-pressure",
+                    "--host-memory-reserve",
+                )
             },
         )
         self.assertFalse(any("secret-key" in argument for argument in argv))
@@ -568,6 +628,61 @@ class ServeOptionsTests(unittest.TestCase):
             for value in ("-1", "65536"):
                 with self.assertRaises(SystemExit):
                     api.parse_args([*required, "--port", value])
+
+    def test_adaptive_expert_ple_reaches_native_and_relaunch(self):
+        args = api.parse_args(
+            [
+                *SERVER_ARGS,
+                "--expert-ple-policy",
+                "adaptive",
+                "--expert-ple-ratio",
+                "1:10",
+                "--expert-ple-memory",
+                "20G",
+            ]
+        )
+        for context in (None, 61433):
+            command = api._native_command(args, args.model_root, context)
+            self.assertEqual(
+                command[command.index("--expert-ple-policy") + 1], "adaptive"
+            )
+            self.assertEqual(command[command.index("--expert-ple-ratio") + 1], "1:10")
+        launched = launcher.parse_args(
+            [
+                *LAUNCHER_ARGS,
+                "--expert-ple-policy",
+                "adaptive",
+                "--expert-ple-ratio",
+                "1:10",
+                "--expert-ple-memory",
+                "20G",
+            ]
+        )
+        forwarded = serve_options.serve_argv(launched)
+        self.assertIn("--expert-ple-policy=adaptive", forwarded)
+        self.assertIn("--expert-ple-ratio=1:10", forwarded)
+        defaults = api.parse_args(SERVER_ARGS)
+        self.assertEqual(defaults.expert_ple_policy, "static")
+        self.assertEqual(defaults.expert_ple_ratio, "1:20")
+        self.assertNotIn(
+            "--expert-ple-policy", api._native_command(defaults, defaults.model_root)
+        )
+
+    def test_expert_ple_shared_pool_reaches_native_and_relaunch(self):
+        for parse, required in PARSERS:
+            args = parse([*required, "--expert-ple-memory", "20G"])
+            self.assertEqual(args.expert_ple_memory, 20 * 1024**3)
+            self.assertIsNone(args.expert_memory)
+            self.assertIsNone(args.ple_memory)
+            self.assertIsNone(args.max_memory)
+        args = api.parse_args([*SERVER_ARGS, "--expert-ple-memory", "20G"])
+        for context in (None, 61433):
+            command = api._native_command(args, args.model_root, context)
+            position = command.index("--expert-ple-memory")
+            self.assertEqual(command[position + 1], str(20 * 1024**3))
+        for value in ("0", "-1G", "off", "bad", str(2**63)):
+            for parse, required in PARSERS:
+                self.refuse(parse, [*required, "--expert-ple-memory", value])
 
     def test_native_command_passes_each_serve_option(self):
         model = "community/custom-splash"

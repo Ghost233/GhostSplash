@@ -263,6 +263,7 @@ public:
   [[nodiscard]] std::optional<double> nextWakeupMilliseconds() const;
   [[nodiscard]] EngineSnapshot snapshot() const;
   [[nodiscard]] ResourceWaitSnapshot resourceWaitSnapshot(double nowMilliseconds) const;
+  void setRequestStartsPaused(bool paused) noexcept { requestStartsPaused_ = paused; }
 
   // Runs only between commands: throws std::logic_error while a command is
   // in flight. Returns the model's idle state buffers first, then the caches
@@ -855,6 +856,7 @@ private:
   // The lanes admit() has obtained so far, including those it gave back when
   // the attempt's pages were refused (Request::admission).
   uint64_t admissions_ = 0;
+  bool requestStartsPaused_ = false;
   uint64_t resourceEpoch_ = 1;
   // The resource wait limit after the latest suspension; zero once passed
   // or when no request is suspended.

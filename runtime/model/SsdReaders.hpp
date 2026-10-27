@@ -128,7 +128,7 @@ public:
   [[nodiscard]] std::shared_ptr<Batch> start(size_t count, Task task, unsigned readers,
                                              std::function<void(const Batch &)> ended = {});
   // Readers take no more of the batch's tasks; returns once those they took
-  // ended (Batch::taken).
+  // ended (Batch::taken) and the readers released their batch references.
   void stop(Batch &batch);
   // Readers take no more of the batch's tasks; returns at once, while those
   // they took may still run (Batch::ended). stop() then waits for them.
@@ -164,6 +164,7 @@ private:
 
   std::mutex mutex_;
   std::condition_variable wake_;
+  std::condition_variable drained_;
   std::deque<std::shared_ptr<Batch>> now_, background_;
   // Batches running now, from their start until their last task ended,
   // shared with criticalBusyProbe().

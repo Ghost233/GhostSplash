@@ -192,12 +192,17 @@ VisionLoader::~VisionLoader() = default;
 
 const ops::VisionLayout &VisionLoader::layout() const noexcept { return planned_->layout; }
 
-ImagePlan VisionLoader::image() const {
+ImagePlan VisionLoader::image(metal::MetalBackend *backend) const {
+  HostMemoryAdmission allocate;
+  if (backend && backend->managedAdmissionEnabled())
+    allocate = [backend](uint64_t bytes, const std::function<void()> &grow, const std::function<uint64_t()> &held) {
+      return backend->allocateHostMemory(bytes, grow, true, held);
+    };
   return {"vision/model.bin", std::string(kVisionMagic), planned_->layout.depth, 0, planned_->plan.bytes,
-          [planned = planned_](std::span<uint8_t> bytes, const metal::MetalBuffer &) {
-            vision::writeVision(bytes, planned->plan);
+          [planned = planned_, allocate = std::move(allocate)](std::span<uint8_t> bytes, const metal::MetalBuffer &) {
+            vision::writeVision(bytes, planned->plan, allocate);
             planned->checkUnchanged();
-          }};
+          }, 0, vision::temporaryBytes(planned_->plan)};
 }
 
 uint64_t visionImageBytes(const ops::VisionLayout &layout) { return plan(layout).bytes; }

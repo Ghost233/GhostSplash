@@ -66,6 +66,11 @@ inline MoeGgufSegment moe_gguf_segment(uint expert, uint experts, uint input_siz
                                        device uchar *shared_meta) {
   if (expert == experts)
     return {shared_w0, shared_w1, shared_meta, shared_format};
+  if (routed_format & MOE_ADDRESSED_SLOTS) {
+    device const ulong *planes = reinterpret_cast<device const ulong *>(w0) + ulong(slots[expert]) * MOE_SLOT_ADDRESSES;
+    return {reinterpret_cast<device uchar *>(planes[0]), reinterpret_cast<device uchar *>(planes[1]),
+            reinterpret_cast<device uchar *>(planes[2]), routed_format & ~MOE_ADDRESSED_SLOTS};
+  }
   constant QuantFormat &f = kQuantFormats[routed_format];
   const ulong rows = ulong(slots[expert]) * output_size, groups = input_size / 32;
   return {w0 + rows * groups * f.plane0_bytes, w1 + rows * groups * f.plane1_bytes,

@@ -26,7 +26,7 @@ WeightFile SafetensorsTargetLoader::open(size_t index) {
                          writeGgufImage(backend, buffer, planned->images[index]);
                          planned->checkpoint.checkUnchanged();
                        },
-                       plan.residentBytes});
+                       plan.residentBytes, imageWriteTemporaryBytes(plan)});
 }
 
 WeightFile SafetensorsTargetLoader::layer(uint32_t index) {

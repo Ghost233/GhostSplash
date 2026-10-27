@@ -3,6 +3,7 @@
 #include "TestChecks.hpp"
 #include "TestEngine.hpp"
 #include "TestExecutor.hpp"
+#include "TestFiles.hpp"
 #include "TestKvPool.hpp"
 #include "TestMetalMemory.hpp"
 #include "TestStatus.hpp"
@@ -11,6 +12,7 @@
 #include "engine/NativeRuntime.hpp"
 #include "engine/ReleasableMemory.hpp"
 #include "metal/CommandWatchdog.hpp"
+#include "model/ExpertStoreStats.hpp"
 
 #include <algorithm>
 #include <cerrno>
@@ -570,6 +572,9 @@ void testCommandWatchdogAndPendingHealthWake() {
   progressing.progress(2, 200.0);
   require(!progressing.expired(219.999) && progressing.expired(220.0),
           "a command's progress did not move its deadline, or another's did");
+  progressing.progress(3, 50.0);
+  require(!progressing.expired(219.999) && progressing.expired(220.0),
+          "an older GPU completion moved the deadline backwards");
 
   for (bool gpuCompleted : {false, true}) {
     LoopFixture fixture;
@@ -1339,6 +1344,67 @@ void testConstrainedMaskExchange() {
   }
 }
 
+// Opted-in automatic storage at its floor cannot admit new work under
+// Critical, even when the request would reuse every allocation. Work already
+// admitted keeps its lane and the existing resource timeout bounds the wait.
+void testCriticalAutomaticStoragePausesOnlyNewStarts() {
+  test::metalStatistics() = {};
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, 40ULL << 30, 2ULL << 30, 2ULL << 30,
+                          [] { return hostMemory(64ULL << 30); }, 0);
+  governor.enablePressureControl();
+  NativeLoopConfig config;
+  config.engine.resourceWaitTimeoutMilliseconds = 100;
+  config.engine.growthPaused = [&] { return !governor.snapshot().hostGrowthAllowed; };
+  config.engine.serving = [&](bool serving) { return governor.setServing(serving); };
+  LoopFixture fixture(config);
+  auto &loop = fixture.loop;
+  MemoryControl control(governor, backend, loop);
+  loop.announceReady();
+  require(loop.receive(protocol::peer::serialize(request(1, 4))) && loop.tick() && loop.commandInFlight(),
+          "pressure fixture did not admit its first request");
+  require(loop.tick() && !loop.commandInFlight(), "first command did not reach a safe point");
+  static_cast<void>(control.run(MemoryPressure::Critical));
+  require(loop.receive(protocol::peer::serialize(request(2))), "pressure request frame was rejected");
+  for (unsigned step = 0; step < 32 && loop.snapshot().completed < 1; ++step)
+    static_cast<void>(loop.tick());
+  require(loop.snapshot().completed == 1 && loop.snapshot().failed == 0 &&
+              !fixture.executor.requests.contains(2) && loop.resourceWaitSnapshot().memory == 1,
+          "Critical admitted a new zero-growth request or stopped already admitted work");
+  fixture.monotonic += 99;
+  static_cast<void>(loop.tick());
+  require(loop.snapshot().failed == 0, "automatic-storage pause shortened the resource deadline");
+  fixture.monotonic += 1;
+  static_cast<void>(loop.tick());
+  const auto events = fixture.events();
+  require(loop.snapshot().failed == 1 && loop.engineHealthy() &&
+              std::any_of(events.begin(), events.end(), [](const auto &message) {
+                const auto *error = std::get_if<protocol::ErrorEvent>(&message);
+                return error && error->requestId == 2 && error->code == "resource_timeout" && error->retryable &&
+                    error->message.find("macOS is short of memory") != std::string::npos;
+              }), "automatic-storage pause changed the resource timeout/error contract");
+  static_cast<void>(control.run(MemoryPressure::Normal));
+  require(loop.receive(protocol::peer::serialize(request(3))), "recovery request was rejected");
+  runUntilIdle(loop);
+  require(loop.snapshot().completed == 2, "new requests did not resume after the pressure cleared");
+
+  // A new higher-priority arrival must not displace admitted lanes while
+  // its own start is paused, even when every lane is occupied.
+  for (uint64_t id : {4, 5, 6, 7}) {
+    auto input = request(id, 8);
+    input.priority = RequestPriority::Background;
+    input.cacheSalt = {id, 0};
+    require(loop.receive(protocol::peer::serialize(input)), "resident request was rejected");
+  }
+  require(loop.tick() && loop.commandInFlight() && loop.tick() && !loop.commandInFlight(),
+          "pressure fixture did not reach a full-lane safe point");
+  static_cast<void>(control.run(MemoryPressure::Critical));
+  require(loop.receive(protocol::peer::serialize(request(8))), "higher-priority request was rejected");
+  static_cast<void>(loop.tick());
+  require(loop.snapshot().prioritySuspensions == 0 && !fixture.executor.requests.contains(8),
+          "a paused higher-priority start displaced already admitted work");
+}
+
 // Between commands the control pass runs what the host's pressure asks for:
 // with nothing waiting, a paced pass toward the warning margin, which keeps
 // the resume point and the empty runway extent, and nothing past it; nothing
@@ -2014,6 +2080,125 @@ void testReleaseRequestGivesTheWeightsBackWhenIdle() {
           "the engine did not release once its request ended");
 }
 
+// MiB are logical charges in the stand-in backend, never physical payload.
+// Public release -> request must choose before the expert owner allocates.
+void testReleasedExpertsChooseCurrentCapacity() {
+  constexpr uint64_t mib = 1ULL << 20;
+  struct Example {
+    uint64_t charge, ple, quota, budget, target, finalCharge, peak;
+    bool waits = false, reselects = false;
+  };
+  // Auto PLE, tight hard cap, final-fits/peak-does-not, no PLE, manual
+  // PLE, full-resident PLE in the fixed images, and two optional groups.
+  for (const auto example : std::vector<Example>{
+      {1920, 256, 896, 2560, 640, 2496, 2528},
+      {1920, 256, 896, 2432, 512, 2368, 2400},
+      {1920, 256, 896, 2380, 512, 2368, 2400, true},
+      {1664, 0, 640, 2560, 640, 2240, 2272},
+      {1920, 0, 640, 2560, 640, 2496, 2528},
+      {1920, 0, 640, 2560, 640, 2496, 2528},
+      {1920, 0, 1000, 3000, 896, 2752, 2784},
+      {1920, 0, 1000, 3000, 640, 2496, 2528, false, true}}) {
+  test::metalStatistics() = {};
+  metal::MetalBackend backend("unused");
+  MemoryGovernor governor(backend, example.budget * mib, 1, 1,
+      [] { return hostMemory(64ULL << 30); }, 0);
+  MemoryPressure pressure = MemoryPressure::Normal;
+  governor.setPressureProvider([&] { return pressure; });
+  struct Experts final : model::WeightMemory {
+    MemoryGovernor &governor;
+    uint64_t actual = 4096ULL << 20, target = actual, maximumRequest = 0;
+    uint64_t charge, ple, finalCharge = 0, peak = 0;
+    bool absent = false;
+    Experts(MemoryGovernor &owner, uint64_t held, uint64_t automaticPle)
+        : governor(owner), charge(held), ple(automaticPle) {}
+    bool released() const noexcept override { return absent; }
+    void release() override {
+      actual = 64ULL << 20; absent = true;
+      test::metalStatistics().allocatedBytes = charge;
+    }
+    bool restore(const metal::AllocationAdmission &admit) override {
+      model::ExpertCacheRange range;
+      range.minimumBytes = 512ULL << 20; range.fullBytes = 4096ULL << 20;
+      range.chunks = {{.allocationBytes = 128ULL << 20, .minimumChunks = 1, .maximumChunks = 2},
+                      {.allocationBytes = 256ULL << 20, .minimumChunks = 1, .maximumChunks = 2}};
+      const auto plan = governor.planAutomaticStorageRestore(range, actual, 32ULL << 20, ple);
+      target = plan.targetBytes;
+      finalCharge = test::metalStatistics().allocatedBytes + target - actual;
+      peak = finalCharge + (32ULL << 20);
+      maximumRequest = std::max(maximumRequest, plan.peakBytes);
+      const auto result = admit(plan.peakBytes, [&] {
+        test::metalStatistics().allocatedBytes += plan.requiredBytes;
+        actual += plan.requiredBytes;
+      });
+      if (!result) throw metal::MetalAllocationError("expert floor refused", result.failure);
+      absent = false;
+      return true;
+    }
+  } experts(governor, example.charge * mib, example.ple * mib);
+  governor.setAutomaticStorageQuota(example.quota * mib, example.budget * mib, [&] { return experts.actual + experts.ple; });
+  NativeLoopConfig config;
+  config.engine.maxContext = 1024;
+  config.engine.resourceWaitTimeoutMilliseconds = 400;
+  config.engine.serving = [&](bool serving) { return governor.setServing(serving); };
+  config.weights = &experts;
+  bool permission = !example.reselects;
+  const auto admit = governor.allocationAdmission("restore_weights");
+  config.weightAdmission = [&](uint64_t bytes, const std::function<void()> &allocate) -> metal::AllocationResult {
+    if (!permission) return metal::AllocationFailure::HostPressure;
+    return admit(bytes, allocate);
+  };
+  LoopFixture fixture(config);
+  fixture.loop.announceReady();
+  require(releaseAnswer(fixture, 21).released, "public release retained expert payload");
+  require(fixture.loop.receive(protocol::peer::serialize(request(22))), "smaller restore request failed");
+  if (example.reselects) {
+    require(!fixture.loop.tick() && experts.actual == 64 * mib && experts.target == 896 * mib,
+            "unstarted higher restore allocated payload before current permission");
+    permission = true; pressure = MemoryPressure::Critical; fixture.monotonic += 200;
+    require(!fixture.loop.tick() && experts.actual == 64 * mib && experts.target == 512 * mib &&
+                fixture.loop.resourceWaitSnapshot().oldestWaitMilliseconds == 200,
+            "Critical allowed an unstarted old target or renewed its resource deadline");
+    pressure = MemoryPressure::Normal; fixture.monotonic += 199;
+    governor.setAutomaticStorageQuota(640 * mib, example.budget * mib, [&] { return experts.actual + experts.ple; });
+  }
+  if (example.waits) {
+    require(!fixture.loop.tick() && experts.actual == 64 * mib && fixture.loop.weightsSnapshot().released &&
+                fixture.loop.weightsSnapshot().restoring && fixture.loop.resourceWaitSnapshot().memory == 1,
+            "restore allocated a floor whose temporary peak exceeds the current hard cap");
+    fixture.monotonic += 399;
+    governor.setAutomaticStorageQuota(768 * mib, example.budget * mib, [&] { return experts.actual + experts.ple; });
+    require(!fixture.loop.tick() && fixture.loop.resourceWaitSnapshot().oldestWaitMilliseconds == 399,
+            "metadata target reselection renewed the original resource waiting deadline");
+    fixture.monotonic += 1;
+    require(fixture.loop.tick() && fixture.loop.snapshot().failed == 1 &&
+                fixture.loop.weightsSnapshot().released && !fixture.loop.weightsSnapshot().restoring &&
+                experts.actual == 64 * mib && governor.snapshot().localReservedBytes == 0,
+            "peak refusal failed to expire retryably at the original deadline or hid retained actual bytes");
+    require(fixture.loop.receive(protocol::peer::serialize(request(23))) &&
+                fixture.loop.receive(protocol::peer::serialize(protocol::CancelFrame{23})),
+            "waiting restore could not be cancelled");
+    runUntilIdle(fixture.loop);
+    require(experts.actual == 64 * mib && fixture.loop.engineHealthy(),
+            "cancellation allocated released experts or stopped the engine");
+    experts.charge = 1880 * mib;
+    test::metalStatistics().allocatedBytes = experts.charge;
+    require(fixture.loop.receive(protocol::peer::serialize(request(24))), "retry after peak refusal failed");
+    runUntilIdle(fixture.loop);
+    require(fixture.loop.snapshot().completed == 1 && experts.actual == 512 * mib,
+            "released storage did not retry once current headroom could hold the floor peak");
+    continue;
+  }
+  runUntilIdle(fixture.loop);
+  require(fixture.loop.snapshot().completed == 1 && experts.target == example.target * mib &&
+              experts.actual == 512 * mib && experts.maximumRequest == 480 * mib &&
+              governor.snapshot().chargedBytes == (example.charge + 448) * mib &&
+              experts.finalCharge == example.finalCharge * mib && experts.peak == example.peak * mib,
+          "release failed current target/peak selection or counted retained PLE/helpers twice: budget=" +
+              std::to_string(example.budget) + " target=" + std::to_string(experts.target / mib));
+  }
+}
+
 // The loop reports that it holds requests from the first it takes to the end
 // of its last, the span the process keeps the Mac from idle sleep for.
 void testHoldingRequestsSpansFirstToLastRequest() {
@@ -2080,6 +2265,7 @@ void testMemoryStatusReporterLogsTransitionsOnly() {
 
 int main() {
   try {
+    testCriticalAutomaticStoragePausesOnlyNewStarts();
     testWireLifecycleAndCacheHit();
     testSnapshotReportsLiveRequests();
     testGenerationPromptBoundsTheReplayState();
@@ -2119,6 +2305,7 @@ int main() {
     testRefusedRestoreWaitsForMemory();
     testIdleReleaseOffReleasesOnlyOnRequest();
     testReleaseRequestGivesTheWeightsBackWhenIdle();
+    testReleasedExpertsChooseCurrentCapacity();
     testHoldingRequestsSpansFirstToLastRequest();
     testMemoryStatusReporterLogsTransitionsOnly();
     std::cout << "native engine loop tests passed\n";

@@ -41,6 +41,7 @@ struct ImagePlan final {
   uint64_t bytes = 0;
   ImageWriter write;
   uint64_t declaredBytes = 0;
+  uint64_t temporaryBytes = 0;
 };
 
 // A model's weights in memory: each image in a buffer of its own, written
@@ -51,8 +52,8 @@ struct ImagePlan final {
 // contentIdentity, what the sources hold (ModelDescriptor::sourceIdentity).
 class WeightImages final : public WeightMemory {
 public:
-  WeightImages(metal::MetalBackend &backend, std::string contentIdentity) noexcept
-      : backend_(&backend), contentIdentity_(std::move(contentIdentity)) {}
+  WeightImages(metal::MetalBackend &backend, std::string contentIdentity, bool accountTemporary = false) noexcept
+      : backend_(&backend), contentIdentity_(std::move(contentIdentity)), accountTemporary_(accountTemporary) {}
   WeightImages(const WeightImages &) = delete;
   WeightImages &operator=(const WeightImages &) = delete;
 
@@ -80,11 +81,13 @@ private:
     std::string component;
     metal::MetalBuffer buffer;
     ImageWriter write;
+    uint64_t temporaryBytes = 0;
   };
   metal::MetalBackend *backend_;
   std::string contentIdentity_;
   std::vector<Image> images_;
   bool released_ = false;
+  bool accountTemporary_ = false;
   // The images restore() has written back since release().
   size_t restored_ = 0;
 };

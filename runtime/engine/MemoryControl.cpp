@@ -30,8 +30,10 @@ std::string MemoryStatusReporter::update(const ResourceWaitSnapshot &wait,
 }
 
 bool MemoryControl::run(MemoryPressure pressure) {
-  loop_.releaseIdleWeights();
   governor_.setPressure(pressure);
+  loop_.setRequestStartsPaused(governor_.requestStartsPaused());
+  if (loop_.commandInFlight()) return true;
+  loop_.releaseIdleWeights();
   const double now = loop_.monotonicMilliseconds();
   // Requests held back by a refusal wait for memory too, the refused one
   // included while a pass defers it.
@@ -45,12 +47,17 @@ bool MemoryControl::run(MemoryPressure pressure) {
     logLine(diagnostic);
   const std::optional<MemoryReclaimDirective> directive =
       policy_.update(memory, now, requestWaiting);
-  if (!directive)
-    return false;
-  const MemoryReclaimResult reclaim = loop_.reclaimMemory(*directive);
-  policy_.reclaimed(*directive, reclaim);
-  governor_.reclaimed(reclaim.outcome);
-  static_cast<void>(backend_.refreshMemoryStats());
+  MemoryReclaimResult reclaim;
+  if (directive) {
+    reclaim = loop_.reclaimMemory(*directive);
+    policy_.reclaimed(*directive, reclaim);
+    governor_.reclaimed(reclaim.outcome);
+    static_cast<void>(backend_.refreshMemoryStats());
+  }
+  // Existing KV/state reclamation gets the first pass. Automatic storage
+  // observes a new host sample afterwards, never the earlier deficit.
+  governor_.controlAutomaticStorage();
+  loop_.setRequestStartsPaused(governor_.requestStartsPaused());
   // What transfers held back continues at the next command-free point.
   return reclaim.outcome == ReclaimOutcome::Pending;
 }

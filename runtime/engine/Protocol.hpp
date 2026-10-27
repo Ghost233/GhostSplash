@@ -22,7 +22,7 @@ inline constexpr uint16_t kProtocolVersion = 11;
 // A frame is its header, the magic "SPLH", the u16 protocol version, the
 // u16 FrameType and the u64 payload length, then the payload.
 inline constexpr size_t kFrameHeaderBytes = 16;
-inline constexpr uint32_t kStatusSchemaVersion = 6;
+inline constexpr uint32_t kStatusSchemaVersion = 7;
 // Image pixels travel inside the request frame; a multi-image agent turn can
 // carry well over 64 MiB of resized RGB bytes.
 inline constexpr uint64_t kAbsoluteMaxFramePayloadBytes =

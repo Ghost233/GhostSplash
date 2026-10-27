@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HostMemory.hpp"
+
 // A large table of fixed-size native rows that stays in its source file and
 // is read a row at a time: a bounded host cache of rows, read on the engine's
 // SSD readers (model::SsdReaders), and the staging of one command's
@@ -28,6 +30,7 @@
 
 #include "model/LatencyHistogram.hpp"
 #include "model/SsdReaders.hpp"
+#include "model/StorageGrowth.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -91,6 +94,11 @@ struct SparseRowStoreOptions final {
   // The ids of a stage whose scratch the working memory holds; a larger
   // stage grows its scratch past that.
   uint32_t stageRows = 0;
+  // Nonzero enables physical chunk resizing with one bounded index reserved
+  // for this largest cache. Its bytes count in every current cache budget.
+  uint64_t maximumCacheBytes = 0;
+  bool boundedWorkingMemory = false;
+  HostMemoryAdmission hostAllocation{};
 };
 
 // What a stage or prefetch was for, which its statistics are kept by.
@@ -119,6 +127,9 @@ struct SparseRowStats final {
     uint64_t hitRows = 0;
     uint64_t readRows = 0;
     LatencyStats stage;
+    uint64_t reusedEvictedRows = 0;
+    uint64_t readWaitNanoseconds = 0;
+    uint64_t consumedPrefetchedRows = 0;
   };
   Use uses[kSparseRowUses];
   uint64_t readBytes = 0;
@@ -162,6 +173,19 @@ public:
   // Cache bytes plus the fixed working-memory reservation, at most
   // options.cacheBytes; not the store's measured allocation high-water mark.
   [[nodiscard]] uint64_t committedBytes() const noexcept;
+  [[nodiscard]] uint64_t hostAllocatedBytes() const noexcept;
+  [[nodiscard]] uint64_t nonBackendHostBytes() const noexcept;
+  [[nodiscard]] static uint64_t boundedWorkingBytes(uint32_t rowBytes, uint32_t prefetchRows, uint32_t stageRows) noexcept;
+  [[nodiscard]] static uint64_t minimumResizableBytes(uint64_t maximumBytes, uint32_t rowBytes,
+                                                     uint32_t prefetchRows, uint32_t stageRows,
+                                                     std::optional<uint64_t> modelRows = std::nullopt);
+  [[nodiscard]] static uint64_t maximumResizableBytes(uint64_t modelRows, uint32_t rowBytes,
+                                                     uint32_t prefetchRows, uint32_t stageRows);
+  // Between commands; drains prefetches and retains the most recent rows.
+  void resize(uint64_t cacheBytes);
+  [[nodiscard]] std::optional<StorageGrowthPlan> planGrowOne(uint64_t maximumBytes) const;
+  [[nodiscard]] StorageGrowthReceipt growOne(const StorageGrowthPlan &plan);
+  void setGrowthGuard(StorageGrowthGuard guard);
 
   // Stages the rows of `ids` (any order, repeats allowed): row u of `rows`
   // (u * rowBytes) holds the u-th distinct id's row, and slots[i] = u for
@@ -191,6 +215,7 @@ public:
   [[nodiscard]] SparseRowStats stats() const;
 
 private:
+  void resizeImpl(uint64_t cacheBytes, bool planned);
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };

@@ -77,6 +77,7 @@ struct ModelMemoryFootprint final {
   // as long as it runs, so the plan and the governor charge it like the
   // weights it stands in for. Zero without one.
   uint64_t streamedTableBytes = 0;
+  uint64_t requiredHostBytes = 0;
 };
 
 // What a spill-capable target plans for the K/V of long requests that lives
@@ -127,6 +128,10 @@ struct ModelMemoryProfile final {
   ops::GdnStateFormat stateFormat = ops::GdnStateFormat::Float32;
   // A spill-capable target's (planStreamedMemory); disabled for others.
   KvSpillPlan spill{};
+  // Shared store cap and its planned charges, reported without charging them twice.
+  uint64_t expertPleMemoryBytes = 0;
+  uint64_t expertPlannedBytes = 0;
+  uint64_t plePlannedBytes = 0;
 
   [[nodiscard]] std::optional<std::string> validationError() const;
   [[nodiscard]] uint64_t fixedRuntimeBytes() const;
@@ -137,6 +142,10 @@ struct ModelMemoryProfile final {
 // loaded with the arenas its geometry takes.
 struct StreamedMemoryInputs final {
   uint64_t hardBudgetBytes = 0;
+  // Combined expert and PLE storage ceiling, zero for no additional cap.
+  uint64_t expertPleMemoryBytes = 0;
+  bool expertPleAdaptive = false;
+  uint32_t expertPleRatio = 20;
   // Everything the plan holds besides the streamed parts, the arenas, the
   // lanes' state and KV: the weights that load, the reserves, the state
   // staging and the Neural Engine split.
@@ -289,6 +298,9 @@ struct EngineMemoryBreakdown {
   uint64_t configuredMemoryLimitBytes = 0;
   uint64_t workingSetMarginBytes = 0;
   uint64_t hardBudgetBytes = 0;
+  uint64_t expertPleMemoryBytes = 0;
+  uint64_t expertPlannedBytes = 0;
+  uint64_t plePlannedBytes = 0;
 
   uint64_t targetWeightsBytes = 0;
   uint64_t draftWeightsBytes = 0;
@@ -302,6 +314,7 @@ struct EngineMemoryBreakdown {
   uint64_t aneFfnBytes = 0;
   uint64_t stateStagingBytes = 0;
   uint64_t streamedTableBytes = 0;
+  uint64_t requiredHostBytes = 0;
   uint64_t fixedRuntimeBytes = 0;
 
   // All lanes' state, cached composite states, and KV extents grow from this
@@ -409,6 +422,7 @@ public:
   [[nodiscard]] SpillGeometry spillGeometry() const noexcept;
 
   [[nodiscard]] std::string toStatusJson() const;
+  void setExpertPleSplit(uint64_t experts, uint64_t ple);
 
 private:
   EngineMemoryPlan(DeviceCapabilities device, ModelMemoryProfile model,

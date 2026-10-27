@@ -42,18 +42,30 @@ std::string_view memoryAuditErrorName(MemoryAuditError error) {
   return "unknown";
 }
 
-MemoryAuditResult auditActualMemory(const EngineMemoryPlan &plan,
-                                    ActualMemoryReport actual) {
+static MemoryAuditResult auditMemory(const EngineMemoryPlan &plan,
+                                      ActualMemoryReport actual, bool startup,
+                                      std::optional<RuntimeStoreQuotaView> stores = std::nullopt) {
   const EngineMemoryBreakdown &budget = plan.breakdown();
   // Optional draft and vision weights may be absent. Loading requires them
   // when the descriptor names those roles.
   if (!actual.targetWeightsBytes || (!actual.draftWeightsBytes && budget.draftWeightsBytes) ||
-      !actual.stateAllocatedBytes || !actual.sharedPrefillBytes ||
-      !actual.sharedDecodeBytes || !actual.kvAllocatedBytes ||
+      (startup && (!actual.stateAllocatedBytes || !actual.kvAllocatedBytes)) ||
+      !actual.sharedPrefillBytes || !actual.sharedDecodeBytes ||
       !actual.backendAllocatedBytes || !actual.deviceCurrentAllocatedBytes ||
       !actual.devicePeakAllocatedBytes || !actual.backendPeakAllocatedBytes) {
     return fail(MemoryAuditError::MissingMeasurement,
-                "warmup memory report is incomplete", actual);
+                startup ? "warmup memory report is incomplete" : "runtime memory report is incomplete", actual);
+  }
+  if (stores) {
+    uint64_t quota = 0;
+    if (!checkedAdd(stores->expertQuotaBytes, stores->pleQuotaBytes, quota))
+      return fail(MemoryAuditError::ArithmeticOverflow, "current store quota sum overflowed", actual);
+    const uint64_t configured = budget.expertPleMemoryBytes
+        ? std::min(budget.expertPleMemoryBytes, budget.hardBudgetBytes) : budget.hardBudgetBytes;
+    if (!stores->maximumBytes || stores->maximumBytes > configured || quota > stores->maximumBytes ||
+        stores->expertAllocatedBytes > stores->expertQuotaBytes ||
+        stores->expertAllocatedBytes > actual.targetWeightsBytes)
+      return fail(MemoryAuditError::CategoryExceedsPlan, "current expert/PLE quotas exceed their original bounds", actual);
   }
 
   // The plan takes the weight categories from what loaded, so they are
@@ -100,15 +112,20 @@ MemoryAuditResult auditActualMemory(const EngineMemoryPlan &plan,
   // The streamed table's row cache is host memory: bounded by its plan like
   // the categories, but outside Metal's footprint, beside which it takes its
   // part of the hard budget.
-  if (actual.streamedTableBytes > budget.streamedTableBytes) {
+  const uint64_t pleCeiling = stores ? stores->pleQuotaBytes : budget.streamedTableBytes;
+  if (actual.streamedTableBytes > pleCeiling) {
     std::ostringstream message;
     message << "streamed table actual bytes " << actual.streamedTableBytes
-            << " exceed planned bytes " << budget.streamedTableBytes;
+            << " exceed planned bytes " << pleCeiling;
     return fail(MemoryAuditError::CategoryExceedsPlan, message.str(), actual);
   }
+  if (actual.requiredHostBytes > budget.requiredHostBytes)
+    return fail(MemoryAuditError::CategoryExceedsPlan, "required host workspace exceeds its plan", actual);
+  uint64_t hostBytes = 0;
+  if (!checkedAdd(actual.streamedTableBytes, actual.requiredHostBytes, hostBytes))
+    return fail(MemoryAuditError::ArithmeticOverflow, "host workspace sum overflowed", actual);
   const uint64_t metalBudget =
-      budget.hardBudgetBytes -
-      std::min(budget.hardBudgetBytes, actual.streamedTableBytes);
+      budget.hardBudgetBytes - std::min(budget.hardBudgetBytes, hostBytes);
   uint64_t dynamic = 0;
   for (const uint64_t bytes : {actual.stateAllocatedBytes, actual.kvAllocatedBytes, actual.kvBlockCacheBytes,
                                actual.kvHistoryStagingBytes})
@@ -196,9 +213,21 @@ MemoryAuditResult auditActualMemory(const EngineMemoryPlan &plan,
   return result;
 }
 
+MemoryAuditResult auditActualMemory(const EngineMemoryPlan &plan, ActualMemoryReport actual) {
+  return auditMemory(plan, actual, true);
+}
+
+MemoryAuditResult auditRuntimeMemory(const EngineMemoryPlan &plan, ActualMemoryReport actual,
+                                     std::optional<RuntimeStoreQuotaView> stores) {
+  auto result = auditMemory(plan, actual, false, stores);
+  result.runtimeEpoch = true;
+  result.currentStores = stores;
+  return result;
+}
+
 std::string MemoryAuditResult::toStatusJson() const {
   std::ostringstream out;
-  out << '{' << "\"scope\":\"startup_warmup\","
+  out << '{' << "\"scope\":\"" << (runtimeEpoch ? "runtime_store_epoch" : "startup_warmup") << "\","
       << "\"valid\":" << (valid ? "true" : "false") << ',' << "\"error\":\""
       << memoryAuditErrorName(error) << "\","
       << "\"categorized_bytes\":" << categorizedBytes << ','
@@ -212,8 +241,12 @@ std::string MemoryAuditResult::toStatusJson() const {
       << actual.deviceCurrentAllocatedBytes << ','
       << "\"device_peak_allocated_bytes\":" << actual.devicePeakAllocatedBytes
       << ','
-      << "\"backend_peak_allocated_bytes\":" << actual.backendPeakAllocatedBytes
-      << '}';
+      << "\"backend_peak_allocated_bytes\":" << actual.backendPeakAllocatedBytes;
+  if (currentStores)
+    out << ",\"current_store_quota\":{\"expert_bytes\":" << currentStores->expertQuotaBytes
+        << ",\"ple_bytes\":" << currentStores->pleQuotaBytes << ",\"maximum_bytes\":" << currentStores->maximumBytes
+        << ",\"expert_allocated_bytes\":" << currentStores->expertAllocatedBytes << '}';
+  out << '}';
   return out.str();
 }
 

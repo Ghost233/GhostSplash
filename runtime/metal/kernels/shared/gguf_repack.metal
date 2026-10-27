@@ -210,6 +210,14 @@ kernel void moe_expert_load(device const uchar *staging [[buffer(0)]], device uc
   if (t >= q.rows * G) return;
   const uint n = t / G, g = t % G;
   const ulong slot = slots[group.y];
+  if (q.format & MOE_ADDRESSED_SLOTS) {
+    device const ulong *planes = reinterpret_cast<device const ulong *>(arena) + slot * MOE_SLOT_ADDRESSES + group.z * 3;
+    gguf_repack_group(staging + sources[group.y * 3 + group.z] + ulong(n) * q.row_bytes,
+                      q.format & ~MOE_ADDRESSED_SLOTS, G, n, g,
+                      reinterpret_cast<device uchar *>(planes[0]), reinterpret_cast<device uchar *>(planes[1]),
+                      reinterpret_cast<device uchar *>(planes[2]));
+    return;
+  }
   gguf_repack_group(staging + sources[group.y * 3 + group.z] + ulong(n) * q.row_bytes, q.format, G, n, g,
                     arena + q.planes[0] + slot * q.slot_bytes[0], arena + q.planes[1] + slot * q.slot_bytes[1],
                     arena + q.planes[2] + slot * q.slot_bytes[2]);

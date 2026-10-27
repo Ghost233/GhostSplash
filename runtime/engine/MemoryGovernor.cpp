@@ -1,6 +1,7 @@
 #include "engine/MemoryGovernor.hpp"
 
 #include "engine/MemoryPlan.hpp"
+#include "AwakeClock.hpp"
 
 #include <dispatch/dispatch.h>
 #include <mach/mach.h>
@@ -9,6 +10,7 @@
 #include <sys/sysctl.h>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -148,7 +150,9 @@ MemoryGovernor::chargedBytes(bool refreshDevice) const noexcept {
       ? memory.allocatedBytes + untrackedReserveBytes_
       : limit;
   const uint64_t device = std::max(accounted, memory.deviceCurrentAllocatedBytes);
-  return hostHeldBytes_ <= limit - device ? device + hostHeldBytes_ : limit;
+  const auto host = backend_.hostMemoryStats();
+  const unsigned __int128 total = static_cast<unsigned __int128>(device) + hostHeldBytes_ + host.fixedBytes + host.temporaryBytes;
+  return total > limit ? limit : static_cast<uint64_t>(total);
 }
 
 std::optional<HostMemory> MemoryGovernor::sampleHost() const noexcept {
@@ -164,11 +168,12 @@ uint64_t MemoryGovernor::hostHeadroomBytes(const std::optional<HostMemory> &host
   if (!host || host->spare <= hostSpareReserveBytes_)
     return 0;
   const uint64_t spareAfterReserve = host->spare - hostSpareReserveBytes_;
-  return reservedBytes < spareAfterReserve ? spareAfterReserve - reservedBytes : 0;
+  const uint64_t withheld = reservedBytes + std::min(pendingAutomaticBytes_, UINT64_MAX - reservedBytes);
+  return withheld < spareAfterReserve ? spareAfterReserve - withheld : 0;
 }
 
 std::optional<MemoryGovernor::Reservation>
-MemoryGovernor::tryReserve(uint64_t bytes, metal::AllocationFailure &failure) {
+MemoryGovernor::tryReserve(uint64_t bytes, metal::AllocationFailure &failure, bool elastic, bool automaticBlock) {
   if (!bytes) {
     throw std::invalid_argument("memory reservation must be positive");
   }
@@ -180,8 +185,9 @@ MemoryGovernor::tryReserve(uint64_t bytes, metal::AllocationFailure &failure) {
   const std::optional<HostMemory> host = sampleHost();
   host_ = hostState(host);
   const MemoryPressure pressure = effectivePressure(host_);
-  bool engineFits = !overflows && observed <= limitBytes_ &&
-                    requested <= limitBytes_ - observed;
+  const uint64_t allocationLimit = limitBytes_ - (elastic ? automaticStorageWithheldBytes_ : 0);
+  bool engineFits = !overflows && observed <= allocationLimit &&
+                    requested <= allocationLimit - observed;
   // Growth leaves the warning margin free above the host's spare reserve,
   // stops while macOS warns and, while a request waits for memory, waits for
   // the recovery margin once the host has run short, unless a request in
@@ -197,7 +203,7 @@ MemoryGovernor::tryReserve(uint64_t bytes, metal::AllocationFailure &failure) {
     host_.constrained = true;
   const bool hostRefuses =
       pressure == MemoryPressure::Critical ||
-      (!serving_ && (systemPressure_ == MemoryPressure::Warning || !hostRoomFits ||
+      (!serving_ && ((systemPressure_ == MemoryPressure::Warning && !(pressureManaged_ && automaticBlock)) || !hostRoomFits ||
                      growthHeld(host_)));
   if (hostRefuses || !engineFits) {
     // The host's refusal lifts with its pressure, the limit's only once
@@ -213,21 +219,274 @@ MemoryGovernor::tryReserve(uint64_t bytes, metal::AllocationFailure &failure) {
   return Reservation(this, bytes);
 }
 
-metal::AllocationAdmission MemoryGovernor::allocationAdmission() noexcept {
-  return [this](uint64_t bytes, const std::function<void()> &allocate)
+void MemoryGovernor::setHostHeldBytes(uint64_t bytes) {
+  if (bytes > limitBytes_) throw std::invalid_argument("host-held memory exceeds engine limit");
+  hostHeldBytes_ = bytes;
+}
+
+uint64_t MemoryGovernor::actualBytes() const noexcept {
+  const auto host = backend_.hostMemoryStats();
+  const unsigned __int128 total = static_cast<unsigned __int128>(backend_.memoryStats().allocatedBytes) +
+                                  hostHeldBytes_ + host.fixedBytes + host.temporaryBytes;
+  return total > UINT64_MAX ? UINT64_MAX : static_cast<uint64_t>(total);
+}
+
+void MemoryGovernor::refreshHostHeld() {
+  if (hostHeldProvider_) hostHeldBytes_ = hostHeldProvider_();
+}
+
+uint64_t MemoryGovernor::localReservedBytes() const noexcept {
+  const uint64_t actual = actualBytes();
+  return allocationScope_ ? (actual < allocationPeak_ ? allocationPeak_ - actual : 0) : reservedBytes_;
+}
+
+void MemoryGovernor::publishAccounting(std::string) { refreshHostHeld(); }
+
+void MemoryGovernor::setNonBackendHostHeld(std::function<uint64_t()> provider) {
+  hostHeldProvider_ = std::move(provider);
+  refreshHostHeld();
+}
+
+void MemoryGovernor::enablePressureControl(MemoryPolicySources sources) {
+  pressureManaged_ = true;
+  memoryPolicy_ = std::move(sources);
+  observeAutomaticGrowth(sampleHost());
+}
+
+uint64_t MemoryGovernor::policyNow() const {
+  return memoryPolicy_.milliseconds ? memoryPolicy_.milliseconds() :
+      uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(AwakeClock::now().time_since_epoch()).count());
+}
+
+void MemoryGovernor::observeAutomaticGrowth(const std::optional<HostMemory> &host) {
+  if (!pressureManaged_) return;
+  const uint64_t now = policyNow();
+  MemoryPolicyObservation observation{
+      MemoryPolicyObservation::Pressure(uint8_t(systemPressure_) + 1), pressureSequence_};
+  try { if (memoryPolicy_.pressure) observation = memoryPolicy_.pressure(); }
+  catch (...) { observation = {}; }
+  if (now < policyNow_ || observation.unsafeSequence != pressureSequence_) normalSince_.reset();
+  policyNow_ = now; pressureSequence_ = observation.unsafeSequence;
+  if (!host) growthReason_ = "telemetry_unavailable";
+  else if (observation.pressure == MemoryPolicyObservation::Pressure::Unknown) growthReason_ = "pressure_unknown";
+  else if (observation.pressure == MemoryPolicyObservation::Pressure::Critical || systemPressure_ == MemoryPressure::Critical)
+    growthReason_ = "system_pressure";
+  else if (host->spare < hostSpareReserveBytes_ || host->spare - hostSpareReserveBytes_ < kHostRecoveryMarginBytes)
+    growthReason_ = "recovery_reserve";
+  else {
+    // A new valid post-allocation sample already reflects actual ownership.
+    pendingAutomaticBytes_ = 0;
+    if (!normalSince_) normalSince_ = now;
+    growthReason_ = now - *normalSince_ < 30'000 ? "headroom_observation" :
+        now < nextAutomaticAt_ ? "block_cooldown" : "ready";
+    return;
+  }
+  normalSince_.reset();
+  if (host) pendingAutomaticBytes_ = 0;
+}
+
+metal::AllocationAdmission MemoryGovernor::allocationAdmission(std::string purpose, bool mandatory) {
+  return makeAdmission(std::move(purpose), mandatory, std::nullopt);
+}
+
+metal::AllocationAdmission MemoryGovernor::makeAdmission(std::string purpose, bool mandatory,
+                                                        std::optional<uint64_t> finalStorageGrowth,
+                                                        std::optional<AutomaticStorageBlock> block) {
+  return [this, purpose = std::move(purpose), mandatory, finalStorageGrowth, block](uint64_t bytes, const std::function<void()> &allocate)
              -> metal::AllocationResult {
-    metal::AllocationFailure failure;
-    auto reservation = tryReserve(bytes, failure);
-    if (!reservation)
-      return failure;
-    try {
-      allocate();
-    } catch (const metal::MetalAllocationError &error) {
-      // Host headroom is an estimate; the driver can still deny the allocation.
-      return error.failure();
+    const bool elastic = purpose == "kv_required" || purpose == "state_required";
+    const bool automatic = purpose == "expert_optional" || purpose == "ple_optional" ||
+                           purpose == "restore_expert_optional";
+    const bool contributionPlanned = finalStorageGrowth.has_value();
+    const uint64_t contribution = finalStorageGrowth.value_or(bytes);
+    const bool retained = elastic || (automatic && !contributionPlanned);
+    if (pressureManaged_ && block && allocationScope_)
+      return {metal::AllocationFailure::PlanInsufficient, "automatic block requires its own paced reservation"};
+    if (pressureManaged_ && automatic && !block) {
+      if (!automaticStorageFits(contribution)) return {metal::AllocationFailure::EngineBudget, "automatic store quota exceeded"};
+      if (allocationScope_) return {metal::AllocationFailure::PlanInsufficient, "automatic receiving requires one block plan"};
+      metal::AllocationFailure failure = metal::AllocationFailure::None;
+      auto reservation = tryReserve(bytes, failure, retained);
+      if (!reservation) return failure;
+      return {metal::AllocationFailure::PlanInsufficient, "automatic receiving requires one block plan"};
     }
+    const auto storageBefore = contributionPlanned ? sampleAutomaticStorage() : std::nullopt;
+    bool storageSettled = false;
+    bool storageStarted = false;
+    const auto beginStorage = [&] {
+      if (contributionPlanned) {
+        automaticStorageContributionActive_ = true;
+        storageStarted = true;
+        if (block) { automaticBlock_ = block; automaticBlockConsumed_ = false; }
+      }
+    };
+    const auto settleStorage = [&](bool complete = false) {
+      if (!storageStarted || storageSettled) return true;
+      storageSettled = true;
+      automaticStorageContributionActive_ = false;
+      const bool consumed = automaticBlockConsumed_;
+      automaticBlock_.reset(); automaticBlockConsumed_ = false;
+      const auto after = sampleAutomaticStorage();
+      if (!storageBefore || !after) {
+        automaticStorageDecision(true, "automatic_storage_accounting_unavailable");
+        return false;
+      }
+      if (*after < *storageBefore) withholdReleasedAutomaticStorage(*storageBefore - *after);
+      const uint64_t received = *after > *storageBefore ? *after - *storageBefore : 0;
+      automaticStorageWithheldBytes_ -= std::min(received, automaticStorageWithheldBytes_);
+      if (received > contribution || *after > automaticStorageQuotaBytes_) {
+        automaticStorageDecision(true, "automatic_storage_growth_mismatch");
+        return false;
+      }
+      if (block && complete && (!consumed || received != contribution)) {
+        automaticStorageDecision(true, "automatic_block_receipt_mismatch");
+        return false;
+      }
+      return true;
+    };
+    refreshHostHeld();
+    if (pressureProvider_) systemPressure_ = pressureProvider_();
+    if (pressureManaged_ && allocationScope_) {
+      // Nested allocations consume an already begun peak transaction. No IO
+      // or model traversal happens here, including under a storage lock.
+      if (systemPressure_ == MemoryPressure::Critical ||
+          (!allocationMandatory_ && systemPressure_ == MemoryPressure::Warning && !automaticBlock_))
+        return metal::AllocationFailure::HostPressure;
+      const uint64_t actual = actualBytes();
+      if (actual > allocationPeak_ || bytes > allocationPeak_ - actual)
+        return {metal::AllocationFailure::PlanInsufficient,
+                "local allocation plan insufficient: requested=" + std::to_string(bytes) +
+                " remaining=" + std::to_string(actual < allocationPeak_ ? allocationPeak_ - actual : 0)};
+      const uint64_t charged = chargedBytes(true);
+      const uint64_t allocationLimit = limitBytes_ - ((retained || allocationElastic_) ? automaticStorageWithheldBytes_ : 0);
+      if (charged > allocationLimit || allocationPeak_ - actual > allocationLimit - charged)
+        return metal::AllocationFailure::EngineBudget;
+      if (automatic && (!automaticStorageFits(contribution) || (contributionPlanned && !storageBefore)))
+        return {metal::AllocationFailure::EngineBudget, "automatic store quota exceeded"};
+      if (contributionPlanned && automaticStorageContributionActive_)
+        return {metal::AllocationFailure::PlanInsufficient, "automatic storage contribution already in progress"};
+      beginStorage();
+      try { allocate(); }
+      catch (...) { static_cast<void>(settleStorage()); publishAccounting(); throw; }
+      const bool storageValid = settleStorage(true);
+      publishAccounting();
+      if (!storageValid) return {metal::AllocationFailure::PlanInsufficient, "actual store growth exceeded its contribution plan"};
+      return {};
+    }
+    if (pressureManaged_ && block) {
+      const auto host = sampleHost();
+      observeAutomaticGrowth(host);
+      if (growthReason_ != "ready" || pendingAutomaticBytes_)
+        return {metal::AllocationFailure::GrowthDeferred, std::string(growthReason_)};
+    }
+    const auto finish = [&](std::string_view outcome) {
+      if (!pressureManaged_) return;
+      allocationScope_ = false;
+      refreshHostHeld();
+      if (block) {
+        const uint64_t now = policyNow();
+        policyNow_ = now;
+        nextAutomaticAt_ = now > UINT64_MAX - 5'000 ? UINT64_MAX : now + 5'000;
+        pendingAutomaticBytes_ = bytes;
+        growthReason_ = "awaiting_sample";
+        if (outcome != "success") normalSince_.reset();
+      }
+    };
+    metal::AllocationFailure failure = metal::AllocationFailure::None;
+    const bool previousServing = serving_;
+    if (pressureManaged_ && !mandatory) serving_ = false;
+    auto reservation = tryReserve(bytes, failure, retained, block.has_value());
+    serving_ = previousServing;
+    if (!reservation) { finish("local_refusal"); return failure; }
+    if (block) {
+      const auto actual = sampleAutomaticStorage();
+      if (!actual || *actual > automaticStorageMaximumBytes_ || contribution > automaticStorageMaximumBytes_ - *actual) {
+        finish("local_refusal"); return {metal::AllocationFailure::EngineBudget, "automatic block exceeds immutable store maximum"};
+      }
+      automaticStorageQuotaBytes_ = std::max(automaticStorageQuotaBytes_, *actual + contribution);
+    }
+    if (automatic && (!automaticStorageFits(contribution) || (contributionPlanned && !storageBefore))) {
+      finish("local_refusal");
+      if (deniedReservations_ != UINT64_MAX) ++deniedReservations_;
+      return {metal::AllocationFailure::EngineBudget, "automatic store quota exceeded"};
+    }
+    if (contributionPlanned && automaticStorageContributionActive_) {
+      finish("local_refusal");
+      return {metal::AllocationFailure::PlanInsufficient, "automatic storage contribution already in progress"};
+    }
+    const uint64_t before = actualBytes();
+    if (pressureManaged_) {
+      allocationScope_ = true;
+      allocationMandatory_ = mandatory;
+      allocationElastic_ = retained;
+      allocationPeak_ = bytes <= UINT64_MAX - before ? before + bytes : UINT64_MAX;
+    }
+    beginStorage();
+    try {
+      if (allocationDriver_) allocationDriver_(purpose, bytes, allocate);
+      else allocate();
+    } catch (const metal::MetalAllocationError &error) {
+      const bool storageValid = settleStorage();
+      finish(actualBytes() > before ? "partial" : "failed");
+      if (!storageValid) return {metal::AllocationFailure::PlanInsufficient, "actual store growth exceeded its contribution plan: " + std::string(error.what())};
+      return {error.failure(), error.what()};
+    } catch (...) {
+      static_cast<void>(settleStorage());
+      finish(actualBytes() > before ? "partial" : "failed");
+      throw;
+    }
+    refreshHostHeld();
+    const bool storageValid = settleStorage(true);
+    if (pressureManaged_ && actualBytes() > allocationPeak_) {
+      finish("partial");
+      return {metal::AllocationFailure::PlanInsufficient, "actual allocation exceeded its local growth plan"};
+    }
+    if (!storageValid) {
+      finish("partial");
+      return {metal::AllocationFailure::PlanInsufficient, "actual store growth exceeded its contribution plan"};
+    }
+    finish("success");
     return {};
   };
+}
+
+metal::AllocationAdmission MemoryGovernor::automaticStorageAdmission(std::string purpose,
+                                                                    uint64_t finalStorageGrowth) {
+  if (purpose != "expert_optional" && purpose != "ple_optional" && purpose != "restore_expert_optional")
+    throw std::invalid_argument("automatic storage admission requires a storage purpose");
+  return makeAdmission(std::move(purpose), false, finalStorageGrowth);
+}
+
+metal::AllocationAdmission MemoryGovernor::automaticStorageAdmission(std::string purpose, AutomaticStorageBlock block) {
+  if ((purpose == "ple_optional" && block.kind != AutomaticStorageKind::PleBlock) ||
+      ((purpose == "expert_optional" || purpose == "restore_expert_optional") && block.kind != AutomaticStorageKind::ExpertBlock) ||
+      (purpose != "expert_optional" && purpose != "ple_optional" && purpose != "restore_expert_optional") ||
+      block.grossBlocks != 1 || !block.candidate)
+    throw std::invalid_argument("automatic storage admission requires one matching block plan");
+  return makeAdmission(std::move(purpose), false, block.contributionBytes, block);
+}
+
+bool MemoryGovernor::consumeAutomaticStorageBlock(const AutomaticStorageBlock &block) {
+  if (!automaticBlock_ || automaticBlockConsumed_ || *automaticBlock_ != block) return false;
+  if (pressureManaged_) {
+    try {
+      if (pressureProvider_) systemPressure_ = pressureProvider_();
+    } catch (...) {
+      normalSince_.reset();
+      growthReason_ = "pressure_unknown";
+      throw metal::MetalAllocationError("automatic block pressure unavailable before receipt",
+                                       metal::AllocationFailure::HostPressure);
+    }
+    observeAutomaticGrowth(sampleHost());
+    if (growthReason_ != "ready") {
+      const bool pressured = growthReason_ == "system_pressure" || growthReason_ == "pressure_unknown" ||
+          growthReason_ == "telemetry_unavailable" || growthReason_ == "recovery_reserve";
+      throw metal::MetalAllocationError("automatic block refused before receipt: " + std::string(growthReason_),
+          pressured ? metal::AllocationFailure::HostPressure : metal::AllocationFailure::GrowthDeferred);
+    }
+  }
+  automaticBlockConsumed_ = true;
+  return true;
 }
 
 bool MemoryGovernor::setServing(bool serving) noexcept {
@@ -240,6 +499,74 @@ void MemoryGovernor::setRequestWaiting(bool waiting) noexcept {
 
 void MemoryGovernor::setPressure(MemoryPressure pressure) noexcept {
   systemPressure_ = pressure;
+}
+
+void MemoryGovernor::withholdReleasedAutomaticStorage(uint64_t bytes) noexcept {
+  automaticStorageReleasedBytes_ += std::min(bytes, UINT64_MAX - automaticStorageReleasedBytes_);
+  automaticStorageWithheldBytes_ += std::min(bytes, limitBytes_ - automaticStorageWithheldBytes_);
+}
+
+void MemoryGovernor::setAutomaticStorageQuota(uint64_t quota, uint64_t maximum,
+                                             std::function<uint64_t()> actual) {
+  if (!quota || quota > maximum || maximum > limitBytes_ || !actual)
+    throw std::invalid_argument("invalid automatic storage quota");
+  if (automaticStorageActual_ && maximum != automaticStorageMaximumBytes_)
+    throw std::invalid_argument("automatic storage maximum is immutable");
+  automaticStorageQuotaBytes_ = quota;
+  automaticStorageMaximumBytes_ = maximum;
+  automaticStorageActual_ = std::move(actual);
+}
+
+bool MemoryGovernor::automaticStorageFits(uint64_t contribution) const noexcept {
+  if (!automaticStorageActual_) return true;
+  const auto actual = sampleAutomaticStorage();
+  return actual && *actual <= automaticStorageQuotaBytes_ && contribution <= automaticStorageQuotaBytes_ - *actual;
+}
+
+model::StorageRestorePlan MemoryGovernor::planAutomaticStorageRestore(
+    const model::ExpertCacheRange &range, uint64_t retainedBytes,
+    uint64_t workspaceBytes, uint64_t otherAutomaticBytes) {
+  refreshHostHeld();
+  if (pressureProvider_) systemPressure_ = pressureProvider_();
+  const auto memory = evaluate();
+  uint64_t ceiling = std::min(automaticStorageQuotaBytes_, automaticStorageMaximumBytes_);
+  ceiling -= std::min(ceiling, otherAutomaticBytes);
+  uint64_t headroom = memory.hostMeasurementValid && memory.systemPressure != MemoryPressure::Critical ?
+      std::min(memory.headroomBytes, memory.hostAvailableBytes -
+          std::min(memory.hostAvailableBytes, memory.hostReserveBytes)) : 0;
+  headroom -= std::min(headroom, workspaceBytes);
+  ceiling = std::min({ceiling, range.fullBytes, retainedBytes + std::min(headroom, UINT64_MAX - retainedBytes)});
+  model::StorageRestorePlan plan{range.minimumBytes,
+      range.minimumBytes - std::min(range.minimumBytes, retainedBytes), 0};
+  plan.peakBytes = plan.requiredBytes + workspaceBytes;
+  if (pressureManaged_)
+    automaticStorageQuotaBytes_ = plan.targetBytes + otherAutomaticBytes;
+  auto chunks = range.chunks;
+  for (; !pressureManaged_;) {
+    bool progress = false;
+    for (auto &chunk : chunks) {
+      if (chunk.minimumChunks >= chunk.maximumChunks || plan.targetBytes > ceiling ||
+          chunk.allocationBytes > ceiling - plan.targetBytes) continue;
+      plan.targetBytes += chunk.allocationBytes;
+      ++chunk.minimumChunks;
+      progress = true;
+    }
+    if (!progress) break;
+  }
+  return plan;
+}
+
+std::optional<uint64_t> MemoryGovernor::sampleAutomaticStorage() const noexcept {
+  if (!automaticStorageActual_) return std::nullopt;
+  try {
+    return automaticStorageActual_();
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+void MemoryGovernor::controlAutomaticStorage() {
+  if (automaticStorageControl_) automaticStorageControl_(evaluate());
 }
 
 void MemoryGovernor::reclaimed(ReclaimOutcome outcome) noexcept {
@@ -255,6 +582,7 @@ MemoryGovernorSnapshot MemoryGovernor::snapshot() const noexcept {
 
 MemoryGovernorSnapshot MemoryGovernor::evaluate() noexcept {
   const std::optional<HostMemory> host = sampleHost();
+  observeAutomaticGrowth(host);
   host_ = hostState(host);
   return snapshot(host, host_);
 }
@@ -264,12 +592,14 @@ MemoryGovernor::snapshot(const std::optional<HostMemory> &hostMemory,
                          const HostState &host) const noexcept {
   uint64_t observed = chargedBytes();
   uint64_t used = observed;
-  if (reservedBytes_ <= std::numeric_limits<uint64_t>::max() - used) {
-    used += reservedBytes_;
+  const uint64_t reserved = localReservedBytes();
+  if (reserved <= std::numeric_limits<uint64_t>::max() - used) {
+    used += reserved;
   } else {
     used = std::numeric_limits<uint64_t>::max();
   }
-  uint64_t hostHeadroom = hostHeadroomBytes(hostMemory, reservedBytes_);
+  uint64_t hostHeadroom = hostHeadroomBytes(hostMemory, localReservedBytes());
+  const uint64_t allocationLimit = limitBytes_ - automaticStorageWithheldBytes_;
   const MemoryPressure pressure = effectivePressure(host);
   bool hostGrowthAllowed = systemPressure_ == MemoryPressure::Normal &&
       !growthHeld(host) && hostHeadroom >= kHostWarningMarginBytes;
@@ -287,12 +617,21 @@ MemoryGovernor::snapshot(const std::optional<HostMemory> &hostMemory,
       hostHeadroom,
       systemPressure_,
       hostGrowthAllowed,
+      reserved,
+      untrackedReserveBytes_,
+      automaticStorageReleasedBytes_, automaticStorageWithheldBytes_,
+      requestStartsPaused(), automaticStorageReason_,
+      allocationLimit, used < allocationLimit ? allocationLimit - used : 0,
+      pressureManaged_, automaticStorageMinimumBytes_, automaticStorageMaximumBytes_, automaticStorageQuotaBytes_,
+      sampleAutomaticStorage(), pendingAutomaticBytes_,
+      normalSince_ && policyNow_ >= *normalSince_ ? std::min<uint64_t>(30'000, policyNow_ - *normalSince_) : 0,
+      policyNow_ < nextAutomaticAt_ ? nextAutomaticAt_ - policyNow_ : 0, growthReason_,
   };
 }
 
 MemoryGovernor::HostState
 MemoryGovernor::hostState(const std::optional<HostMemory> &hostMemory) const noexcept {
-  const uint64_t hostHeadroom = hostHeadroomBytes(hostMemory, reservedBytes_);
+  const uint64_t hostHeadroom = hostHeadroomBytes(hostMemory, localReservedBytes());
   HostState next;
   next.constrained = !hostMemory ||
       hostHeadroom < kHostWarningMarginBytes ||

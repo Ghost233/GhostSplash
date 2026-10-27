@@ -1,15 +1,24 @@
 """POST /v1/memory/release over HTTP: a request takes no fields, and the answer
 says whether the engine gave its weights back."""
 
+import argparse
+import contextlib
 import http.client
+import io
 import json
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from dev.tests import native_peer
 from dev.tests.server_fixtures import RELEASED_WEIGHTS, FakeRuntime, HarnessTestCase
 from server import runtime as engine_runtime
 from server import server as api
+from server import startup_report
+
+REAL_MODEL_OPTIONS = None
 
 # The weights section the engine answers a release request with when it keeps
 # the weights, in each case native_engine_loop_test.cpp checks it reports, and
@@ -48,6 +57,25 @@ class MemoryReleaseTests(HarnessTestCase):
         connection.endheaders(data)
         response = connection.getresponse()
         return response.status, json.loads(response.read())
+
+    def test_preconfigured_readonly_runtime_limit_keeps_http_lifecycle(self):
+        class FixedQueueRuntime:
+            def __init__(self):
+                self.runtime = FakeRuntime()
+
+            @property
+            def pending_limit(self):
+                return self.runtime.pending_limit
+
+            def __getattr__(self, name):
+                return getattr(self.runtime, name)
+
+        runtime = FixedQueueRuntime()
+        harness = self.harness(runtime, queue_size=runtime.pending_limit)
+        self.assertEqual(
+            self.post(harness, {"Content-Length": "0"}),
+            (200, {"released": True, "weights": RELEASED_WEIGHTS}),
+        )
 
     def test_an_idle_engine_releases_for_a_request_without_fields(self):
         runtime = FakeRuntime()
@@ -145,5 +173,232 @@ class MemoryReleaseTests(HarnessTestCase):
         self.assertEqual(runtime.release_calls, 1)
 
 
+class RealModelMemoryReleaseTests(HarnessTestCase):
+    """Existing HTTP harness over real MultiplexedRuntime owners.
+
+    The operator chooses an already prepared, separately authorized model;
+    the test never prepares/downloads it or changes launcher defaults.
+    """
+
+    def _close_real_runtime(self, runtime, processes):
+        runtime.close()
+        for process in processes:
+            self.assertIsNotNone(process.poll())
+            print(
+                "real_public_cleanup="
+                + json.dumps({"pid": process.pid, "exit": process.returncode}),
+                flush=True,
+            )
+
+    def _open_real_owner(self, model_root, budget, model_name, mode, options):
+        argv = [
+            str(model_root),
+            "--model",
+            model_name,
+            "--max-context",
+            "8192",
+            "--max-memory",
+            budget,
+            "--max-cache-disk",
+            "0",
+            "--queue-size",
+            "1",
+            "--kv-format",
+            "q4h",
+            "--disable-ane",
+            "--verify-rows",
+            "all",
+            "--idle-release",
+            "off",
+        ]
+        if mode == "on":
+            argv += ["--moe-memory-pressure", "on"]
+        if options.real_binary is not None:
+            argv += ["--binary", str(options.real_binary)]
+        if ple := options.real_ple_memory:
+            argv += ["--ple-memory", ple]
+        args = api.parse_args(argv)
+        self.assertEqual(args.moe_memory_pressure, mode)
+        configured = list(startup_report.configuration_lines(args))
+        self.assertIn(f"  --moe-memory-pressure = {mode}", configured)
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            api.parse_args(
+                argv + ["--moe-memory-pressure", "on", "--expert-memory", "1G"]
+            )
+        root, held = api.assembly.hold(Path(args.model_root))
+        self.addCleanup(held.close)
+        tokenizer_options = {}
+        config = root / "tokenizer/config.json"
+        if config.is_file() and json.loads(config.read_text()).get("model_type") in (
+            "qwen3_5",
+            "qwen3_5_text",
+            "qwen3_5_moe",
+            "qwen3_5_moe_text",
+        ):
+            tokenizer_options["fix_mistral_regex"] = False
+        tokenizer = api.AutoTokenizer.from_pretrained(
+            root / "tokenizer",
+            local_files_only=True,
+            trust_remote_code=False,
+            **tokenizer_options,
+        )
+        api.validate_tokenizer(tokenizer)
+        command = api._native_command(args, root)
+        processes = []
+
+        def spawn():
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=None,
+                bufsize=0,
+            )
+            processes.append(process)
+            print(
+                "real_public_process="
+                + json.dumps(
+                    {
+                        "pid": process.pid,
+                        "command": command,
+                        "pressure_case": "default-off" if mode == "off" else "on",
+                    }
+                ),
+                flush=True,
+            )
+            return process
+
+        runtime = engine_runtime.MultiplexedRuntime(
+            command, process_factory=spawn, startup_timeout=30, pending_limit=1
+        )
+        self.addCleanup(self._close_real_runtime, runtime, processes)
+        self.assertTrue(runtime.wait_ready())
+        harness = self.harness(
+            runtime,
+            tokenizer=tokenizer,
+            model=args.model,
+            queue_size=1,
+            max_context=8192,
+            timeout=15,
+            vision=False,
+        )
+
+        return harness, runtime, args, configured, processes
+
+    def _real_request(self, harness, method, path, body=None):
+        connection = http.client.HTTPConnection(
+            *harness.server.server_address, timeout=20
+        )
+        try:
+            connection.request(
+                method,
+                path,
+                None if body is None else json.dumps(body),
+                {} if body is None else {"Content-Type": "application/json"},
+            )
+            response = connection.getresponse()
+            payload = json.loads(response.read())
+            self.assertEqual(response.status, 200, payload)
+            return payload
+        finally:
+            connection.close()
+
+    def _real_status(self, harness, phase):
+        snapshot = self._real_request(harness, "GET", "/status")
+        self.assertTrue(snapshot["ready"])
+        self.assertEqual(snapshot["transport"]["restarts"], 0)
+        self.assertFalse(snapshot["transport"]["status_stale"])
+        print(
+            "real_public_status=" + json.dumps({"phase": phase, "snapshot": snapshot}),
+            flush=True,
+        )
+        return snapshot
+
+    def test_public_startup_generation_release_and_next_request_restore(self):
+        options = REAL_MODEL_OPTIONS
+        if options is None or options.real_model_root is None:
+            self.skipTest("explicit --real-model-root correctness run only")
+        mode = options.real_moe_pressure
+        self.assertIn(mode, ("off", "on"))
+        harness, runtime, args, configured, processes = self._open_real_owner(
+            options.real_model_root, options.real_max_memory, "local/T10", mode, options
+        )
+        before = self._real_status(harness, "ready")
+        pressure = before["moe_memory_pressure"]
+        self.assertEqual(pressure["enabled"], mode == "on")
+        self.assertEqual(pressure["mode"], "local" if mode == "on" else "off")
+        self.assertTrue(pressure["model_ready"])
+        self.assertTrue(
+            {
+                "role",
+                "group",
+                "instance",
+                "leader",
+                "epoch",
+                "coordination_ready",
+                "heartbeat_age_seconds",
+            }.isdisjoint(pressure)
+        )
+        effective = list(
+            startup_report.effective_lines(before, runtime.readiness, args)
+        )
+        print(
+            "real_public_manifest="
+            + json.dumps({"configured": configured, "effective": effective}),
+            flush=True,
+        )
+        body = {
+            "model": args.model,
+            "prompt": list(range(1, 9)),
+            "max_tokens": 16,
+            "temperature": 0,
+            "seed": 314159,
+        }
+        first = self._real_request(
+            harness, "POST", "/v1/completions", {**body, "cache_salt": "t10-before"}
+        )
+        self.assertEqual(first["usage"]["prompt_tokens"], 8)
+        self.assertEqual(first["usage"]["completion_tokens"], 16)
+        generated = self._real_status(harness, "generated")
+        released = self._real_request(harness, "POST", "/v1/memory/release")
+        self.assertTrue(released["released"])
+        during = self._real_status(harness, "released")
+        self.assertTrue(during["weights"]["released"])
+        self.assertLess(
+            during["memory_actual"]["allocated_bytes"],
+            generated["memory_actual"]["allocated_bytes"],
+        )
+        second = self._real_request(
+            harness, "POST", "/v1/completions", {**body, "cache_salt": "t10-after"}
+        )
+        self.assertEqual(first["choices"], second["choices"])
+        self.assertEqual(
+            first["usage"]["completion_tokens"], second["usage"]["completion_tokens"]
+        )
+        after = self._real_status(harness, "restored")
+        self.assertFalse(after["weights"]["released"])
+        self.assertFalse(after["weights"]["restoring"])
+        self.assertEqual(
+            after["weights"]["restores"], generated["weights"]["restores"] + 1
+        )
+        self.assertEqual(after["memory_plan"], before["memory_plan"])
+        self.assertTrue(after["moe_memory_pressure"]["model_ready"])
+        self.assertEqual(after["moe_memory_pressure"]["mode"], pressure["mode"])
+        self.assertFalse(during["moe_memory_pressure"]["model_ready"])
+        self.assertEqual(len(processes), 1)
+
+
 if __name__ == "__main__":
-    unittest.main()
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--real-model-root", type=Path)
+    parser.add_argument("--real-binary", type=Path)
+    parser.add_argument("--real-max-memory", default="8G")
+    parser.add_argument(
+        "--real-moe-pressure",
+        choices=("off", "on"),
+        default="on",
+        help="off checks the omitted native flag (default off); on explicitly enables it",
+    )
+    parser.add_argument("--real-ple-memory")
+    REAL_MODEL_OPTIONS, remaining = parser.parse_known_args()
+    unittest.main(argv=[sys.argv[0], *remaining])

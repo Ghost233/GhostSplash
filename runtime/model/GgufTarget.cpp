@@ -83,7 +83,7 @@ WeightFile GgufTargetLoader::open(size_t index) {
                          writeGgufImage(backend, buffer, planned->images[index]);
                          planned->source.checkUnchanged();
                        },
-                       plan.residentBytes});
+                       plan.residentBytes, imageWriteTemporaryBytes(plan)});
 }
 
 WeightFile GgufTargetLoader::layer(uint32_t index) {

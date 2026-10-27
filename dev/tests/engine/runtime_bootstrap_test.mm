@@ -550,6 +550,9 @@ void testStartupRetryWindowOpensAtFirstFailure() {
     require(window.retryUntil(failure, first + 90s) == first + 110s,
             "a failure without progress extended the retry window");
   }
+  failure.resourceFailure = RuntimeResourceFailure::GrowthDeferred;
+  require(StartupRetryWindow(30s).retryUntil(failure, first) == first + 30s,
+          "local cancellation skipped the existing startup retry window");
   failure.resourceFailure = RuntimeResourceFailure::DriverAllocation;
   require(StartupRetryWindow(30s).retryUntil(failure, first) == first + 30s,
           "a driver allocation failure was not retried");

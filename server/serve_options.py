@@ -507,6 +507,36 @@ SERVE_OPTIONS = (
         ),
     ),
     ServeOption(
+        "--expert-ple-memory",
+        "memory",
+        dict(
+            type=parse_max_memory,
+            default=None,
+            metavar="SIZE",
+            help="combined routed-expert and PLE storage budget, e.g. 20G; "
+            "auto stores share this cap, while KV, state and workspaces use "
+            "the overall --max-memory budget (default: auto, no extra cap)",
+        ),
+    ),
+    ServeOption(
+        "--expert-ple-policy",
+        "memory",
+        dict(
+            choices=("static", "adaptive"),
+            default="static",
+            help="runtime expert/PLE budget policy; adaptive needs an explicit shared pool and both stores auto",
+        ),
+    ),
+    ServeOption(
+        "--expert-ple-ratio",
+        "memory",
+        dict(
+            choices=("1:20", "1:10"),
+            default="1:20",
+            help="adaptive PLE:expert budget ceiling; PLE starts at 512M (default: 1:20)",
+        ),
+    ),
+    ServeOption(
         "--ple-memory",
         "memory",
         dict(
@@ -530,6 +560,25 @@ SERVE_OPTIONS = (
             "reads the others from the SSD when a token routes them; off loads "
             "every expert (default: auto, which loads them all where memory "
             "holds them and otherwise gives them what the context leaves)",
+        ),
+    ),
+    ServeOption(
+        "--moe-memory-pressure",
+        "memory",
+        dict(
+            choices=("off", "on"),
+            default="off",
+            help="control automatic MoE storage in this instance (default: off)",
+        ),
+    ),
+    ServeOption(
+        "--host-memory-reserve",
+        "memory",
+        dict(
+            type=parse_sparse_kv_memory,
+            default=None,
+            metavar="auto|SIZE",
+            help="system reserve for this instance's MoE memory pressure control (default: auto)",
         ),
     ),
     ServeOption(
@@ -933,6 +982,18 @@ def add_serve_arguments(parser, groups=None):
 
 def check_serve_arguments(parser, args):
     """The checks of the shared options that involve more than one."""
+    if args.moe_memory_pressure == "on" and args.expert_memory is not None:
+        parser.error("--moe-memory-pressure on requires --expert-memory auto")
+    if args.moe_memory_pressure == "off" and args.host_memory_reserve is not None:
+        parser.error("--host-memory-reserve SIZE requires --moe-memory-pressure on")
+    if args.expert_ple_policy == "adaptive" and (
+        args.expert_ple_memory is None
+        or args.expert_memory is not None
+        or args.ple_memory is not None
+    ):
+        parser.error(
+            "--expert-ple-policy adaptive requires --expert-ple-memory SIZE and both stores auto"
+        )
     if args.compact_draft_head == "on" and args.compact_draft_ranking is None:
         parser.error("--compact-draft-head on requires --compact-draft-ranking FILE")
     if args.ane_ffn_minimum_rows is not None and args.ane_ffn_share is None:
