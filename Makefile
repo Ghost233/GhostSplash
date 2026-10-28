@@ -52,6 +52,10 @@ PRODUCTION_KERNEL_NAMES := \
 	$(patsubst runtime/metal/kernels/%.metal,%,$(PRODUCTION_KERNEL_SOURCES))
 PRODUCTION_AIRS := $(addprefix $(METAL_BUILD)/, \
 	$(addsuffix .air,$(PRODUCTION_KERNEL_NAMES)))
+# With shader validation enabled, linking attention_qkv before gguf_linear can
+# crash MTLCompilerService while creating the NVFP4 m32 gate/up pipeline.
+PRODUCTION_AIRS := $(filter $(METAL_BUILD)/shared/gguf_linear.air,$(PRODUCTION_AIRS)) \
+	$(filter-out $(METAL_BUILD)/shared/gguf_linear.air,$(PRODUCTION_AIRS))
 KERNEL_HEADERS := $(sort $(wildcard runtime/metal/abi/*.h \
 	runtime/metal/kernels/common/*.h))
 # macOS 26.4 is the tested floor: the engine refuses older systems at

@@ -684,6 +684,8 @@ test-engine-metal: $(TEST_METAL_TARGETS) $(TEST_PIPELINE_PROBE)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_PREPARATION) $(LIB) $(WEIGHT_GOLDENS) $(MLX_QUANTIZATION_FIXTURE)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_DEQUANT) $(TEST_GGUF_DEQUANT_LIB)
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_ROTATION) $(LIB)
+	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_PIPELINE_PROBE) $(LIB) \
+		gguf_decode_nvfp4_m32_gate_up
 	$(METAL_TEST_ENV) $(NATIVE_TEST_RUNNER) $(TEST_GGUF_PROJECTION) $(TEST_PRODUCTION_LIB)
 	# Instrumentation doubles inherited prefill threadgroup storage beyond 32 KiB.
 	# Keep API validation and the tests' scalar/guard oracles for these two probes.
