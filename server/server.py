@@ -76,6 +76,7 @@ from .http_security import (
 )
 from .latency import RequestLatency
 from .metrics import prometheus_metrics, timings_dict, usage_dict
+from .operation_tracking import OperationStore
 from .origins import ANY_ORIGIN
 from .output import (
     BlockSequencer,
@@ -542,6 +543,42 @@ class FrontendHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.route
+        if path == "/v1/splash/runtime":
+            with self.app.backend.lock:
+                generation = (
+                    None
+                    if self.app.backend.closing or self.app.backend.fatal_error
+                    else self.app.backend.runtime.current_generation
+                )
+            capabilities = self.app.prefill_capabilities(generation is not None)
+            with self.app.backend.lock:
+                current = (
+                    None
+                    if self.app.backend.closing or self.app.backend.fatal_error
+                    else self.app.backend.runtime.current_generation
+                )
+            if current != generation:
+                generation = None
+                capabilities = self.app.prefill_capabilities(False)
+            self._json(
+                200,
+                {
+                    "service_instance": self.server.instance_id,
+                    "runtime_generation": generation,
+                    "prefill_capabilities": capabilities,
+                },
+            )
+            return
+        operation_match = re.fullmatch(
+            r"/v1/splash/operations/([A-Za-z0-9._~-]{1,128})", path
+        )
+        if operation_match:
+            operation = self._find_operation(operation_match.group(1))
+            if operation is None:
+                self._safe_error(APIError(404, "operation not found", "not_found"))
+            else:
+                self._json(200, operation.snapshot())
+            return
         if path in ("/", "/index.html", "/favicon.ico") or path in CHAT_ASSETS:
             if not self.server.webui:
                 self._safe_error(APIError(404, "not found", "not_found"))
@@ -624,6 +661,29 @@ class FrontendHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         path = self.route
+        operation_match = re.fullmatch(
+            r"/v1/splash/operations/([A-Za-z0-9._~-]{1,128})", path
+        )
+        if operation_match:
+            tokens = self.headers.get_all("X-Splash-Operation-Token", [])
+            result = (
+                self.server.operations.acknowledge(operation_match.group(1), tokens[0])
+                if len(tokens) == 1
+                else "missing"
+            )
+            if result == "missing":
+                self._safe_error(APIError(404, "operation not found", "not_found"))
+            elif result == "pending":
+                self._safe_error(
+                    APIError(
+                        409,
+                        "operation is not safely terminal",
+                        "operation_not_terminal",
+                    )
+                )
+            else:
+                self._json(200, {"acknowledged": True})
+            return
         response_match = re.fullmatch(r"/v1/responses/(resp_[A-Za-z0-9_]+)", path)
         if response_match is None:
             self._safe_error(APIError(404, "not found", "not_found"))
@@ -639,6 +699,18 @@ class FrontendHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         started_at = time.monotonic()
+        cancel_match = re.fullmatch(
+            r"/v1/splash/operations/([A-Za-z0-9._~-]{1,128})/cancel", self.route
+        )
+        if cancel_match:
+            operation = self._find_operation(cancel_match.group(1))
+            if operation is None:
+                self._safe_error(APIError(404, "operation not found", "not_found"))
+            else:
+                for job in operation.request_cancel():
+                    self.app.backend.cancel(job)
+                self._json(200, operation.snapshot())
+            return
         route = POST_ROUTES.get(self.route)
         if route is None:
             self._safe_error(APIError(404, "not found", "not_found"))
@@ -665,11 +737,56 @@ class FrontendHandler(BaseHTTPRequestHandler):
         self._body_reservation = None
         # The native job submitted last, which a failure cancels.
         self._submitted = None
+        self._operation = None
+        outcome = "failed"
         try:
+            ids = self.headers.get_all("X-Splash-Operation-ID", [])
+            tokens = self.headers.get_all("X-Splash-Operation-Token", [])
+            if ids or tokens:
+                if (
+                    self.route not in ("/v1/chat/completions", "/v1/systemone")
+                    or len(ids) != 1
+                    or len(tokens) != 1
+                ):
+                    raise APIError(
+                        400, "operation requires one identity and one credential"
+                    )
+                instances = self.headers.get_all("X-Splash-Service-Instance", [])
+                generations = self.headers.get_all("X-Splash-Runtime-Generation", [])
+                kinds = self.headers.get_all("X-Splash-Operation-Kind", [])
+                if (
+                    len(instances) != 1
+                    or len(generations) != 1
+                    or len(kinds) != 1
+                    or kinds[0] not in ("prefill", "consume")
+                    or not re.fullmatch(r"[1-9][0-9]{0,18}", generations[0])
+                ):
+                    raise APIError(
+                        400,
+                        "operation requires service instance and runtime generation",
+                    )
+                if instances[0] != self.server.instance_id:
+                    raise APIError(
+                        409, "service instance changed", "service_instance_changed"
+                    )
+                try:
+                    self._operation = self.server.operations.create(
+                        ids[0], tokens[0], int(generations[0]), kinds[0]
+                    )
+                except ValueError as error:
+                    if str(error) == "operation registry is full":
+                        raise APIError(
+                            503, str(error), "operation_registry_full"
+                        ) from error
+                    if str(error) == "invalid operation identity or credential":
+                        raise APIError(400, str(error)) from error
+                    raise APIError(409, str(error), "operation_conflict") from error
             generation = self._serve(route, started_at)
             if generation is not None:
                 self._generate(*generation, started_at)
+            outcome = "completed"
         except (BrokenPipeError, ConnectionResetError):
+            outcome = "cancelled"
             self._cancel_submitted()
         except TimeoutError:
             self._cancel_submitted()
@@ -693,6 +810,8 @@ class FrontendHandler(BaseHTTPRequestHandler):
             # still reads of an upload refused unread; the job must not, as
             # freeing it returns the input it retains.
             self._submitted = None
+            if self._operation is not None:
+                self._operation.handler_finished(outcome)
             admission.release()
             self.app.latencies.observe("http_request", time.monotonic() - started_at)
 
@@ -710,6 +829,16 @@ class FrontendHandler(BaseHTTPRequestHandler):
             body = {key: value for key, value in body.items() if value is not None}
             if route.fieldless and body:
                 raise APIError(400, "this endpoint takes no fields")
+        if self._operation is not None:
+            if self.route == "/v1/systemone":
+                prefill = body.get("prefill_only") is True
+            else:
+                prefill = any(
+                    type(body.get(key)) is int and body[key] == 0
+                    for key in ("max_tokens", "max_completion_tokens")
+                )
+            if self._operation.kind != ("prefill" if prefill else "consume"):
+                raise APIError(400, "operation kind does not match request")
         serve = getattr(self, route.method)
         return serve(body, self.app.request_deadline(body, started_at))
 
@@ -722,13 +851,29 @@ class FrontendHandler(BaseHTTPRequestHandler):
         self._submit(job)
         respond(job)
 
-    def _submit(self, job):
+    def _find_operation(self, operation_id):
+        tokens = self.headers.get_all("X-Splash-Operation-Token", [])
+        if len(tokens) != 1:
+            return None
+        return self.server.operations.find(operation_id, tokens[0])
+
+    def _submit(self, job, question_id=None):
         """Submit `job` unless its deadline has passed or its client has
         left; from then on a failure cancels it."""
         remaining_request_time(job.deadline)
         if self._client_disconnected():
             raise ConnectionResetError("client disconnected before submission")
-        self.app.backend.submit(job)
+        if self._operation is not None:
+            if not self._operation.add(job, question_id):
+                raise APIError(409, "operation cancelled", "operation_cancelled")
+            job.operation = self._operation
+            job.expected_generation = self._operation.expected_generation
+        try:
+            self.app.backend.submit(job)
+        except Exception:
+            if self._operation is not None:
+                self._operation.unknown(job)
+            raise
         self._submitted = job
 
     def _cancel_submitted(self):
@@ -738,6 +883,16 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def _post_chat_completions(self, body, deadline):
         progress = _progress_flag(body)
         stream, stream_options = _stream_options(body)
+        limits = [
+            body[key] for key in ("max_tokens", "max_completion_tokens") if key in body
+        ]
+        prefill = any(type(value) is int and value == 0 for value in limits)
+        if prefill and any(type(value) is not int for value in limits):
+            raise APIError(400, "prefill output budget fields must be integers")
+        if prefill and len(limits) == 2 and limits[0] != limits[1]:
+            raise APIError(400, "prefill output budget fields must agree")
+        if prefill and stream:
+            raise APIError(400, "prefill does not support stream")
         job = self.app.prepare(body, deadline=deadline)
         job.flags |= progress
         if stream:
@@ -834,18 +989,46 @@ class FrontendHandler(BaseHTTPRequestHandler):
     def _post_systemone(self, body, deadline):
         answers = {}
         input_tokens = 0
+        prefill_only = body.get("prefill_only", False)
         entries = self.app.prepare_systemone(
             body, deadline=deadline, disconnected=self._client_disconnected
         )
+        if (
+            self._operation is not None
+            and not prefill_only
+            and self.app.prefill_capabilities(True)["systemone_state"]
+            and any(job is not None for _, _, job in entries)
+        ):
+            try:
+                prefix = self.app.systemone_state_prefix(body["state"])
+            except Exception as error:
+                raise RequestValidationError(
+                    [field_error(["state"], "state prefill prefix cannot be verified")]
+                ) from error
+            required = prefix[:-1]
+            if not required or any(
+                tuple(job.prompt_tokens[: len(required)]) != tuple(required)
+                for _, _, job in entries
+                if job is not None
+            ):
+                raise RequestValidationError(
+                    [
+                        field_error(
+                            ["questions"], "question changes the state prefill prefix"
+                        )
+                    ]
+                )
         for qid, spec, job in entries:
             if job is None:
                 answers[qid] = judgments.deterministic_answer(spec)
                 continue
             # One admitted job per HTTP request preserves the existing
             # queue bound and lets later questions reuse the state prefix.
-            self._submit(job)
+            self._submit(job, qid)
             result = self._await_done(job)
             input_tokens += result.prompt_tokens
+            if prefill_only:
+                continue
             probabilities = (
                 self.app.decision_scorer.probabilities(spec, result.option_logits)
                 if self.app.decision_scorer is not None
@@ -856,14 +1039,14 @@ class FrontendHandler(BaseHTTPRequestHandler):
                 if self.app.decision_scorer is not None
                 else judgments.systemone_answer(spec, probabilities)
             )
-        self._json(
-            200,
-            {
-                "model": self.app.response_model,
-                "answers": answers,
-                "usage": {"input_tokens": input_tokens, "output_tokens": 0},
-            },
-        )
+        response = {
+            "model": self.app.response_model,
+            "answers": answers,
+            "usage": {"input_tokens": input_tokens, "output_tokens": 0},
+        }
+        if prefill_only:
+            response["prefill_only"] = True
+        self._json(200, response)
 
     def _await_done(self, job):
         """The result of a score job, which emits only start and done."""
@@ -1551,6 +1734,7 @@ class FrontendServer(HTTPServer):
         self.allowed_origins = frozenset(allowed_origins)
         self.refused_origins = RefusedOriginLog()
         self.instance_id = secrets.token_hex(12)
+        self.operations = OperationStore(self.instance_id)
         self.started_at = time.time()
         self.requests = HttpAdmission(request_capacity)
         self.token_counts = HttpAdmission(request_capacity)

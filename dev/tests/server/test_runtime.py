@@ -58,6 +58,21 @@ def fast_liveness_probe(test):
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_expected_generation_is_checked_before_native_write(self):
+        factory = FakeFactory()
+        runtime = engine_runtime.MultiplexedRuntime(
+            process_factory=factory, eager_start=True
+        )
+        self.addCleanup(runtime.close)
+        generation = runtime.current_generation
+        self.assertIsNotNone(generation)
+        with self.assertRaises(engine_runtime.GenerationChanged):
+            runtime.submit(
+                dataclasses.replace(request(10), expected_generation=generation + 1)
+            )
+        self.assertEqual(factory.processes[0].stdin.messages(wire.RequestFrame), [])
+        self.assertEqual(runtime.pending_count, 0)
+
     def test_direct_admission_and_out_of_order_demultiplexing(self):
         factory = FakeFactory()
         runtime = engine_runtime.MultiplexedRuntime(

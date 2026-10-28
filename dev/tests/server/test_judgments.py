@@ -80,6 +80,49 @@ class BoundaryCountingTokenizer(CharTokenizer):
 
 
 class JudgmentTests(HarnessTestCase):
+    def test_systemone_state_prefill_matches_the_later_question_prefix(self):
+        runtime = FakeRuntime(Plan(reason="length"), Plan(logits=(1.0, 0.0)))
+        harness = self.harness(
+            runtime, tokenizer=byte_tokenizer(TURNS_TEMPLATE), max_context=8192
+        )
+        body = {
+            "model": "test-model",
+            "state": {"transcript": "some input"},
+            "cache_salt": "decision-1",
+            "prefill_only": True,
+        }
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 200, payload)
+        self.assertEqual(json.loads(payload)["usage"]["output_tokens"], 0)
+        prefix = runtime.requests[-1].frame
+        body.pop("prefill_only")
+        body["questions"] = {"intent": {"type": "noul"}}
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 200, payload)
+        scored = runtime.requests[-1].frame
+        self.assertEqual(
+            scored.prompt_tokens[: len(prefix.prompt_tokens)], prefix.prompt_tokens
+        )
+        self.assertEqual(scored.cache_salt, prefix.cache_salt)
+
+    def test_systemone_prefill_rejects_nonempty_questions(self):
+        runtime = FakeRuntime()
+        harness = self.harness(
+            runtime, tokenizer=byte_tokenizer(TURNS_TEMPLATE), max_context=8192
+        )
+        status, _, _ = harness.request(
+            "POST",
+            "/v1/systemone",
+            {
+                "model": "test-model",
+                "state": "input",
+                "prefill_only": True,
+                "questions": {"intent": {"type": "noul"}},
+            },
+        )
+        self.assertEqual(status, 422)
+        self.assertEqual(runtime.requests, [])
+
     def test_judgments_scores_options_without_generation(self):
         runtime = FakeRuntime(Plan(logits=(1.5, -2.25)))
         harness = self.harness(runtime, tokenizer=CharTokenizer(), max_context=8192)

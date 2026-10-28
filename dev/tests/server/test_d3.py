@@ -16,6 +16,24 @@ def config():
 
 
 class D3Tests(HarnessTestCase):
+    def test_state_prefill_is_refused_without_affecting_scoring(self):
+        runtime = FakeRuntime(Plan(logits=(0.0, 2.0)))
+        harness = self.harness(
+            runtime,
+            tokenizer=CharTokenizer(),
+            max_context=8192,
+            decision_config=config(),
+            vision=False,
+        )
+        body = {"model": harness.app.model, "state": "document", "prefill_only": True}
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 422, payload)
+        self.assertEqual(runtime.requests, [])
+        body.pop("prefill_only")
+        body["questions"] = {"team": {"type": "noul"}}
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 200, payload)
+
     def test_structured_unicode_matches_model_json_template(self):
         runtime = FakeRuntime(Plan(logits=(0.0, 2.0)))
         cfg = config() | {

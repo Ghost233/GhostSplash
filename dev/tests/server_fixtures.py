@@ -331,6 +331,7 @@ class FakeCall:
     def __init__(self, runtime, request_id, request, on_event, on_complete, plan):
         self.runtime = runtime
         self.request_id = request_id
+        self.generation = 1
         self.request = request
         self.on_event = on_event
         self.on_complete = on_complete
@@ -417,6 +418,10 @@ class FakeRuntime:
     def pending_count(self):
         return sum(not call.done for call in self.calls)
 
+    @property
+    def current_generation(self):
+        return 1 if self.ready else None
+
     def wait_ready(self, timeout=None):
         # The fake starts no engine: it is as ready as the test sets it.
         return self.ready
@@ -435,6 +440,14 @@ class FakeRuntime:
         return self.release_event
 
     def submit(self, request, *, on_event=None, on_complete=None):
+        if (
+            request is not None
+            and request.expected_generation is not None
+            and request.expected_generation != self.current_generation
+        ):
+            raise engine_runtime.GenerationChanged(
+                "native runtime generation changed before admission"
+            )
         if self.pending_count >= self.pending_limit:
             raise engine_runtime.PendingLimitExceeded("fake runtime is full")
         plan = None

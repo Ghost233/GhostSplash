@@ -100,7 +100,8 @@ void Engine::submit(EngineRequest value) {
   if (value.flags & (RequestDecisionScoreType | RequestDecisionNoulType))
     throw std::invalid_argument("encoder question-type flags require an encoder model");
   const bool decision = value.flags & RequestDecisionScoring;
-  if (decision != config_.decisionScoring)
+  const bool prefillOnly = !value.maxNewTokens && value.scoreTokens.empty();
+  if (decision != config_.decisionScoring && !prefillOnly)
     throw std::invalid_argument("request scoring mode does not match the model");
   if (decision && (value.prompt.empty() || value.scoreTokens.size() < 2 ||
       value.scoreTokens.size() > 255 || value.maxNewTokens ||
@@ -1115,6 +1116,11 @@ bool Engine::spillingPrompt() const {
 }
 
 void Engine::endAtLength(Request &active) {
+  if (!active.request.maxNewTokens && active.request.scoreTokens.empty()) {
+    settle(active, {LaneOutcome::KvDiskQuota,
+                    "the SSD cache could not hold the complete prefill"});
+    return;
+  }
   ++counters_.spill.lengthEnds;
   finish(active, EngineFinishReason::Length, {});
 }
@@ -2438,17 +2444,17 @@ void Engine::apply(const Pending &command, std::span<const ModelStepResult> resu
       }
       active.scoreLogits = result.scoreLogits;
     }
-    // Score requests carry maxNewTokens == 0; only the model's finished flag
-    // on the final prompt chunk completes them. A request whose output the
-    // SSD cache's quota bounded ends at that bound.
-    const bool complete =
-        result.finished || (!scoring && completionTokens >= active.outputLimit);
+    // Score and prefill-only requests finish only at the final prompt chunk.
+    // A generation request can also end at an SSD cache quota bound.
+    const bool prefillOnly = !active.request.maxNewTokens && !scoring;
+    const bool complete = result.finished ||
+        (!scoring && !prefillOnly && completionTokens >= active.outputLimit);
     counters_.spill.lengthEnds +=
         complete && !result.finished && active.outputLimit < active.request.maxNewTokens;
-    if (scoring && complete &&
+    if ((scoring || prefillOnly) && complete &&
         item.promptOffset + result.consumedPromptTokens !=
             active.promptTokens) {
-      throw std::logic_error("score request finished before the prompt ended");
+      throw std::logic_error("zero-output request finished before the prompt ended");
     }
     if (result.outputTokensWithoutKv && !complete) {
       throw std::logic_error("model emitted an uncommitted token and continued");
@@ -2487,8 +2493,9 @@ void Engine::apply(const Pending &command, std::span<const ModelStepResult> resu
     if (active.pendingEnd) {
       settle(active, *std::exchange(active.pendingEnd, std::nullopt));
     } else if (schedulerResults[index].finished) {
-      finish(active, result.finished ? EngineFinishReason::Stop
-                                     : EngineFinishReason::Length,
+      const bool prefillOnly = !active.request.maxNewTokens && active.request.scoreTokens.empty();
+      finish(active, result.finished && !prefillOnly ? EngineFinishReason::Stop
+                                                    : EngineFinishReason::Length,
              active.scoreLogits);
     }
   }
@@ -2544,23 +2551,25 @@ void Engine::finish(Request &active, EngineFinishReason reason,
   // its output: the quota's (outputLimit) or a lone lane's at the wall.
   const bool bounded =
       reason == EngineFinishReason::Length && completionTokens < active.request.maxNewTokens;
-  events_.completed(active.request.id, reason, bounded, active.promptTokens,
-                    completionTokens, active.deduplicatedKvTokens, optionLogits,
-                    active.speculation);
   if (reason == EngineFinishReason::Cancelled) {
     ++counters_.cancelled;
   } else {
     ++counters_.completed;
   }
   release(active);
+  // A terminal event means this request can no longer mutate its lane or
+  // cache. In-flight commands and state restores have already settled.
+  events_.completed(active.request.id, reason, bounded, active.promptTokens,
+                    completionTokens, active.deduplicatedKvTokens, optionLogits,
+                    active.speculation);
 }
 
 void Engine::finishFailure(Request &active, LaneEnd end) {
   scheduler_.fail(active.request.id);
   active.finalized = true;
-  events_.failed(active.request.id, end.outcome, std::move(end.message), end.retryAfterSeconds);
   ++counters_.failed;
   release(active);
+  events_.failed(active.request.id, end.outcome, std::move(end.message), end.retryAfterSeconds);
 }
 
 void Engine::vacateLane(Request &active, bool keepContinuation) {

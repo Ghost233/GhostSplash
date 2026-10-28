@@ -258,6 +258,7 @@ public:
                     .resident = true,
                     .constrained =
                         request.constraint == ConstraintMode::TokenMask,
+                    .prefillOnly = !request.maxNewTokens && request.scoreTokens.empty(),
                     .scoreTokens = {request.scoreTokens.begin(),
                                     request.scoreTokens.end()}});
         prompts[request.id].assign(request.prompt.begin(), request.prompt.end());
@@ -371,7 +372,7 @@ public:
       // mask instead, and a score request's returns its option logits.
       const bool last = !state.replaying &&
                         state.position == prompts.at(item.requestId).size();
-      const bool awaitsMask = state.constrained && last;
+      const bool awaitsMask = state.constrained && last && !state.prefillOnly;
       // The wait outlives a suspension, as the host continuation keeps it.
       state.awaitingMask = state.awaitingMask || awaitsMask;
       if (last && !awaitsMask)
@@ -380,7 +381,9 @@ public:
                            awaitsMask ? DecodeStage::ApplyInitialMask
                                       : DecodeStage::Regular,
                            0, 0};
-      if (last && !state.scoreTokens.empty()) {
+      if (last && state.prefillOnly) {
+        step.finished = true;
+      } else if (last && !state.scoreTokens.empty()) {
         step.finished = true;
         if (invalidScores.contains(item.requestId))
           step.failure = "score logit is not finite";
@@ -716,6 +719,7 @@ public:
     bool resident = false;
     bool replaying = false;
     bool constrained = false;
+    bool prefillOnly = false;
     std::vector<uint32_t> scoreTokens;
     // Waits for its first token's mask.
     bool awaitingMask = false;

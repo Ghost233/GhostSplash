@@ -185,6 +185,8 @@ class Job:
     # The request's cache_salt hashed to 128 bits; zero without one.
     cache_salt: int = 0
     latency: RequestLatency | None = None
+    operation: object | None = None
+    expected_generation: int | None = None
 
     @property
     def may_call_tools(self):
@@ -681,7 +683,11 @@ class NativeBackend:
             thinking_budget=self._thinking_budget(job),
         )
         return engine_runtime.GenerationRequest(
-            frame, job.deadline, self._mask_provider(job), job.image_owner
+            frame,
+            job.deadline,
+            self._mask_provider(job),
+            job.image_owner,
+            job.expected_generation,
         )
 
     def _thinking_budget(self, job):
@@ -754,6 +760,8 @@ class NativeBackend:
         job.image_pixels = b""
 
         def on_event(call, event):
+            if job.operation is not None:
+                job.operation.bind(job, call)
             with self.lock:
                 if state.detached:
                     return
@@ -766,6 +774,8 @@ class NativeBackend:
                 call.cancel()
 
         def on_complete(call):
+            if job.operation is not None:
+                job.operation.bind(job, call)
             with self.lock:
                 if state.detached or state.terminal_enqueued:
                     return
@@ -777,6 +787,8 @@ class NativeBackend:
         with self.lock:
             if self.closing:
                 state.detach()
+                if job.operation is not None:
+                    job.operation.not_admitted(job)
                 job.events.put(
                     (
                         "error",
@@ -793,6 +805,8 @@ class NativeBackend:
             call = self.runtime.submit(
                 request, on_event=on_event, on_complete=on_complete
             )
+            if job.operation is not None:
+                job.operation.bind(job, call)
             with self.lock:
                 if not state.detached:
                     state.call = call
@@ -800,6 +814,17 @@ class NativeBackend:
             if cancel:
                 call.cancel()
         except Exception as error:
+            if job.operation is not None:
+                if isinstance(
+                    error,
+                    (
+                        engine_runtime.GenerationChanged,
+                        engine_runtime.PendingLimitExceeded,
+                    ),
+                ):
+                    job.operation.not_admitted(job)
+                else:
+                    job.operation.unknown(job)
             with self.lock:
                 deliver = not state.detached and not state.terminal_enqueued
                 if deliver:
@@ -895,6 +920,8 @@ class NativeBackend:
         result = None
         try:
             done = call.result(0)
+            if job.operation is not None:
+                job.operation.completed(job, call, done)
             if call.callback_error is not None:
                 raise self._api_error(call.callback_error)
             if (
@@ -940,7 +967,13 @@ class NativeBackend:
                 queued = latency.get("queue_to_start_ms")
                 if queued is not None:
                     job.latency.metrics.observe("native_queue", queued / 1000.0)
+        except engine_runtime.RequestFailed as request_error:
+            if job.operation is not None:
+                job.operation.failed(job, call)
+            error = self._api_error(request_error)
         except (engine_runtime.EngineUnhealthy, engine_runtime.ProtocolFatal):
+            if job.operation is not None:
+                job.operation.unknown(job)
             # An admitted request ends with EngineUnhealthy or ProtocolFatal
             # only when the engine running it fails: it stopped or broke the
             # protocol. The listener has already decided whether that engine
@@ -957,6 +990,8 @@ class NativeBackend:
                     "runtime_unavailable",
                 )
         except Exception as unexpected:
+            if job.operation is not None:
+                job.operation.unknown(job)
             error = self._api_error(unexpected)
         finally:
             with self.lock:
@@ -974,6 +1009,8 @@ class NativeBackend:
 
     @staticmethod
     def _api_error(error):
+        if isinstance(error, engine_runtime.GenerationChanged):
+            return APIError(409, str(error), "runtime_generation_changed")
         if isinstance(error, APIError):
             return APIError(error.status, error.message, error.code)
         if isinstance(error, ConstraintError):

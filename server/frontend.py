@@ -320,6 +320,86 @@ class Frontend:
         self.preparation_waiting = 0
         self.response_store = ResponseStore()
         self.thinking_codec = thinking_codec
+        self._prefill_probe_lock = threading.Lock()
+        self._systemone_prefill_supported = None
+        self._systemone_prefill_reason = None
+
+    def prefill_capabilities(self, ready):
+        """The paths this serving instance can prepare, not a cache-hit claim."""
+        chat = ready and self.decision_scorer is None
+        systemone = False
+        if ready and not isinstance(self.decision_scorer, (D3Scorer, ModernBertScorer)):
+            with self._prefill_probe_lock:
+                if self._systemone_prefill_supported is None:
+                    self._systemone_prefill_supported = self._probe_systemone_prefix()
+                systemone = self._systemone_prefill_supported
+        result = {
+            "schema": "splash-prefill/1",
+            "operation_tracking": ready,
+            "chat_zero_budget": chat,
+            "systemone_state": systemone,
+        }
+        if not systemone:
+            if not ready:
+                result["systemone_reason"] = "not_ready"
+            elif isinstance(self.decision_scorer, (D3Scorer, ModernBertScorer)):
+                result["systemone_reason"] = "noncausal_model"
+            else:
+                result["systemone_reason"] = self._systemone_prefill_reason
+        return result
+
+    def _probe_systemone_prefix(self):
+        """Check the current tokenizer and template share actual state tokens."""
+        question = {"type": "choice", "criteria": {"a": "first", "b": "second"}}
+        states = ({"material": "alpha probe state"}, {"material": "omega probe state"})
+        self._systemone_prefill_reason = "prefix_not_shared"
+        try:
+            prefixes = []
+            scored = []
+            for state in states:
+                _, specs, errors = judgments.validate_systemone(
+                    {"state": state, "questions": {"probe": question}}
+                )
+                if errors:
+                    return False
+                spec = specs[0][1]
+                if self.decision_scorer is not None:
+                    prefixes.append(self.systemone_state_prefix(state))
+                    tokens, _ = self.decision_scorer.encode(state, spec, question)
+                else:
+                    prefixes.append(self.systemone_state_prefix(state))
+                    tokens, _, _ = self._encode_score_prompt(
+                        judgments.systemone_messages(state, spec, ("A", "B")),
+                        ("A", "B"),
+                        lambda _: None,
+                        lambda: None,
+                        "question",
+                    )
+                scored.append(tokens)
+            different = next(
+                (i for i, (a, b) in enumerate(zip(*prefixes)) if a != b), None
+            )
+            if different is None:
+                return False
+            return all(
+                len(prefix) > different
+                and len(tokens) > different
+                and prefix[: different + 1] == tokens[: different + 1]
+                for prefix, tokens in zip(prefixes, scored)
+            )
+        except Exception as error:
+            self._systemone_prefill_reason = "probe_error"
+            print_status(
+                f"System One prefill probe failed · {type(error).__name__}", error=True
+            )
+            return False
+
+    def systemone_state_prefix(self, state):
+        if self.decision_scorer is not None:
+            return self.decision_scorer.encode_prefix(state)
+        return judgments.encode_systemone_prefix(
+            self.prompt_tokenizer, self.chat_templates.select(None).source, state
+        )
 
     def accepts_model(self, model):
         """Whether a request may name `model`: a name the server answers to,
@@ -734,6 +814,15 @@ class Frontend:
 
     def prepare_systemone(self, body, *, deadline, disconnected):
         details = []
+        prefill_only = body.get("prefill_only", False)
+        if not isinstance(prefill_only, bool):
+            details.append(field_error(["prefill_only"], "must be a boolean"))
+        elif prefill_only and isinstance(
+            self.decision_scorer, (D3Scorer, ModernBertScorer)
+        ):
+            details.append(field_error(["prefill_only"], "requires a causal model"))
+        if prefill_only and body.get("stream", False) is not False:
+            details.append(field_error(["stream"], "prefill does not support stream"))
         model = body.get("model")
         if not isinstance(model, str) or not model:
             details.append(field_error(["model"], "field required", "missing"))
@@ -741,7 +830,9 @@ class Frontend:
             details.append(
                 field_error(["model"], f"model {model} is not served by this endpoint")
             )
-        state, specs, question_details = judgments.validate_systemone(body)
+        state, specs, question_details = judgments.validate_systemone(
+            body, prefill_only=prefill_only
+        )
         details.extend(question_details)
         try:
             priority = self._priority(body)
@@ -757,6 +848,28 @@ class Frontend:
         total_tokens = 0
         checkpoint = _preparation_checkpoint(deadline, disconnected)
         with self._preparation(deadline):
+            if prefill_only:
+                checkpoint()
+                try:
+                    tokens = self.systemone_state_prefix(state)
+                except (APIError, ConnectionResetError):
+                    raise
+                except ValueError as error:
+                    raise APIError(400, str(error)) from error
+                except Exception as error:
+                    raise APIError(400, "state prompt could not be rendered") from error
+                checkpoint()
+                if len(tokens) > self.max_context:
+                    raise ContextLengthError(len(tokens), self.max_context)
+                return [
+                    (
+                        None,
+                        None,
+                        self._score_job(
+                            tokens, (), deadline, priority, None, cache_salt
+                        ),
+                    )
+                ]
             for qid, spec in specs:
                 if spec.deterministic:
                     jobs.append((qid, spec, None))
@@ -1116,6 +1229,7 @@ class Frontend:
             )
         remaining_request_time(deadline)
         requested = body.get("max_completion_tokens", body.get("max_tokens"))
+        allow_zero = output_field is None
         if output_field is None:
             # Chat takes either field; errors name the one the client sent.
             output_field = (
@@ -1123,7 +1237,11 @@ class Frontend:
                 if "max_completion_tokens" in body
                 else "max_tokens"
             )
-        max_new = self._output_budget(requested, prompt_tokens, output_field)
+        max_new = self._output_budget(
+            requested, prompt_tokens, output_field, allow_zero=allow_zero
+        )
+        if not max_new:
+            constraint = None
         # A budget the output limit reaches first closes nothing.
         budget = options.thinking_token_budget
         return self._generation_job(
@@ -1237,7 +1355,7 @@ class Frontend:
             budget,
         )
 
-    def _output_budget(self, requested, prompt_tokens, field):
+    def _output_budget(self, requested, prompt_tokens, field, *, allow_zero=False):
         """The output token budget requested under the API's field name. It is
         a ceiling: a request generates up to the end of the context window
         its prompt leaves, all of it when the request names no budget."""
@@ -1245,7 +1363,11 @@ class Frontend:
             raise ContextLengthError(len(prompt_tokens), self.max_context - 1)
         remaining = self.max_context - len(prompt_tokens)
         max_new = remaining if requested is None else requested
-        if not isinstance(max_new, int) or isinstance(max_new, bool) or max_new <= 0:
+        if (
+            not isinstance(max_new, int)
+            or isinstance(max_new, bool)
+            or max_new < (0 if allow_zero else 1)
+        ):
             raise APIError(400, f"{field} must be a positive integer")
         return min(max_new, remaining)
 

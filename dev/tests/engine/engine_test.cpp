@@ -59,19 +59,22 @@ public:
     maskRequests.emplace_back(
         requestId, std::vector<uint32_t>(simulation.begin(), simulation.end()));
   }
-  void completed(uint64_t id, EngineFinishReason, bool bounded, uint32_t prompt,
+  void completed(uint64_t id, EngineFinishReason reason, bool bounded, uint32_t prompt,
                  uint32_t completion, uint32_t deduplicated,
                  std::span<const float>, const SpeculativeCounts &speculation) override {
     ++completedCount;
+    if (onTerminal) onTerminal(id);
+    reasons[id] = reason;
     if (bounded)
       boundedIds.push_back(id);
     usage[id] = {prompt, completion};
     deduplicatedTokens[id] = deduplicated;
     speculativeCounts[id] = speculation;
   }
-  void failed(uint64_t, LaneOutcome outcome, std::string message,
+  void failed(uint64_t id, LaneOutcome outcome, std::string message,
               uint32_t retryAfterSeconds) override {
     ++failedCount;
+    if (onTerminal) onTerminal(id);
     if (outcome == LaneOutcome::CapacityExhausted)
       ++capacityExhaustedCount;
     const LaneOutcomeWire wire = laneOutcomeWire(outcome);
@@ -81,11 +84,13 @@ public:
   }
 
   std::unordered_map<uint64_t, std::vector<uint32_t>> progress;
+  std::function<void(uint64_t)> onTerminal;
   // The matched prompt tokens of each start, zero for a cold one.
   std::vector<uint32_t> starts;
   std::vector<uint64_t> startIds;
   std::unordered_map<uint64_t, std::vector<uint32_t>> outputs;
   std::unordered_map<uint64_t, std::pair<uint32_t, uint32_t>> usage;
+  std::unordered_map<uint64_t, EngineFinishReason> reasons;
   // The requests that ended at a bound of the engine's own.
   std::vector<uint64_t> boundedIds;
   std::unordered_map<uint64_t, uint32_t> deduplicatedTokens;
@@ -923,6 +928,151 @@ void testColdPublishesReplayStateAndRebuildsALostOne() {
   require(events.completedCount == 3 && events.failedCount == 0 &&
               events.emitted == 3,
           "request lifecycle did not complete cleanly");
+}
+
+void testPrefillOnlyCachesGrowingPrefixesBeforeGeneration() {
+  test::TestKvStorage storage(512, 4096, 4);
+  KvPool pool(storage, 0);
+  engine::Cache resources(pool, nullptr, nullptr);
+  Executor executor;
+  executor.firstTokens = true;
+  Events events;
+  engine::Engine engine(test::engineConfig(), resources, executor, events);
+  guardReleases(storage, engine);
+  std::vector<uint32_t> prompt(model::ExecutionLimits::prefillTokenBudget + 65, 1);
+  auto prefill = request(1, prompt);
+  prefill.maxNewTokens = 0;
+  engine.submit(std::move(prefill));
+  runUntilIdle(engine);
+  require(executor.prefillRows == prompt.size() && executor.prefillChunks[1] > 1 &&
+              events.usage[1] == std::pair<uint32_t, uint32_t>{prompt.size(), 0} &&
+              events.reasons[1] == EngineFinishReason::Length && events.emitted == 0,
+          "prefill-only ended early or emitted a token");
+  const uint32_t first = (prompt.size() - 1) / KvCache::pageTokens * KvCache::pageTokens;
+  prompt.insert(prompt.end(), 64, 2);
+  auto append = request(2, prompt);
+  append.maxNewTokens = 0;
+  engine.submit(std::move(append));
+  runUntilIdle(engine);
+  require(events.starts.back() == first && events.usage[2].second == 0 && events.emitted == 0,
+          "appended input did not reuse its prefilled prefix");
+  require(std::all_of(events.cycles.begin(), events.cycles.end(),
+                      [](const auto &cycle) { return cycle.first == WorkKind::Prefill; }),
+          "prefill-only entered decode");
+  engine.submit(request(3, prompt));
+  runUntilIdle(engine);
+  require(events.starts.back() > first && events.emitted == 1 && events.failedCount == 0,
+          "generation did not resume from the prefilled prefix");
+}
+
+void testPrefillOnlyThenGenerateWithAdditionalInput() {
+  test::TestKvStorage storage(512, 4096, 4);
+  KvPool pool(storage, 0);
+  engine::Cache resources(pool, nullptr, nullptr);
+  Executor executor;
+  executor.firstTokens = true;
+  executor.decodeTokens = 2;
+  std::vector<uint32_t> consumed;
+  executor.commandTimes = [&](const BatchPlan &plan, std::span<const ModelBatchItem> items) {
+    if (plan.kind == WorkKind::Prefill)
+      for (const ModelBatchItem &item : items)
+        if (item.requestId == 2)
+          consumed.insert(consumed.end(), item.inputTokens.begin(), item.inputTokens.end());
+    return test::CommandTimes{};
+  };
+  Events events;
+  engine::Engine engine(test::engineConfig(), resources, executor, events);
+  guardReleases(storage, engine);
+  events.onTerminal = [&](uint64_t id) {
+    require(!executor.requests.contains(id) && resources.snapshot().activeRequests == 0,
+            "terminal event preceded release of the model or cache request");
+  };
+  std::vector<uint32_t> prompt(model::ExecutionLimits::prefillTokenBudget + 65, 1);
+  auto prefill = request(1, prompt);
+  prefill.maxNewTokens = 0;
+  prefill.cacheSalt = {123, 456};
+  engine.submit(std::move(prefill));
+  runUntilIdle(engine);
+  require(events.completedCount == 1 && events.usage[1].second == 0 && events.emitted == 0,
+          "the first request did not complete zero-output prefill");
+  const uint32_t matched = (prompt.size() - 1) / KvCache::pageTokens * KvCache::pageTokens;
+  prompt.insert(prompt.end(), 64, 2);
+  auto generation = request(2, prompt);
+  generation.maxNewTokens = 2;
+  generation.cacheSalt = {123, 456};
+  engine.submit(std::move(generation));
+  runUntilIdle(engine);
+  require(events.starts.size() == 2 && events.starts[1] == matched && matched > 0,
+          "the generation request did not restore the prefilled prefix");
+  require(consumed == std::vector<uint32_t>(prompt.begin() + matched, prompt.end()) &&
+              std::ranges::count(consumed, 2U) == 64,
+          "the generation request did not process the unmatched input and appended tokens");
+  require(std::ranges::any_of(events.cycles, [](const auto &cycle) { return cycle.first == WorkKind::Decode; }) &&
+              events.outputs[2] == std::vector<uint32_t>({42, 42}) &&
+              events.usage[2] == std::pair<uint32_t, uint32_t>{prompt.size(), 2} &&
+              events.completedCount == 2 && events.failedCount == 0 &&
+              executor.requests.empty() && resources.snapshot().activeRequests == 0,
+          "generation did not decode the full input and release its resources");
+}
+
+void testTerminalEventsFollowLaneRelease() {
+  test::TestKvStorage storage(64, 4096, 4);
+  KvPool pool(storage, 0);
+  engine::Cache resources(pool, nullptr, nullptr);
+  Executor executor;
+  executor.firstTokens = true;
+  Events events;
+  engine::Engine engine(test::engineConfig(), resources, executor, events);
+  guardReleases(storage, engine);
+  events.onTerminal = [&](uint64_t id) {
+    require(!executor.requests.contains(id), "terminal sent before model lane release");
+    require(resources.snapshot().activeRequests == 0, "terminal sent before cache request release");
+  };
+  engine.submit(request(1, std::vector<uint32_t>(65, 1)));
+  runUntilIdle(engine);
+  executor.holdPrefillUntil = std::make_shared<std::atomic<bool>>(false);
+  engine.submit(request(2, std::vector<uint32_t>(65, 2)));
+  static_cast<void>(engine.tick(100));
+  require(engine.commandInFlight(), "prefill command did not enter flight");
+  engine.cancel(2);
+  require(events.completedCount == 1 && executor.requests.contains(2),
+          "cancel reported terminal while a command was in flight");
+  *executor.holdPrefillUntil = true;
+  runUntilIdle(engine);
+  executor.holdPrefillUntil.reset();
+  engine.submit(request(3, std::vector<uint32_t>(65, 3)));
+  static_cast<void>(engine.tick(200));
+  engine.failRequest(3, LaneOutcome::CapacityExhausted, "test failure");
+  runUntilIdle(engine);
+  require(events.failedCount == 1, "failure did not produce a terminal event");
+}
+
+void testDecisionPrefillCachesStateBeforeScoring() {
+  test::TestKvStorage storage(512, 4096, 4);
+  KvPool pool(storage, 0);
+  engine::Cache resources(pool, nullptr, nullptr);
+  Executor executor;
+  Events events;
+  engine::Engine engine(test::engineConfig({.decisionScoring = true}), resources, executor, events);
+  guardReleases(storage, engine);
+  std::vector<uint32_t> prompt(model::ExecutionLimits::prefillTokenBudget + 65, 1);
+  auto prefill = request(1, prompt);
+  prefill.maxNewTokens = 0;
+  engine.submit(std::move(prefill));
+  runUntilIdle(engine);
+  require(executor.prefillRows == prompt.size() && events.emitted == 0 && events.completedCount == 1,
+          "decision state prefill did not finish without generation");
+  const uint32_t first = prompt.size();
+  prompt.insert(prompt.end(), {248050, 2, 248050, 248062});
+  auto score = request(2, prompt);
+  score.maxNewTokens = 0;
+  score.flags = RequestDecisionScoring;
+  score.scoreTokens = {first, first + 2};
+  engine.submit(std::move(score));
+  runUntilIdle(engine);
+  require(events.starts.back() == (first - 1) / KvCache::pageTokens * KvCache::pageTokens &&
+              events.completedCount == 2 && events.failedCount == 0 && events.emitted == 0,
+          "decision scoring did not reuse the prefilled state prefix");
 }
 
 void testConcurrentDuplicateStateIsCapturedOnce() {
@@ -10417,6 +10567,9 @@ void testCancelledRestoringProducerReleasesItsWaiter() {
   Events events;
   engine::Engine engine(test::engineConfig({.maxContext = 102400}), cache, executor, events);
   guardReleases(storage, engine);
+  events.onTerminal = [&](uint64_t id) {
+    require(!executor.requests.contains(id), "terminal sent before restoring lane release");
+  };
   std::vector<uint32_t> prompt(226);
   std::iota(prompt.begin(), prompt.end(), 1);
   publishDiskState(cache, prompt);
@@ -10428,6 +10581,7 @@ void testCancelledRestoringProducerReleasesItsWaiter() {
   require(executor.diskReads == 1 && engine.snapshot().scheduler.waitingPrefix == 1,
           "the sibling did not wait for the restoring producer");
   engine.cancel(1);
+  require(events.completedCount == 0, "terminal sent before cancelled restore drained");
   executor.restoreControl = std::make_shared<RestoreControl>();
   static_cast<void>(engine.tick(2));
   require(executor.diskReads == 2 && engine.resourceWaitSnapshot(2).restoring == 2 &&
@@ -10712,6 +10866,51 @@ void testCancelledDiskPrefixStopsQueuedReads() {
               events.outputs.contains(2) && events.failedCount == 0 &&
               cache.snapshot().activeRequests == 0,
           "retry did not reuse the cancelled request's disk prefix");
+}
+
+void testImmediateRetryWaitsForCancelledDiskRestore() {
+  test::TestKvStorage storage(128, 4096, 4);
+  KvPool pool(storage, 0);
+  test::TestKvTier tier;
+  tier.transferLimit = 1;
+  engine::Cache cache(pool, &tier, nullptr);
+  Executor executor;
+  Events events;
+  engine::Engine engine(test::engineConfig({.maxContext = 102400}), cache, executor, events);
+  guardReleases(storage, engine);
+  const std::vector<uint32_t> prompt(129, 17);
+  cache.beginRequest(999);
+  require(cache.ensureTokens(999, 128).granted(), "fixture KV failed");
+  const auto block = test::publishBlocks(cache, 999, prompt, 128);
+  demoteState(cache, block);
+  cache.endRequest(999);
+  for (int page = 0; page < 4; ++page) {
+    require(cache.reclaimOne(CacheReclaimMode::KeepExtents, ReclaimClass::InUse).madeProgress,
+            "fixture KV did not demote");
+    tier.complete();
+    static_cast<void>(cache.pollTransfers());
+  }
+  engine.submit(request(1, prompt));
+  static_cast<void>(engine.tick(1));
+  require(tier.restores == 1 && executor.diskReads == 1, "restore did not start");
+  engine.cancel(1);
+  executor.restoreControl->ready = true;
+  static_cast<void>(engine.tick(2));
+  require(events.completedCount == 1 && tier.inFlight() && cache.snapshot().activeRequests == 0 &&
+              executor.requests.empty(), "cancelled request was not released with a shared read in flight");
+  executor.restoreControl = std::make_shared<RestoreControl>();
+  executor.restoreControl->ready = true;
+  engine.submit(request(2, prompt));
+  static_cast<void>(engine.tick(3));
+  require(tier.inFlight() && !events.outputs.contains(2) && executor.prefillRows == 0,
+          "retry consumed a prefix before its pending shared restore completed");
+  for (int tick = 4; tick < 64 && !idle(engine); ++tick) {
+    tier.complete();
+    static_cast<void>(engine.tick(tick));
+  }
+  require(idle(engine) && events.outputs.contains(2) && events.failedCount == 0 &&
+              executor.restored == 128 && cache.snapshot().activeRequests == 0,
+          "retry did not safely finish after the shared restore drained");
 }
 
 // A lane short of pages waits for the copies of demoted blocks to land and
@@ -12074,6 +12273,7 @@ int main() {
     testCancelledRestoringProducerReleasesItsWaiter();
     testSkipCacheRequestDoesNotWaitForAProducer();
     testCancelledDiskPrefixStopsQueuedReads();
+    testImmediateRetryWaitsForCancelledDiskRestore();
     testPagesReturnFromDemotionWithoutSuspending();
     testRefusedRestoreClosesAdmission();
     testFailedDiskRestoreKeepsShallowerState();
@@ -12148,6 +12348,10 @@ int main() {
     testProjectionClipsTheOutput();
     testFailedRestoreReturnsTheCommitment();
     testColdPublishesReplayStateAndRebuildsALostOne();
+    testPrefillOnlyCachesGrowingPrefixesBeforeGeneration();
+    testPrefillOnlyThenGenerateWithAdditionalInput();
+    testTerminalEventsFollowLaneRelease();
+    testDecisionPrefillCachesStateBeforeScoring();
     testConcurrentDuplicateStateIsCapturedOnce();
     testReplayStateEndsBeforeTheGenerationPrompt();
     testFollowUpResumesBeforeTheGenerationPrompt();

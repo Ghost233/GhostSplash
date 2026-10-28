@@ -15,7 +15,8 @@ from dataclasses import dataclass, fields
 from enum import IntEnum, IntFlag
 from typing import TypeAlias
 
-PROTOCOL_VERSION = 11
+# Version 12 adds zero-output prefill and post-release native terminals.
+PROTOCOL_VERSION = 12
 # A frame is its header, the magic, the protocol version, the frame type and
 # the payload length, then the payload.
 FRAME_HEADER_BYTES = 16
@@ -704,7 +705,7 @@ def _validated_request(
                     "score requests must not generate output tokens",
                     request_id,
                 )
-        elif not output_tokens or output_tokens > MAX_LOGICAL_OUTPUT_TOKENS:
+        elif output_tokens > MAX_LOGICAL_OUTPUT_TOKENS:
             raise ValueError("logical max output token count exceeds its limit")
         if not prompt or len(prompt) > MAX_PROMPT_TOKENS:
             raise ValueError("prompt token count exceeds its limit")

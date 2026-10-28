@@ -316,6 +316,9 @@ void testRequestRoundTrip() {
   CHECK(test, roundTrip(withImage) == withImage);
   RequestFrame progress = exampleProgressRequest();
   CHECK(test, roundTrip(progress) == progress);
+  RequestFrame prefill = exampleRequest();
+  prefill.logicalMaxOutputTokens = 0;
+  CHECK(test, roundTrip(prefill) == prefill);
 }
 
 // A request's error carries its id, so the stream survives it.

@@ -50,6 +50,28 @@ def config():
 
 
 class KevTests(HarnessTestCase):
+    def test_systemone_state_prefill_matches_kev_question_prefix(self):
+        runtime = FakeRuntime(Plan(reason="length"), Plan(logits=(0.0, 2.0)))
+        harness = self.harness(
+            runtime,
+            tokenizer=KevTokenizer(),
+            max_context=8192,
+            decision_config=config(),
+            vision=False,
+        )
+        body = {"model": harness.app.model, "state": "some input", "prefill_only": True}
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 200, payload)
+        prefix = runtime.requests[-1].frame
+        body.pop("prefill_only")
+        body["questions"] = {"intent": {"type": "noul"}}
+        status, _, payload = harness.request("POST", "/v1/systemone", body)
+        self.assertEqual(status, 200, payload)
+        scored = runtime.requests[-1].frame
+        self.assertEqual(
+            scored.prompt_tokens[: len(prefix.prompt_tokens)], prefix.prompt_tokens
+        )
+
     def test_systemone_uses_pointer_positions_and_model_temperature(self):
         runtime = FakeRuntime(Plan(logits=(0.0, 2.0)))
         harness = self.harness(

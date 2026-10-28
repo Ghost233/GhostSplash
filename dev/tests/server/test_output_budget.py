@@ -73,10 +73,10 @@ class OutputBudgetTests(HarnessTestCase):
         runtime = FakeRuntime()
         harness = self.harness(runtime)
         for path, body, field in (
-            ("/v1/chat/completions", chat_body(max_tokens=0), "max_tokens"),
+            ("/v1/chat/completions", chat_body(max_tokens=-1), "max_tokens"),
             (
                 "/v1/chat/completions",
-                chat_body(max_completion_tokens=0, max_tokens=5),
+                chat_body(max_completion_tokens=-1, max_tokens=5),
                 "max_completion_tokens",
             ),
             (
@@ -92,6 +92,50 @@ class OutputBudgetTests(HarnessTestCase):
                     json.loads(payload)["error"]["message"],
                     f"{field} must be a positive integer",
                 )
+        self.assertEqual(runtime.requests, [])
+
+    def test_chat_zero_budget_prefills_without_generation(self):
+        runtime = FakeRuntime(Plan(reason="length"))
+        harness = self.harness(runtime, max_context=10)
+        status, _, payload = harness.request(
+            "POST",
+            "/v1/chat/completions",
+            chat_body(max_tokens=0, cache_salt="conversation-1"),
+        )
+        self.assertEqual(status, 200, payload)
+        response = json.loads(payload)
+        self.assertEqual(response["usage"]["completion_tokens"], 0)
+        self.assertFalse(response["choices"][0]["message"].get("content"))
+        self.assertEqual(runtime.requests[0].frame.logical_max_output_tokens, 0)
+        self.assertNotEqual(runtime.requests[0].frame.cache_salt, 0)
+
+    def test_chat_zero_budget_with_json_output_does_not_request_a_mask(self):
+        runtime = FakeRuntime(Plan(reason="length"))
+        harness = self.harness(runtime, max_context=10)
+        status, _, payload = harness.request(
+            "POST",
+            "/v1/chat/completions",
+            chat_body(max_tokens=0, response_format={"type": "json_object"}),
+        )
+        self.assertEqual(status, 200, payload)
+        self.assertEqual(json.loads(payload)["usage"]["completion_tokens"], 0)
+        self.assertIsNone(runtime.calls[0].request.mask_provider)
+
+    def test_chat_prefill_rejects_stream_and_conflicting_budgets(self):
+        runtime = FakeRuntime()
+        harness = self.harness(runtime)
+        for body in (
+            chat_body(max_tokens=0, stream=True),
+            chat_body(max_tokens=0, max_completion_tokens=5),
+            chat_body(max_tokens=5, max_completion_tokens=0),
+            chat_body(max_tokens=False, max_completion_tokens=0),
+            chat_body(max_tokens=0.0, max_completion_tokens=0),
+        ):
+            with self.subTest(body=body):
+                status, _, payload = harness.request(
+                    "POST", "/v1/chat/completions", body
+                )
+                self.assertEqual(status, 400, payload)
         self.assertEqual(runtime.requests, [])
 
     def test_anthropic_reports_the_context_window_when_it_ends_the_response(self):

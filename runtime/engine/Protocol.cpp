@@ -317,8 +317,7 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
       return invalid(IssueCode::InvalidCount,
                      "score requests must not produce output tokens");
     }
-  } else if (!request.logicalMaxOutputTokens ||
-             request.logicalMaxOutputTokens > limits.maxLogicalOutputTokens) {
+  } else if (request.logicalMaxOutputTokens > limits.maxLogicalOutputTokens) {
     return invalid(IssueCode::LimitExceeded,
                    "logical max output token count exceeds its limit");
   }

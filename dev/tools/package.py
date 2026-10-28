@@ -60,6 +60,7 @@ SERVER_FILES = (
     "lru.py",
     "latency.py",
     "metrics.py",
+    "operation_tracking.py",
     "errors.py",
     "runtime.py",
     "protocol.py",

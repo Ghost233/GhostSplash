@@ -394,7 +394,7 @@ def _question_spec(qid, question):
     return spec, []
 
 
-def validate_systemone(body):
+def validate_systemone(body, *, prefill_only=False):
     """Validate every field and question before any inference.
 
     Returns (state, [(question_id, spec), ...], details); callers raise
@@ -411,6 +411,10 @@ def validate_systemone(body):
         state = None
     questions = body.get("questions", _MISSING)
     specs = []
+    if prefill_only:
+        if questions is not _MISSING and questions != {}:
+            details.append(field_error(["questions"], "prefill accepts no questions"))
+        return state, specs, details
     if questions is _MISSING:
         details.append(field_error(["questions"], "field required", "missing"))
     elif not isinstance(questions, dict) or not questions:
@@ -430,6 +434,32 @@ def validate_systemone(body):
             details.extend(errors)
             specs.append((qid, spec))
     return state, specs, details
+
+
+def encode_systemone_prefix(prompt_tokenizer, chat_template, state):
+    payload = json.dumps({"evidence": state}, ensure_ascii=False)[:-1]
+    rendered = render_chat_template(
+        prompt_tokenizer.tokenizer,
+        [
+            {"role": "system", "content": SYSTEMONE_SYSTEM},
+            {"role": "user", "content": payload},
+        ],
+        {
+            "chat_template": chat_template,
+            "tokenize": False,
+            "continue_final_message": True,
+            **template_options(
+                reasoning_effort="none",
+                preserve_thinking=None,
+                tools=None,
+                add_generation_prompt=False,
+            ),
+        },
+    )
+    tokens = prompt_tokenizer.encode(tokenizable(rendered))
+    if not tokens:
+        raise ValueError("the tokenizer produced an empty state prefix")
+    return tokens
 
 
 def systemone_messages(state, spec, slots):

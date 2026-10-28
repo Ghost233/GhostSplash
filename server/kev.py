@@ -75,6 +75,15 @@ class KevScorer:
             )
         )
 
+    def encode_prefix(self, state):
+        prompt = self.template.render(
+            state=text_value(state), instructions="", options=[], type="choice"
+        )
+        prefix, marker, _ = prompt.partition("<|fim_middle|>")
+        if not marker:
+            raise ValueError("unexpected layout of the Kev state prefix")
+        return self.tokenizer.encode(tokenizable(prefix), add_special_tokens=False)
+
     def encode(self, state, spec, question=None):
         descriptions = spec.descriptions
         if question is not None and spec.kind in ("choice", "noul"):

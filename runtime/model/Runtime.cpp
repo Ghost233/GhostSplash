@@ -1679,6 +1679,7 @@ struct Runtime::Impl {
   std::optional<InitialSelection> finishPrompt(CommandGraph &graph, Request &entry, const ModelBatchItem &item,
                                                const MetalBuffer &lastRow, uint32_t lane, bool decoding = false) {
     if ((entry.flags & RequestDecisionScoring) ||
+        (!entry.maxNewTokens && entry.scoreTokens.empty()) ||
         (!decoding && (entry.replayingGeneration || item.logicalPosition + item.tokenCount != entry.promptTokens)))
       return std::nullopt;
     const uint32_t hidden = geometry.target.hiddenSize;
@@ -2707,7 +2708,8 @@ StateAdmission Runtime::beginAt(const ModelRequest &request, uint32_t stateLane)
     throw std::invalid_argument("invalid executor request activation");
   }
   const bool decision = request.flags & RequestDecisionScoring;
-  if (decision != bool(impl_->geometry.target.decisionHeadSize))
+  const bool prefillOnly = !request.maxNewTokens && request.scoreTokens.empty();
+  if (decision != bool(impl_->geometry.target.decisionHeadSize) && !prefillOnly)
     throw std::invalid_argument("request scoring mode does not match the model");
   if (decision && (request.scoreTokens.size() < 2 || request.scoreTokens.size() > 255 ||
       request.maxNewTokens || request.scoreTokens.back() >= request.prompt.size() - 1 ||
@@ -3001,7 +3003,7 @@ Runtime::prefillAsync(const BatchPlan &plan,
       }
       // The anchor this chunk selects when it completes a generation prompt.
       std::optional<uint32_t> selected;
-      if (nextLength == entry.promptTokens && !entry.replayingGeneration &&
+      if (entry.maxNewTokens && nextLength == entry.promptTokens && !entry.replayingGeneration &&
           entry.scoreTokens.empty() && entry.constraint == ConstraintMode::None) {
         selected = impl->initialToken(lane);
         if (std::string failure = impl->invalidSelection({&*selected, 1}, lane);
@@ -3086,6 +3088,8 @@ Runtime::prefillAsync(const BatchPlan &plan,
             }
             result.scoreLogits.push_back(logit);
           }
+          result.finished = true;
+        } else if (!entry.maxNewTokens) {
           result.finished = true;
         } else if (selected) {
           impl->commitSelected(entry, {&*selected, 1});

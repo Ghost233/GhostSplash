@@ -508,14 +508,9 @@ class ProtocolPythonTests(unittest.TestCase):
                     lambda request=request: p.serialize_message(request),
                 )
                 self.assertEqual(issue.request_id, request.request_id)
-        # Ordinary generation still requires a positive output budget.
-        self.assert_protocol_error(
-            p.FailureClass.REQUEST_ERROR,
-            p.IssueCode.LIMIT_EXCEEDED,
-            lambda: p.serialize_message(
-                replace(example_request(), logical_max_output_tokens=0)
-            ),
-        )
+        # Zero output is a state-only prefill, not a scoring request.
+        prefill = replace(example_request(), logical_max_output_tokens=0)
+        self.assertEqual(decode_client(p.serialize_message(prefill)), prefill)
 
     def test_done_option_logits_wire_layout_and_roundtrip(self):
         done = p.DoneEvent(
@@ -909,6 +904,7 @@ class ProtocolPythonTests(unittest.TestCase):
         mutations.extend(
             [
                 (mutate_u16(valid, 4, 1), p.IssueCode.UNSUPPORTED_VERSION),
+                (mutate_u16(valid, 4, 11), p.IssueCode.UNSUPPORTED_VERSION),
                 (mutate_u16(valid, 6, 0x7777), p.IssueCode.UNKNOWN_FRAME_TYPE),
                 (
                     mutate_u64(valid, 8, 0xFFFFFFFFFFFFFFFF),

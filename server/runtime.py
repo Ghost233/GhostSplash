@@ -91,6 +91,10 @@ class EngineUnhealthy(EngineRuntimeError):
     pass
 
 
+class GenerationChanged(EngineRuntimeError):
+    """The requested native incarnation changed before admission."""
+
+
 class ProtocolFatal(EngineRuntimeError):
     pass
 
@@ -156,6 +160,7 @@ class GenerationRequest:
     # Keeps the frontend's per-request image charge until the call ends;
     # never serialized.
     image_owner: object | None
+    expected_generation: int | None = None
 
     def __post_init__(self):
         if (self.frame.constraint is wire.ConstraintMode.TOKEN_MASK) != (
@@ -539,6 +544,11 @@ class MultiplexedRuntime:
             return max(0, self._generation - 1)
 
     @property
+    def current_generation(self) -> int | None:
+        with self._state_lock:
+            return self._generation if self.ready else None
+
+    @property
     def readiness(self) -> wire.ReadyEvent | None:
         with self._state_lock:
             return self._ready_message
@@ -615,6 +625,13 @@ class MultiplexedRuntime:
                 if not self.ready:
                     raise EngineUnhealthy("native process is not ready")
                 generation = self._generation
+                if (
+                    request.expected_generation is not None
+                    and request.expected_generation != generation
+                ):
+                    raise GenerationChanged(
+                        "native runtime generation changed before admission"
+                    )
                 # Created under the lock so that a call exists exactly when
                 # _pending owns its admission slot; the release below relies
                 # on that.
