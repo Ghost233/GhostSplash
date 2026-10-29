@@ -97,6 +97,7 @@ gguf::Image modelImage(const SafetensorsCheckpoint &checkpoint, const DFlashDraf
     b.stored(selector + "predecessor_codebook", {layout.vocabularySize, layout.selectorRank});
     b.stored(selector + "successor_codebook", {layout.vocabularySize, layout.selectorRank});
   }
+  if (checkpoint.find(kDraftMaskEmbedding)) b.stored(std::string(kDraftMaskEmbedding), {hidden});
   return b.finish();
 }
 
@@ -108,8 +109,10 @@ std::vector<gguf::Image> planDraftImages(const SafetensorsCheckpoint &checkpoint
   for (uint32_t layer = 0; layer < layout.layers; ++layer)
     images.push_back(layerImage(checkpoint, layout, layer, consumed));
   images.push_back(modelImage(checkpoint, layout, consumed));
+  const uint64_t standardTensors = uint64_t{layout.layers} * 11 + 3 +
+                                   (checkpoint.find(kDraftMaskEmbedding) ? 1 : 0);
   if (layout.kind == DraftKind::Standard &&
-      (consumed.size() != uint64_t{layout.layers} * 11 + 3 || checkpoint.tensorCount() != consumed.size()))
+      (consumed.size() != standardTensors || checkpoint.tensorCount() != consumed.size()))
     throw WeightStoreError("standard DFlash checkpoint contains unconsumed tensors");
   return images;
 }
@@ -143,5 +146,9 @@ WeightFile DraftCheckpointLoader::layer(uint32_t index) {
 }
 
 WeightFile DraftCheckpointLoader::model() { return open(planned_->images.size() - 1); }
+
+bool DraftCheckpointLoader::hasMaskEmbedding() const noexcept {
+  return planned_->checkpoint.find(kDraftMaskEmbedding) != nullptr;
+}
 
 } // namespace splash::model

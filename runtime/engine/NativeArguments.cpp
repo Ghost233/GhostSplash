@@ -205,6 +205,10 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       if (value != "always")
         throw UsageError("--kv-spill requires always");
       result.kvSpillAlways = true;
+    } else if (option == "--kv-window-trim") {
+      if (value != "on" && value != "off")
+        throw UsageError("--kv-window-trim requires on or off");
+      result.kvWindowTrim = value == "on";
     } else if (option == "--ane") {
       if (value != "on" && value != "off")
         throw UsageError("--ane requires on or off");
@@ -282,7 +286,7 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError(std::string("MAX_CONTEXT: ") + error.what());
   }
   if (result.ffnLoading.mode == model::FfnWeightMode::Quantized &&
-      result.model.family() != model::Qwen3_5_4BLayout::family)
+      result.model.family() != model::Qwen3_5_4BLayout{}.family)
     throw UsageError("--experimental-quantized-ffn only supports Qwen3.5-4B generation");
   if (result.model.hasDraft() && !std::filesystem::is_directory(result.modelRoot / "draft"))
     throw UsageError("MODEL_DIRECTORY must hold the model's draft/ directory for this model");

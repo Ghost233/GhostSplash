@@ -12,6 +12,7 @@
 #include "HostKvExtents.hpp"
 #include "LinearNumerics.hpp"
 #include "NormReference.hpp"
+#include "TestFamilies.hpp"
 
 #include <algorithm>
 #include <array>
@@ -64,27 +65,23 @@ std::array<float, 256> hadamardReference(const std::array<float, 256> &input,
   return output;
 }
 
-// The production attention geometries: query heads over the KV heads of a
-// layout, whose values the group of twelve keeps token-major for its sparse
-// kernels.
-struct Geometry final {
-  uint32_t queryHeads;
-  uint32_t kvHeads;
-  bool valuesTokenMajor;
+// The production attention geometries, every family's: query heads over the
+// KV heads of a layout, whose values a QSA family keeps token-major for its
+// sparse kernels.
+using Geometry = splash::test::AttentionGeometry;
+const std::vector<Geometry> kGeometries = splash::test::familyAttentionGeometries();
 
-  [[nodiscard]] kv::Layout layout(kv::Format format) const {
-    return {.attentionLayers = 1, .kvHeads = kvHeads, .headDimension = 256, .format = format,
-            .valuesTokenMajor = valuesTokenMajor};
-  }
-};
-constexpr std::array<Geometry, 5> kGeometries{{{24, 4, false}, {16, 2, false}, {16, 4, false},
-                                             {8, 2, false}, {24, 2, true}}};
+// The parts of a layout's tiles, each a threadgroup of the split grid's x
+// beside its KV head.
+uint32_t tileParts(uint32_t queryHeads, kv::Layout layout) {
+  return layout.valuesTokenMajor ? 1 : SPLASH_ATTENTION_TILE_PARTS(queryHeads / layout.kvHeads);
+}
 
 // A layout's split or reduce pipeline of a phase ("prefill" or "verify").
 std::string pipelineName(std::string_view phase, bool split, uint32_t queryHeads, kv::Layout layout) {
   const bool sparse = layout.valuesTokenMajor;
   const std::string suffix = layout.kvHeads == 4 ? (queryHeads == 16 ? "_kv4_g4" : "")
-      : queryHeads == 24 ? "_kv2_g12" : queryHeads == 8 ? "_kv2_g4" : "_kv2_g8";
+      : "_kv" + std::to_string(layout.kvHeads) + "_g" + std::to_string(queryHeads / layout.kvHeads);
   const std::string format = kv::isQ4_0(layout.format) ? "q4_0_"
       : layout.format == kv::Format::Int4Hadamard ? "q4h_"
       : layout.format == kv::Format::Int8 ? "q8_" : "bf16_";
@@ -105,31 +102,34 @@ std::string locatedSplitName(kv::Layout layout) {
 
 void checkPrefillSlotOrientation(uint32_t queryHeads, kv::Layout layout) {
   bool unequalAxes = false, partialTile = false, multipleSplits = false;
+  // The split grid's x: each KV head's tile parts.
+  const uint32_t headParts = layout.kvHeads * tileParts(queryHeads, layout);
   // Enumerate nonsquare grids and partial final tiles. Each logical partial
-  // belongs to exactly one query tile, KV head and balanced history split.
+  // belongs to exactly one query tile, KV head part and balanced history
+  // split.
   for (const uint32_t rows : {17U, 257U, 2048U}) {
     const auto plan = ops::PagedAttention::prefillPlan(rows, queryHeads, layout);
     const uint32_t tiles = (rows + plan.tileRows - 1) / plan.tileRows;
-    require(plan.splitGroups.x == layout.kvHeads &&
+    require(plan.splitGroups.x == headParts &&
                 plan.splitGroups.y == tiles && plan.splitGroups.z == plan.splits,
-            "prefill split axes must be KV head, query tile, split");
+            "prefill split axes must be KV head part, query tile, split");
     unequalAxes |= tiles != plan.splits;
     partialTile |= rows % plan.tileRows != 0;
     multipleSplits |= plan.splits > 1;
-    const uint64_t slots = uint64_t{tiles} * layout.kvHeads * plan.splits;
+    const uint64_t slots = uint64_t{tiles} * headParts * plan.splits;
     std::vector<uint8_t> visits(slots, 0);
     for (uint32_t z = 0; z < plan.splitGroups.z; ++z)
       for (uint32_t y = 0; y < plan.splitGroups.y; ++y)
         for (uint32_t x = 0; x < plan.splitGroups.x; ++x) {
           // group.y selects the query tile and group.z its balanced split;
-          // scratch is [tile][KV head][split].
-          const uint64_t slot = (uint64_t{y} * layout.kvHeads + x) * plan.splits + z;
+          // scratch is [tile][KV head][part][split].
+          const uint64_t slot = (uint64_t{y} * headParts + x) * plan.splits + z;
           require(slot < visits.size() && visits[slot] == 0,
                   "prefill grid aliases or exceeds a logical partial slot");
           ++visits[slot];
           require(slot % plan.splits == z &&
-                      (slot / plan.splits) % layout.kvHeads == x &&
-                      slot / (uint64_t{plan.splits} * layout.kvHeads) == y,
+                      (slot / plan.splits) % headParts == x &&
+                      slot / (uint64_t{plan.splits} * headParts) == y,
                   "prefill dispatch orientation changed logical scratch ownership");
         }
     require(std::all_of(visits.begin(), visits.end(),
@@ -167,7 +167,7 @@ void checkPlans(uint32_t queryHeads, kv::Layout layout) {
     require(plan.splitPipeline == prefillSplit + tileSuffix &&
                 plan.reducePipeline == prefillReduce + tileSuffix,
             "prefill plan runs the wrong pipelines");
-    require(plan.splitGroups.x == layout.kvHeads &&
+    require(plan.splitGroups.x == layout.kvHeads * tileParts(queryHeads, layout) &&
                 plan.splitGroups.y == tiles && plan.splitGroups.z == splits &&
                 plan.reduceGroups.x == layout.kvHeads &&
                 plan.reduceGroups.y == tileRows * queryHeads / layout.kvHeads &&
@@ -185,14 +185,14 @@ void checkPlans(uint32_t queryHeads, kv::Layout layout) {
             "prefill arena omitted a valid shorter plan");
   }
   for (uint32_t rows : {1U, 15U, 16U, 17U, 31U, 32U}) {
-    const auto baseline = ops::PagedAttention::prefillPlan(rows, queryHeads, layout, 8);
+    const auto baseline = ops::PagedAttention::prefillPlan(rows, queryHeads, layout, {}, 8);
     require(baseline.tileRows == 8 && baseline.splitPipeline == prefillSplit &&
                 baseline.reducePipeline == prefillReduce &&
                 baseline.splits == std::clamp(32U / ((rows + 7) / 8), 1U, 32U),
             "explicit baseline plan changed its kernel or split policy");
   }
   for (uint32_t tile : {1U, 4U, 32U})
-    rejects([&] { (void)ops::PagedAttention::prefillPlan(16, queryHeads, layout, tile); },
+    rejects([&] { (void)ops::PagedAttention::prefillPlan(16, queryHeads, layout, {}, tile); },
             "no paged-attention kernel for tile rows", "invalid tile rows were accepted");
   const std::string verifySplit = pipelineName("verify", true, queryHeads, layout);
   const std::string verifyReduce = pipelineName("verify", false, queryHeads, layout);
@@ -218,7 +218,8 @@ void checkPlans(uint32_t queryHeads, kv::Layout layout) {
     require(plan.splits == maximum &&
                 plan.workspace.partialsBytes == fused * 256 * 4 &&
                 plan.workspace.statisticsBytes == fused * 2 * 4 &&
-                plan.splitGroups.x == (sparse ? layout.kvHeads * plan.splits : layout.kvHeads) &&
+                plan.splitGroups.x ==
+                    (sparse ? layout.kvHeads * plan.splits : layout.kvHeads * tileParts(queryHeads, layout)) &&
                 plan.splitGroups.y == (sparse ? 1 : plan.splits) &&
                 plan.splitGroups.z == lanes &&
                 plan.reduceGroups.y == 8 * queryHeads / layout.kvHeads &&
@@ -753,7 +754,7 @@ std::vector<uint16_t> run(metal::MetalBackend &backend, Case &data, bool testBou
   constexpr bool prefill = phase == Phase::Prefill;
   const auto plan = [&] {
     if constexpr (prefill)
-      return ops::PagedAttention::prefillPlan(data.rows, data.queryHeads, data.layout, tileRows);
+      return ops::PagedAttention::prefillPlan(data.rows, data.queryHeads, data.layout, {}, tileRows);
     else {
       std::vector<uint32_t> histories;
       for (uint32_t lane = 0; lane < data.lanes; ++lane)
@@ -1190,7 +1191,7 @@ void checkProjection(metal::MetalBackend &backend, uint32_t queryHeads, kv::Layo
     for (auto format : {kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated}) {
       layout.format = format;
       metal::CommandGraph rejected;
-      rejects([&] { addProjection(rejected, keyNorm); }, "no sparse attention kernel for layout",
+      rejects([&] { addProjection(rejected, keyNorm); }, "no KV store kernel for layout",
               "sparse Q4 preparation was accepted without a matching kernel");
       require(rejected.empty(), "unsupported sparse Q4 preparation encoded a dispatch");
     }
@@ -1827,8 +1828,8 @@ int main(int argc, char **argv) {
         if (!geometry.valuesTokenMajor || !kv::isQ4_0(format))
           checkPlans(geometry.queryHeads, geometry.layout(format));
     for (auto format : {kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
-      rejects([&] { (void)ops::PagedAttention::prefillPlan(8, 24, Geometry{24, 2, true}.layout(format)); },
-              "no sparse attention kernel for layout", "sparse Q4 was accepted without a matching kernel");
+      rejects([&] { (void)ops::PagedAttention::prefillPlan(8, 24, Geometry{24, 2, 256, true}.layout(format)); },
+              "no KV store kernel for layout", "sparse Q4 was accepted without a matching kernel");
     if (argc == 1) {
       std::cout << "paged attention plans: CPU PASS\n";
       return 0;

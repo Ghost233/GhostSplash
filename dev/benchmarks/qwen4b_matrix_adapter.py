@@ -175,11 +175,11 @@ def expected_configuration(root, block):
 def expected_attention(root):
     """Verify the generator's exact matrix-only override snapshot."""
     source = (root / "runtime/ops/PagedAttention.cpp").read_text()
-    old = "kernel == KernelLayout::Kv4Group4 && layout.format == kv::Format::Int8\n      ? 1U : prefillSplits(tiles);"
+    old = "compact && layout.format == kv::Format::Int8\n                              ? 1U : prefillSplits(tiles, variant.windowTokens);"
     replacements = (
         (
             old,
-            "kernel == KernelLayout::Kv4Group4\n      ? matrixTailSplits() : prefillSplits(tiles);",
+            "compact\n                              ? matrixTailSplits() : prefillSplits(tiles, variant.windowTokens);",
         ),
         (
             "namespace splash::ops {",

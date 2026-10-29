@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
           std::vector<uint32_t> maximum(lanes, limit);
           metal::CommandGraph graph;
           sampling.addAcceptance(graph, {draft.view, dummy, dummy, dummy, dummy, target.view,
-                                          retained.view, accepted.view, verifyRows.view}, maximum, policies, 30, 31);
+                                          retained.view, accepted.view, verifyRows.view}, maximum, policies, {30, 31});
           static_cast<void>(backend.submitCommandAsync(graph.command()).wait());
           for (uint32_t lane = 0; lane < lanes; ++lane) {
             const uint32_t kept = static_cast<const uint32_t *>(retained.view.contents())[lane];

@@ -21,7 +21,7 @@ GhostSplash 是基于 [incoai/splash](https://github.com/incoai/splash) 的个�
 上游已覆盖的功能统一使用上游代码和测试。后续同步时移除对应的本地改动。
 上游已提供完整 GGUF embedding、混合类型 GDN alpha/beta、量化 GGUF 中的
 BF16/F16 张量、融合 MoE gate/up 专家和 Q5_0/Q5_1 支持，具体范围见
-[开发文档](DEVELOPMENT.md#gguf-targets)。本分支仅保留仍有必要的独有功能与测试。
+[开发文档](docs/models.md#gguf-targets)。本分支仅保留仍有必要的独有功能与测试。
 1.4.0 的 Flash Next、YaRN、SSD 专家流式加载和稀疏 KV 溢出也采用上游实现。
 本地继续保留 4B、Kev、D3 和 ModernBERT 支持、可选 KV 格式、ANE 恢复及独立功能开关。
 
@@ -179,7 +179,7 @@ GhostModelDeck 的 `Splash (source checkout)` 应登记当前仓库根目录，
 引用已删除 worktree 或指向旧 worktree 的 `.tooling` 条目，需要更新为这个目录。
 
 运行检查使用 `make check test-sanitizers`，详细构建和模型准备方式见
-[DEVELOPMENT.md](DEVELOPMENT.md)。下方保留上游使用说明；其中 Homebrew 安装命令
+[开发文档索引](docs/README.md)。下方保留上游使用说明；其中 Homebrew 安装命令
 安装的是上游 Splash，使用本仓库的魔改需要从源码构建。
 
 ## 上游 Splash 说明
@@ -198,9 +198,11 @@ It reuses cached prefixes and batches concurrent requests automatically.
 
 ## Quick start
 
-Apple M3 or newer, macOS 26.4 or later, and [Homebrew](https://brew.sh).
-The 4-bit examples need at least 36 GB of unified memory (48 GB recommended);
-24 GB Macs can use [smaller GGUF variants](#models).
+[Download the Splash desktop app](https://github.com/incoai/splash/releases/latest/download/Splash.dmg)
+for an Apple M3 or newer on macOS 26.4 or later, open the disk image and drag
+Splash into Applications.
+
+The command line needs the same Mac and [Homebrew](https://brew.sh):
 
 ```bash
 brew install incoai/tap/splash
@@ -209,7 +211,7 @@ splash serve --model unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M
 
 The first run downloads the model and its matching draft and starts serving
 on `127.0.0.1:8000`. Later starts reuse the downloads; leave room on disk for
-them ([storage requirements](DEVELOPMENT.md#model-storage)).
+them ([storage requirements](docs/server.md#model-storage)).
 
 Once it prints `Ready`, leave this terminal open. Open <http://127.0.0.1:8000>
 in your browser, or run an installed coding agent from another terminal:
@@ -239,9 +241,9 @@ curl http://127.0.0.1:8000/v1/chat/completions \
 
 Reasoning follows the model default; `"reasoning_effort": "none"` turns it off
 in Chat. Anthropic Messages requests reason only when they set `thinking`.
-[Reasoning settings](DEVELOPMENT.md#default-reasoning-effort) ·
-[Tool calls](DEVELOPMENT.md#tool-calls) ·
-[API details](DEVELOPMENT.md#api)
+[Reasoning settings](docs/server.md#default-reasoning-effort) ·
+[Tool calls](docs/api.md#tool-calls) ·
+[API details](docs/api.md)
 
 ## Models
 
@@ -252,7 +254,9 @@ automatically:
 | --- | --- | --- |
 | Qwen3.8-27B | `unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_M` | `mlx-community/Qwen3.8-27B-4bit` |
 | Qwen3.6-35B-A3B | `unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M` | `mlx-community/Qwen3.6-35B-A3B-4bit` |
+| Ornith-1.5-122B | `unsloth/Ornith-1.5-122B-GGUF:UD-Q4_K_XL` | `ornith-ai/Ornith-1.5-122B-MLX-4bit` |
 | Qwen3.8-Flash-Next | `ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF:Q2_0` | — |
+| Flint | `unsloth/flint-GGUF:UD-Q4_K_XL` | — |
 
 Unsloth GGUF variants span **1–8 bits**, including mixed-precision UD formats
 up to `UD-Q8_K_XL`, whose BF16 tensors load too. Whole-BF16 and F16 models are
@@ -266,11 +270,26 @@ checkpoints and NVFP4 GGUFs also load. Smaller variants run on
 [24 GB Macs](docs/performance.md#smaller-ggufs-on-24-gb-macs).
 [27B variants](https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/tree/main) ·
 [35B variants](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/tree/main) ·
+[Ornith-1.5-122B variants](https://huggingface.co/unsloth/Ornith-1.5-122B-GGUF/tree/main) ·
 [Flash-Next variants](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/tree/main)
 
 Vision and the tokenizer come from the target model's source.
-[Model loading and compatibility](DEVELOPMENT.md#upstream-model-loading) ·
-[Supported formats](DEVELOPMENT.md#gguf-targets)
+[Model loading and compatibility](docs/models.md#upstream-model-loading) ·
+[Supported formats](docs/models.md#gguf-targets)
+
+To serve files already on this Mac, pass the target's GGUF file or GGUF/MLX
+directory directly, and a compatible local DFlash2 draft:
+
+```bash
+splash serve --model local/qwen \
+  --model-dir /models/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q4_K_M.gguf \
+  --draft-model /models/Qwen3.8-27B-DFlash2
+```
+
+This prepares local files without contacting the Hub; `--model` is the name
+reported by the API. Omit `--draft-model` to use the family's draft from the
+Hub cache, or add `--mmproj /models/mmproj-BF16.gguf` for a GGUF's vision.
+See [local model files](docs/models.md#local-model-files) for details.
 
 ## Settings
 
@@ -292,11 +311,11 @@ window. To set your own limits or cache options, add these to `splash serve`:
 Use `--max-memory` to leave room for other applications.
 The server listens on localhost without authentication by default. For LAN
 access, authentication, browser apps on other origins, and other options, see
-[server configuration](DEVELOPMENT.md#server-configuration) or
+[server configuration](docs/server.md#server-configuration) or
 `splash serve --help`.
-[KV precision](DEVELOPMENT.md#kv-cache-precision) ·
-[SSD cache](DEVELOPMENT.md#ssd-cache) ·
-[Advanced memory settings](DEVELOPMENT.md#memory-and-context)
+[KV precision](docs/server.md#kv-cache-precision) ·
+[SSD cache](docs/server.md#ssd-cache) ·
+[Advanced memory settings](docs/server.md#memory-and-context)
 
 ## Performance
 
@@ -316,7 +335,7 @@ Strata serving the same GGUF on that Mac.
 
 [Launch benchmarks](https://inco.ai/blog/splash/) ·
 [Measurement details](docs/performance.md#splash-10-launch-benchmarks) ·
-[Run benchmarks locally](DEVELOPMENT.md#local-benchmarks)
+[Run benchmarks locally](docs/validate.md#local-benchmarks)
 
 ### GGUF against llama.cpp
 
@@ -354,7 +373,7 @@ ship precompiled, with no Xcode or local tuning required.
 
 ## More
 
-- [Development](DEVELOPMENT.md): configuration, API, internals, building, and testing.
+- [Documentation](docs/README.md): configuration, API, internals, building, and testing.
 - [Issues and feedback](https://github.com/incoai/splash/issues)
 - [Apache-2.0](LICENSE). GGUF kernels include MIT-licensed material from
   llama.cpp; see [third-party notices](THIRD_PARTY_NOTICES). Model weights keep their own licenses.

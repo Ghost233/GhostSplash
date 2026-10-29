@@ -20,7 +20,7 @@ BUILD_ID_PYTHON ?= python3
 SPLASH_MAKEFILE := $(abspath $(firstword $(MAKEFILE_LIST)))
 MODEL ?=
 # MODEL with the installer's source options selects one installation
-# (DEVELOPMENT.md, Upstream model loading); every model target passes them.
+# (docs/models.md, Upstream model loading); every model target passes them.
 # LANGUAGE_ONLY=1 selects the text-only installation; 0 or empty, the one
 # with vision.
 REVISION ?=
@@ -52,10 +52,12 @@ PRODUCTION_KERNEL_NAMES := \
 	$(patsubst runtime/metal/kernels/%.metal,%,$(PRODUCTION_KERNEL_SOURCES))
 PRODUCTION_AIRS := $(addprefix $(METAL_BUILD)/, \
 	$(addsuffix .air,$(PRODUCTION_KERNEL_NAMES)))
-# With shader validation enabled, linking attention_qkv before gguf_linear can
-# crash MTLCompilerService while creating the NVFP4 m32 gate/up pipeline.
-PRODUCTION_AIRS := $(filter $(METAL_BUILD)/shared/gguf_linear.air,$(PRODUCTION_AIRS)) \
-	$(filter-out $(METAL_BUILD)/shared/gguf_linear.air,$(PRODUCTION_AIRS))
+# Shader validation can crash MTLCompilerService for register decode or NVFP4
+# gate/up pipelines when their AIRs follow other kernels in the library.
+GGUF_DECODE_AIRS := $(filter $(PRODUCTION_AIRS), \
+	$(METAL_BUILD)/decode/linear_gguf_sgmatrix.air \
+	$(METAL_BUILD)/shared/gguf_linear.air)
+PRODUCTION_AIRS := $(GGUF_DECODE_AIRS) $(filter-out $(GGUF_DECODE_AIRS),$(PRODUCTION_AIRS))
 KERNEL_HEADERS := $(sort $(wildcard runtime/metal/abi/*.h \
 	runtime/metal/kernels/common/*.h))
 # macOS 26.4 is the tested floor: the engine refuses older systems at
@@ -319,6 +321,8 @@ ENGINE_CPP_SOURCES := \
 	runtime/model/Qwen4Exp.cpp \
 	runtime/model/Qwen4Steps.cpp \
 	runtime/model/Qwen4ExpTarget.cpp \
+	runtime/model/Flint.cpp \
+	runtime/model/FlintTarget.cpp \
 	runtime/model/QwenVision.cpp \
 	runtime/model/VisionPreparation.cpp \
 	runtime/model/VisionLoader.cpp \

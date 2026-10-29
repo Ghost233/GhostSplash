@@ -309,6 +309,7 @@ void testServerCommandLines(const char *path) {
            read.expertPleMemoryBytes == meant.expertPleMemoryBytes &&
            read.expertPleAdaptive == meant.expertPleAdaptive && read.expertPleRatio == meant.expertPleRatio &&
            read.sparseKvMemory == meant.sparseKvMemory && read.kvSpillAlways == meant.kvSpillAlways &&
+            read.kvWindowTrim == meant.kvWindowTrim &&
            read.verifyRows == meant.verifyRows;
   };
   const auto golden = readGolden(path);
@@ -357,6 +358,16 @@ void testStreamedMemoryAndSpill() {
   require(parse(model, {"auto", "auto", "--expert-ple-memory", "4096", "--expert-ple-memory", "auto"})
                   .expertPleMemoryBytes == 0,
           "an explicit auto did not reset a previous shared-pool cap");
+}
+
+// A windowed target trims the pages every window has passed unless
+// --kv-window-trim off, which only validation passes, keeps them Full.
+void testWindowTrim() {
+  const ModelDirectory model;
+  require(parse(model, {"auto", "auto"}).kvWindowTrim &&
+              parse(model, {"auto", "auto", "--kv-window-trim", "on"}).kvWindowTrim &&
+              !parse(model, {"auto", "auto", "--kv-window-trim", "off"}).kvWindowTrim,
+          "--kv-window-trim did not reach the arguments as given");
 }
 
 // A command line the server never writes is refused with what is wrong.
@@ -434,6 +445,8 @@ void testRefusals() {
     refuses({"auto", "auto", "--sparse-kv-memory", size}, "--sparse-kv-memory requires a positive byte count or auto");
   for (const char *spill : {"never", "auto", ""})
     refuses({"auto", "auto", "--kv-spill", spill}, "--kv-spill requires always");
+  for (const char *trim : {"never", "auto", ""})
+    refuses({"auto", "auto", "--kv-window-trim", trim}, "--kv-window-trim requires on or off");
   refuses({"auto", "auto", "--persistent-cache", "yes"}, "--persistent-cache requires on or off");
   refuses({"auto", "auto", "0", "--persistent-cache", "on"},
           "--persistent-cache requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
@@ -528,6 +541,7 @@ int main(int argc, char **argv) {
     testNeuralEngine();
     testVerifyRows();
     testStreamedMemoryAndSpill();
+    testWindowTrim();
     testRefusals();
     std::cout << "native arguments tests passed\n";
     return EXIT_SUCCESS;

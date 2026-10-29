@@ -57,10 +57,11 @@ void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, 
   // Validate every segment before recording a dispatch.
   for (const QuantizedSegment &segment : projection.blocks().segments) {
     if (segment.isFloat()) {
-      if (segment.formatId == QuantizedSegment::kBFloat16 &&
+      if (segment.formatId != QuantizedSegment::kFloat32 &&
           (splits != 1 || epilogue != LinearEpilogue::None || projection.planeInputs()))
-        throw std::invalid_argument("single-token BF16 float weights take a plain unsplit projection");
-      requireBytes(segment.plane0, uint64_t{segment.outputSize} * projection.planeInputSize() * segment.floatBytes(),
+        throw std::invalid_argument("single-token non-F32 rows take a plain unsplit projection");
+      requireBytes(segment.plane0, uint64_t{segment.outputSize} *
+                                       QuantizedSegment::rowBytes(segment.formatId, projection.planeInputSize()),
                    "single-token float weights");
     }
     else
@@ -69,7 +70,7 @@ void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, 
   if (!auxiliary) auxiliary = output;
   if (!partials) partials = output;
   for (const QuantizedSegment &segment : projection.blocks().segments) {
-    if (segment.formatId == QuantizedSegment::kBFloat16) {
+    if (segment.isFloat() && segment.formatId != QuantizedSegment::kFloat32) {
       addGgufFloat(graph, input, segment, output, 1, projection.outputSize, segment.columnOffset,
                    projection.destination, FloatTile::Simdgroup);
       continue;

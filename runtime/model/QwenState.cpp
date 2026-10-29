@@ -20,17 +20,21 @@ void *writableContents(const MetalBuffer &buffer, const char *name) {
   return contents;
 }
 
+// The buffer of a cell of no bytes is empty (QwenGdnCell): nothing to copy
+// or clear.
 void copyExact(const MetalBuffer &destination, const MetalBuffer &source,
                const char *name) {
   if (destination.sizeBytes() != source.sizeBytes()) {
     throw std::logic_error(std::string(name) + " shape mismatch");
   }
-  std::memcpy(writableContents(destination, name),
-              writableContents(source, name), destination.sizeBytes());
+  if (destination)
+    std::memcpy(writableContents(destination, name),
+                writableContents(source, name), destination.sizeBytes());
 }
 
 void clear(const MetalBuffer &buffer, const char *name) {
-  std::memset(writableContents(buffer, name), 0, buffer.sizeBytes());
+  if (buffer)
+    std::memset(writableContents(buffer, name), 0, buffer.sizeBytes());
 }
 
 // A state file slot holds GDN, then Standard's rings or DFlash2's window.
@@ -39,8 +43,9 @@ std::vector<std::span<std::byte>> stateSpans(
     const std::shared_ptr<DFlashContextWindow> &window) {
   std::vector<std::span<std::byte>> spans;
   const auto append = [&](const MetalBuffer &buffer) {
-    spans.emplace_back(static_cast<std::byte *>(writableContents(buffer, "state IO")),
-                       buffer.sizeBytes());
+    if (buffer)
+      spans.emplace_back(static_cast<std::byte *>(writableContents(buffer, "state IO")),
+                         buffer.sizeBytes());
   };
   append(gdn.stateBase);
   if (window) {
@@ -129,6 +134,9 @@ QwenGdnCell::QwenGdnCell(metal::MetalBackend &backend,
     throw std::invalid_argument("Qwen state allocation tracker is empty");
   if (!layout.valid())
     throw std::invalid_argument("Qwen GDN state layout is invalid");
+  // Metal allocates no buffer of no bytes, and such a cell needs none.
+  if (!layout.cellBytes())
+    return;
   const uint64_t before = backend.memoryStats().allocatedBytes;
   buffers_ = gdnCellBuffers(backend, backend.allocateBuffer(layout.cellBytes(), metal::BufferStorage::Shared, label),
                             layout);
@@ -268,6 +276,9 @@ QwenStateStorage::QwenStateStorage(metal::MetalBackend &backend,
     staging_->buffer = backend_.allocateBuffer(
         layout_.cachedBytes(), metal::BufferStorage::Shared, "qwen-state-staging");
   }
+  if (!layout_.target.cellBytes())
+    emptyCell_ = std::shared_ptr<QwenGdnCell>(
+        new QwenGdnCell(backend_, allocations_, layout_.target, "qwen-state-empty-gdn"));
 }
 
 QwenStateStorage::~QwenStateStorage() {
@@ -338,7 +349,7 @@ void QwenStateStorage::releaseLane(uint32_t index, uint64_t requestId) {
   // reactivated lane gets its previous buffers back in the same order.
   for (uint32_t parity = current.cells.gdn.size(); parity > 0;) {
     --parity;
-    pool_->cells.push_back(std::move(current.cells.gdn[parity]));
+    pool_->giveCell(std::move(current.cells.gdn[parity]));
   }
   if (current.cells.draft) pool_->rings.push_back(std::move(current.cells.draft));
   if (current.cells.window) pool_->windows.push_back(std::move(current.cells.window));
@@ -399,7 +410,8 @@ uint64_t QwenStateStorage::missingBytes(uint32_t cells, bool rings) const noexce
 uint32_t QwenStateStorage::statesToActivate() const noexcept {
   if (layout_.draft.usesContextWindow() && !idleRings())
     return std::numeric_limits<uint32_t>::max();
-  constexpr uint32_t laneCells = CompositeStateLayout::kLaneGdnCells;
+  // A lane takes no cell when its cells have no bytes.
+  const uint32_t laneCells = emptyCell_ ? 0 : CompositeStateLayout::kLaneGdnCells;
   const uint32_t cells = laneCells - std::min(idleCells(), laneCells);
   const uint32_t draft = layout_.draft.fullHistory ? (idleRings() ? 0 : 1)
       : layout_.draft.usesContextWindow() ? (idleWindows() ? 0 : 1) : 0;
@@ -509,6 +521,12 @@ metal::AllocationResult
 QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
                           Buffers &buffers, uint64_t extraBytes,
                           const std::function<void()> &allocateExtra) {
+  // Cells of no bytes are all the empty cell, which neither an admission nor
+  // the pool sees.
+  if (emptyCell_) {
+    std::fill_n(buffers.gdn.begin(), cells, emptyCell_);
+    cells = 0;
+  }
   const uint32_t pooledCells =
       std::min(cells, static_cast<uint32_t>(pool_->cells.size()));
   const bool pooledRings = !pool_->rings.empty();

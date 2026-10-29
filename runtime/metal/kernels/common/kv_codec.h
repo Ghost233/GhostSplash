@@ -11,8 +11,9 @@ using namespace mpp::tensor_ops;
 // Dense attention uses the intrinsic signed-nibble decoder directly as a
 // tensor operand. Selected attention uses splash_q4h_decode on the same
 // bytes. K and V have the same adjacent-nibble, token-major orientation.
+template <uint HeadDim = SPLASH_KV_HEAD_DIMENSION>
 inline auto splash_q4h_page_operand(device uchar *data) {
-  constexpr uint D = SPLASH_KV_HEAD_DIMENSION, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
+  constexpr uint D = HeadDim, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
   return tensor<device int4b_format, dextents<int, 2>, tensor_inline>(
       data, dextents<int, 2>{D, N}, array<int, 2>{1, D});
 }
@@ -22,32 +23,32 @@ inline bfloat2 splash_q4_0_pair(device const SplashQ4Block *block, uint lane) {
                  bfloat(splash_q4_0_decode(block->qs[lane], lane + 16, float(block->d))));
 }
 
-template <class Cache>
+template <class Cache, uint HeadDim = SPLASH_KV_HEAD_DIMENSION>
 inline auto splash_kv_key_operand(device Cache *data, threadgroup bfloat *stage) {
-  constexpr uint D = SPLASH_KV_HEAD_DIMENSION, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
+  constexpr uint D = HeadDim, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
   if constexpr (is_same<Cache, SplashQ4Block>::value)
     return tensor(stage, dextents<int,2>{D,N}, array<int,2>{1,D});
   else if constexpr (is_same<Cache, uchar>::value)
-    return splash_q4h_page_operand(data);
+    return splash_q4h_page_operand<HeadDim>(data);
   else
     return tensor<device Cache, dextents<int,2>, tensor_inline>(data, dextents<int,2>{D,N}, array<int,2>{1,D});
 }
 
-template <class Cache>
+template <class Cache, uint HeadDim = SPLASH_KV_HEAD_DIMENSION>
 inline auto splash_kv_value_operand(device Cache *data, threadgroup bfloat *stage) {
-  constexpr uint D = SPLASH_KV_HEAD_DIMENSION, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
+  constexpr uint D = HeadDim, N = SPLASH_TARGET_KV_BLOCK_TOKENS;
   if constexpr (is_same<Cache, SplashQ4Block>::value)
     return tensor(stage, dextents<int,2>{D,N}, array<int,2>{1,D});
   else if constexpr (is_same<Cache, uchar>::value)
-    return splash_q4h_page_operand(data);
+    return splash_q4h_page_operand<HeadDim>(data);
   else
     return tensor<device Cache, dextents<int,2>, tensor_inline>(data, dextents<int,2>{N,D}, array<int,2>{1,N});
 }
 
-template <class Cache, bool ValuesTokenMajor = false>
+template <class Cache, bool ValuesTokenMajor = false, uint HeadDim = SPLASH_KV_HEAD_DIMENSION>
 inline float splash_kv_read(SplashKvPageTensors<Cache> slab, uint token, uint dimension, bool valueTensor) {
   const auto data = valueTensor ? slab.values : slab.keys;
-  const uint element = token * SPLASH_KV_HEAD_DIMENSION + dimension;
+  const uint element = token * HeadDim + dimension;
   if constexpr (is_same<Cache, SplashQ4Block>::value) {
     const auto block = data + element / 32;
     return float(bfloat(splash_q4_0_decode(block->qs[dimension % 16], dimension, float(block->d))));
@@ -63,12 +64,12 @@ inline float splash_kv_read(SplashKvPageTensors<Cache> slab, uint token, uint di
 
 // Every GPU store uses the same codec after its caller selects a head slab
 // and loads one BF16 dimension. Only the parallel reductions are GPU-specific.
-template <class Cache, bool ValuesTokenMajor = false>
+template <class Cache, bool ValuesTokenMajor = false, uint HeadDim = SPLASH_KV_HEAD_DIMENSION>
 inline void splash_kv_store_row(SplashKvPageTensors<Cache> slab, bfloat source,
                                threadgroup float *maxima, bool valueTensor,
                                uint token, uint dimension, uint lane, uint group) {
   const auto data = valueTensor ? slab.values : slab.keys;
-  const uint element = token * SPLASH_KV_HEAD_DIMENSION + dimension;
+  const uint element = token * HeadDim + dimension;
   if constexpr (is_same<Cache, SplashQ4Block>::value) {
     const float value = float(source), maximum = simd_max(abs(value));
     const uint first = simd_min(abs(value) == maximum ? lane : 32u);
@@ -85,7 +86,7 @@ inline void splash_kv_store_row(SplashKvPageTensors<Cache> slab, bfloat source,
     const float value = float(source), local = simd_max(abs(value));
     if (lane == 0) maxima[group] = local;
     threadgroup_barrier(mem_flags::mem_threadgroup);
-    if (group == 0) for (uint offset = 4; offset; offset >>= 1) {
+    if (group == 0) for (uint offset = HeadDim / 64; offset; offset >>= 1) {
       if (lane < offset) maxima[lane] = max(maxima[lane], maxima[lane + offset]);
       simdgroup_barrier(mem_flags::mem_threadgroup);
     }

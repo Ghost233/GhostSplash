@@ -4,12 +4,12 @@ import sys
 from pathlib import Path
 
 source = Path(sys.argv[1]).read_text()
-old = "kernel == KernelLayout::Kv4Group4 && layout.format == kv::Format::Int8\n      ? 1U : prefillSplits(tiles);"
+old = "compact && layout.format == kv::Format::Int8\n                              ? 1U : prefillSplits(tiles, variant.windowTokens);"
 if source.count(old) != 1:
     raise SystemExit("production tail split policy changed; review matrix override")
 source = source.replace(
     old,
-    "kernel == KernelLayout::Kv4Group4\n      ? matrixTailSplits() : prefillSplits(tiles);",
+    "compact\n                              ? matrixTailSplits() : prefillSplits(tiles, variant.windowTokens);",
 )
 anchor = "namespace splash::ops {"
 if source.count(anchor) != 1:

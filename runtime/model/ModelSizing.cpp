@@ -67,17 +67,16 @@ StreamableWeights targetWeights(const Layout &layout, const Plan &plan, gguf::Pl
     result.expertBytes = loadedBytes(plan({.streamTable = result.tableBytes != 0})) - result.loadedBytes +
                          residentExpertSlotsBytes(layout.experts);
     StreamedBlocks blocks;
-    blocks.blocks = gguf::streamedExperts(std::span(streamed).first(layout.layers));
+    blocks.blocks = gguf::streamedExperts(std::span(streamed).subspan(layout.leadingDenseLayers, layout.layers - layout.leadingDenseLayers));
     result.expertFloorBytes = ExpertStore::minimumBytes(
-        blocks, {layout.hiddenSize, layout.experts, layout.expertsPerToken, layout.expertIntermediateSize}, resizableExperts);
+        blocks, layout.moeBlockShape(), resizableExperts);
   }
   if (layout.ffnKind == QwenFfnKind::SparseMoe) {
     const auto diagnostic = streams.streamExperts ? streamed :
         plan({.streamExperts = true, .streamTable = streams.streamTable});
     StreamedBlocks blocks;
-    blocks.blocks = gguf::streamedExperts(std::span(diagnostic).first(layout.layers));
-    const ops::MoeShape shape{layout.hiddenSize, layout.experts, layout.expertsPerToken,
-                              layout.expertIntermediateSize};
+    blocks.blocks = gguf::streamedExperts(std::span(diagnostic).subspan(layout.leadingDenseLayers, layout.layers - layout.leadingDenseLayers));
+    const ops::MoeShape shape = layout.moeBlockShape();
     ExpertStorageSnapshot info;
     info.contiguous = ExpertStore::storageRange(blocks, shape);
     info.resizable = ExpertStore::storageRange(blocks, shape, true);

@@ -6,6 +6,8 @@
 #include "metal/abi/GDN.h"
 #include "ops/GDN.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <array>
 #include <algorithm>
@@ -18,7 +20,9 @@ inline constexpr uint32_t kGdnConvolutionTaps = SPLASH_GDN_CONVOLUTION_TAPS;
 
 // Physical state geometry is supplied by the paired target and draft models,
 // and the recurrent state's format by the runtime (--state-format). The
-// engine sees only opaque CompositeState handles and byte accounting.
+// engine sees only opaque CompositeState handles and byte accounting. A
+// target without GDN layers keeps only its auxiliary state in a cell, if it
+// has one: its cells may hold nothing.
 struct GdnStateLayout final {
   static constexpr uint32_t bfloat16Bytes = 2;
 
@@ -33,10 +37,13 @@ struct GdnStateLayout final {
   // convolution history), after them in the cell.
   uint64_t auxiliaryBytes = 0;
 
+  // Every GDN dimension is set with GDN layers and zero without.
   [[nodiscard]] constexpr bool valid() const noexcept {
-    return layers && convolutionHistory && convolutionChannels &&
-           recurrentGroups && recurrentRows && recurrentColumns &&
-           ops::validFormat(format);
+    const std::array dimensions{convolutionHistory, convolutionChannels,
+                                recurrentGroups, recurrentRows,
+                                recurrentColumns};
+    const auto set = [&](uint32_t dimension) { return !dimension == !layers; };
+    return std::ranges::all_of(dimensions, set) && ops::validFormat(format);
   }
   [[nodiscard]] constexpr uint64_t convolutionLayerBytes() const noexcept {
     return alignUp(uint64_t{convolutionHistory} * convolutionChannels *
@@ -117,6 +124,9 @@ struct DraftStateLayout final {
   bool operator==(const DraftStateLayout &) const = default;
 };
 
+// A lane holds two GDN cells and its draft storage; a cached state keeps
+// Standard DFlash's rings or DFlash2's context window beside one GDN cell.
+// A cell of no bytes takes no memory (QwenGdnCell).
 struct CompositeStateLayout final {
   // The GDN cells a lane holds, with one draft ring.
   static constexpr uint32_t kLaneGdnCells = 2;
