@@ -114,7 +114,7 @@ class KevTests(HarnessTestCase):
         self.assertIn("decision_model", harness.app.status())
 
     def test_isolated_surrogates_match_the_upstream_replacement(self):
-        from server import judgments
+        from server.dialects import scoring as judgments
         from server.kev import KevScorer
 
         scorer = KevScorer(KevTokenizer(), config())
@@ -209,8 +209,10 @@ class KevTests(HarnessTestCase):
                 for key in ("ONE", "TWO")
             },
         }
-        entries = harness.app.prepare_systemone(
-            body, deadline=FOREVER, disconnected=stays_connected
+        from server.dialects import scoring
+
+        entries = scoring.prepare_systemone(
+            harness.app, body, deadline=FOREVER, disconnected=stays_connected
         )
         for index, (_, _, job) in enumerate(entries):
             text = harness.tokenizer.decode(job.prompt_tokens)

@@ -1,8 +1,12 @@
-# What the engine's memory and caches take from each family Splash serves
-# (model::kFamilies), as dev/tests/engine/family_values_test.cpp writes it,
-# family by family in kFamilies' order, each with the draft
-# dev/tests/fixtures/model-configs describes for it:
+# What the start options and the engine's memory and caches take from each
+# family Splash serves (model::kFamilies), as
+# dev/tests/engine/family_values_test.cpp writes it, family by family in
+# kFamilies' order, each with the draft dev/tests/fixtures/model-configs
+# describes for it:
 #
+#   facts: what the options of a start depend on (model::familyFacts),
+#     1 for yes: a MoE FFN, GDN state, a PLE table, sparse KV, every FFN
+#     layer dense; and the native window and the most context it serves;
 #   kv: the target's KV layout (kv::Layout) and its sliding window, if it
 #     has one;
 #   kv <format>: a page's bytes, Full and Index (kv::PageForm), and Slim for
@@ -15,10 +19,12 @@
 #   namespace <kv format> <state format>: the persistent cache's directory
 #     (engine::persistentCacheNamespace) for manifests of 'a' and 'b' digits.
 #
-# A line that changes for an existing family moves its memory plan, or
-# empties its users' persistent caches: such a change must be one on
-# purpose. A new family adds its lines.
+# A facts line that changes for an existing family changes the options the
+# app offers and passes for its models, or the context it suggests; any other
+# line that changes moves its memory plan, or empties its users' persistent
+# caches. Either change must be one on purpose. A new family adds its lines.
 family Qwen3.8-27B
+facts experts 0 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 1 context 262144..1010000
 kv layers 16 heads 4 dimension 256 index 0
 kv int8 page 1064960 index-page 0 alignment 128 extents 128..128
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:128 129:128 255:128 256:128 257:128 511:128 512:128 1000:128 4095:128 4096:128 10000:128 65535:128 65536:128 100000:128 262144:128 1000000:128
@@ -31,6 +37,7 @@ state bf16 cell 78643200 lane 205127680 cached 84541440
 namespace int8 bf16 172879058b5e2bcc713e129a2b62393a
 namespace bf16 bf16 42a4e915c0e06b5a19ac419dbfca5147
 family Qwen3.6-35B-A3B
+facts experts 1 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 0 context 262144..1010000
 kv layers 10 heads 2 dimension 256 index 0
 kv int8 page 332800 index-page 0 alignment 256 extents 256..512
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:0 129:0 255:0 256:256 257:256 511:256 512:512 1000:256 4095:256 4096:512 10000:256 65535:256 65536:512 100000:512 262144:512 1000000:512
@@ -43,6 +50,7 @@ state bf16 cell 32931840 lane 118554624 cached 35291136
 namespace int8 bf16 4debebc6a78787f3367f847b6362e45b
 namespace bf16 bf16 f0dcb3f1543f228fb6ad140ffa8d39a9
 family Qwen3.5-122B-A10B
+facts experts 1 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 0 context 262144..1010000
 kv layers 12 heads 2 dimension 256 index 0
 kv int8 page 399360 index-page 0 alignment 256 extents 256..256
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:0 129:0 255:0 256:256 257:256 511:256 512:256 1000:256 4095:256 4096:256 10000:256 65535:256 65536:256 100000:256 262144:256 1000000:256
@@ -55,6 +63,7 @@ state bf16 cell 78446592 lane 210763776 cached 81985536
 namespace int8 bf16 734718fde5d9ae8498a8b81e6740167b
 namespace bf16 bf16 4cf67c8254e966ac407c08e9b46eec1b
 family Qwen3.8-Flash-Next
+facts experts 1 recurrent-state 1 ple-table 1 sparse-kv 1 dense-ffn 0 context 262144..1010000
 kv layers 12 heads 2 dimension 256 index 128 values-token-major
 kv int8 page 423936 index-page 24576 alignment 256 extents 256..256
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:0 129:0 255:0 256:256 257:256 511:256 512:256 1000:256 4095:256 4096:256 10000:256 65535:256 65536:256 100000:256 262144:256 1000000:256
@@ -69,6 +78,7 @@ namespace bf16 bf16 f6e38910bc0e3f19d0341068bb3c6848
 # Local 4B, Standard DFlash and Kev values were captured with pre-merge
 # 1438c6cf headers and the retained src-ea02ac86f1fa255e runtime library.
 family Qwen3.5-4B
+facts experts 0 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 1 context 262144..262144
 kv layers 8 heads 4 dimension 256 index 0
 kv int8 page 532480 index-page 0 alignment 128 extents 128..256
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:128 129:128 255:128 256:256 257:256 511:128 512:256 1000:128 4095:128 4096:256 10000:256 65535:128 65536:256 100000:128 262144:256 1000000:256
@@ -81,6 +91,7 @@ state bf16 cell 26345472 lane 52690944 cached 26345472
 namespace int8 bf16 7c525b5ddf3296605c5ff522f9d5f24d
 namespace bf16 bf16 7cf8f3fc576873caae1aeea67551c6c8
 family Qwen3.5-4B draft standard
+facts experts 0 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 1 context 262144..262144
 kv layers 8 heads 4 dimension 256 index 0
 kv int8 page 532480 index-page 0 alignment 128 extents 128..256
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:128 129:128 255:128 256:256 257:256 511:128 512:256 1000:128 4095:128 4096:256 10000:256 65535:128 65536:256 100000:128 262144:256 1000000:256
@@ -93,6 +104,7 @@ state bf16 cell 26345472 lane 1210318848 cached 1183973376
 namespace int8 bf16 08cb2762fc36200c5d460bc356e46d5e
 namespace bf16 bf16 286df1e91a433adcd1db56aa17664455
 family Kev-0.8B
+facts experts 0 recurrent-state 1 ple-table 0 sparse-kv 0 dense-ffn 1 context 262144..262144
 kv layers 6 heads 2 dimension 256 index 0
 kv int8 page 199680 index-page 0 alignment 256 extents 512..768
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:0 129:0 255:0 256:0 257:0 511:0 512:512 1000:768 4095:768 4096:512 10000:768 65535:768 65536:512 100000:768 262144:512 1000000:768
@@ -105,6 +117,7 @@ state bf16 cell 10321920 lane 20643840 cached 10321920
 namespace int8 bf16 68fc6dd0e50195830cd9912d6182dec0
 namespace bf16 bf16 1dc82a469b5f9f9ca27586451e0a622f
 family Flint
+facts experts 1 recurrent-state 0 ple-table 0 sparse-kv 0 dense-ffn 0 context 262144..262144
 kv layers 49 heads 4 dimension 128 index 0 window 512 layers 0xdddddddddddc
 kv int8 page 1655808 index-page 0 slim-page 473088 alignment 128 extents 128..128
 kv int8 extent-pages 1:0 31:0 32:0 63:0 64:0 127:0 128:128 129:128 255:128 256:128 257:128 511:128 512:128 1000:128 4095:128 4096:128 10000:128 65535:128 65536:128 100000:128 262144:128 1000000:128

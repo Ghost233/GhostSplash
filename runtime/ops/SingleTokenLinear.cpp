@@ -54,6 +54,7 @@ void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, 
   if (epilogue != LinearEpilogue::None)
     requireBytes(auxiliary, uint64_t{projection.outputSize} * 2, "single-token auxiliary");
   requireBytes(partials, singleTokenLinearScratchBytes(projection, splits), "single-token partials");
+  const uint32_t planeInputs = projection.planeInputs() ? projection.planeInputs() : projection.inputSize;
   // Validate every segment before recording a dispatch.
   for (const QuantizedSegment &segment : projection.blocks().segments) {
     if (segment.isFloat()) {
@@ -61,10 +62,9 @@ void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, 
           (splits != 1 || epilogue != LinearEpilogue::None || projection.planeInputs()))
         throw std::invalid_argument("single-token non-F32 rows take a plain unsplit projection");
       requireBytes(segment.plane0, uint64_t{segment.outputSize} *
-                                       QuantizedSegment::rowBytes(segment.formatId, projection.planeInputSize()),
+                                       QuantizedSegment::rowBytes(segment.formatId, planeInputs),
                    "single-token float weights");
-    }
-    else
+    } else
       requireSegmentPlanes(segment, "single-token weights", projection.planeInputs());
   }
   if (!auxiliary) auxiliary = output;
@@ -75,7 +75,7 @@ void addSingleTokenLinear(metal::CommandGraph &graph, metal::MetalBuffer input, 
                    projection.destination, FloatTile::Simdgroup);
       continue;
     }
-    const SingleTokenParams p{projection.inputSize, projection.planeInputSize(), segment.outputSize,
+    const SingleTokenParams p{projection.inputSize, planeInputs, segment.outputSize,
                               projection.outputSize, segment.columnOffset, splits};
     const uint32_t tile = segment.isFloat() ? 32 : columnsPerThreadgroup;
     const std::string name = std::string("gguf_single_") + (segment.isFloat() ? "float" : segment.name()) +

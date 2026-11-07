@@ -27,12 +27,10 @@ uint64_t parseMaxMemory(std::string_view value) {
   return result;
 }
 
-// Whether `value` is a context of 1 to the model's own tokens, which
-// `result` then holds.
-bool parseContext(std::string_view value,
-                  const model::ModelCapabilities &capabilities, uint32_t &result) {
-  return parsePositive(value, result) &&
-         result <= capabilities.maximumContextTokens;
+// Whether `value` is a context of 1 to `most` tokens, which `result` then
+// holds.
+bool parseContext(std::string_view value, uint32_t most, uint32_t &result) {
+  return parsePositive(value, result) && result <= most;
 }
 
 // MAX_CONTEXT, zero for auto; the model bounds it (model::servedFor).
@@ -109,18 +107,27 @@ std::filesystem::path requireModelRoot(std::string_view argument) {
   const std::filesystem::path root =
       std::filesystem::canonical(std::filesystem::path(argument), error);
   if (error || !std::filesystem::is_directory(root, error))
-    throw UsageError("MODEL_DIRECTORY must name an existing directory");
+    throw ModelRootError("MODEL_DIRECTORY must name an existing directory");
   if (!std::filesystem::is_directory(root / "target", error))
-    throw UsageError("MODEL_DIRECTORY must hold the model's target/ directory");
+    throw ModelRootError("MODEL_DIRECTORY must hold the model's target/ directory");
   return root;
+}
+
+// The model `root` holds (model::inspectModelRoot), whose refusal is the
+// root's.
+model::ModelDescriptor inspectModel(const std::filesystem::path &root) {
+  try {
+    return model::inspectModelRoot(root);
+  } catch (const std::exception &error) {
+    throw ModelRootError(error.what());
+  }
 }
 
 } // namespace
 
 NativeArguments parseNativeArguments(int argc, const char *const *argv) {
-  if (argc < 5 || std::string_view(argv[1]) != "serve-native") {
-    throw UsageError("expected the serve-native command");
-  }
+  if (argc < 5)
+    throw UsageError("serve-native requires MODEL_DIRECTORY, MAX_CONTEXT and MAX_MEMORY_BYTES");
   NativeArguments result;
   std::optional<double> aneShare;
   std::optional<uint32_t> aneRows;
@@ -178,24 +185,6 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       result.pleMemory = parseStreamedSetting(option, value);
     } else if (option == "--expert-memory") {
       result.expertMemory = parseStreamedSetting(option, value);
-    } else if (option == "--moe-memory-pressure") {
-      result.moeMemoryPressure = parseSwitch(option, value);
-    } else if (option == "--host-memory-reserve") {
-      uint64_t bytes = 0;
-      if (value != "auto" && !parsePositive(value, bytes))
-        throw UsageError("--host-memory-reserve requires auto or a positive byte count");
-      result.hostMemoryReserveBytes = bytes ? std::optional<uint64_t>(bytes) : std::nullopt;
-    } else if (option == "--expert-ple-memory") {
-      uint64_t bytes = 0;
-      if (value != "auto" && !parsePositive(value, bytes))
-        throw UsageError("--expert-ple-memory requires a positive byte count or auto");
-      result.expertPleMemoryBytes = bytes;
-    } else if (option == "--expert-ple-policy") {
-      if (value != "static" && value != "adaptive") throw UsageError("--expert-ple-policy requires static or adaptive");
-      result.expertPleAdaptive = value == "adaptive";
-    } else if (option == "--expert-ple-ratio") {
-      if (value != "1:20" && value != "1:10") throw UsageError("--expert-ple-ratio requires 1:20 or 1:10");
-      result.expertPleRatio = value == "1:20" ? 20 : 10;
     } else if (option == "--sparse-kv-memory") {
       uint64_t bytes = 0;
       if (value != "auto" && !parsePositive(value, bytes))
@@ -270,15 +259,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--max-cache-disk-writes requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
   if (!result.cacheRoot.empty() && !result.persistentCache)
     throw UsageError("--cache-dir requires --persistent-cache on");
-  if (result.expertPleAdaptive && (!result.expertPleMemoryBytes ||
-      result.expertMemory.mode != StreamedSetting::Mode::Auto || result.pleMemory.mode != StreamedSetting::Mode::Auto))
-    throw UsageError("--expert-ple-policy adaptive requires --expert-ple-memory SIZE and both stores auto");
-  if (result.moeMemoryPressure && result.expertMemory.mode != StreamedSetting::Mode::Auto)
-    throw UsageError("--moe-memory-pressure on requires --expert-memory auto");
-  if (!result.moeMemoryPressure && result.hostMemoryReserveBytes)
-    throw UsageError("--host-memory-reserve SIZE requires --moe-memory-pressure on");
   result.modelRoot = requireModelRoot(argv[2]);
-  model::ModelDescriptor inspected = model::inspectModelRoot(result.modelRoot);
+  model::ModelDescriptor inspected = inspectModel(result.modelRoot);
   result.maxContext = parseMaxContext(argv[3]);
   try {
     result.model = model::servedFor(std::move(inspected), result.maxContext);
@@ -289,16 +271,15 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       result.model.family() != model::Qwen3_5_4BLayout{}.family)
     throw UsageError("--experimental-quantized-ffn only supports Qwen3.5-4B generation");
   if (result.model.hasDraft() && !std::filesystem::is_directory(result.modelRoot / "draft"))
-    throw UsageError("MODEL_DIRECTORY must hold the model's draft/ directory for this model");
+    throw ModelRootError("MODEL_DIRECTORY must hold the model's draft/ directory for this model");
+  // A relaunch's context is one its first engine served: MAX_CONTEXT at
+  // most, which a relaunch passes as that engine's, else one the model holds.
   if (relaunchContext) {
-    if (result.maxContext)
-      throw UsageError("--relaunch-context requires MAX_CONTEXT auto");
-    if (!parseContext(*relaunchContext, result.model.capabilities, result.relaunchContext))
-      throw UsageError("--relaunch-context requires an integer in [1, " +
-                       std::to_string(result.model.capabilities.maximumContextTokens) + "]");
+    const uint32_t most =
+        result.maxContext ? result.maxContext : result.model.capabilities.maximumContextTokens;
+    if (!parseContext(*relaunchContext, most, result.relaunchContext))
+      throw UsageError("--relaunch-context requires an integer in [1, " + std::to_string(most) + "]");
   }
-  if (result.moeMemoryPressure && !std::visit([](const auto &layout) { return layout.experts != 0; }, result.model.target))
-    throw UsageError("--moe-memory-pressure on requires a resizable MoE model");
   result.maxMemoryBytes = parseMaxMemory(argv[4]);
   return result;
 }

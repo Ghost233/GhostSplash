@@ -241,7 +241,7 @@ GDN recurrent state 是 FP32、卷积历史为 BF16；当前 GGUF 权重混合�
 
 1. **Q/K 顺序**：先完成 QK RMSNorm 与 RoPE，再施加一致的 Hadamard，再量化存 K、用旋转 Q 计算。Hadamard 不是 RoPE；放在 RoPE 前通常不等价。上游 Qwen35 就是此顺序。[Qwen35 源码](https://github.com/ggml-org/llama.cpp/blob/86a283532072722c5f3363d37d59a874d09fa99b/src/models/qwen35.cpp#L277)、[本地投影](../runtime/ops/PagedAttention.cpp)
 2. **V 与门控**：PV 输出必须逆旋转到原坐标，再做 Qwen 的逐元素 sigmoid gate。此 gate 与一般 rotation 不交换，不能简单将逆旋转折进 gate 后的 output projection。[上游 PV 后逆旋转](https://github.com/ggml-org/llama.cpp/blob/86a283532072722c5f3363d37d59a874d09fa99b/src/llama-graph.cpp#L3048)、[上游 sigmoid gate](https://github.com/ggml-org/llama.cpp/blob/86a283532072722c5f3363d37d59a874d09fa99b/src/models/qwen35.cpp#L329)
-3. **attention 消费格式**：现 KV MPP `matmul2d` 路径直接读 INT8 操作数，scale 后处理。标准整数 packed4 有原生 TensorOps 输入路径可考虑，但不能把 GGML q4_0 的完整 block 字节直接当成 Metal tensor；仍须匹配打包、尺度、stride、alignment 和 operand 组合。非均匀 codebook 则需要额外 lookup/dequantize。不能原生消费时，在读取 tile 时转换到硬件支持的局部格式，保持页式访问；全 cache 恢复 BF16 会抵消内存目的。[MPP tile](../runtime/metal/kernels/common/paged_attention_tile.h)、[本地原生 uint4b 矩阵路径](../runtime/metal/kernels/common/q4_mpp_tiles.h)
+3. **attention 消费格式**：现 KV MPP `matmul2d` 路径直接读 INT8 操作数，scale 后处理。标准整数 packed4 有原生 TensorOps 输入路径可考虑，但不能把 GGML q4_0 的完整 block 字节直接当成 Metal tensor；仍须匹配打包、尺度、stride、alignment 和 operand 组合。非均匀 codebook 则需要额外 lookup/dequantize。不能原生消费时，在读取 tile 时转换到硬件支持的局部格式，保持页式访问；全 cache 恢复 BF16 会抵消内存目的。[MPP tile](../runtime/metal/kernels/common/paged_attention_tile.h)、[本地原生 uint4b 矩阵路径](https://github.com/Ghost233/GhostSplash/blob/422961d062ed4f45cedc52308efa858b07c51e63/runtime/metal/kernels/common/q4_mpp_tiles.h)
 4. **尺度寻址**：本地 K token-major、V dimension-major、per-token/head scale。GGML q4_0 的 32 元 group scale 需要新的 ABI 和寻址。每头 F32-scale uniform4 更靠近现有布局，但收益/误差须独立评价。[PagedKv storage identity](../runtime/ops/PagedKv.hpp)
 5. **状态一致**：前缀复用、snapshot、persist cache 需记录 quantizer/layout、rotation 大小、版本；若随机化则加 seed/符号身份。旧 namespace 只识别现有格式和几何，不能读取不同基底的同尺寸数据。上游已专门修复这个错误。[PR #28498](https://github.com/ggml-org/llama.cpp/pull/28498)
 6. **drafter 后续**：target 的 speculative verify 写缓存必须使用同样的旋转与量化格式。本地 DFlash 有独立的 BF16 ring，可先保持原格式；不应将它描述为已经向 target KV 注入数据。若未来共享或注入 target KV，才须遵循 target 的旋转基底。上游针对其注入路径有修复可参考。[本地 draft ring](../runtime/model/DFlashDraft.hpp)、[PR #25823](https://github.com/ggml-org/llama.cpp/pull/25823)
@@ -366,7 +366,7 @@ any tests. Runtime validation remains deferred until the user explicitly permits
 
 ## Shared-worktree launcher handoff incorporated
 
-Read `build/launcher-kv-main-thread-handoff.md` and checked the reported
+Read `build/` 下的 `launcher-kv-main-thread-handoff.md` and checked the reported
 launcher/parser sources. Their KV selection is consistently command-line
 `--kv-format`; no legacy KV environment-variable usage remains in these notes.
 The shared parser defaults to INT8 and validates all five current formats.

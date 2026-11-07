@@ -36,9 +36,9 @@ from server import serve_options
 
 parser = argparse.ArgumentParser(
     prog="tielcoder35ba3bq4xlsplash.sh",
-    description="Tiel Coder 35B-A3B UD-Q4_K_XL with automatic expert memory pressure control",
+    description="Tiel Coder 35B-A3B UD-Q4_K_XL with automatic expert memory",
     epilog="Defaults: context=262144, KV=q4h, queue=4, memory=30G, "
-           "expert-memory=auto, moe-memory-pressure=on, SSD cache=50G; lookup, fast-topk and compact off.",
+           "expert-memory=auto, SSD cache=50G; lookup, fast-topk and compact off.",
 )
 parser.add_argument("--port", type=int, default=int(port))
 parser.add_argument("--binary", default=binary)
@@ -48,7 +48,7 @@ parser.set_defaults(
     max_memory=serve_options.parse_max_memory(memory),
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
-    expert_memory=serve_options.parse_expert_memory("auto"), moe_memory_pressure="on",
+    expert_memory=serve_options.parse_expert_memory("auto"),
     prompt_lookup="off", fast_topk="off", compact_draft_head="off",
     experimental_quantized_ffn="off",
 )

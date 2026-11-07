@@ -1,19 +1,23 @@
-#include "GgufFixtures.hpp"
+#include "ClaimScope.hpp"
 #include "ProtocolPeer.hpp"
+#include "SyntheticModels.hpp"
 #include "TestChecks.hpp"
 #include "TestFiles.hpp"
 #include "TestCheckpoint.hpp"
 #include "TestDrafts.hpp"
 #include "TestStderr.hpp"
-#include "TestAdmission.hpp"
-#include "Checked.hpp"
 #include "engine/Bootstrap.hpp"
 #include "engine/RuntimeResources.hpp"
 #include "engine/Engine.hpp"
 #include "engine/MemoryPlan.hpp"
 #include "model/ModelSizing.hpp"
+#include "model/Qwen4Exp.hpp"
+#include "model/Runtime.hpp"
 #include "model/RuntimeArenas.hpp"
+#include "model/SparseRowStore.hpp"
 #include "model/SsdReaders.hpp"
+#include "model/WorkFormulas.hpp"
+#include "tools/LoadOptions.hpp"
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
@@ -21,9 +25,6 @@
 #include <sys/time.h>
 
 #include <algorithm>
-#include <atomic>
-#include <future>
-#include <thread>
 #include <array>
 #include <chrono>
 #include <cstdlib>
@@ -32,131 +33,32 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <limits>
+#include <numeric>
 #include <optional>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
-
-std::atomic<bool> observeLargeHostGrowth{false};
-std::atomic<uint64_t> largeHostGrowths{0}, largeHostBytes{0}, firstLargeHostBytes{0}, backgroundHostGrowths{0};
-std::thread::id observedHostOwner;
-thread_local size_t failingMetadataBytes = 0;
-thread_local int matchingMetadataAllocations = -1;
-void *operator new(size_t bytes) {
-  if (bytes == failingMetadataBytes && matchingMetadataAllocations >= 0 && matchingMetadataAllocations-- == 0)
-    throw std::bad_alloc();
-  if (observeLargeHostGrowth.load(std::memory_order_acquire) && bytes >= (1ULL << 20)) {
-    if (largeHostGrowths.fetch_add(1, std::memory_order_relaxed) == 0) firstLargeHostBytes = bytes;
-    largeHostBytes.fetch_add(bytes, std::memory_order_relaxed);
-    if (std::this_thread::get_id() != observedHostOwner) backgroundHostGrowths.fetch_add(1, std::memory_order_relaxed);
-  }
-  if (void *memory = std::malloc(bytes ? bytes : 1)) return memory;
-  throw std::bad_alloc();
-}
-void operator delete(void *memory) noexcept { std::free(memory); }
+#include <vector>
 
 namespace {
 
 using namespace splash;
 using namespace splash::engine;
 
+using splash::test::flashNextConfig;
+using splash::test::kMoeExperts;
+using splash::test::kMoeLayers;
+using splash::test::loadableConfig;
+using splash::test::localVolume;
+using splash::test::moeConfig;
+using splash::test::PlannedModel;
+using splash::test::plannedModel;
+using splash::test::reading;
 using splash::test::rejects;
 using splash::test::require;
-
-struct AutomaticStorageClock final {
-  std::shared_ptr<std::atomic<uint64_t>> now = std::make_shared<std::atomic<uint64_t>>(0);
-  explicit AutomaticStorageClock(RuntimeResourcesConfig &config) {
-    auto events = std::make_shared<std::atomic<uint64_t>>(0);
-    config.memoryPressure = [source = config.memoryPressure, events] {
-      const auto level = source ? source() : MemoryPressure::Normal;
-      if (level == MemoryPressure::Critical) events->fetch_add(1);
-      return level;
-    };
-    config.memoryPolicy = {[clock = now] { return clock->load(); }, [source = config.memoryPressure, events] {
-      const auto level = source();
-      return MemoryPolicyObservation{MemoryPolicyObservation::Pressure(uint32_t(level) + 1), events->load()};
-    }};
-  }
-  void advance(const MemoryGovernorSnapshot &group) const {
-    if (!group.pressureControlEnabled || (group.automaticGrowthReason != "headroom_observation" &&
-        group.automaticGrowthReason != "ready" && group.automaticGrowthReason != "block_cooldown" &&
-        group.automaticGrowthReason != "automatic_outstanding")) return;
-    const uint64_t stable = 30'000 - std::min<uint64_t>(30'000, group.normalStableMilliseconds);
-    const auto target = now->load() + std::max(stable, group.blockCooldownMilliseconds);
-    auto before = now->load();
-    while (before < target && !now->compare_exchange_weak(before, target)) {}
-  }
-};
-
-metal::AllocationResult growAutomaticTo(RuntimeResources &resources, const AutomaticStorageClock &clock,
-                                       bool table, uint64_t target, std::chrono::steady_clock::time_point deadline) {
-  // This bounded owner acts for an admitted request; Ready alone is idle.
-  auto *experts = resources.modelContext().model.expertStore();
-  auto *ple = resources.modelContext().model.streamedTable();
-  for (;;) {
-    const uint64_t actual = table ? ple->committedBytes() : experts->allocatedBytes();
-    if (actual == target) return {};
-    require(actual < target && std::chrono::steady_clock::now() < deadline,
-            "paced seed did not reach its original target within the original grow deadline");
-    clock.advance(resources.memoryGovernor().evaluate());
-    const auto result = resources.growAutomaticStorageOne(table ? experts->allocatedBytes() : target,
-        table ? target : ple ? ple->committedBytes() : 0);
-    if (!result && result.failure != metal::AllocationFailure::GrowthDeferred) return result;
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-}
-
-void testLoadedDraftIsRequiredOnlyWithDraft() {
-  model::LoadedModel loaded;
-  model::Qwen3_5_4BWeights target;
-  target.actualAllocatedBytes = 1;
-  target.manifestFingerprintSha256 = "target";
-  loaded.descriptor = model::makeModelDescriptor("target-only", target.layout, {}, {},
-      model::TargetSource::Gguf, model::VisionSource::None);
-  loaded.target = std::move(target);
-  loaded.manifestFingerprintSha256 = "model";
-  requireLoadedModel(loaded);
-  loaded.draft.actualAllocatedBytes = 1;
-  rejects([&] { requireLoadedModel(loaded); }, "incomplete allocation accounting",
-          "target-only loader reported nonexistent draft weights");
-}
-
-// A small model whose weights load and whose geometry the runtime plans:
-// four target and two draft layers of the 2048-wide hidden state a compiled
-// draft attention takes, the draft reading a GDN layer and the attention
-// layer, with Qwen3.8-27B's attention and GDN heads and a two-block vision
-// tower.
-struct PlannedModel final {
-  model::Qwen3_8Layout target;
-  model::DFlashDraftLayout draft;
-  ops::VisionLayout vision;
-};
-
-PlannedModel plannedModel() {
-  PlannedModel result;
-  model::Qwen3_8Layout &target = result.target;
-  target.layers = 4;
-  target.hiddenSize = 2048;
-  target.vocabularySize = 1024;
-  target.intermediateSize = 1024;
-  constexpr std::array<uint32_t, 2> draftReads{1, 3};
-  result.draft = model::draftLayout(target.hiddenSize, target.vocabularySize, 2, 1024, 10'000'000.0F, draftReads);
-  ops::VisionLayout &vision = result.vision;
-  vision.depth = 2;
-  vision.hiddenSize = 128;
-  vision.patchDimension = 1536;
-  vision.intermediateSize = 200;
-  vision.paddedIntermediateSize = 256;
-  vision.mergedHiddenSize = 512;
-  vision.outputHiddenSize = target.hiddenSize;
-  vision.heads = 2;
-  vision.headDimension = 64;
-  vision.positionGridSide = 4;
-  return result;
-}
 
 // The target and draft checkpoints of `model` under root, which weight
 // planning reads; its vision tower stays absent, so loading stops there.
@@ -177,1038 +79,14 @@ RuntimeResourcesConfig budgetConfig(const char *metallibPath, const std::filesys
   return config;
 }
 
-// A model under root whose weights load, which nothing but the host
-// refuses: `name` names its descriptor and build.
-RuntimeResourcesConfig loadableConfig(const char *metallibPath, const std::filesystem::path &root,
-                                      const std::string &name) {
-  const PlannedModel planned = plannedModel();
-  static_cast<void>(test::writeSyntheticModel(root, planned.target, planned.draft, planned.vision));
-  RuntimeResourcesConfig config;
-  config.metallibPath = metallibPath;
-  config.modelRoot = root;
-  config.model = model::makeModelDescriptor(name, planned.target, planned.draft, planned.vision,
-                                            model::TargetSource::Safetensors,
-                                            model::VisionSource::Safetensors);
-  config.model.sourceIdentity = "synthetic";
-  config.buildId = name;
-  config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64 * kGiB, 64 * kGiB}); };
-  return config;
-}
-
-// A local volume of 1000 GiB with `availableBytes` free, which leaves the
-// automatic SSD cache room from 12 GiB on.
-DiskVolume localVolume(uint64_t availableBytes) {
-  return {"/Volumes/Test", availableBytes, 1000 * kGiB, true};
-}
-
-// A volume probe that reads `volume` for every directory.
-std::function<std::optional<DiskVolume>(const std::filesystem::path &)>
-reading(std::optional<DiskVolume> volume) {
-  return [volume](const std::filesystem::path &) { return volume; };
-}
-
-// The routed experts of each layer of the MoE model below.
-constexpr uint32_t kMoeExperts = 128;
-constexpr uint32_t kMoeLayers = 8;
-
-// A MoE model under root whose weights load: the planned model's draft and
-// vision tower beside kMoeLayers layers of Qwen3.6-35B-A3B's geometry, each
-// with kMoeExperts routed experts, eight a token. Its experts above their
-// smallest store, a layer's, take more than the arenas of its prefill groups
-// and the first 64K tokens of its KV.
-RuntimeResourcesConfig moeConfig(const char *metallibPath, const std::filesystem::path &root) {
-  const PlannedModel planned = plannedModel();
-  model::Qwen3_6MoeLayout target;
-  target.layers = kMoeLayers;
-  target.vocabularySize = planned.target.vocabularySize;
-  target.experts = kMoeExperts;
-  static_cast<void>(test::writeSyntheticModel(root, target, planned.draft, planned.vision));
-  RuntimeResourcesConfig config;
-  config.metallibPath = metallibPath;
-  config.modelRoot = root;
-  config.model = model::makeModelDescriptor("moe-test", target, planned.draft, planned.vision,
-                                            model::TargetSource::Safetensors, model::VisionSource::Safetensors);
-  config.model.sourceIdentity = "synthetic";
-  config.buildId = "moe-test";
-  config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64 * kGiB, 64 * kGiB}); };
-  return config;
-}
-
-// A Qwen3.8-Flash-Next model under root whose weights load, a block-sparse
-// target whose KV spills: a GGUF of its family's tensors
-// (gguf_fixtures::targetTensors) with its attention, GDN, indexer and PLE
-// heads but a hidden state of 256 values, a vocabulary of 256 tokens, eight
-// layers, every second one full attention, and four routed experts a layer,
-// and a draft of one layer that reads four of them; no vision tower.
-RuntimeResourcesConfig flashNextConfig(const char *metallibPath, const std::filesystem::path &root, bool mixed = false,
-                                      uint32_t tableRows = gguf_fixtures::kPleTableRows, bool executable = false) {
-  model::Qwen4ExpLayout target;
-  target.layers = executable ? 4 : 8;
-  target.hiddenSize = executable ? HYPER_CONNECTION_NORM_HIDDEN : 256;
-  target.vocabularySize = 256;
-  target.fullAttentionPeriod = 2;
-  target.maskToken = 252;
-  target.stopTokens = {250, 251};
-  target.pleEosToken = 250;
-  target.pleImageToken = 253;
-  target.experts = executable ? 8 : 4;
-  target.expertsPerToken = 2;
-  target.expertIntermediateSize = 256;
-  target.pleLayer = 0;
-  gguf_fixtures::TensorTypes types = gguf_fixtures::qwen4ExpTypes();
-  for (const char *name : {"hc_attn_down.weight", "hc_attn_up.weight", "hc_ffn_down.weight", "hc_ffn_up.weight",
-                           "output_hc_down.weight", "output_hc_up.weight", "ffn_gate_exps.weight",
-                           "ffn_up_exps.weight", "ffn_down_exps.weight", "ffn_gate_shexp.weight",
-                           "ffn_up_shexp.weight", "ffn_down_shexp.weight"})
-    types[name] = gguf_fixtures::kQ8_0;
-  if (mixed)
-    for (const char *name : {"ffn_gate_exps.weight", "ffn_up_exps.weight", "ffn_down_exps.weight"})
-      types["blk.0." + std::string(name)] = gguf_fixtures::kQ4_K;
-  // The PLE hash, its heads an equal share of the table's rows each.
-  std::vector<test::gguf::Key> keys = gguf_fixtures::metadata(target);
-  const std::string ple = std::string(model::Qwen4ExpLayout::ggufArchitecture) + ".ple.";
-  const uint32_t heads = target.pleHeads(), headRows = tableRows / heads;
-  std::vector<int32_t> offsets, rows(heads, int32_t(headRows));
-  for (uint32_t head = 0; head < heads; ++head)
-    offsets.push_back(int32_t(head * headRows));
-  keys.push_back(test::gguf::int32ArrayKey(ple + "layer_multipliers", {1, 31, 961}));
-  keys.push_back(test::gguf::int32ArrayKey(ple + "head_offsets", offsets));
-  keys.push_back(test::gguf::int32ArrayKey(ple + "head_vocab_sizes", rows));
-  keys.push_back(test::gguf::uint32Key(ple + "eos_token_id", target.pleEosToken));
-  if (executable) {
-    uint64_t payload = 0, maximumTensor = 0;
-    for (auto tensor : gguf_fixtures::targetTensors(target, types, false)) {
-      if (tensor.name == "per_layer_token_embd.weight") tensor.dims[1] = tableRows;
-      uint64_t elements = 1;
-      for (const auto dimension : tensor.dims) elements = checkedMultiply(elements, dimension, "fixture tensor");
-      const auto &format = *model::ggmlTypeTraits(tensor.type);
-      const uint64_t bytes = checkedMultiply(elements / format.blockElements, format.blockBytes, "fixture tensor");
-      payload = checkedAdd(payload, bytes, "fixture payload");
-      maximumTensor = std::max(maximumTensor, bytes);
-    }
-    require(payload < (512ULL << 20), "executable PLE fixture exceeds its pre-allocation payload bound");
-    // Values are encoded directly in each tensor: no F32 reference or
-    // conversion payload. Serialization holds the tensor vectors plus the
-    // GGUF vector's old and new storage.
-    const uint64_t serializationPeak = checkedAdd(checkedMultiply(payload, 4, "fixture peak"), 16ULL << 20, "fixture peak");
-    std::cout << "PLE fixture target_payload_bytes=" << payload << " largest_tensor_bytes=" << maximumTensor
-              << " float_reference_bytes=0 construction_peak_bound_bytes=" << serializationPeak
-              << " layers=" << target.layers << " hidden=" << target.hiddenSize << " experts=" << target.experts
-              << " qkv=" << target.packedGdnWidth << " full_qkv=" << target.packedFullWidth
-              << " expert_width=" << target.expertIntermediateSize << " draft_layers=1 draft_reads=1,3\n";
-  }
-  std::filesystem::create_directories(root / "target");
-  auto tensors = gguf_fixtures::targetTensors(target, types);
-  if (executable) {
-    for (auto &tensor : tensors) {
-      if (tensor.type == gguf_fixtures::kQ8_0) {
-        const auto &format = *model::ggmlTypeTraits(tensor.type);
-        const uint64_t rowBytes = tensor.dims[0] / format.blockElements * format.blockBytes;
-        for (uint64_t byte = 0; byte < tensor.data.size(); byte += format.blockBytes) {
-          const uint64_t row = byte / rowBytes, block = byte % rowBytes / format.blockBytes;
-          tensor.data[byte] = 0; tensor.data[byte + 1] = 0x18; // fp16 scale 1/512
-          for (uint32_t value = 2; value < format.blockBytes; ++value)
-            tensor.data[byte + value] = ((row >> ((block * format.blockElements + value - 2) % 19)) & 1) ? 1 : 255;
-        }
-      } else {
-        require(tensor.type == model::ggml::kF32, "executable fixture expects Q8_0 or F32 source tensors");
-        for (uint64_t element = 0; element < tensor.data.size() / sizeof(float); ++element) {
-          // GGUF stores the already negative GDN -exp(A_log), not A_log.
-          const float value = tensor.name.ends_with("ssm_a") ? -1.0F : gguf_fixtures::isNorm(tensor.name) ? 1.0F :
-              float(int((element + element / tensor.dims[0]) % 11) - 5) / 512.0F;
-          std::memcpy(tensor.data.data() + element * sizeof(float), &value, sizeof(value));
-        }
-      }
-    }
-  }
-  if (tableRows != gguf_fixtures::kPleTableRows) {
-    auto &table = gguf_fixtures::tensorNamed(tensors, "per_layer_token_embd.weight");
-    const uint64_t rowBytes = table.data.size() / table.dims[1];
-    table.dims[1] = tableRows;
-    table.data.resize(rowBytes * tableRows);
-    if (executable) {
-      require(table.type == gguf_fixtures::kQ8_0, "executable PLE source must use finite Q8_0 blocks");
-      const auto &format = *model::ggmlTypeTraits(table.type);
-      for (uint64_t byte = 0; byte < table.data.size(); byte += format.blockBytes) {
-        table.data[byte] = 0; table.data[byte + 1] = 0x24; // fp16 scale 1/64
-        const uint64_t row = byte / rowBytes, block = byte % rowBytes / format.blockBytes;
-        for (uint32_t value = 2; value < format.blockBytes; ++value)
-          table.data[byte + value] = ((row >> ((block * format.blockElements + value - 2) % 19)) & 1) ? 1 : 255;
-      }
-    } else {
-      for (uint64_t byte = 0; byte < table.data.size(); ++byte) table.data[byte] = uint8_t(byte * 7 + 11);
-    }
-  }
-  test::writeFile(root / "target" / "model.gguf", test::gguf::file(keys, tensors));
-  constexpr std::array<uint32_t, 4> draftReads{1, 3, 5, 7};
-  const model::DFlashDraftLayout draft =
-      model::draftLayout(target.hiddenSize, target.vocabularySize, 1, 512, 1'000'000.0F,
-                         std::span(draftReads).first(executable ? 2 : 4));
-  test::writeSyntheticShard(root / "draft" / "model.safetensors", test::draftTensors(draft));
-  RuntimeResourcesConfig config;
-  config.metallibPath = metallibPath;
-  config.modelRoot = root;
-  config.model = model::makeModelDescriptor("flash-next-test", target, draft,
-                                            {.outputHiddenSize = target.hiddenSize}, model::TargetSource::Gguf,
-                                            model::VisionSource::None);
-  config.model.sourceIdentity = "synthetic";
-  config.buildId = "flash-next-test";
-  config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64 * kGiB, 64 * kGiB}); };
-  return config;
-}
-
-// A bounded native MoE fixture, with its own target and draft source files.
-RuntimeResourcesConfig nativeMoeConfig(const char *metallibPath, const std::filesystem::path &root,
-                                     bool visionEnabled = false, bool compact = false) {
-  model::Qwen3_6MoeLayout target;
-  target.layers = 4; target.hiddenSize = 2048; target.vocabularySize = 256;
-  if (compact) target.hiddenSize = 256;
-  target.maskToken = 252; target.stopTokens = {250, 251};
-  target.experts = 16; target.expertsPerToken = 4; target.expertIntermediateSize = 256;
-  constexpr std::array<uint32_t, 2> reads{1, 3};
-  const auto draft = model::draftLayout(target.hiddenSize, target.vocabularySize, 1, 1024, 1'000'000.0F, reads);
-  test::writeSyntheticCheckpoints(root / "model", target, draft);
-  RuntimeResourcesConfig config;
-  config.modelRoot = root / "model";
-  config.metallibPath = metallibPath;
-  const auto vision = visionEnabled ? plannedModel().vision : ops::VisionLayout{.outputHiddenSize = target.hiddenSize};
-  if (visionEnabled) test::writeSyntheticShard(root / "model/vision/model.safetensors", test::visionTensors(vision));
-  config.model = model::makeModelDescriptor("local-native", target, draft, vision,
-      model::TargetSource::Safetensors, visionEnabled ? model::VisionSource::Safetensors : model::VisionSource::None);
-  config.model.sourceIdentity = "synthetic";
-  config.buildId = "local-native";
-  config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64 * kGiB, 64 * kGiB}); };
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.idleReleaseSeconds = 1;
-  return config;
-}
-
-void testLocalReleasedCurrentLayout(const char *metallibPath, bool withPle, bool manualPle = false) {
-  const test::TemporaryDirectory root("sm-current-restore");
-  auto config = withPle ? flashNextConfig(metallibPath, root.path() / "model", false, 96 * 4096, true) :
-      nativeMoeConfig(metallibPath, root.path(), false, true);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.expertPleMemoryBytes = withPle ? kGiB : 512ULL << 20;
-  config.expertPleAdaptive = withPle && !manualPle;
-  if (config.expertPleAdaptive) config.memoryPressure = [] { return MemoryPressure::Warning; };
-  if (withPle) {
-    const auto metadata = model::streamableWeights(config.modelRoot, config.model,
-        {.streamExperts = true, .streamTable = true}, config.ffnLoading, true, true);
-    require(metadata.loadedBytes < (512ULL << 20), "synthetic PLE restore fixture exceeded its fixed-weight bound");
-    if (manualPle) config.pleMemory = {StreamedSetting::Mode::Size, metadata.tableFloorBytes};
-  }
-  AutomaticStorageClock policyClock(config);
-  RuntimeMetrics metrics;
-  RuntimeBootstrapConfig start;
-  start.resources = config;
-  start.nativeLoop.metrics = &metrics;
-  start.nativeLoop.engine.maxContext = 128;
-  start.nativeLoop.engine.resourceWaitTimeoutMilliseconds = 4000;
-  double now = 0;
-  start.nativeLoop.monotonicMilliseconds = [&] { return now; };
-  start.nativeLoop.unixMicros = [] { return uint64_t{1'000'000}; };
-  std::vector<uint8_t> output;
-  auto runtime = RuntimeBootstrap::start(start, [&](std::span<const uint8_t> bytes) {
-    output.insert(output.end(), bytes.begin(), bytes.end());
-  }, [] { return "{}"; });
-  auto &resources = runtime->resources();
-  auto *experts = resources.modelContext().model.expertStore();
-  auto *ple = resources.modelContext().model.streamedTable();
-  const auto range = resources.expertStorageSnapshot()->resizable;
-  require(experts && range.chunks.size() == 1 && bool(ple) == withPle,
-          "bounded restore fixture lost its intended public store configuration");
-  const uint64_t floor = range.minimumBytes, chunk = range.chunks.front().allocationBytes;
-  const uint64_t pleHeld = ple ? ple->committedBytes() : 0;
-  const uint64_t automaticPleHeld = withPle && !manualPle ? pleHeld : 0;
-  if (config.expertPleAdaptive) {
-    const auto measured = runtime->modelRuntime().actualRuntimeMemory();
-    require(measured.sharedPrefillActualAllocatedBytes && measured.sharedDecodeActualAllocatedBytes,
-            "executable adaptive fixture omitted its actual warmup arenas");
-    static_cast<void>(resources.rebalanceExpertPle(0, measured));
-    const auto observed = resources.expertPleStatusJson();
-    require(observed.find("\"reason\":\"host_growth_paused\"") == std::string::npos &&
-                observed.find("\"target_ple_bytes\":" + std::to_string(pleHeld)) != std::string::npos &&
-                observed.find("\"ple_maximum_bytes\":" + std::to_string(pleHeld)) != std::string::npos &&
-                observed.find("\"runtime_audit\":{\"scope\":\"runtime_store_epoch\",\"valid\":true") != std::string::npos,
-            "measured Warning local adaptive policy was paused or ignored the current floor quota: " + observed);
-  }
-  const auto checkPleRows = [&] {
-    if (!ple) return;
-    const std::array<uint32_t, 4> ids{1, 7, 18, 31};
-    std::array<uint32_t, 4> slots{};
-    const uint64_t rowBytes = ple->table().rowBytes;
-    std::vector<uint8_t> rows(ids.size() * rowBytes);
-    ple->stage(ids, rows, slots, model::SparseRowUse::Prefill);
-    const auto &format = *model::ggmlTypeTraits(gguf_fixtures::kQ8_0);
-    for (size_t row = 0; row < ids.size(); ++row)
-      for (uint64_t column = 0; column < rowBytes; ++column) {
-        const uint64_t within = column % format.blockBytes, block = column / format.blockBytes;
-        const uint8_t expected = within == 0 ? 0 : within == 1 ? 0x24 :
-            ((ids[row] >> ((block * format.blockElements + within - 2) % 19)) & 1) ? 1 : 255;
-        require(rows[slots[row] * rowBytes + column] == expected,
-                "PLE release/restore changed distinct finite source rows or their slot mapping");
-      }
-  };
-  checkPleRows();
-  require(static_cast<bool>(growAutomaticTo(resources, policyClock, false, floor + 3 * chunk,
-      std::chrono::steady_clock::now() + std::chrono::seconds(3))), "old larger layout seed was refused");
-  const auto originalPlan = resources.memoryPlan().toStatusJson();
-  const auto generate = [&](uint64_t id) {
-    protocol::RequestFrame frame;
-    frame.requestId = id; frame.promptTokens = {1, 2, 3, 4}; frame.logicalMaxOutputTokens = 4;
-    frame.cacheSalt = {id, 0}; frame.absoluteDeadlineUnixMicros = 601'000'000;
-    frame.remainingDeadlineMicros = 600'000'000;
-    require(runtime->nativeLoop().receive(protocol::peer::serialize(frame)), "current-layout generation frame failed");
-    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(12);
-    while (runtime->nativeLoop().snapshot().completed < id) {
-      for (const auto &event : protocol::peer::decodeEvents(output))
-        if (const auto *error = std::get_if<protocol::ErrorEvent>(&event))
-          throw std::runtime_error("current restore request failed: " + error->code + ": " + error->message);
-      require(runtime->nativeLoop().engineHealthy() && std::chrono::steady_clock::now() < until,
-              "current-layout generation exceeded its original deadline or stopped the engine");
-      static_cast<void>(runtime->nativeLoop().tick());
-      now += 1;
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    std::vector<uint32_t> tokens;
-    for (const auto &event : protocol::peer::decodeEvents(output))
-      if (const auto *emitted = std::get_if<protocol::TokensEvent>(&event); emitted && emitted->requestId == id)
-        tokens.insert(tokens.end(), emitted->tokens.begin(), emitted->tokens.end());
-    require(!tokens.empty(), "current-layout fixture emitted no tokens");
-    return tokens;
-  };
-  const auto reference = generate(1);
-  require(runtime->nativeLoop().receive(protocol::peer::serialize(protocol::ReleaseRequestFrame{91})) &&
-              runtime->nativeLoop().weightsSnapshot().released && !(!runtime->nativeLoop().weightsSnapshot().released && !runtime->nativeLoop().weightsSnapshot().restoring),
-          "public release kept model Ready or refused its idle weights");
-  const uint64_t retained = experts->allocatedBytes();
-  auto &governor = resources.memoryGovernor();
-  governor.setAutomaticStorageQuota(floor + chunk + automaticPleHeld, governor.automaticStorageMaximumBytes(),
-      [&] { return experts->allocatedBytes() + (withPle && !manualPle ? ple->committedBytes() : 0); });
-  bool sawExpertRestore = false;
-  governor.setAllocationDriver([&](std::string_view purpose, uint64_t bytes, const std::function<void()> &allocate) {
-    if (purpose == "restore_weights" && !resources.modelContext().model.images->released()) {
-      // The accepted request still waits for its weights: T7 assigns it
-      // the current floor, even though the local cap retained one extra
-      // chunk. The active request may receive that chunk only afterwards.
-      require(experts->released() && experts->allocatedBytes() == retained &&
-                  experts->stats().budgetBytes == floor && bytes == floor - retained &&
-                  resources.expertPleStatusJson().find("\"expert_restore_target_bytes\":" + std::to_string(floor)) != std::string::npos,
-              "first expert payload preceded current target selection or charged retained helpers again");
-      sawExpertRestore = true;
-    }
-    allocate();
-  });
-  const auto changed = generate(2);
-  checkPleRows();
-  governor.setAllocationDriver({});
-  require(sawExpertRestore && experts->allocatedBytes() == floor && changed == reference &&
-              (!ple || ple->committedBytes() == pleHeld) && resources.memoryPlan().toStatusJson() == originalPlan &&
-              runtime->nativeLoop().weightsSnapshot().restores == 1 && (!runtime->nativeLoop().weightsSnapshot().released && !runtime->nativeLoop().weightsSnapshot().restoring),
-          "smaller current restore changed numerical output, retained PLE, plan or lifecycle state");
-  if (manualPle)
-    require(resources.expertPleStatusJson().find("\"ple_budget_bytes\":" + std::to_string(config.pleMemory.bytes)) != std::string::npos &&
-                resources.expertPleStatusJson().find("\"automatic_ple\":false") != std::string::npos,
-            "manual PLE cap changed or was deducted from automatic experts a second time");
-  require(static_cast<bool>(growAutomaticTo(resources, policyClock, false, floor + chunk,
-      std::chrono::steady_clock::now() + std::chrono::seconds(3))) && experts->allocatedBytes() == floor + chunk,
-          "selected current target stayed permanently at its execution floor");
-}
-
-void testImagePayloadIsPreparedByOwner(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-writer");
-  auto config = nativeMoeConfig(metallibPath, root.path(), true);
-  config.moeMemoryPressure = true;
-  config.allocationDriver = [&](std::string_view purpose, uint64_t, const std::function<void()> &allocate) {
-    if (purpose != "startup_weights") { allocate(); return; }
-    backgroundHostGrowths = 0;
-    observedHostOwner = std::this_thread::get_id();
-    observeLargeHostGrowth.store(true, std::memory_order_release);
-    try { allocate(); } catch (...) { observeLargeHostGrowth = false; throw; }
-    observeLargeHostGrowth = false;
-  };
-  auto resources = RuntimeResources::create(config, 128);
-  require(backgroundHostGrowths == 0, "image reader workers allocated new large payloads without an owner gate: count=" +
-          std::to_string(backgroundHostGrowths.load()));
-  const auto host = resources->backend().hostMemoryStats();
-  require(host.temporaryBytes == 0 && host.fixedBytes == resources->modelContext().model.hostHeldBytes() &&
-              resources->memoryGovernor().actualBytes() == resources->backend().memoryStats().allocatedBytes + host.fixedBytes,
-          "completed load retained temporary payload or counted fixed host capacity twice");
-}
-
-void testLocalReleaseInvalidatesModelReadiness(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-release-ready");
-  auto config = nativeMoeConfig(metallibPath, root.path());
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.idleReleaseSeconds = std::numeric_limits<double>::infinity();
-  RuntimeMetrics metrics;
-  RuntimeBootstrapConfig start;
-  start.resources = config;
-  start.nativeLoop.metrics = &metrics;
-  start.nativeLoop.engine.maxContext = 2048;
-  RuntimeBootstrap *published = nullptr;
-  std::vector<uint8_t> output;
-  auto runtime = RuntimeBootstrap::start(start, [&](std::span<const uint8_t> bytes) {
-    output.insert(output.end(), bytes.begin(), bytes.end());
-  }, [&] { return published->statusJson(metrics.snapshot(), {}); });
-  published = runtime.get();
-  require((!runtime->nativeLoop().weightsSnapshot().released && !runtime->nativeLoop().weightsSnapshot().restoring),
-          "completed native warmup did not publish model readiness");
-  require(runtime->nativeLoop().receive(protocol::peer::serialize(protocol::ReleaseRequestFrame{91})),
-          "native release request was refused");
-  bool answered = false;
-  for (const auto &event : protocol::peer::decodeEvents(output))
-    if (const auto *status = std::get_if<protocol::StatusJsonEvent>(&event); status && status->correlationId == 91) {
-      answered = true;
-      require(status->json.find("\"released\":true") != std::string::npos &&
-                  status->json.find("\"model_ready\":false") != std::string::npos,
-              "released native weights still reported model_ready: " + status->json);
-    }
-  require(answered && runtime->nativeLoop().weightsSnapshot().released &&
-              !(!runtime->nativeLoop().weightsSnapshot().released && !runtime->nativeLoop().weightsSnapshot().restoring),
-          "native release did not invalidate the model lifecycle before its answer");
-}
-
-void testNoPlePressureReturnsExpertChunks(const char *metallibPath) {
-  for (const bool critical : {false, true}) {
-    const test::TemporaryDirectory root("sm-shrink");
-    auto config = nativeMoeConfig(metallibPath, root.path());
-    std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-    std::atomic<uint64_t> spare{64 * kGiB};
-    std::atomic<bool> measured{true};
-    std::atomic<uint64_t> hostSamples{0};
-    config.moeMemoryPressure = true;
-    config.hostMemoryReserveBytes = 2 * kGiB;
-      config.idleReleaseSeconds = std::numeric_limits<double>::infinity();
-    config.memoryPressure = [&] { return pressure.load(); };
-    config.hostMemory = [&]() -> std::optional<HostMemory> {
-      ++hostSamples;
-      if (!measured) return std::nullopt;
-      return HostMemory{64 * kGiB, spare.load()};
-    };
-    AutomaticStorageClock policyClock(config);
-      RuntimeMetrics metrics;
-    RuntimeBootstrapConfig start;
-    start.resources = config;
-    start.nativeLoop.metrics = &metrics;
-    start.nativeLoop.engine.maxContext = 2048;
-    start.nativeLoop.engine.resourceWaitTimeoutMilliseconds = 4000;
-    double now = 0;
-    start.nativeLoop.monotonicMilliseconds = [&] { return now; };
-    start.nativeLoop.unixMicros = [] { return uint64_t{1'000'000}; };
-    std::vector<uint8_t> output;
-    auto runtime = RuntimeBootstrap::start(start, [&](std::span<const uint8_t> bytes) {
-      output.insert(output.end(), bytes.begin(), bytes.end());
-    }, [] { return "{}"; });
-    auto &resources = runtime->resources();
-    auto *store = resources.modelContext().model.expertStore();
-    const auto range = resources.expertStorageSnapshot()->resizable;
-    require(store && range.chunks.size() == 1 && !resources.streamedTableStats(),
-            "pressure fixture requires a single-format MoE without PLE");
-    const uint64_t floor = range.minimumBytes, chunk = range.chunks.front().allocationBytes;
-    require(store->allocatedBytes() == floor, "local start did not retain the admitted expert floor");
-    const auto growUntil = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-    const auto admitted = growAutomaticTo(resources, policyClock, false, floor + chunk, growUntil);
-    require(static_cast<bool>(admitted), "optional chunk precondition did not obtain healthy local admission: " + admitted.detail);
-    require(store->allocatedBytes() == floor + chunk, "optional precondition did not allocate exactly one real chunk");
-    const auto generate = [&](uint64_t id) {
-      protocol::RequestFrame request;
-      request.requestId = id; request.promptTokens = {1, 2, 3, 4}; request.logicalMaxOutputTokens = 4;
-      request.cacheSalt = {id, 0};
-      request.absoluteDeadlineUnixMicros = 601'000'000; request.remainingDeadlineMicros = 600'000'000;
-      require(runtime->nativeLoop().receive(protocol::peer::serialize(request)), "shrink generation refused its frame");
-      const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(12);
-      while (runtime->nativeLoop().snapshot().completed < id) {
-        require(runtime->nativeLoop().engineHealthy() && std::chrono::steady_clock::now() < until,
-                "generation did not finish around expert shrink");
-        for (const auto &event : protocol::peer::decodeEvents(output))
-          if (const auto *error = std::get_if<protocol::ErrorEvent>(&event))
-            throw std::runtime_error("shrink generation: " + error->code + ": " + error->message);
-        static_cast<void>(runtime->nativeLoop().tick());
-        if (!runtime->nativeLoop().commandInFlight())
-          static_cast<void>(runtime->controlPass(pressure));
-        now += 1;
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      }
-      std::vector<uint32_t> tokens;
-      for (const auto &event : protocol::peer::decodeEvents(output))
-        if (const auto *emitted = std::get_if<protocol::TokensEvent>(&event); emitted && emitted->requestId == id)
-          tokens.insert(tokens.end(), emitted->tokens.begin(), emitted->tokens.end());
-      require(!tokens.empty(), "shrink generation emitted no tokens");
-      return tokens;
-    };
-    const auto reference = generate(1);
-    const auto originalPlan = resources.memoryPlan().breakdown().toStatusJson();
-    const auto capacity = resources.expertStorageSnapshot()->capacityWeightBytes;
-
-    pressure = MemoryPressure::Warning;
-    spare = 3 * kGiB + chunk;
-    for (unsigned pass = 0; pass < 3; ++pass) {
-      now += 1000;
-      static_cast<void>(runtime->controlPass(pressure));
-      const auto allocated = store->allocatedBytes();
-      const auto quota = store->stats().budgetBytes;
-      if (allocated != floor + chunk || quota != floor + chunk)
-        require(false, "repeated Warning with no reserve deficit discarded expert capacity: pass=" + std::to_string(pass) +
-              " floor=" + std::to_string(floor) + " chunk=" + std::to_string(chunk) +
-              " actual=" + std::to_string(allocated) + " quota=" + std::to_string(quota) +
-              " released=" + std::to_string(resources.memoryGovernor().snapshot().automaticStorageReleasedBytes) +
-              " withheld=" + std::to_string(resources.memoryGovernor().snapshot().automaticStorageWithheldBytes) +
-              " group=" + runtime->statusJson({}, {}));
-    }
-    measured = false;
-    now += 1000;
-    static_cast<void>(runtime->controlPass(pressure));
-    require(store->allocatedBytes() == floor + chunk, "missing telemetry was treated as freeable expert capacity");
-    if (critical) pressure = MemoryPressure::Critical;
-    else { measured = true; spare = 3 * kGiB - chunk / 2; }
-    now += 1000;
-    const auto beforeShrink = store->stats();
-    const auto beforeBackend = resources.backend().memoryStats();
-    const auto beforeActual = resources.actualMemoryReport(runtime->modelRuntime().actualRuntimeMemory(), false);
-    static_cast<void>(runtime->controlPass(pressure));
-    const auto shrunk = resources.expertStorageSnapshot();
-    const auto governor = resources.memoryGovernor().snapshot();
-    const auto afterBackend = resources.backend().memoryStats();
-    const auto afterActual = resources.actualMemoryReport(runtime->modelRuntime().actualRuntimeMemory(), false);
-    const auto currentPlan = resources.memoryPlan().breakdown().toStatusJson();
-    // Quota is the allowed byte ceiling; actual allocation rounds to real
-    // chunks. A half-chunk Warning deficit removes the whole optional chunk.
-    const uint64_t expectedQuota = critical ? floor : floor + chunk / 2;
-    const bool auxiliaryUnchanged =
-        beforeActual.draftWeightsBytes == afterActual.draftWeightsBytes &&
-        beforeActual.visionWeightsBytes == afterActual.visionWeightsBytes &&
-        beforeActual.sharedPrefillBytes == afterActual.sharedPrefillBytes &&
-        beforeActual.sharedDecodeBytes == afterActual.sharedDecodeBytes &&
-        beforeActual.kvBlockCacheBytes == afterActual.kvBlockCacheBytes &&
-        beforeActual.kvHistoryStagingBytes == afterActual.kvHistoryStagingBytes &&
-        beforeActual.stateStagingBytes == afterActual.stateStagingBytes &&
-        beforeActual.aneFfnBytes == afterActual.aneFfnBytes;
-    const auto known = [](const std::optional<uint64_t> &value) {
-      return value ? std::to_string(*value) : std::string("unknown");
-    };
-    const std::string shrinkDiagnostic =
-        " critical=" + std::to_string(critical) + " command=" + std::to_string(runtime->nativeLoop().commandInFlight()) +
-        " chunk=" + std::to_string(chunk) + " geometry_floor=" + std::to_string(floor) +
-        " before_allocated=" + std::to_string(beforeShrink.allocatedBytes) +
-        " before_quota=" + std::to_string(beforeShrink.budgetBytes) +
-        " before_floor=" + std::to_string(beforeShrink.minimumBytes) +
-        " after_store_allocated=" + std::to_string(store->allocatedBytes()) +
-        " after_snapshot_allocated=" + known(shrunk->allocatedBytes) +
-        " after_quota=" + known(shrunk->budgetBytes) + " after_floor=" + known(shrunk->currentFloorBytes) +
-        " before_capacity=" + known(capacity) + " after_capacity=" + known(shrunk->capacityWeightBytes) +
-        " backend_before=" + std::to_string(beforeBackend.allocatedBytes) +
-        " backend_after=" + std::to_string(afterBackend.allocatedBytes) +
-        " kv_before=" + std::to_string(beforeActual.kvAllocatedBytes) +
-        " kv_after=" + std::to_string(afterActual.kvAllocatedBytes) +
-        " state_before=" + std::to_string(beforeActual.stateAllocatedBytes) +
-        " state_after=" + std::to_string(afterActual.stateAllocatedBytes) +
-        " auxiliary_unchanged=" + std::to_string(auxiliaryUnchanged) +
-        " released=" + std::to_string(governor.automaticStorageReleasedBytes) +
-        " withheld=" + std::to_string(governor.automaticStorageWithheldBytes) +
-        " measured=" + std::to_string(governor.hostMeasurementValid) +
-        " local_spare=" + std::to_string(governor.hostSpareBytes) +
-        " local_base=" + std::to_string(governor.hostSpareReserveBytes) +
-        " system_pressure=" + memoryPressureName(governor.systemPressure) +
-        " effective_pressure=" + memoryPressureName(governor.pressure) +
-        " reason=" + std::string(governor.automaticStorageReason) +
-        " plan_unchanged=" + std::to_string(currentPlan == originalPlan) +
-        (currentPlan == originalPlan ? "" : " original_plan=" + originalPlan + " current_plan=" + currentPlan);
-    require(store->allocatedBytes() == floor && shrunk->allocatedBytes == floor &&
-                shrunk->budgetBytes == expectedQuota &&
-                shrunk->currentFloorBytes == floor && shrunk->capacityWeightBytes < capacity &&
-                governor.automaticStorageReleasedBytes == chunk && governor.automaticStorageWithheldBytes == chunk &&
-                governor.automaticStorageReason == "minimum_insufficient" &&
-                resources.memoryPlan().breakdown().toStatusJson() == originalPlan,
-            "pressure did not return real expert chunks at the geometry floor while retaining KV/state limits" + shrinkDiagnostic);
-    require(auxiliaryUnchanged && beforeActual.kvAllocatedBytes >= afterActual.kvAllocatedBytes &&
-                beforeActual.stateAllocatedBytes >= afterActual.stateAllocatedBytes &&
-                beforeActual.targetWeightsBytes - afterActual.targetWeightsBytes == chunk &&
-                beforeBackend.allocatedBytes >= afterBackend.allocatedBytes &&
-                beforeBackend.allocatedBytes - afterBackend.allocatedBytes == chunk +
-                    (beforeActual.kvAllocatedBytes - afterActual.kvAllocatedBytes) +
-                    (beforeActual.stateAllocatedBytes - afterActual.stateAllocatedBytes) &&
-                (critical || (beforeActual.kvAllocatedBytes == afterActual.kvAllocatedBytes &&
-                              beforeActual.stateAllocatedBytes == afterActual.stateAllocatedBytes)),
-            "backend release did not equal exact expert plus independent KV/state release" + shrinkDiagnostic);
-    const auto status = runtime->statusJson({}, {});
-    require(status.find("\"automatic_storage_released_bytes\":" + std::to_string(chunk)) != std::string::npos &&
-                status.find("\"automatic_storage_reason\":") != std::string::npos,
-            "public status omitted physical release or pressure decision reason");
-    measured = true; spare = 64 * kGiB; pressure = MemoryPressure::Normal;
-    now += 1000;
-    static_cast<void>(runtime->controlPass(pressure));
-    require(generate(2) == reference && runtime->nativeLoop().engineHealthy(),
-            "expert shrink changed deterministic tokens or invalidated bound expert mappings");
-  }
-}
-
-void testCriticalStopsHostWorkspaceBeforeAllocation(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-critical");
-  std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-  auto config = nativeMoeConfig(metallibPath, root.path());
-  config.moeMemoryPressure = true;
-  config.memoryPressure = [&] { return pressure.load(); };
-  config.allocationDriver = [&](std::string_view purpose, uint64_t, const std::function<void()> &allocate) {
-    if (purpose != "startup_weights") { allocate(); return; }
-    pressure = MemoryPressure::Critical;
-    largeHostGrowths = 0; largeHostBytes = 0; firstLargeHostBytes = 0;
-    observedHostOwner = std::this_thread::get_id();
-    observeLargeHostGrowth.store(true, std::memory_order_release);
-    try { allocate(); } catch (...) { observeLargeHostGrowth = false; throw; }
-    observeLargeHostGrowth = false;
-  };
-  try { auto resources = RuntimeResources::create(config, 128); throw std::runtime_error("Critical admitted loading"); }
-  catch (const RuntimeResourcesError &error) {
-    require(error.failure() == RuntimeResourceFailure::HostCapacity,
-            std::string("Critical lost its local refusal cause: ") + error.what());
-  }
-  require(largeHostGrowths == 0, "Critical allowed host payload growth after local begin: count=" +
-      std::to_string(largeHostGrowths.load()) + " first_bytes=" + std::to_string(firstLargeHostBytes.load()) +
-      " payload_bytes=" + std::to_string(largeHostBytes.load()));
-
-}
-
-void testLocalPleChunkCriticalAndActual(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-ple");
-  std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-  auto config = flashNextConfig(metallibPath, root.path() / "model", false, 96 * 4096);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.expertPleAdaptive = true; config.expertPleMemoryBytes = kGiB;
-  config.memoryPressure = [&] { return pressure.load(); };
-  bool injectCritical = true;
-  config.allocationDriver = [&](std::string_view purpose, uint64_t, const std::function<void()> &allocate) {
-    if (purpose == "ple_optional" && injectCritical) pressure = MemoryPressure::Critical;
-    allocate();
-  };
-  AutomaticStorageClock policyClock(config);
-  auto resources = RuntimeResources::create(config, 128);
-  resources->memoryGovernor().setServing(false);
-  auto *ple = resources->modelContext().model.streamedTable();
-  require(ple != nullptr, "valid PLE storage fixture did not stream its table");
-  const uint64_t beforeCommitted = ple->committedBytes(), beforeHost = ple->hostAllocatedBytes();
-  const uint64_t beforeFixed = resources->backend().hostMemoryStats().fixedBytes;
-  const auto checkRows = [&] {
-    const std::array<uint32_t, 4> ids{1, 7, 1, 9};
-    std::array<uint32_t, 4> slots{};
-    const uint32_t rowBytes = ple->table().rowBytes;
-    std::vector<uint8_t> rows(uint64_t{ids.size()} * rowBytes);
-    ple->stage(ids, rows, slots, model::SparseRowUse::Prefill);
-    for (size_t index = 0; index < ids.size(); ++index)
-      for (uint32_t byte = 0; byte < rowBytes; ++byte)
-        require(rows[uint64_t{slots[index]} * rowBytes + byte] == uint8_t((uint64_t{ids[index]} * rowBytes + byte) * 7 + 11),
-                "preallocated PLE working memory changed source rows");
-  };
-  checkRows();
-  ple->prefetch(std::array<uint32_t, 3>{7, 9, 11}); ple->drainPrefetch(); checkRows();
-  const uint64_t growth = uint64_t{4096} * (ple->table().rowBytes + 13);
-  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(4);
-  const auto result = growAutomaticTo(*resources, policyClock, true, beforeCommitted + growth, deadline);
-  require(result.failure == metal::AllocationFailure::HostPressure && ple->committedBytes() == beforeCommitted &&
-              ple->hostAllocatedBytes() == beforeHost && resources->backend().hostMemoryStats().fixedBytes == beforeFixed,
-          std::string("Critical failed to veto actual PLE chunk growth: ") + metal::allocationFailureName(result.failure) +
-          " detail=" + result.detail +
-          " committed_before=" + std::to_string(beforeCommitted) + " committed_after=" + std::to_string(ple->committedBytes()) +
-          " host_before=" + std::to_string(beforeHost) + " host_after=" + std::to_string(ple->hostAllocatedBytes()));
-  pressure = MemoryPressure::Normal; injectCritical = false;
-  checkRows();
-  const auto host = resources->backend().hostMemoryStats();
-  require(host.temporaryBytes == 0 && host.fixedBytes == resources->modelContext().model.hostHeldBytes() &&
-              resources->memoryGovernor().actualBytes() == resources->backend().memoryStats().allocatedBytes + host.fixedBytes,
-          "PLE cache/working payload was lost or charged twice after Critical rollback");
-  resources.reset();
-}
-
-void testLocalPlePressureTotalStorageOnly(const char *metallibPath, bool verifyStatus = false,
-                                         bool adaptive = true, bool warning = false) {
-  const test::TemporaryDirectory root("sm-ple-pressure");
-  std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-  auto config = flashNextConfig(metallibPath, root.path() / "model", false, 96 * 4096);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.expertPleAdaptive = adaptive;
-  config.expertPleMemoryBytes = kGiB;
-  config.memoryPressure = [&] { return pressure.load(); };
-  std::atomic<uint64_t> spare{64 * kGiB};
-  std::atomic<bool> measured{true};
-  if (warning) {
-    config.hostMemoryReserveBytes = 2 * kGiB;
-    config.hostMemory = [&]() -> std::optional<HostMemory> {
-      return measured ? std::optional(HostMemory{64 * kGiB, spare.load()}) : std::nullopt;
-    };
-  }
-  AutomaticStorageClock policyClock(config);
-  auto resources = RuntimeResources::create(config, 128);
-  auto &governor = resources->memoryGovernor();
-  governor.setServing(false);
-  auto *experts = resources->modelContext().model.expertStore();
-  auto *ple = resources->modelContext().model.streamedTable();
-  require(experts && ple, "local PLE pressure fixture did not stream both stores");
-  if (adaptive) {
-    require(!resources->rebalanceExpertPle(0, {}),
-            "storage-only adaptive fixture applied a transfer without runtime measurements");
-    const auto observed = resources->expertPleStatusJson();
-    require(observed.find("\"reason\":\"host_growth_paused\"") != std::string::npos &&
-                observed.find("\"adjustments\":0") != std::string::npos &&
-                observed.find("\"runtime_audit\":{\"scope\":\"runtime_store_epoch\",\"valid\":false,\"error\":\"missing_measurement\"") != std::string::npos,
-            "storage-only adaptive fixture accepted an incomplete runtime measurement: " + observed);
-  }
-  const uint64_t eFloor = experts->allocatedBytes(), pFloor = ple->committedBytes();
-  const uint64_t eChunk = resources->expertStorageSnapshot()->resizable.chunks.front().allocationBytes;
-  const uint64_t pChunk = 4096 * (ple->table().rowBytes + 13);
-  const auto grow = [&](bool table, uint64_t target) {
-    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-    const auto result = growAutomaticTo(*resources, policyClock, table, target, until);
-    require(static_cast<bool>(result), "PLE total fixture did not receive healthy local optional admission: " + result.detail);
-  };
-  grow(false, eFloor + eChunk);
-  grow(true, pFloor + pChunk);
-  require(experts->allocatedBytes() == eFloor + eChunk && ple->committedBytes() == pFloor + pChunk,
-          "local PLE fixture did not allocate exactly one optional chunk per store");
-  const std::vector<uint32_t> ids{4, 17};
-  std::vector<uint8_t> rows(ids.size() * ple->table().rowBytes);
-  std::vector<uint32_t> slots(ids.size());
-  ple->stage(ids, rows, slots, model::SparseRowUse::Decode);
-  const auto expected = rows;
-  ple->prefetch(ids);
-  if (warning) {
-    pressure = MemoryPressure::Warning;
-    governor.setPressure(pressure);
-    spare = 3 * kGiB + eChunk + pChunk;
-    for (unsigned pass = 0; pass < 3; ++pass) {
-      governor.controlAutomaticStorage();
-      require(experts->allocatedBytes() == eFloor + eChunk && ple->committedBytes() == pFloor + pChunk &&
-                  governor.snapshot().automaticStorageReleasedBytes == 0,
-              "combined Warning without a reserve deficit discarded automatic storage");
-    }
-    measured = false;
-    governor.controlAutomaticStorage();
-    require(experts->allocatedBytes() == eFloor + eChunk && ple->committedBytes() == pFloor + pChunk,
-            "missing combined-store telemetry was treated as a request to donate");
-    measured = true;
-    spare = 3 * kGiB - (eChunk + pChunk) / 2;
-  }
-  const auto beforeMetal = resources->backend().memoryStats().allocatedBytes;
-  const auto beforeHost = resources->backend().hostMemoryStats().fixedBytes;
-  const auto planBefore = resources->memoryPlan().toStatusJson();
-  pressure = warning ? MemoryPressure::Warning : MemoryPressure::Critical;
-  governor.setPressure(pressure);
-  governor.controlAutomaticStorage();
-  require(experts->allocatedBytes() == eFloor && ple->committedBytes() == pFloor &&
-              beforeMetal - resources->backend().memoryStats().allocatedBytes == eChunk &&
-              beforeHost - resources->backend().hostMemoryStats().fixedBytes == pChunk &&
-              governor.snapshot().automaticStorageReleasedBytes == eChunk + pChunk &&
-              governor.snapshot().automaticStorageWithheldBytes == eChunk + pChunk &&
-              resources->memoryPlan().toStatusJson() == planBefore,
-          "combined expert/PLE pressure did not donate both real storage chunks while preserving the dynamic plan");
-  ple->stage(ids, rows, slots, model::SparseRowUse::Decode);
-  require(rows == expected && !ple->stats().poisoned, "combined pressure changed PLE source rows or poisoned retained state");
-  if (verifyStatus) {
-    // A half-total deficit assigns half of each optional chunk. The actual
-    // stores round down independently and release both complete chunks.
-    const uint64_t eQuota = eFloor + (warning ? eChunk / 2 : 0);
-    const uint64_t pQuota = pFloor + (warning ? pChunk / 2 : 0);
-    const auto status = resources->expertPleStatusJson();
-    require(status.find("\"pressure_managed\":true") != std::string::npos &&
-                status.find("\"current_quota_bytes\":" + std::to_string(eQuota + pQuota)) != std::string::npos &&
-                status.find("\"expert_budget_bytes\":" + std::to_string(eQuota)) != std::string::npos &&
-                status.find("\"ple_budget_bytes\":" + std::to_string(pQuota)) != std::string::npos &&
-                status.find("\"automatic_actual_bytes\":" + std::to_string(eFloor + pFloor)) != std::string::npos &&
-                status.find("\"receiving\":\"paced_grant_required\"") != std::string::npos,
-            "combined pressure status omitted current category quotas, actual total or closed receiver: " + status);
-  }
-}
-
-void testFixedPlePressureStorageOnly(const char *metallibPath, bool resident) {
-  const test::TemporaryDirectory root("sm-fixed-ple-pressure");
-  std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-  auto config = flashNextConfig(metallibPath, root.path() / "model", false, 96 * 4096);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.expertPleMemoryBytes = kGiB;
-  const uint64_t manualLimit = (48ULL << 20) + 123;
-  config.pleMemory = resident ? StreamedSetting{StreamedSetting::Mode::Off, 0} :
-      StreamedSetting{StreamedSetting::Mode::Size, manualLimit};
-  config.memoryPressure = [&] { return pressure.load(); };
-  const auto metadata = model::streamableWeights(config.modelRoot, config.model,
-      {.streamExperts = true, .streamTable = true}, config.ffnLoading, true, true);
-  AutomaticStorageClock policyClock(config);
-  auto resources = RuntimeResources::create(config, 128);
-  auto &governor = resources->memoryGovernor();
-  governor.setServing(false);
-  auto *experts = resources->modelContext().model.expertStore();
-  auto *ple = resources->modelContext().model.streamedTable();
-  require(experts && bool(ple) != resident, "fixed PLE fixture changed the requested residency mode");
-  const uint64_t floor = experts->allocatedBytes();
-  const uint64_t chunk = resources->expertStorageSnapshot()->resizable.chunks.front().allocationBytes;
-  const uint64_t fixedPle = ple ? ple->committedBytes() : metadata.tableBytes;
-  const uint64_t pleQuota = resident ? metadata.tableBytes : manualLimit;
-  const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-  const auto admitted = growAutomaticTo(*resources, policyClock, false, floor + chunk, until);
-  require(static_cast<bool>(admitted), "fixed PLE fixture did not obtain optional expert admission: " + admitted.detail);
-  const auto plan = resources->memoryPlan().toStatusJson();
-  const auto beforeMetal = resources->backend().memoryStats().allocatedBytes;
-  const auto beforeHost = resources->backend().hostMemoryStats().fixedBytes;
-  pressure = MemoryPressure::Critical;
-  governor.setPressure(pressure);
-  governor.controlAutomaticStorage();
-  resources->publishMemoryAccounting();
-  const auto status = resources->expertPleStatusJson();
-  require(experts->allocatedBytes() == floor && (!ple || ple->committedBytes() == fixedPle) &&
-              beforeMetal - resources->backend().memoryStats().allocatedBytes == chunk &&
-              resources->backend().hostMemoryStats().fixedBytes == beforeHost &&
-              governor.snapshot().automaticStorageReleasedBytes == chunk &&
-              governor.snapshot().automaticStorageWithheldBytes == chunk &&
-              resources->memoryPlan().toStatusJson() == plan &&
-              status.find("\"automatic_ple\":false") != std::string::npos &&
-              status.find("\"current_quota_bytes\":" + std::to_string(floor)) != std::string::npos &&
-              status.find("\"automatic_actual_bytes\":" + std::to_string(floor)) != std::string::npos &&
-              status.find("\"ple_budget_bytes\":" + std::to_string(pleQuota)) != std::string::npos &&
-              status.find("\"ple_fixed_bytes\":" + std::to_string(fixedPle)) != std::string::npos &&
-              status.find("\"ple_resident_bytes\":" + std::to_string(resident ? fixedPle : 0)) != std::string::npos,
-          "fixed PLE changed size, was charged twice, or lost its logical cap/actual category: " + status);
-  require(resources->memoryGovernor().actualBytes() ==
-              resources->backend().memoryStats().allocatedBytes + resources->backend().hostMemoryStats().fixedBytes,
-          "fixed PLE storage-only accounting omitted/duplicated actual payload or fabricated Ready");
-}
-
-void testPlePressureDisabledStorageOnly(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-ple-pressure-off");
-  auto config = flashNextConfig(metallibPath, root.path() / "model", false, 96 * 4096);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.expertPleMemoryBytes = kGiB;
-  config.pleMemory = {StreamedSetting::Mode::Size, 48ULL << 20};
-  auto resources = RuntimeResources::create(config, 128);
-  auto *ple = resources->modelContext().model.streamedTable();
-  require(ple != nullptr, "disabled pressure fixture lost its fixed streamed PLE cache");
-  const auto beforeMetal = resources->backend().memoryStats().allocatedBytes;
-  const auto beforeHost = resources->backend().hostMemoryStats().fixedBytes;
-  const auto beforePle = ple->committedBytes();
-  const auto plan = resources->memoryPlan().toStatusJson();
-  resources->memoryGovernor().setPressure(MemoryPressure::Critical);
-  resources->memoryGovernor().controlAutomaticStorage();
-  require(resources->backend().memoryStats().allocatedBytes == beforeMetal &&
-              resources->backend().hostMemoryStats().fixedBytes == beforeHost && ple->committedBytes() == beforePle &&
-              resources->memoryPlan().toStatusJson() == plan &&
-              resources->memoryGovernor().automaticStorageMaximumBytes() == 0 &&
-              resources->memoryGovernor().snapshot().automaticStorageReleasedBytes == 0 &&
-              !resources->memoryGovernor().snapshot().pressureControlEnabled &&
-              resources->expertPleStatusJson().find("\"pressure_managed\":true") == std::string::npos,
-          "default-off PLE acquired automatic pressure storage behavior");
-}
-
-void testPartialPlePressureStorageOnly(const char *metallibPath) {
-  const test::TemporaryDirectory root("sm-ple-pressure-partial");
-  std::atomic<MemoryPressure> pressure{MemoryPressure::Normal};
-  std::atomic<bool> measured{true};
-  std::atomic<uint64_t> spare{64 * kGiB};
-  auto config = flashNextConfig(metallibPath, root.path() / "model", true, 96 * 4096);
-  config.maximumMemoryBytes = 4 * kGiB;
-  config.moeMemoryPressure = true;
-  config.expertPleMemoryBytes = kGiB;
-  config.hostMemoryReserveBytes = 2 * kGiB;
-  config.memoryPressure = [&] { return pressure.load(); };
-  config.hostMemory = [&]() -> std::optional<HostMemory> {
-    return measured ? std::optional(HostMemory{64 * kGiB, spare.load()}) : std::nullopt;
-  };
-  AutomaticStorageClock policyClock(config);
-  auto resources = RuntimeResources::create(config, 128);
-  auto &governor = resources->memoryGovernor();
-  governor.setServing(false);
-  auto *experts = resources->modelContext().model.expertStore();
-  auto *ple = resources->modelContext().model.streamedTable();
-  require(experts && ple, "partial pressure fixture lost a streamed store");
-  const auto geometry = resources->expertStorageSnapshot()->resizable;
-  const uint64_t eFloor = experts->allocatedBytes(), pFloor = ple->committedBytes();
-  const uint64_t pChunk = 4096 * (ple->table().rowBytes + 13);
-  const uint64_t eGrowth = geometry.fullBytes - eFloor;
-  require(eGrowth && geometry.chunks.size() == 2, "partial fixture has no optional mixed expert storage");
-  const auto grow = [&](bool table, uint64_t target) {
-    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-    const auto admitted = growAutomaticTo(*resources, policyClock, table, target, until);
-    require(static_cast<bool>(admitted), "partial fixture optional admission failed: " + admitted.detail);
-  };
-  grow(false, geometry.fullBytes);
-  grow(true, pFloor + pChunk);
-  const auto beforeMetal = resources->backend().memoryStats().allocatedBytes;
-  const auto beforeHost = resources->backend().hostMemoryStats().fixedBytes;
-  const auto plan = resources->memoryPlan().toStatusJson();
-  pressure = MemoryPressure::Critical;
-  governor.setPressure(pressure);
-  measured = false;
-  // Seven Q8 blocks have 28 owner entries (112 bytes). The Q4 block
-  // already needs its complete minimum. Reject the Q8 donor metadata copy;
-  // PLE must still donate, and the retained expert bytes remain visible.
-  failingMetadataBytes = 7 * 4 * sizeof(uint32_t);
-  matchingMetadataAllocations = 0;
-  try { governor.controlAutomaticStorage(); }
-  catch (...) { matchingMetadataAllocations = -1; throw; }
-  matchingMetadataAllocations = -1;
-  const auto partial = governor.snapshot();
-  const auto status = resources->expertPleStatusJson();
-  require(experts->allocatedBytes() == geometry.fullBytes && ple->committedBytes() == pFloor &&
-              resources->backend().memoryStats().allocatedBytes == beforeMetal &&
-              beforeHost - resources->backend().hostMemoryStats().fixedBytes == pChunk &&
-              partial.automaticStorageReleasedBytes == pChunk && partial.automaticStorageWithheldBytes == pChunk &&
-              partial.automaticStorageReason == "shrink_allocation_failed" && !partial.hostMeasurementValid &&
-              status.find("\"current_quota_bytes\":" + std::to_string(eFloor + pFloor)) != std::string::npos &&
-              status.find("\"expert_store_budget_bytes\":" + std::to_string(geometry.fullBytes)) != std::string::npos &&
-              status.find("\"automatic_actual_bytes\":" + std::to_string(geometry.fullBytes + pFloor)) != std::string::npos &&
-              resources->memoryPlan().toStatusJson() == plan,
-          "partial donation fabricated rollback, lost actual/unknown accounting, or refilled storage: " + status);
-  measured = true;
-  const auto optionalChunk = std::find_if(geometry.chunks.begin(), geometry.chunks.end(), [](const auto &chunk) {
-    return chunk.maximumChunks > chunk.minimumChunks;
-  })->allocationBytes;
-  pressure = MemoryPressure::Warning;
-  governor.setPressure(pressure);
-  spare = 3 * kGiB - optionalChunk / 2;
-  governor.controlAutomaticStorage();
-  require(experts->allocatedBytes() == geometry.fullBytes - optionalChunk &&
-              governor.automaticStorageQuotaBytes() == eFloor + pFloor &&
-              governor.snapshot().automaticStorageReleasedBytes == pChunk + optionalChunk &&
-              governor.snapshot().automaticStorageWithheldBytes == pChunk + optionalChunk,
-          "small Warning after partial Critical raised the old quota or donated beyond one needed real chunk");
-  pressure = MemoryPressure::Critical;
-  governor.setPressure(pressure);
-  governor.controlAutomaticStorage();
-  require(experts->allocatedBytes() == eFloor && ple->committedBytes() == pFloor &&
-              governor.snapshot().automaticStorageReleasedBytes == eGrowth + pChunk &&
-              governor.snapshot().automaticStorageWithheldBytes == eGrowth + pChunk &&
-              resources->memoryPlan().toStatusJson() == plan,
-          "pressure retry did not account only the remaining real expert donation");
-}
-
-void testExpertStorageMetadata(const char *metallibPath) {
-  const test::TemporaryDirectory root("expert-storage-metadata");
-  for (const bool mixed : {false, true}) {
-    const auto config = flashNextConfig(metallibPath, root.path() / (mixed ? "mixed" : "q8"), mixed);
-    const auto weights = model::streamableWeights(config.modelRoot, config.model,
-        {.streamExperts = true, .streamTable = true});
-    require(weights.expertStorage.has_value(), "MoE metadata omitted expert storage range");
-    const auto &e = *weights.expertStorage;
-    // Eight layers of four experts, three 256x256 projections. Q8_0
-    // stores 34 bytes/32 weights; Q4_K stores 144/256, in layer zero only.
-    require(e.weightBytes == (mixed ? 6'291'456 : 6'684'672) &&
-            e.residentLayoutBytes == weights.expertBytes &&
-            e.contiguous.minimumBytes == weights.expertFloorBytes &&
-            e.resizable.minimumBytes > e.contiguous.minimumBytes &&
-            e.resizable.fullBytes >= e.weightBytes && e.resizable.chunks.size() == (mixed ? 2 : 1) &&
-            !e.minimumRequiredBytes && !e.allocatedBytes && !e.capacityWeightBytes,
-            "expert metadata conflated weight formats, layout overhead or unknown loaded requirements");
-    for (const auto &chunk : e.resizable.chunks)
-      require(chunk.minimumChunks == 1 && chunk.slots == 4 &&
-                  ((chunk.weightBytes == 835'584 && chunk.maximumChunks == (mixed ? 7 : 8)) ||
-                   (mixed && chunk.weightBytes == 442'368 && chunk.maximumChunks == 1)),
-              "mixed quantization did not retain each real format-group block");
-  }
-  const auto config = nativeMoeConfig(metallibPath, root.path() / "mlx", false, true);
-  const auto weights = model::streamableWeights(config.modelRoot, config.model,
-      {.streamExperts = true, .streamTable = true}, config.ffnLoading, true);
-  // Four layers, sixteen experts, three 256x256 affine4 projections;
-  // each 64 weights stores 32 code bytes and two fp16 scale/bias pairs.
-  require(weights.expertStorage && weights.expertStorage->weightBytes == 7'077'888 &&
-              weights.expertStorage->resizable.chunks.size() == 1 &&
-              weights.expertStorage->resizable.chunks[0].weightBytes == 1'769'472 &&
-              weights.expertStorage->resizable.chunks[0].maximumChunks == 4 &&
-              !weights.tableBytes && !weights.tableFloorBytes,
-          "MLX model without PLE did not expose its actual affine expert storage boundary");
-}
-
-void testExpertStorageLifecycle(const char *metallibPath) {
-  const test::TemporaryDirectory root("expert-storage-lifecycle");
-  auto config = flashNextConfig(metallibPath, root.path());
-  const auto metadata = model::streamableWeights(config.modelRoot, config.model,
-      {.streamExperts = true, .streamTable = true});
-  config.expertMemory = {StreamedSetting::Mode::Size, metadata.expertFloorBytes};
-  auto resources = RuntimeResources::create(config, 32);
-  const auto allocated = resources->expertStorageSnapshot();
-  require(allocated && allocated->layout == "contiguous" &&
-          allocated->weightBytes == 6'684'672 && allocated->capacityWeightBytes == 835'584 &&
-          allocated->residentWeightBytes == 0 && allocated->budgetBytes == metadata.expertFloorBytes &&
-          allocated->minimumRequiredBytes == resources->memoryPlan().breakdown().minimumRequiredBytes &&
-          *allocated->allocatedBytes == *allocated->capacityWeightBytes + *allocated->auxiliaryBytes,
-          "loaded expert report lost the real weight capacity, auxiliary bytes or runtime requirement");
-  resources->releasableMemory().release();
-  const auto released = resources->expertStorageSnapshot();
-  require(released && released->released && released->capacityWeightBytes == 0 &&
-          released->residentWeightBytes == 0 && *released->allocatedBytes < *allocated->allocatedBytes &&
-          released->allocatedBytes == released->auxiliaryBytes,
-          "released expert report retained allocated weight capacity or dropped retained auxiliaries");
-  while (resources->releasableMemory().released())
-    static_cast<void>(resources->releasableMemory().restore(test::admitAll));
-  const auto restored = resources->expertStorageSnapshot();
-  require(restored && !restored->released && restored->allocatedBytes == allocated->allocatedBytes &&
-          restored->capacityWeightBytes == allocated->capacityWeightBytes,
-          "expert restore did not restore reported physical capacity");
-}
-
-void testMixedExpertStorage(const char *metallibPath) {
-  for (const bool ple : {false, true}) {
-    const test::TemporaryDirectory root("mixed-expert-storage");
-    RuntimeResourcesConfig config;
-    if (ple) config = flashNextConfig(metallibPath, root.path(), true);
-    else {
-      model::Qwen3_6MoeLayout target;
-      target.layers = 4; target.hiddenSize = 256; target.vocabularySize = 256;
-      target.experts = 4; target.expertsPerToken = 2; target.expertIntermediateSize = 256;
-      auto types = gguf_fixtures::qwen4ExpTypes();
-      for (const char *name : {"ffn_gate_shexp.weight", "ffn_up_shexp.weight", "ffn_down_shexp.weight"})
-        types[name] = gguf_fixtures::kQ8_0;
-      for (const char *name : {"ffn_gate_exps.weight", "ffn_up_exps.weight", "ffn_down_exps.weight"}) {
-        types[name] = gguf_fixtures::kQ8_0;
-        types["blk.0." + std::string(name)] = gguf_fixtures::kQ4_K;
-      }
-      std::filesystem::create_directories(root.path() / "target");
-      test::writeFile(root.path() / "target/model.gguf", test::gguf::file(
-          gguf_fixtures::metadata(target), gguf_fixtures::targetTensors(target, types)));
-      constexpr std::array<uint32_t, 2> reads{1, 3};
-      const auto draft = model::draftLayout(target.hiddenSize, target.vocabularySize, 1, 512, 1'000'000.0F, reads);
-      test::writeSyntheticShard(root.path() / "draft/model.safetensors", test::draftTensors(draft));
-      config.metallibPath = metallibPath; config.modelRoot = root.path();
-      config.model = model::makeModelDescriptor("mixed-moe", target, draft,
-          {.outputHiddenSize = target.hiddenSize}, model::TargetSource::Gguf, model::VisionSource::None);
-      config.model.sourceIdentity = "synthetic";
-      config.buildId = "mixed-moe";
-      config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64 * kGiB, 64 * kGiB}); };
-    }
-    const auto metadata = model::streamableWeights(config.modelRoot, config.model,
-        {.streamExperts = true, .streamTable = true});
-    require(bool(metadata.tableBytes) == ple, "mixed fixture has the wrong PLE contract");
-    config.expertMemory = {StreamedSetting::Mode::Size, metadata.expertFloorBytes};
-    auto resources = RuntimeResources::create(config, 32);
-    const auto e = resources->expertStorageSnapshot();
-    // One singleton layer of Q4_K and the other layers Q8_0. A singleton
-    // is retained at load; each streamed size holds one layer's experts.
-    require(e && e->weightBytes == (ple ? 6'291'456 : 2'949'120) &&
-            e->capacityWeightBytes == 1'277'952 && e->residentWeightBytes == 442'368 &&
-            e->resizable.chunks.size() == 2 &&
-            *e->allocatedBytes == *e->capacityWeightBytes + *e->auxiliaryBytes,
-            "mixed quantization capacity used slots or source-file bytes instead of stored weight planes");
-    config.expertMemory = {StreamedSetting::Mode::Off};
-    resources.reset();
-    resources = RuntimeResources::create(config, 32);
-    const auto full = resources->expertStorageSnapshot();
-    require(full && full->layout == "resident" && full->capacityWeightBytes == full->weightBytes &&
-            full->residentWeightBytes == full->weightBytes && !resources->streamedExpertStats(),
-            "whole resident experts did not report full byte capacity");
-    resources->releasableMemory().release();
-    const auto released = resources->expertStorageSnapshot();
-    require(released->capacityWeightBytes == 0 && released->residentWeightBytes == 0 &&
-            released->allocatedBytes == released->residentSlotTableBytes,
-            "resident expert release omitted its retained slot table");
-  }
-}
-
-// What a start sized: its context, the least memory its plan needs and its
-// arenas, its routed experts' store, whether its SSD cache started, its
-// backend's memory, its log and how many times it loaded the weights.
+// What a start sized: its context, the least memory its plan needs, its
+// arenas, the budget of states and KV, its streamed table's row cache and
+// what the host held back of the streamed stores, its routed experts' store,
+// whether its SSD cache started, its backend's memory, its log and how many
+// times it loaded the weights.
 struct StreamedStart final {
   uint32_t context = 0;
-  uint64_t minimumRequired = 0, arenaBytes = 0;
+  uint64_t minimumRequired = 0, arenaBytes = 0, dynamicBudget = 0, table = 0, heldBack = 0;
   std::optional<model::ExpertStoreStats> experts;
   bool tier = false;
   metal::MetalMemoryStats memory;
@@ -1216,22 +94,52 @@ struct StreamedStart final {
   size_t loads = 0;
 };
 
-StreamedStart startStreamed(const RuntimeResourcesConfig &config) {
+// How many times `part` is in `text`.
+size_t occurrences(std::string_view text, std::string_view part) {
+  size_t count = 0;
+  for (size_t at = text.find(part); at != std::string_view::npos; at = text.find(part, at + 1)) ++count;
+  return count;
+}
+
+// A start of `config` asked for `requestedContextTokens` (--max-context),
+// zero for the automatic context.
+StreamedStart startStreamed(const RuntimeResourcesConfig &config, uint32_t requestedContextTokens = 0) {
   StreamedStart started;
   started.log = test::capturedStderr([&] {
-    auto resources = RuntimeResources::create(config, 0);
+    auto resources = RuntimeResources::create(config, requestedContextTokens);
     const EngineMemoryBreakdown &budget = resources->memoryPlan().breakdown();
     started.context = resources->memoryPlan().maximumContextTokens();
     started.minimumRequired = budget.minimumRequiredBytes;
     started.arenaBytes = budget.sharedPrefillBytes + budget.sharedDecodeBytes;
+    started.dynamicBudget = budget.dynamicBudgetBytes;
+    started.table = budget.streamedTableBytes;
+    started.heldBack = budget.hostHeldBackBytes;
     started.experts = resources->streamedExpertStats();
     started.tier = resources->cache().snapshot().kvTier.capacityBytes != 0;
     started.memory = resources->backend().refreshMemoryStats();
   });
-  for (size_t at = started.log.find("Weights loaded"); at != std::string::npos;
-       at = started.log.find("Weights loaded", at + 1))
-    ++started.loads;
+  started.loads = occurrences(started.log, "Weights loaded");
   return started;
+}
+
+// The KV allowance an automatic start of `config` keeps beside the floors
+// before a streamable part loads whole: the first 64K tokens (the window
+// where that is less) and their speculative rows, in the fewest pages whose
+// extents hold them as one request's KV capacity rounds them
+// (kvCapacityPagesFor), less the runway among the floors. A part loads whole
+// only where the budget holds its floors, all of it and this allowance. It is
+// not the allowance a store's growth above its smallest is priced with, which
+// in a windowed layout also keeps a streamed command's pages Full.
+uint64_t residentAllowanceBytes(const RuntimeResourcesConfig &config) {
+  kv::Layout layout = config.model.targetKvLayout;
+  layout.format = config.kvFormat;
+  const uint64_t tokens = std::min<uint64_t>(config.model.capabilities.maximumContextTokens, 65'536) +
+                          model::ExecutionLimits::speculativeScratchTokens;
+  const uint64_t pages = (tokens + kv::kPageTokens - 1) / kv::kPageTokens;
+  uint64_t budget = pages;
+  while (kvCapacityPagesFor(layout, budget) < pages) ++budget;
+  return kvPagesBytes(layout, budget, kvWindowFloorPages(layout, 0), layout.extentPagesFor(budget)) -
+         kvRunwayPages(layout.minimumExtentPages()) * layout.bytesPerModelPage();
 }
 
 // The sizes a model's weights take, planned from its files before it loads,
@@ -1244,8 +152,8 @@ void testStreamableWeightsAreWhatLoads(const RuntimeResourcesConfig &config) {
   const std::filesystem::path &root = config.modelRoot;
   const model::StreamableWeights weights =
       model::streamableWeights(root, config.model, {.streamExperts = true, .streamTable = true});
-  require(weights.expertBytes > weights.expertFloorBytes && weights.expertFloorBytes && !weights.tableBytes &&
-              !weights.tableFloorBytes && !weights.tableRowBytes && weights.tableRefusal.empty(),
+  require(weights.expertBytes > weights.expertMinimumBytes && weights.expertMinimumBytes && !weights.tableBytes &&
+              !weights.tableMinimumBytes && !weights.tableRowBytes && weights.tableRefusal.empty(),
           "the streamable weights of a MoE without a table are not its experts'");
   const auto allocated = [](const model::LoadedModel &loaded) {
     return loaded.targetActualAllocatedBytes() + loaded.draft.actualAllocatedBytes +
@@ -1264,9 +172,9 @@ void testStreamableWeightsAreWhatLoads(const RuntimeResourcesConfig &config) {
   // Streamed experts read on a pool of SSD readers, as the engine's do.
   const auto readers = std::make_shared<model::SsdReaders>(model::kSsdReaders);
   const model::LoadedModel streamed = model::loadModel(
-      backend, root, config.model, {.expertMemoryBytes = weights.expertFloorBytes, .readers = readers});
+      backend, root, config.model, {.expertMemoryBytes = weights.expertMinimumBytes, .readers = readers});
   require(streamed.expertStore() && streamed.expertStore()->stats().slots == kMoeExperts &&
-              allocated(streamed) <= weights.loadedBytes + weights.expertFloorBytes,
+              allocated(streamed) <= weights.loadedBytes + weights.expertMinimumBytes,
           "the smallest store did not hold a layer's experts within its bytes");
   require(arenas(whole, {.experts = true}) == arenas(streamed, model::StreamedParts::loaded(streamed)) &&
               arenas(streamed, {}) == arenas(whole, model::StreamedParts::loaded(whole)) &&
@@ -1275,8 +183,31 @@ void testStreamableWeightsAreWhatLoads(const RuntimeResourcesConfig &config) {
   rejects([&] {
     static_cast<void>(
         model::loadModel(backend, root, config.model,
-                         {.expertMemoryBytes = weights.expertFloorBytes - 1, .readers = readers}));
+                         {.expertMemoryBytes = weights.expertMinimumBytes - 1, .readers = readers}));
   }, "holds fewer slots", "a store a byte below the smallest loaded");
+}
+
+// A tool's --expert-memory SIZE (tools::takeLoadOption) is the store, as
+// splash serve's is: SIZE in whole slots, all of it its floor, which it
+// starts at and keeps. A SIZE between the smallest store and every expert;
+// the synthetic target's experts are of one size, so the store is short of
+// SIZE by less than two slots (one, and its buffers' page rounding).
+void testAToolsStoreIsItsSize(const RuntimeResourcesConfig &config) {
+  const model::StreamableWeights weights =
+      model::streamableWeights(config.modelRoot, config.model, {.streamExperts = true});
+  const uint64_t size = (weights.expertMinimumBytes + weights.expertBytes) / 2;
+  model::ModelLoadOptions options{.readers = std::make_shared<model::SsdReaders>(model::kSsdReaders)};
+  require(tools::takeLoadOption("--expert-memory", std::to_string(size), options),
+          "--expert-memory is not a tool's load option");
+  metal::MetalBackend backend(config.metallibPath.string());
+  const model::LoadedModel loaded = model::loadModel(backend, config.modelRoot, config.model, options);
+  require(loaded.expertStore() != nullptr, "a tool's --expert-memory below every expert did not stream them");
+  const model::ExpertStoreStats store = loaded.expertStore()->stats();
+  require(store.floorBytes == store.capBytes && store.liveBytes == store.capBytes && store.capBytes <= size &&
+              size - store.capBytes < 2 * store.arenaBytes / store.slots,
+          "a tool's store of --expert-memory " + std::to_string(size) + " bytes has a floor of " +
+              std::to_string(store.floorBytes) + " bytes and holds " + std::to_string(store.liveBytes) +
+              " of its " + std::to_string(store.capBytes));
 }
 
 // --expert-memory auto loads a MoE target's routed experts where the plan
@@ -1287,8 +218,10 @@ void testStreamableWeightsAreWhatLoads(const RuntimeResourcesConfig &config) {
 // count only the second. The automatic SSD cache gives its state staging up
 // where it alone would stream them. Off loads them whatever the budget, a
 // budget without room for their arenas stops the start with its breakdown,
-// and a size below the smallest store is refused by name before anything
-// loads.
+// a size streams them through a store of exactly that size in whole slots,
+// its floor and its cap, in one load, whether or not memory holds every
+// expert, and a size below the smallest store is refused by name before
+// anything loads.
 void testAutomaticExpertMemory(RuntimeResourcesConfig config) {
   const model::StreamableWeights weights =
       model::streamableWeights(config.modelRoot, config.model, {.streamExperts = true});
@@ -1303,18 +236,27 @@ void testAutomaticExpertMemory(RuntimeResourcesConfig config) {
                 start.context >= 65'536,
             message);
   };
-  // A byte short of the budget that holds every expert, which the plan
-  // without the arenas holds: whole, then through the store. The first
-  // load's experts do not count toward the peaks.
-  config.maximumMemoryBytes = whole.minimumRequired - 1;
+  // The budget that holds every expert: the floors, all of the experts and
+  // the KV kept resident (residentAllowanceBytes).
+  const uint64_t holdsEvery = whole.minimumRequired + residentAllowanceBytes(config);
+  // A byte short of it, which the plan without the arenas holds: whole, then
+  // through the store. The first load's experts do not count toward the
+  // peaks.
+  config.maximumMemoryBytes = holdsEvery - 1;
   const StreamedStart reloaded = startStreamed(config);
   streams(reloaded,
           "experts that fit beside everything but the arenas did not stream through the store the plan sizes");
+  // The store starts at its floor, the chunks above it reserved and held in
+  // the plan (testTwoLaunchesGetOneFloor).
+  require(reloaded.experts->chunks < reloaded.experts->capChunks &&
+              reloaded.experts->liveBytes == reloaded.experts->floorBytes &&
+              reloaded.heldBack == reloaded.experts->capBytes - reloaded.experts->liveBytes,
+          "a streamed store did not start at its floor, the chunks above it held in the plan");
   const uint64_t firstLoad = weights.loadedBytes + weights.expertBytes;
   require(reloaded.memory.peakAllocatedBytes < firstLoad && reloaded.memory.devicePeakAllocatedBytes < firstLoad,
           "the backend's peaks counted the load the start discarded");
   // Short of that too: at the floor, then through the store.
-  config.maximumMemoryBytes = whole.minimumRequired - whole.arenaBytes - 1;
+  config.maximumMemoryBytes = holdsEvery - whole.arenaBytes - 1;
   streams(startStreamed(config),
           "routed experts memory cannot hold did not stream through the store the plan sizes");
 
@@ -1322,7 +264,7 @@ void testAutomaticExpertMemory(RuntimeResourcesConfig config) {
   // the cache gives it up, and they load whole in one load.
   config.cacheDisk = {.automatic = true};
   config.diskVolume = reading(localVolume(500 * kGiB));
-  config.maximumMemoryBytes = whole.minimumRequired + config.model.stateLayout.cachedBytes() - 1;
+  config.maximumMemoryBytes = holdsEvery + config.model.stateLayout.cachedBytes() - 1;
   const StreamedStart yielded = startStreamed(config);
   require(!yielded.experts && !yielded.tier && yielded.loads == 1 &&
               yielded.log.find("SSD cache off: its " + std::to_string(config.model.stateLayout.cachedBytes() >> 20) +
@@ -1350,18 +292,30 @@ void testAutomaticExpertMemory(RuntimeResourcesConfig config) {
             "a start without room for its arenas was refused without its breakdown");
   }
   config.maximumMemoryBytes = 0;
-  config.expertMemory = {StreamedSetting::Mode::Size, weights.expertFloorBytes};
-  const StreamedStart floor = startStreamed(config);
-  require(floor.experts && floor.experts->slots == kMoeExperts && floor.loads == 1,
-          "an explicit store did not load once at its size");
-  config.expertMemory = {StreamedSetting::Mode::Size, weights.expertFloorBytes - 1};
+  const uint64_t size = (weights.expertMinimumBytes + weights.expertBytes) / 2;
+  config.expertMemory = {StreamedSetting::Mode::Size, size};
+  for (const uint64_t limit : {uint64_t{0}, whole.minimumRequired - 1}) {
+    config.maximumMemoryBytes = limit;
+    const StreamedStart sized = startStreamed(config);
+    require(sized.experts && sized.loads == 1 && sized.experts->floorBytes == sized.experts->capBytes &&
+                sized.experts->liveBytes == sized.experts->capBytes && sized.experts->capBytes <= size &&
+                size - sized.experts->capBytes < 2 * sized.experts->arenaBytes / sized.experts->slots &&
+                !sized.heldBack &&
+                sized.log.find("the " + std::to_string(size >> 20) + " MiB --expert-memory sets") !=
+                    std::string::npos &&
+                sized.log.find("it gives none back") != std::string::npos,
+            "an explicit size did not stream the experts through a store of that size, its floor and its cap, "
+            "in one load");
+  }
+  config.maximumMemoryBytes = 0;
+  config.expertMemory = {StreamedSetting::Mode::Size, weights.expertMinimumBytes - 1};
   try {
     static_cast<void>(RuntimeResources::create(config, 0));
-    throw std::runtime_error("a store below its floor was accepted");
+    throw std::runtime_error("a size below the smallest store was accepted");
   } catch (const RuntimeResourcesError &error) {
     require(error.stage() == RuntimeResourceStage::Configuration &&
                 std::string_view(error.what()).find("is less than its smallest store") != std::string_view::npos,
-            "a store below its floor was not refused by name before loading");
+            "a size below the smallest store was not refused by name before loading");
   }
 }
 
@@ -1397,8 +351,9 @@ void testVerifyRows(const char *metallibPath, RuntimeResourcesConfig moe) {
   const std::string_view budgeted = "Decode cycles verify the rows the verify budget chooses (--verify-rows auto, as "
                                     "moe-test is a MoE target): greedy and seeded outputs can differ from run to run.";
   requireStart(moe, budgeted, true, "a MoE target with resident experts did not budget its rows");
-  moe.expertMemory = {StreamedSetting::Mode::Size,
-                      model::streamableWeights(moe.modelRoot, moe.model, {.streamExperts = true}).expertFloorBytes};
+  // A budget a byte short of the whole model's minimum, below the one that
+  // holds every expert and the KV allowance, streams them.
+  moe.maximumMemoryBytes = startStreamed(moe).minimumRequired - 1;
   requireStart(moe, budgeted, true, "a MoE target whose experts stream did not budget its rows");
   moe.verifyRows = model::VerifyRows::All;
   requireStart(moe, "Decode cycles verify every row of the draft's block (--verify-rows all).", false,
@@ -1469,19 +424,6 @@ void testPersistentCacheNamespace() {
               persistentCacheNamespace(identity('a', "build", kv::Format::Int8), states) != name &&
               persistentCacheNamespace(identity('a', "build", kv::Format::Int8), bfloatStates) != name,
           "other models, layouts or state formats shared a cache namespace");
-  auto standard = model.stateLayout;
-  standard.draft.fullHistory = true;
-  standard.draft.layerContextTokens[0] = 8192;
-  const auto shortHistory = persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard);
-  standard.draft.layerContextTokens[0] = 32768;
-  require(shortHistory != name &&
-              shortHistory != persistentCacheNamespace(identity('a', "build", kv::Format::Int8), standard),
-          "standard draft history capacities shared a persistent namespace");
-  const auto rotatedQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Hadamard), model.stateLayout);
-  const auto plainQ4 = persistentCacheNamespace(identity('a', "build", kv::Format::Q4_0Unrotated), model.stateLayout);
-  const auto q4h = persistentCacheNamespace(identity('a', "build", kv::Format::Int4Hadamard), model.stateLayout);
-  require(rotatedQ4 != plainQ4 && rotatedQ4 != q4h && plainQ4 != name,
-          "different Q4 quantizers or rotation bases shared a persistent namespace");
   // A dense layout's namespace is the one main (be3b083c) names, with FP32
   // and BF16 states: a change of its lines would leave every 27B's and 35B's
   // persistent cache cold.
@@ -1544,8 +486,7 @@ void testWeightBudgetBeforeLoading(const char *metallibPath) {
       throw std::runtime_error("model load ignored system pressure");
     } catch (const RuntimeResourcesError &error) {
       require(error.failure() == RuntimeResourceFailure::HostCapacity,
-              "startup pressure did not remain retryable: stage=" + std::to_string(static_cast<int>(error.stage())) +
-                  " failure=" + std::to_string(static_cast<int>(error.failure())) + " what=" + error.what());
+              "startup pressure did not remain retryable");
       require(std::string_view(error.what()).find("not enough free memory") !=
                   std::string_view::npos,
               "startup pressure reached the weight loader");
@@ -1574,16 +515,31 @@ void testWeightBudgetBeforeLoading(const char *metallibPath) {
                     text.find("budget is " + std::to_string(minimum - 1) +
                               " bytes") != std::string_view::npos,
                 "weight loading began before checking the memory ceiling");
+        // What the start reports in place of Ready (engine::startFailedEvent).
+        require(error.shortfall() ==
+                    protocol::StartShortfall{.bound = protocol::ShortfallBound::MaxMemory,
+                                             .requiredBytes = minimum,
+                                             .budgetBytes = minimum - 1},
+                "the refusal lost what the plan's floors require against the ceiling");
       } else {
         require(error.failure() == RuntimeResourceFailure::Other,
                 "missing model file was misclassified as allocation pressure");
       }
     }
   }
-  config.maximumMemoryBytes = 0;
-  requireReachesModelLoader(config, root.path(),
-                            "a sufficient weight budget did not reach the "
-                            "model loader");
+  // Without a ceiling, or with one above this Mac's budget, which only a
+  // notice names, the start reaches the loader.
+  for (const uint64_t ceiling : {uint64_t{0}, 1024 * kGiB}) {
+    config.maximumMemoryBytes = ceiling;
+    const std::string log = test::capturedStderr([&] {
+      requireReachesModelLoader(config, root.path(),
+                                "a sufficient weight budget did not reach the "
+                                "model loader");
+    });
+    require((log.find("--max-memory ignored: its 1024.0 GiB exceed this Mac's Metal budget of ") !=
+             std::string::npos) == (ceiling != 0),
+            "a ceiling above the budget was ignored without a notice, or no ceiling was named");
+  }
 }
 
 // A state's write to the disk tier stages through a state-sized buffer the
@@ -1682,7 +638,10 @@ void testHostMemoryProbeIsRequired(const char *metallibPath) {
 
 // The 27B under a budget half a GiB above its weights: the weights alone fit,
 // but not with what the runtime needs beside them. Startup refuses it before
-// any weight is loaded.
+// any weight is loaded, against the bound that binds: --max-memory, or this
+// Mac's Metal budget where that is lower (a 16 GB Mac's 10.8 GiB), which
+// --max-memory can only lower. There, a --max-memory half a GiB below the
+// Metal budget binds instead.
 void testModelBeyondBudgetIsRefusedBeforeLoading(const char *metallibPath) {
   const test::TemporaryDirectory root("splash-budget");
   RuntimeResourcesConfig config = budgetConfig(metallibPath, root.path());
@@ -1690,14 +649,30 @@ void testModelBeyondBudgetIsRefusedBeforeLoading(const char *metallibPath) {
                                             test::qwen3_8Vision(), model::TargetSource::Safetensors,
                                             model::VisionSource::Safetensors);
   writeCheckpoints(root.path(), config.model);
-  config.maximumMemoryBytes = model::streamableWeights(root.path(), config.model, {}).loadedBytes + kGiB / 2;
-  try {
-    auto resources = RuntimeResources::create(config, 0);
-    throw std::runtime_error("a model that cannot fit unexpectedly loaded");
-  } catch (const RuntimeResourcesError &error) {
-    require(error.failure() == RuntimeResourceFailure::EngineCapacity &&
-                error.stage() == RuntimeResourceStage::MemoryPlanning,
-            "a model that cannot fit reached the weight loader");
+  const uint64_t device =
+      EngineMemoryPolicy::hardBudgetBytes(metal::probeDeviceCapabilities().recommendedMaxWorkingSetBytes, 0);
+  const uint64_t above = model::streamableWeights(root.path(), config.model, {}).loadedBytes + kGiB / 2;
+  std::vector<uint64_t> limits{above};
+  if (above >= device)
+    limits.push_back(device - kGiB / 2);
+  for (const uint64_t limit : limits) {
+    config.maximumMemoryBytes = limit;
+    const bool maxMemory = limit <= device;
+    const uint64_t budget = maxMemory ? limit : device;
+    try {
+      auto resources = RuntimeResources::create(config, 0);
+      throw std::runtime_error("a model that cannot fit unexpectedly loaded");
+    } catch (const RuntimeResourcesError &error) {
+      require(error.failure() == RuntimeResourceFailure::EngineCapacity &&
+                  error.stage() == RuntimeResourceStage::MemoryPlanning,
+              "a model that cannot fit reached the weight loader");
+      require(error.shortfall() &&
+                  error.shortfall()->bound ==
+                      (maxMemory ? protocol::ShortfallBound::MaxMemory : protocol::ShortfallBound::DeviceMemory) &&
+                  error.shortfall()->budgetBytes == budget && error.shortfall()->requiredBytes > budget,
+              maxMemory ? "the refusal of a model beyond --max-memory lost what it needed against it"
+                        : "the refusal of a model beyond this Mac's Metal budget lost what it needed against it");
+    }
   }
 }
 
@@ -1746,6 +721,21 @@ void testStartupAdmissionIgnoresModelSize(const char *metallibPath) {
 
 // The memory plan takes the vision category from what loaded, so a model
 // with vision whose loader produced no vision bytes must stop here.
+void testLoadedDraftIsRequiredOnlyWithDraft() {
+  model::LoadedModel loaded;
+  model::Qwen3_5_4BWeights target;
+  target.actualAllocatedBytes = 1;
+  target.manifestFingerprintSha256 = "target";
+  loaded.descriptor = model::makeModelDescriptor("target-only", target.layout, {}, {},
+      model::TargetSource::Gguf, model::VisionSource::None);
+  loaded.target = std::move(target);
+  loaded.manifestFingerprintSha256 = "model";
+  requireLoadedModel(loaded);
+  loaded.draft.actualAllocatedBytes = 1;
+  rejects([&] { requireLoadedModel(loaded); }, "incomplete allocation accounting",
+          "target-only loader reported nonexistent draft weights");
+}
+
 void testLoadedVisionIsRequiredOnlyWithVision() {
   model::LoadedModel loaded;
   loaded.descriptor = model::makeModelDescriptor(
@@ -1824,11 +814,46 @@ void testFailedStepIsNamed(const char *metallibPath) {
           "a start the host refused was not retried");
 }
 
+// A Metal command of resource assembly that ran out of GPU memory fails the
+// start as CommandMemory, which no start retries, as a warmup's does: the
+// Neural Engine split's setup and calibration run theirs before any warmup.
+// Another process holds what the commands need, and a retry, in the process
+// or the server's relaunch, would take it from that process. A command that
+// failed otherwise fails its step as before. The automatic SSD cache's
+// volume, read as its files open, stands in for the split's command here.
+void testACommandOutOfMemoryInAssemblyIsCommandMemory(const char *metallibPath) {
+  using namespace std::chrono_literals;
+  using Kind = protocol::StartFailureKind;
+  const test::TemporaryDirectory root("splash-command-memory");
+  RuntimeResourcesConfig config = loadableConfig(metallibPath, root.path(), "command-memory-test");
+  config.cacheDisk = {.automatic = true};
+  for (const bool outOfMemory : {true, false}) {
+    config.diskVolume = [outOfMemory](const std::filesystem::path &) -> std::optional<DiskVolume> {
+      throw metal::MetalBackendError("Metal command 2 failed: Insufficient Memory", outOfMemory);
+    };
+    const std::string what = outOfMemory ? "for want of GPU memory" : "otherwise";
+    try {
+      static_cast<void>(test::capturedStderr([&] { static_cast<void>(RuntimeResources::create(config, 0)); }));
+      throw std::runtime_error("resources were assembled past a command that failed " + what);
+    } catch (const RuntimeResourcesError &error) {
+      const RuntimeBootstrapReport report = RuntimeBootstrapError(error).report();
+      const Kind kind = startFailedEvent(report).kind;
+      require(report.resourceStage == RuntimeResourceStage::StorageAllocation &&
+                  kind == (outOfMemory ? Kind::CommandMemory : Kind::Internal) &&
+                  report.message == "Metal command 2 failed: Insufficient Memory",
+              "a start whose command failed " + what + " in resource assembly failed as kind " +
+                  std::to_string(static_cast<int>(kind)));
+      require(!StartupRetryWindow(30s).retryUntil(report, StartupRetryWindow::Clock::time_point{}),
+              "a start whose command failed " + what + " in resource assembly was retried");
+    }
+  }
+}
+
 // What a start allocates, the KV runway and then the arenas and the warmup as
-// RuntimeBootstrap::start allocates them, is memory a request in service
+// ServingRuntime::start allocates them, is memory a request in service
 // needs: neither the warning margin above the spare reserve nor macOS's
-// warning refuses it, only what refuses loading, and an allocation the
-// engine marks meanwhile leaves the start's mark in place. Once serving
+// warning refuses it, only what refuses loading, and a claim the engine
+// opens meanwhile leaves the start's admission in place. Once serving
 // begins, growth that no request in service needs keeps to both again.
 void testStartGrowsThroughHostPressure(const char *metallibPath) {
   const test::TemporaryDirectory root("splash-start-pressure");
@@ -1838,7 +863,7 @@ void testStartGrowsThroughHostPressure(const char *metallibPath) {
   // A host with its reserve but not the warning margin beyond it, then one
   // with ample room while macOS warns.
   for (const bool warning : {false, true}) {
-    const uint64_t available = warning ? 64 * kGiB : reserve + kHostWarningMarginBytes / 2;
+    const uint64_t available = warning ? 64 * kGiB : reserve + kHostMarginBytes / 2;
     config.hostMemory = [available] {
       return std::optional<HostMemory>(HostMemory{available, available});
     };
@@ -1856,15 +881,17 @@ void testStartGrowsThroughHostPressure(const char *metallibPath) {
               runtime = model::createRuntime(resources->modelContext());
             })),
             "the start's arenas waited " + host);
-    EngineConfig engine;
-    connectToGovernor(engine, resources->memoryGovernor());
     {
-      const Serving allocation(engine.serving, true);
+      const test::ClaimScope request(resources->memoryGovernor(), ClaimClass::Start);
     }
     // The warmup's lane state; it throws if refused.
-    static_cast<void>(runtime->warmupPrefill(model::ExecutionLimits::prefillTokenBudget));
-    static_cast<void>(runtime->warmupDecodeBatch(1));
+    {
+      const KvPool::RunwayHold runway(resources->kvPool());
+      static_cast<void>(runtime->warmupPrefill(model::ExecutionLimits::prefillTokenBudget));
+      static_cast<void>(runtime->warmupDecodeBatch(1));
+    }
     resources->beginServing();
+    const test::ClaimScope growth(resources->memoryGovernor(), ClaimClass::Growth);
     const metal::AllocationResult grown = admit(kMiB, [] {});
     require(!grown && grown.failure == metal::AllocationFailure::HostPressure,
             "growth that no request in service needs went on " + host + " once serving began");
@@ -1881,8 +908,6 @@ void testStartChecksTheReserveWithWhatItServes(const char *metallibPath) {
   const test::TemporaryDirectory root("splash-start-reserve");
   RuntimeBootstrapConfig config;
   config.resources = loadableConfig(metallibPath, root.path(), "start-reserve-test");
-  RuntimeMetrics metrics;
-  config.nativeLoop.metrics = &metrics;
   // The process's Metal memory at the last check of the host. Once the start
   // has given back a lane's state, the host refuses its next two checks, as
   // macOS would before it counts what Metal freed.
@@ -1900,10 +925,13 @@ void testStartChecksTheReserveWithWhatItServes(const char *metallibPath) {
     }
     return host();
   };
-  std::unique_ptr<RuntimeBootstrap> bootstrap;
+  std::unique_ptr<ServingRuntime> bootstrap;
+  std::vector<uint8_t> output;
   static_cast<void>(test::capturedStderr([&] {
-    bootstrap = RuntimeBootstrap::start(config, [](std::span<const uint8_t>) {},
-                                        [] { return std::string(); });
+    bootstrap = ServingRuntime::start(
+        config, [&](std::span<const uint8_t> bytes) { output.insert(output.end(), bytes.begin(), bytes.end()); },
+        [] { return 0.0; });
+    bootstrap->announceReady();
   }));
   require(refused == 2, "the start checked the host before it gave back its warmups' idle state");
   // The warmups leave three lanes' state idle beside the lane the engine
@@ -1912,9 +940,16 @@ void testStartChecksTheReserveWithWhatItServes(const char *metallibPath) {
   // still see.
   require(checked < device.currentAllocatedSize + 2 * lane,
           "the start's last check of the host counted the lanes' state its warmups left idle");
-  require(bootstrap->statusJson(metrics.snapshot(), {}).find("\"memory_limited_steps\":[]") !=
-              std::string::npos,
-          "the start did not warm every decode width");
+  // The runtime answers its loop's status requests itself.
+  require(bootstrap->nativeLoop().receive(protocol::peer::serialize(protocol::StatusRequestFrame{1})),
+          "the loop refused a status request");
+  std::string status;
+  for (const protocol::EngineEvent &event : protocol::peer::decodeEvents(output))
+    if (const auto *answer = std::get_if<protocol::StatusJsonEvent>(&event); answer && answer->correlationId == 1)
+      status = answer->json;
+  require(status.find("\"memory_limited_steps\":[]") != std::string::npos &&
+              status.find("\"memory_audit\":{\"scope\":\"startup_warmup\",\"valid\":true,") != std::string::npos,
+          "the start did not warm every decode width, or its loop did not answer with its status: " + status);
 }
 
 // A model served with YaRN starts and runs as any other, with YaRN all the
@@ -1953,6 +988,7 @@ void testYarnRuntime(const char *metallibPath) {
   require(static_cast<bool>(admit(budget.sharedPrefillBytes + budget.sharedDecodeBytes,
                                   [&] { runtime = model::createRuntime(context); })),
           "the YaRN runtime's arenas were refused");
+  const KvPool::RunwayHold runway(resources->kvPool());
   static_cast<void>(runtime->warmupPrefill(model::ExecutionLimits::prefillTokenBudget));
   static_cast<void>(runtime->warmupDecodeBatch(1));
 }
@@ -2146,51 +1182,12 @@ void testAutomaticContextIgnoresTheVolume(const char *metallibPath) {
           "a persistent cache with no room anywhere did not leave the tier off once");
 }
 
-// Exercise the production assembly and runtime with each optional allocation.
-// A category's fixed plan must cover the enabled buffers before KV growth.
-void testOptionalFeatureMemoryPlan(const char *metallibPath) {
-  const test::TemporaryDirectory root("optional-memory-plan");
-  const PlannedModel planned = plannedModel();
-  static_cast<void>(test::writeSyntheticModel(root.path(), planned.target, planned.draft, planned.vision));
-  const auto rankingPath = root.path() / "public.splash";
-  const uint32_t vocabulary = planned.target.vocabularySize;
-  std::vector<uint8_t> ranking(12 + uint64_t{vocabulary} * 4);
-  std::memcpy(ranking.data(), "SPLCHD02", 8);
-  std::memcpy(ranking.data() + 8, &vocabulary, 4);
-  for (uint32_t id = 0; id < vocabulary; ++id)
-    std::memcpy(ranking.data() + 12 + uint64_t{id} * 4, &id, 4);
-  test::writeFile(rankingPath, ranking);
-  for (uint32_t switches = 0; switches < 4; ++switches) {
-    RuntimeResourcesConfig config;
-    config.metallibPath = metallibPath;
-    config.modelRoot = root.path();
-    config.model = model::makeModelDescriptor("optional-memory-test", planned.target, planned.draft,
-        planned.vision, model::TargetSource::Safetensors, model::VisionSource::Safetensors);
-    config.model.sourceIdentity = "synthetic";
-    config.buildId = "optional-memory-test";
-    config.maximumMemoryBytes = 4ULL << 30;
-    config.aneFfn.enabled = false;
-    config.hostMemory = [] { return std::optional<HostMemory>(HostMemory{64ULL << 30, 64ULL << 30}); };
-    config.optionalFeatures.compactDraftHead = switches & 1;
-    config.optionalFeatures.fastTopK = switches & 2;
-    config.optionalFeatures.compactCapacity = 512;
-    config.optionalFeatures.compactRanking = switches & 1 ? rankingPath : root.path() / "missing-unused";
-    auto resources = RuntimeResources::create(config, 0);
-    auto runtime = model::createRuntime(resources->modelContext());
-    const auto actual = runtime->actualRuntimeMemory();
-    const uint64_t reserved = resources->memoryPlan().breakdown().sharedDecodeBytes;
-    require(actual.sharedDecodeActualAllocatedBytes <= reserved,
-        "shared decode actual exceeds plan with optional switches=" + std::to_string(switches) +
-        ": actual=" + std::to_string(actual.sharedDecodeActualAllocatedBytes) +
-        ", planned=" + std::to_string(reserved));
-  }
-}
-
 // A block-sparse target's context past what memory holds spills to the SSD
 // cache, so where the automatic cache's volume has no room for it, a first
 // start serves only what memory holds. A relaunch keeps its first engine's
-// context whatever room the volume has left since: its spilling plan opens
-// the cache's temporary files however little room their volume has.
+// context whatever room the volume has left since, that of a server started
+// with --max-context, which asks for it again, as well: its spilling plan
+// opens the cache's temporary files however little room their volume has.
 void testRelaunchKeepsTheSpilledContext(const char *metallibPath) {
   const test::TemporaryDirectory root("splash-relaunch");
   RuntimeResourcesConfig config = flashNextConfig(metallibPath, root.path());
@@ -2199,6 +1196,8 @@ void testRelaunchKeepsTheSpilledContext(const char *metallibPath) {
   // A budget whose memory holds less of the window than spilling does.
   config.maximumMemoryBytes = startStreamed(config).minimumRequired + 512 * kMiB;
   const StreamedStart first = startStreamed(config);
+  require(startStreamed(config, first.context).context >= first.context,
+          "a --max-context of the context a start spills for was not held");
   config.diskVolume = reading(localVolume(11 * kGiB));
   const StreamedStart refused = startStreamed(config);
   require(first.tier && !refused.tier && refused.context < first.context &&
@@ -2209,10 +1208,568 @@ void testRelaunchKeepsTheSpilledContext(const char *metallibPath) {
   const StreamedStart relaunch = startStreamed(config);
   require(relaunch.tier && relaunch.context >= first.context,
           "a relaunch served less than its first engine's context for want of SSD room");
+  const StreamedStart explicitRelaunch = startStreamed(config, first.context);
+  require(explicitRelaunch.tier && explicitRelaunch.context >= first.context,
+          "a relaunch for --max-context served less than its first engine's context for want of SSD room");
 }
 
-// The engine asks the governor whether the host pauses growth, and its
-// serving mark lets a request in service grow through that pause.
+// An automatic expert store keeps every slot as its floor only where the run
+// spills, except at its smallest size, where every slot is its floor at any
+// share. A byte short of the least budget that loads every expert,
+// Flash-Next's experts stream through a store the plan sizes beside a spill,
+// all of it its floor. Where the SSD cache's files then cannot be made, the
+// run serves without spilling: the weights load once more, and the store
+// keeps kExpertFloorShare of its slots, as in a run that cannot spill. A
+// budget lower by the experts' bytes above their smallest store gives that
+// store, beside a spill too: without the SSD cache's files it is all its
+// floor still, and the weights load as often as where the run spills. Each
+// start reports the store once, as the run serves it.
+void testAStoreKeepsTheFloorOfTheRunsSpill(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-store-floor");
+  RuntimeResourcesConfig config = flashNextConfig(metallibPath, root.path());
+  config.cacheDisk = {.automatic = true};
+  config.diskVolume = reading(localVolume(500 * kGiB));
+  // Halving from the least memory a start needs, where the experts stream
+  // through their smallest store, to 2 GiB above it, where they load whole.
+  uint64_t streams = startStreamed(config).minimumRequired, whole = streams + 2 * kGiB;
+  while (streams + 1 < whole) {
+    config.maximumMemoryBytes = streams + (whole - streams) / 2;
+    (startStreamed(config).experts ? streams : whole) = config.maximumMemoryBytes;
+  }
+  config.maximumMemoryBytes = streams;
+  const StreamedStart spilling = startStreamed(config);
+  require(spilling.tier && spilling.experts && spilling.experts->floorBytes == spilling.experts->capBytes &&
+              spilling.loads == 2,
+          "a store sized beside a spill did not keep all of it as its floor");
+  // A start of `at` with the temporary directory a regular file while the
+  // runtime starts, where no file of the SSD cache can be made.
+  const auto startClosed = [&](const RuntimeResourcesConfig &at) {
+    const char *const saved = std::getenv("TMPDIR");
+    const std::string temporary = saved ? saved : "";
+    const auto restore = [&] { saved ? ::setenv("TMPDIR", temporary.c_str(), 1) : ::unsetenv("TMPDIR"); };
+    StreamedStart closed;
+    closed.log = test::capturedStderr([&] {
+      ::setenv("TMPDIR", (root.path() / "target" / "model.gguf").c_str(), 1);
+      try {
+        const auto resources = RuntimeResources::create(at, 0);
+        closed.experts = resources->streamedExpertStats();
+        closed.tier = resources->cache().snapshot().kvTier.capacityBytes != 0;
+      } catch (...) {
+        restore();
+        throw;
+      }
+      restore();
+    });
+    closed.loads = occurrences(closed.log, "Weights loaded");
+    return closed;
+  };
+  const StreamedStart closed = startClosed(config);
+  require(!closed.tier && closed.experts && closed.experts->capBytes == spilling.experts->capBytes &&
+              closed.experts->floorBytes < closed.experts->capBytes && closed.loads == 3 &&
+              occurrences(closed.log, "Routed experts stream") == 1 &&
+              closed.log.find(std::to_string(static_cast<int>(model::kExpertFloorShare * 100)) +
+                              "% of its slots") != std::string::npos,
+          "a store sized beside a spill the run could not make kept all of it as its floor");
+  const model::StreamableWeights weights =
+      model::streamableWeights(config.modelRoot, config.model, {.streamExperts = true});
+  config.maximumMemoryBytes = streams - (weights.expertBytes - weights.expertMinimumBytes);
+  const StreamedStart least = startStreamed(config), smallest = startClosed(config);
+  require(least.tier && least.experts && least.experts->capBytes == weights.expertMinimumBytes,
+          "a budget lower by the experts' bytes above their smallest store gave another store");
+  require(!smallest.tier && smallest.experts && smallest.experts->capBytes == weights.expertMinimumBytes &&
+              smallest.experts->floorBytes == smallest.experts->capBytes && smallest.loads == least.loads &&
+              occurrences(smallest.log, "Routed experts stream") == 1 &&
+              smallest.log.find("100% of its slots") != std::string::npos,
+          "a store at its smallest size, sized beside a spill the run could not make, loaded again");
+}
+
+// A relaunch is planned as its first engine was. That of a server started
+// with --max-context asks for it again, beside the context the first engine
+// served (server/server.py `_native_command`), and on the budget that engine
+// had announces that context: the automatic SSD cache turns its staging off
+// for it, as it did for the first engine, where a relaunch planned as an
+// automatic start keeps the staging and holds less. On a budget that holds
+// less, as once this Mac's memory shrank, it serves what its plan holds.
+void testAnExplicitRelaunchServesItsFirstContext(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-explicit-relaunch");
+  RuntimeBootstrapConfig config;
+  config.resources = loadableConfig(metallibPath, root.path(), "explicit-relaunch-test");
+  config.resources.diskVolume = reading(localVolume(500 * kGiB));
+  // The context the plan of a start asked for `requestedContextTokens`
+  // holds, and the least memory it needs.
+  const auto plan = [&](uint32_t requestedContextTokens) {
+    std::pair<uint32_t, uint64_t> planned;
+    static_cast<void>(test::capturedStderr([&] {
+      const auto resources = RuntimeResources::create(config.resources, requestedContextTokens);
+      planned = {resources->memoryPlan().maximumContextTokens(),
+                 resources->memoryPlan().breakdown().minimumRequiredBytes};
+    }));
+    return planned;
+  };
+  // A budget whose KV the staging shortens: the plan's least, the staging
+  // and a little KV. Without the SSD cache it holds the context a first
+  // engine started with --max-context serves.
+  config.resources.maximumMemoryBytes =
+      plan(0).second + config.resources.model.stateLayout.cachedBytes() + 64 * kMiB;
+  const uint32_t first = plan(0).first;
+  config.resources.cacheDisk = {.automatic = true};
+  config.resources.relaunchContext = first;
+  require(plan(0).first < first && plan(first).first == first,
+          "the automatic SSD cache's staging cost a relaunch planned as an automatic start no context, or "
+          "one planned for --max-context did not hold it");
+  // What the relaunch announces (Ready's maxContextTokens, which the status
+  // reports), and its log.
+  config.nativeLoop.engine.maxContext = first;
+  const auto relaunch = [&] {
+    std::unique_ptr<ServingRuntime> bootstrap;
+    const std::string log = test::capturedStderr([&] {
+      bootstrap = ServingRuntime::start(config, [](std::span<const uint8_t>) {}, [] { return 0.0; });
+      bootstrap->announceReady();
+    });
+    return std::pair{bootstrap->nativeLoop().statusSnapshot().maximumContextTokens, log};
+  };
+  require(relaunch().first == first, "a relaunch on its first engine's budget served less than its --max-context");
+  config.resources.maximumMemoryBytes -= 32 * kMiB;
+  const uint32_t held = plan(first).first;
+  const auto [served, log] = relaunch();
+  require(held < first && served == held &&
+              log.find("The memory plan holds " + std::to_string(held) + " tokens of context, less than the " +
+                       std::to_string(first) + " the server's first engine served.") != std::string::npos,
+          "a relaunch whose plan holds less than its --max-context did not serve what the plan holds");
+}
+
+// --ple-memory auto takes at most the rows of every id a 128K-token prompt
+// stages beside the row cache's working memory: on the Flash-Next fixture,
+// 128K tokens of its PLE heads' ids.
+void testTableShareHoldsAPromptsIds(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-table-share");
+  const RuntimeResourcesConfig config = flashNextConfig(metallibPath, root.path());
+  const model::StreamableWeights weights =
+      model::streamableWeights(config.modelRoot, config.model, {.streamExperts = true, .streamTable = true});
+  const auto &layout = std::get<model::Qwen4ExpLayout>(config.model.target);
+  const model::SparseRowStoreOptions rows = model::streamedTableRows(layout);
+  require(weights.tableRowBytes &&
+              weights.tableShareBytes ==
+                  model::SparseRowStore::workingBytes(weights.tableRowBytes, rows.prefetchRows, rows.stageRows) +
+                      model::SparseRowStore::cacheBytesFor(uint64_t{128 * 1024} * layout.pleHeads(),
+                                                           weights.tableRowBytes) &&
+              weights.tableShareBytes > weights.tableMinimumBytes,
+          "--ple-memory auto's share is not the rows of every id a 128K-token prompt stages");
+}
+
+// The PLE table's row cache is what the engine's limit gives it, whatever
+// the host spares as the engine starts: Flash-Next's fixture of a table three
+// times its row cache's working memory, under a limit that leaves half of
+// the table above its smallest beside the floors and the KV kept resident
+// (residentAllowanceBytes), which streams it through a row cache above its
+// smallest, starts on a host with no spare room with the roomy host's row
+// cache, context and budget of states and KV, nothing held back.
+void testTheTableIgnoresTheHostsSpareMemory(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-table-host");
+  RuntimeResourcesConfig config = flashNextConfig(metallibPath, root.path(), 491'520);
+  config.expertMemory = {StreamedSetting::Mode::Off, 0};
+  const model::StreamableWeights weights =
+      model::streamableWeights(config.modelRoot, config.model, {.streamTable = true});
+  const StreamedStart whole = startStreamed(config);
+  require(weights.tableMinimumBytes < weights.tableBytes && !whole.table,
+          "the fixture's table does not stream above its smallest, or loads whole on a roomy limit");
+  config.maximumMemoryBytes = whole.minimumRequired + residentAllowanceBytes(config) -
+                              (weights.tableBytes - weights.tableMinimumBytes) / 2;
+  const StreamedStart roomy = startStreamed(config);
+  require(roomy.table > weights.tableMinimumBytes,
+          "a limit that leaves the table half of it above its smallest kept its row cache at its smallest");
+  RuntimeResourcesConfig bounded = config;
+  const uint64_t spareReserve =
+      EngineMemoryPolicy::hostSpareReserveBytes(metal::probeDeviceCapabilities().physicalMemoryBytes);
+  bounded.hostMemory = [spareReserve] {
+    return std::optional<HostMemory>(HostMemory{64 * kGiB, spareReserve + kHostMarginBytes});
+  };
+  const StreamedStart held = startStreamed(bounded);
+  require(held.table == roomy.table && !held.heldBack &&
+              held.context == roomy.context && held.dynamicBudget == roomy.dynamicBudget,
+          "a host with no spare room started the table below the row cache the limit gives it");
+}
+
+// Two launches of one model on hosts that spare different memory get one
+// floor: the store starts at its floor either way, the share of its slots
+// the model's plan sets, its cap the limit's, the chunks above its floor
+// held in the plan, so the floor, the store's start, the context and the
+// budget of states and KV are the roomy host's on a host whose spare memory
+// holds nothing past the governor's reserve and margin.
+void testTwoLaunchesGetOneFloor(const RuntimeResourcesConfig &config) {
+  const StreamedStart roomy = startStreamed(config);
+  RuntimeResourcesConfig bounded = config;
+  const uint64_t spareReserve =
+      EngineMemoryPolicy::hostSpareReserveBytes(metal::probeDeviceCapabilities().physicalMemoryBytes);
+  bounded.hostMemory = [spareReserve] {
+    return std::optional<HostMemory>(HostMemory{64 * kGiB, spareReserve + kHostMarginBytes});
+  };
+  const StreamedStart held = startStreamed(bounded);
+  require(roomy.experts && held.experts && held.experts->floorBytes == roomy.experts->floorBytes &&
+              held.experts->capBytes == roomy.experts->capBytes && held.experts->chunks == roomy.experts->chunks &&
+              held.experts->liveBytes == held.experts->floorBytes && held.heldBack == roomy.heldBack &&
+              held.context == roomy.context && held.dynamicBudget == roomy.dynamicBudget,
+          "two launches on hosts that spare different memory got floors of " +
+              std::to_string(roomy.experts ? roomy.experts->floorBytes : 0) + " and " +
+              std::to_string(held.experts ? held.experts->floorBytes : 0) + " bytes, or did not start at them");
+  require(held.log.find("it starts at its floor and grows toward its cap as memory allows") != std::string::npos &&
+              held.log.find(std::to_string(static_cast<int>(model::kExpertFloorShare * 100)) + "% of its slots") !=
+                  std::string::npos,
+          "the start did not say the store starts at the floor share of its slots");
+}
+
+// A start of `resources` as the server makes one, asked for `maxContext`
+// tokens (--max-context, zero for the automatic context), whose log it keeps
+// in `log`.
+std::unique_ptr<ServingRuntime> bootstrapOf(const RuntimeResourcesConfig &resources, std::string &log,
+                                            uint32_t maxContext = 0) {
+  RuntimeBootstrapConfig config;
+  config.resources = resources;
+  config.nativeLoop.engine.maxContext = maxContext;
+  std::unique_ptr<ServingRuntime> bootstrap;
+  log = test::capturedStderr([&] {
+    bootstrap = ServingRuntime::start(config, [](std::span<const uint8_t>) {}, [] { return 0.0; });
+    bootstrap->announceReady();
+  });
+  return bootstrap;
+}
+
+// The ledger's account named `name` in `memory`, or nullptr.
+const MemoryAccountSnapshot *accountOf(const MemoryGovernorSnapshot &memory, std::string_view name) {
+  const auto found = std::ranges::find(memory.accounts, name, &MemoryAccountSnapshot::name);
+  return found == memory.accounts.end() ? nullptr : &*found;
+}
+
+// The ledger's accounts sum to what the governor charges: at Ready a start of
+// streamed experts books the KV pages and the lane states as their storage
+// counts them and the expert store as its pool reports it, and the fixed
+// account holds the rest, so that the accounts' current bytes add up to the
+// charged bytes exactly.
+void testLedgerAccountsSumToTheBackend(const RuntimeResourcesConfig &config) {
+  std::string log;
+  const std::unique_ptr<ServingRuntime> bootstrap = bootstrapOf(config, log);
+  RuntimeResources &resources = bootstrap->resources();
+  const MemoryGovernorSnapshot memory = resources.memoryGovernor().snapshot();
+  const MemoryAccountSnapshot *kv = accountOf(memory, "kv"), *states = accountOf(memory, "states"),
+                              *experts = accountOf(memory, "experts");
+  require(!memory.accounts.empty() && memory.accounts.front().name == "fixed" && kv && states && experts,
+          "the ledger has no account of the KV pages, the lane states or the expert store");
+  uint64_t booked = 0;
+  for (const MemoryAccountSnapshot &account : memory.accounts) booked += account.currentBytes;
+  require(booked == memory.chargedBytes && memory.accounts.front().currentBytes > 0,
+          "the ledger's accounts did not sum to the charged bytes, " + std::to_string(booked) + " of " +
+              std::to_string(memory.chargedBytes));
+  const ActualMemoryReport actual = resources.actualMemoryReport(bootstrap->modelRuntime().actualRuntimeMemory());
+  require(kv->currentBytes == resources.kvPool().allocatedBytes() && states->currentBytes == actual.stateAllocatedBytes &&
+              experts->currentBytes == resources.streamedExpertStats()->liveBytes,
+          "an account did not book what its owner holds");
+}
+
+// Before Ready the ledger grows the store from its floor into the room the
+// host's rule for growth leaves: on a roomy host to its cap, one logged
+// decision a chunk, and on a host whose spare memory keeps less than the
+// margin beyond the spare reserve not at all. The first control pass after
+// Ready gives nothing back. The starts ask for 98,304 tokens of context, KV
+// of two extents, of which the engine at Ready holds the runway's one: the
+// store's growth does not rest on the memory Metal holds beside the
+// backend's buffers.
+void testStartupGrowsByTheHostRule(const RuntimeResourcesConfig &config) {
+  constexpr uint32_t kContext = 98'304;
+  std::string log;
+  model::ExpertStoreStats grown;
+  {
+    const std::unique_ptr<ServingRuntime> roomy = bootstrapOf(config, log, kContext);
+    grown = *roomy->resources().streamedExpertStats();
+    const MemoryGovernorSnapshot memory = roomy->resources().memoryGovernor().snapshot();
+    const MemoryAccountSnapshot *experts = accountOf(memory, "experts");
+    size_t logged = 0;
+    for (size_t at = log.find("Memory: experts grew"); at != std::string::npos;
+         at = log.find("Memory: experts grew", at + 1))
+      ++logged;
+    require(grown.chunks == grown.capChunks && grown.liveBytes == grown.capBytes &&
+                grown.floorBytes < grown.capBytes && experts && experts->grows == grown.regrows && grown.regrows &&
+                logged == grown.regrows,
+            "a roomy host's start did not grow the store from its floor to its cap by the ledger, one logged "
+            "decision a chunk: " + std::to_string(grown.chunks) + " of " + std::to_string(grown.capChunks) +
+                " chunks, " + std::to_string(grown.liveBytes) + " of " + std::to_string(grown.capBytes) +
+                " bytes, " + std::to_string(experts ? experts->grows : 0) + " grows, " + std::to_string(logged) +
+                " logged, " + std::to_string(memory.headroomBytes) + " bytes of headroom");
+    static_cast<void>(roomy->controlPass(MemoryPressure::Normal));
+    require(roomy->resources().streamedExpertStats()->liveBytes == grown.liveBytes,
+            "the first control pass after Ready gave back what the start grew");
+  }
+  RuntimeResourcesConfig bounded = config;
+  const uint64_t spareReserve =
+      EngineMemoryPolicy::hostSpareReserveBytes(metal::probeDeviceCapabilities().physicalMemoryBytes);
+  bounded.hostMemory = [spareReserve] {
+    return std::optional<HostMemory>(HostMemory{64 * kGiB, spareReserve + kHostMarginBytes / 2});
+  };
+  const std::unique_ptr<ServingRuntime> held = bootstrapOf(bounded, log, kContext);
+  const model::ExpertStoreStats floor = *held->resources().streamedExpertStats();
+  require(floor.liveBytes == floor.floorBytes && floor.floorBytes == grown.floorBytes && !floor.regrows &&
+              log.find("Memory: experts grew") == std::string::npos,
+          "a start on a host inside the margin grew the store past its floor");
+}
+
+// The runtime of a start, built under the governor's admission of its
+// arenas, as Bootstrap builds it.
+std::unique_ptr<model::Runtime> runtimeOf(RuntimeResources &resources) {
+  const EngineMemoryBreakdown &budget = resources.memoryPlan().breakdown();
+  std::unique_ptr<model::Runtime> runtime;
+  require(static_cast<bool>(resources.memoryGovernor().allocationAdmission()(
+              budget.sharedPrefillBytes + budget.sharedDecodeBytes,
+              [&] { runtime = std::make_unique<model::Runtime>(resources.modelContext()); })),
+          "a runtime's arenas were refused");
+  return runtime;
+}
+
+// The bound of one attention layer's pairs a command may compute: a full
+// chunk's at the end of the native window of 262,144 tokens of every family
+// (Bootstrap.mm's former EngineConfig::maximumPrefillAttentionPairs).
+constexpr uint64_t kLayerPairs = 534'774'784;
+constexpr uint32_t kChunk = model::ExecutionLimits::prefillTokenBudget;
+
+// The names of a runtime's pools, in order.
+std::vector<std::string> poolNames(model::Runtime &runtime) {
+  std::vector<std::string> names;
+  for (const model::ElasticPool *pool : runtime.pools()) names.emplace_back(pool->state().name);
+  return names;
+}
+
+// A prompt of `tokens` tokens prefilled on the runway's pages (KvPool::RunwayHold) as one command in `passes`
+// passes of the target's layers, each its own command; its last pass's results.
+std::vector<ModelStepResult> prefillInPasses(model::Runtime &runtime, uint64_t id, uint32_t tokens, uint32_t passes) {
+  std::vector<uint32_t> prompt(tokens);
+  for (uint32_t index = 0; index < tokens; ++index) prompt[index] = 1 + index * 37 % 997;
+  ModelRequest request;
+  request.id = id;
+  request.prompt = prompt;
+  request.maxNewTokens = 4;
+  runtime.beginColdRequest(request, 0);
+  std::vector<uint32_t> pages((tokens + kv::kPageTokens - 1) / kv::kPageTokens);
+  std::iota(pages.begin(), pages.end(), 0u);
+  ModelBatchItem item{.requestId = id, .logicalPosition = 0, .tokenCount = tokens, .pageTable = pages,
+                      .pageTableRevision = 1};
+  item.inputTokens = prompt;
+  std::vector<ModelStepResult> results;
+  try {
+    BatchPlan plan{
+        .kind = WorkKind::Prefill, .items = {{id, tokens}}, .decodeStage = DecodeStage::Regular, .passes = passes};
+    for (; plan.pass < passes; plan = followingPass(plan, runtime.commandLimits().layers)) {
+      const uint32_t pass = plan.pass;
+      results = runtime.submit(plan, std::span(&item, 1), {})->wait();
+      require(results.size() == 1 && results[0].failure.empty() &&
+                  (pass + 1 == passes || !results[0].consumedPromptTokens),
+              "a pass before a command's last committed its rows, or a pass failed");
+    }
+  } catch (...) {
+    runtime.end(id);
+    throw;
+  }
+  runtime.end(id);
+  return results;
+}
+
+// A resident dense start's runtime: a command in two passes, which the
+// runtime refused while only streamed targets ran passes, leaves what it
+// leaves whole, and one in more passes than its layers is refused before
+// anything of it runs; its command limits are one chunk's rows in up to a
+// pass per layer, one lane past a chunk, no streamed history and the
+// per-layer pair bound. What a command computes counts its attention
+// layer's pairs over the layers its pass runs, the heaviest layer's whatever
+// the pass.
+// Loading read its weights from the SSD, and its pools are the vision arena
+// and the embedding cache of a model that serves vision, units that cost
+// only their rebuild, which a start may take (model::PoolState::rebuildOnly,
+// amend/M.md B2 as the owner amended it 11-03; their value once an image's
+// start built the arena is the runtime oracle's, whose model's tower the
+// vision kernels run).
+void testDenseRuntimeBoundary(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-boundary-dense");
+  const RuntimeResourcesConfig config = loadableConfig(metallibPath, root.path(), "boundary-test");
+  const std::unique_ptr<RuntimeResources> resources = RuntimeResources::create(config, 0);
+  require(!resources->kvPool().freePageCount(kv::PageForm::Index), "a start that cannot spill holds an Index runway");
+  const std::unique_ptr<model::Runtime> runtime = runtimeOf(*resources);
+  const uint32_t layers = test::plannedModel().target.layers;
+  const KvPool::RunwayHold runway(resources->kvPool());
+  const std::vector<ModelStepResult> once = prefillInPasses(*runtime, 902, 64, 1);
+  const std::vector<ModelStepResult> twice = prefillInPasses(*runtime, 903, 64, 2);
+  require(once[0].consumedPromptTokens == 64 && twice[0].consumedPromptTokens == 64 && once[0].firstToken &&
+              once[0].firstToken == twice[0].firstToken,
+          "a resident command in two passes did not leave what it leaves whole");
+  rejects([&] { static_cast<void>(prefillInPasses(*runtime, 901, 64, layers + 1)); }, "passes are not ones",
+          "a command in more passes than the target's layers ran");
+  require(runtime->commandLimits() == model::CommandLimits{.commandRows = kChunk,
+                                                           .layers = layers,
+                                                           .maximumPasses = layers,
+                                                           .lanesPastChunk = 1,
+                                                           .indexPageLanes = 0,
+                                                           .attentionPairs = kLayerPairs},
+          "a resident dense runtime's command limits are not a chunk in a pass a layer, with the per-layer bound");
+  const std::array<model::PrefillLane, 1> chunk{{{.position = 0, .rows = kChunk}}};
+  const model::CommandWork whole = runtime->prefillWork(chunk, 0, 1);
+  const uint64_t pairs = model::denseAttentionPairs(0, kChunk);
+  require(whole == model::CommandWork{.attentionPairs = pairs, .layerAttentionPairs = pairs},
+          "a chunk's work is not its attention layer's pairs over the target's layers");
+  // The planned model's one attention layer is its last.
+  require(runtime->prefillWork(chunk, 0, 2) == model::CommandWork{.layerAttentionPairs = pairs} &&
+              runtime->prefillWork(chunk, layers / 2, 1).attentionPairs == pairs,
+          "a pass's work does not count its own layers' pairs and the heaviest layer's of the target");
+  require(poolNames(*runtime) == std::vector<std::string>{"vision_arena", "embeddings"},
+          "a model that serves vision does not have its vision arena and embeddings as pools");
+  require(runtime->pools()[0]->state().rebuildOnly && runtime->pools()[1]->state().rebuildOnly,
+          "the vision arena or the embeddings is not a pool whose units cost only their rebuild");
+}
+
+// A streamed MoE start's runtime, its store sized automatically: a prefill
+// group's rows in a pass per layer and no streamed history. Its pool is the
+// expert store's, whose bytes are Metal's: a unit taken above its floor and
+// given back again moves the backend's allocations by its bytes, rounded to
+// whole pages.
+void testStreamedRuntimeBoundary(RuntimeResourcesConfig moe) {
+  moe.maximumMemoryBytes = startStreamed(moe).minimumRequired - 1;
+  const std::unique_ptr<RuntimeResources> resources = RuntimeResources::create(moe, 0);
+  const std::unique_ptr<model::Runtime> runtime = runtimeOf(*resources);
+  require(resources->streamedExpertStats().has_value(), "the MoE start did not stream its experts");
+  require(runtime->commandLimits() == model::CommandLimits{.commandRows = 4 * kChunk,
+                                                           .layers = kMoeLayers,
+                                                           .maximumPasses = kMoeLayers,
+                                                           .lanesPastChunk = 1,
+                                                           .indexPageLanes = 0,
+                                                           .streamsWeights = true,
+                                                           .attentionPairs = kLayerPairs},
+          "a streamed MoE runtime's command limits are not a group's rows in a pass a layer");
+  require(poolNames(*runtime) == std::vector<std::string>{"experts", "vision_arena", "embeddings"},
+          "a streamed MoE runtime's pools are not its store's and its vision's");
+  require(!runtime->pools()[0]->state().rebuildOnly && runtime->pools()[1]->state().rebuildOnly &&
+              runtime->pools()[2]->state().rebuildOnly,
+          "the store, which the lanes in service read through, is a pool a start may take, or its vision's are not");
+  // The store starts at its floor: a unit it takes, then gives back.
+  model::ElasticPool &experts = *runtime->pools()[0];
+  metal::MetalBackend &backend = resources->backend();
+  const auto allocated = [&] { return backend.refreshMemoryStats().allocatedBytes; };
+  uint64_t before = allocated();
+  const model::PoolState floor = experts.state();
+  require(floor.currentBytes == floor.floorBytes && floor.growUnitBytes &&
+              static_cast<bool>(experts.grow(resources->memoryGovernor().allocationAdmission())) &&
+              allocated() - before >= floor.growUnitBytes && allocated() - before - floor.growUnitBytes < 16384 &&
+              experts.state().currentBytes == floor.currentBytes + floor.growUnitBytes,
+          "a unit the store took did not take the backend's allocations");
+  before = allocated();
+  const model::PoolState state = experts.state();
+  const uint64_t released = experts.release(1);
+  const uint64_t freed = before - allocated();
+  require(released && released == state.releaseUnitBytes && freed >= released && freed - released < 16384 &&
+              experts.state().currentBytes == state.currentBytes - released,
+          "a unit the store gave back did not leave the backend's allocations");
+}
+
+// A Flash-Next start whose K/V spills: its commands hold a prefill group's
+// rows, stream one lane's history, and run a pass per layer. Its pools are
+// its store's where the plan streams its experts, its hot block cache's and
+// its history's staging; of them only the staging, which no lane in service
+// reads through, costs only its rebuild (model::PoolState::rebuildOnly), and
+// its value is its reservations and the time allocating it took, which the
+// next reservation pays once it went. A lane's decode reads and a prompt's staging lack
+// what a reservation of them then allocates, and nothing once they hold it;
+// before the runtime begins the request, which the engine places first,
+// they lack the same. The staging stays a prompt's while it goes on,
+// whatever other prompts reserved since. (The fixture runs no command: no
+// hyper-connection kernel takes its 256-wide hidden state.)
+void testSpilledRuntimeBoundary(const char *metallibPath) {
+  const test::TemporaryDirectory root("splash-boundary-spill");
+  RuntimeResourcesConfig config = flashNextConfig(metallibPath, root.path());
+  config.cacheDisk = {.automatic = true};
+  config.diskVolume = reading(localVolume(500 * kGiB));
+  // A budget whose memory holds less of the window than spilling does
+  // (testRelaunchKeepsTheSpilledContext).
+  config.maximumMemoryBytes = startStreamed(config).minimumRequired + 512 * kMiB;
+  const std::unique_ptr<RuntimeResources> resources = RuntimeResources::create(config, 0);
+  const model::RuntimeContext context = resources->modelContext();
+  require(context.blockCache && context.historyStream, "the Flash-Next start did not spill its K/V");
+  // An empty Index extent from the start, where a lane's first conversion
+  // lands its pages at the memory wall.
+  require(resources->kvPool().freePageCount(kv::PageForm::Index) != 0,
+          "a start that can spill holds no Index runway");
+  const bool streamsExperts = resources->streamedExpertStats().has_value();
+  const std::unique_ptr<model::Runtime> runtime = runtimeOf(*resources);
+  const uint32_t layers = std::get<model::Qwen4ExpLayout>(config.model.target).layers;
+  require(runtime->commandLimits() == model::CommandLimits{.commandRows = 4 * kChunk,
+                                                           .layers = layers,
+                                                           .maximumPasses = layers,
+                                                           .lanesPastChunk = 1,
+                                                           .indexPageLanes = 1,
+                                                           .streamsWeights = streamsExperts,
+                                                           .attentionPairs = kLayerPairs},
+          "a spilling Flash-Next runtime's command limits do not stream one lane's history");
+  std::vector<std::string> pools{"hot_kv", "kv_staging"};
+  if (streamsExperts) pools.insert(pools.begin(), "experts");
+  require(poolNames(*runtime) == pools,
+          "a spilling Flash-Next runtime's pools are not its store's, hot block cache's and staging's");
+  ModelRequest request;
+  const std::vector<uint32_t> prompt(2 * kChunk, 7);
+  request.id = 911;
+  request.prompt = prompt;
+  request.maxNewTokens = 4;
+  model::ElasticPool &hot = *runtime->pools()[streamsExperts], &staging = *runtime->pools()[streamsExperts + 1];
+  require(staging.state().rebuildOnly && hot.state().rebuildOnly &&
+              !(streamsExperts && runtime->pools()[0]->state().rebuildOnly),
+          "the staging or the hot block cache no lane reads is not a pool whose units cost only their rebuild, "
+          "or the store, which the lanes in service read through, is");
+  const struct {
+    model::SpilledReadNeed need;
+    model::ElasticPool &pool;
+  } needs[] = {{{.kind = WorkKind::Decode}, hot}, {{.kind = WorkKind::Prefill, .pages = 128}, staging}};
+  // Through the model's interface, as the engine places and reserves them.
+  model::Model &reads = *runtime;
+  const auto shortfallOf = [&](const model::SpilledReadNeed &need) {
+    return need.kind == WorkKind::Decode ? reads.hotFloorShortfall(std::span(&request.id, 1))
+                                         : reads.stagingShortfall(request.id, need.pages);
+  };
+  std::array<uint64_t, 2> placed{};
+  for (size_t index = 0; index < placed.size(); ++index)
+    placed[index] = shortfallOf(needs[index].need);
+  runtime->beginColdRequest(request, 0);
+  for (size_t index = 0; index < placed.size(); ++index) {
+    const auto &[need, pool] = needs[index];
+    const uint64_t shortfall = shortfallOf(need);
+    const uint64_t before = pool.state().currentBytes;
+    require(shortfall && shortfall == placed[index] && reads.reserveSpilledReads(request.id, need).granted() &&
+                pool.state().currentBytes - before == shortfall && !shortfallOf(need),
+            std::string(need.kind == WorkKind::Decode ? "a lane's decode reads" : "a prompt's staging") +
+                " did not allocate the shortfall it named before and after the request began");
+  }
+  // The staging stays the prompt's while it goes on, as its command in
+  // passes reserved it once, before its first pass, whatever other prompts
+  // reserved meanwhile: one that reserved it and was suspended, and one that
+  // reserved it and ended, leave it, and so do an idle reclaim, a release of
+  // the pool and a decode's floor; it goes once none of the requests it was
+  // reserved for holds a lane.
+  const uint64_t held = staging.state().currentBytes;
+  for (const bool suspends : {true, false}) {
+    ModelRequest other = request;
+    other.id = suspends ? 912 : 913;
+    runtime->beginColdRequest(other, 1);
+    require(reads.reserveSpilledReads(other.id, {.kind = WorkKind::Prefill, .pages = 64}).granted(),
+            "a prompt's staging within what the staging holds was refused");
+    if (suspends) runtime->suspend(other.id);
+    else runtime->end(other.id);
+    require(staging.state().currentBytes == held &&
+                !reads.stagingShortfall(request.id, 128),
+            std::string("a prompt's staging went with another prompt that reserved it and ") +
+                (suspends ? "was suspended" : "ended"));
+  }
+  require(!staging.release(UINT64_MAX) && reads.reserveSpilledReads(request.id, {.kind = WorkKind::Decode}).granted() &&
+              staging.state().currentBytes == held,
+          "a release of the pool or a decode's floor took the staging of a prompt that goes on");
+  runtime->end(request.id);
+  require(!staging.state().currentBytes, "the staging stayed once every request it was reserved for left");
+  runtime->end(912);
+}
+
+// The engine allocates for its requests' claims in the governor's ledger
+// (EngineConfig::governor): inside the warning margin the host refuses a
+// start, and a request in service until nothing in place meets its need.
 void testEngineFollowsTheGovernor(const char *metallibPath) {
   metal::MetalBackend backend(metallibPath);
   constexpr uint64_t kGiB = 1ULL << 30;
@@ -2225,19 +1782,19 @@ void testEngineFollowsTheGovernor(const char *metallibPath) {
       [&available] { return std::optional<HostMemory>(HostMemory{*available, *available}); }, 0);
   EngineConfig config;
   connectToGovernor(config, governor);
-  require(config.growthPaused && config.serving && !config.growthPaused(),
-          "the engine was not connected to the governor");
+  require(config.governor == &governor, "the engine was not connected to the governor");
   const auto admits = [admit = governor.allocationAdmission()] {
     return static_cast<bool>(admit(1024, [] {}));
   };
-  // Inside the warning margin the host pauses growth that no request in
-  // service needs.
   available = hostReserve + kGiB / 2;
-  require(config.growthPaused() && !admits(), "the engine did not see the host's pause");
-  config.serving(true);
-  require(admits(), "the serving mark did not reach the governor");
-  config.serving(false);
-  require(!admits(), "the serving mark was not cleared");
+  {
+    const test::ClaimScope start(governor, ClaimClass::Start);
+    require(!admits(), "the host's margin admitted a start");
+  }
+  const test::ClaimScope inService(governor, ClaimClass::InService);
+  require(!admits(), "the host's margin admitted a request in service before what it holds");
+  require(governor.free(inService.id(), governor.need(inService.id())).outcome == FreeOutcome::Met && admits(),
+          "a request in service did not pass the host's margin once nothing in place met its need");
 }
 
 } // namespace
@@ -2245,110 +1802,7 @@ void testEngineFollowsTheGovernor(const char *metallibPath) {
 int main(int argc, char **argv) {
   @autoreleasepool {
     try {
-      require(argc == 2 || (argc == 3 && (std::string_view(argv[2]) == "--weight-budget" ||
-          std::string_view(argv[2]) == "--local-ple" ||
-          std::string_view(argv[2]) == "--local-ple-pressure" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-status" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-static" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-warning" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-manual" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-resident" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-off" ||
-          std::string_view(argv[2]) == "--local-ple-pressure-partial" ||
-          std::string_view(argv[2]) == "--local-writer" ||
-          std::string_view(argv[2]) == "--local-critical" ||
-          std::string_view(argv[2]) == "--local-release" ||
-          std::string_view(argv[2]) == "--local-current-restore" ||
-          std::string_view(argv[2]) == "--local-current-restore-ple" ||
-          std::string_view(argv[2]) == "--local-shrink" ||
-          std::string_view(argv[2]) == "--expert-metadata" ||
-          std::string_view(argv[2]) == "--expert-storage" ||
-          std::string_view(argv[2]) == "--optional-memory")),
-          "expected metallib path and a known test selector");
-      if (argc == 3 && std::string_view(argv[2]) == "--expert-metadata") {
-        testExpertStorageMetadata(argv[1]);
-        std::cout << "expert storage CPU metadata tests passed\n";
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--weight-budget") {
-        testWeightBudgetBeforeLoading(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple") {
-        testLocalPleChunkCriticalAndActual(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure") {
-        testLocalPlePressureTotalStorageOnly(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-status") {
-        testLocalPlePressureTotalStorageOnly(argv[1], true);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-static") {
-        testLocalPlePressureTotalStorageOnly(argv[1], true, false);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-warning") {
-        testLocalPlePressureTotalStorageOnly(argv[1], true, true, true);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-manual") {
-        testFixedPlePressureStorageOnly(argv[1], false);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-resident") {
-        testFixedPlePressureStorageOnly(argv[1], true);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-off") {
-        testPlePressureDisabledStorageOnly(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-ple-pressure-partial") {
-        testPartialPlePressureStorageOnly(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-writer") {
-        testImagePayloadIsPreparedByOwner(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-critical") {
-        testCriticalStopsHostWorkspaceBeforeAllocation(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-release") {
-        testLocalReleaseInvalidatesModelReadiness(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-current-restore") {
-        testLocalReleasedCurrentLayout(argv[1], false);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-current-restore-ple") {
-        testLocalReleasedCurrentLayout(argv[1], true); testLocalReleasedCurrentLayout(argv[1], true, true);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--local-shrink") {
-        testNoPlePressureReturnsExpertChunks(argv[1]);
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3 && std::string_view(argv[2]) == "--expert-storage") {
-        testExpertStorageMetadata(argv[1]);
-        testExpertStorageLifecycle(argv[1]);
-        testMixedExpertStorage(argv[1]);
-        std::cout << "expert storage tests passed\n";
-        return EXIT_SUCCESS;
-      }
-      if (argc == 3) {
-        testOptionalFeatureMemoryPlan(argv[1]);
-        std::cout << "optional feature memory plan tests passed\n";
-        return EXIT_SUCCESS;
-      }
-      testExpertStorageMetadata(argv[1]);
-      testExpertStorageLifecycle(argv[1]);
-      testMixedExpertStorage(argv[1]);
+      require(argc == 2, "expected metallib path");
       testLoadedDraftIsRequiredOnlyWithDraft();
       testLoadedVisionIsRequiredOnlyWithVision();
       testPersistentCacheNamespace();
@@ -2359,6 +1813,7 @@ int main(int argc, char **argv) {
       testModelBeyondBudgetIsRefusedBeforeLoading(argv[1]);
       testStartupAdmissionIgnoresModelSize(argv[1]);
       testFailedStepIsNamed(argv[1]);
+      testACommandOutOfMemoryInAssemblyIsCommandMemory(argv[1]);
       testStartGrowsThroughHostPressure(argv[1]);
       testStartChecksTheReserveWithWhatItServes(argv[1]);
       testYarnRuntime(argv[1]);
@@ -2368,14 +1823,26 @@ int main(int argc, char **argv) {
       testAutomaticTierYieldsToTheContext(argv[1]);
       testAutomaticContextIgnoresTheVolume(argv[1]);
       testRelaunchKeepsTheSpilledContext(argv[1]);
+      testAStoreKeepsTheFloorOfTheRunsSpill(argv[1]);
+      testAnExplicitRelaunchServesItsFirstContext(argv[1]);
+      testTableShareHoldsAPromptsIds(argv[1]);
+      testTheTableIgnoresTheHostsSpareMemory(argv[1]);
       testEngineFollowsTheGovernor(argv[1]);
-      testOptionalFeatureMemoryPlan(argv[1]);
+      testDenseRuntimeBoundary(argv[1]);
+      testSpilledRuntimeBoundary(argv[1]);
       {
         const test::TemporaryDirectory root("splash-moe");
         const RuntimeResourcesConfig moe = moeConfig(argv[1], root.path());
         testStreamableWeightsAreWhatLoads(moe);
+        testAToolsStoreIsItsSize(moe);
         testAutomaticExpertMemory(moe);
         testVerifyRows(argv[1], moe);
+        testStreamedRuntimeBoundary(moe);
+        RuntimeResourcesConfig streamed = moe;
+        streamed.maximumMemoryBytes = startStreamed(moe).minimumRequired - 1;
+        testLedgerAccountsSumToTheBackend(streamed);
+        testTwoLaunchesGetOneFloor(streamed);
+        testStartupGrowsByTheHostRule(streamed);
       }
       std::cout << "runtime resources tests passed\n";
       return EXIT_SUCCESS;

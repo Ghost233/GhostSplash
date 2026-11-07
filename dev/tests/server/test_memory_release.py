@@ -2,9 +2,7 @@
 says whether the engine gave its weights back."""
 
 import argparse
-import contextlib
 import http.client
-import io
 import json
 import subprocess
 import sys
@@ -21,7 +19,7 @@ from server import startup_report
 REAL_MODEL_OPTIONS = None
 
 # The weights section the engine answers a release request with when it keeps
-# the weights, in each case native_engine_loop_test.cpp checks it reports, and
+# the weights, in each case native_loop_weights_test.cpp checks it reports, and
 # the code and the words of the 409 that says why.
 KEPT = {
     # A restore leaves the weights released until its last image is back, and
@@ -190,7 +188,7 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
                 flush=True,
             )
 
-    def _open_real_owner(self, model_root, budget, model_name, mode, options):
+    def _open_real_owner(self, model_root, budget, model_name, options):
         argv = [
             str(model_root),
             "--model",
@@ -211,20 +209,12 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
             "--idle-release",
             "off",
         ]
-        if mode == "on":
-            argv += ["--moe-memory-pressure", "on"]
         if options.real_binary is not None:
             argv += ["--binary", str(options.real_binary)]
         if ple := options.real_ple_memory:
             argv += ["--ple-memory", ple]
         args = api.parse_args(argv)
-        self.assertEqual(args.moe_memory_pressure, mode)
         configured = list(startup_report.configuration_lines(args))
-        self.assertIn(f"  --moe-memory-pressure = {mode}", configured)
-        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            api.parse_args(
-                argv + ["--moe-memory-pressure", "on", "--expert-memory", "1G"]
-            )
         root, held = api.assembly.hold(Path(args.model_root))
         self.addCleanup(held.close)
         tokenizer_options = {}
@@ -242,7 +232,7 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
             trust_remote_code=False,
             **tokenizer_options,
         )
-        api.validate_tokenizer(tokenizer)
+        # Native Ready validates generation vocabulary in the normal server startup.
         command = api._native_command(args, root)
         processes = []
 
@@ -261,7 +251,6 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
                     {
                         "pid": process.pid,
                         "command": command,
-                        "pressure_case": "default-off" if mode == "off" else "on",
                     }
                 ),
                 flush=True,
@@ -318,29 +307,12 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
         options = REAL_MODEL_OPTIONS
         if options is None or options.real_model_root is None:
             self.skipTest("explicit --real-model-root correctness run only")
-        mode = options.real_moe_pressure
-        self.assertIn(mode, ("off", "on"))
         harness, runtime, args, configured, processes = self._open_real_owner(
-            options.real_model_root, options.real_max_memory, "local/T10", mode, options
+            options.real_model_root, options.real_max_memory, "local/T10", options
         )
         before = self._real_status(harness, "ready")
-        pressure = before["moe_memory_pressure"]
-        self.assertEqual(pressure["enabled"], mode == "on")
-        self.assertEqual(pressure["mode"], "local" if mode == "on" else "off")
-        self.assertTrue(pressure["model_ready"])
-        self.assertTrue(
-            {
-                "role",
-                "group",
-                "instance",
-                "leader",
-                "epoch",
-                "coordination_ready",
-                "heartbeat_age_seconds",
-            }.isdisjoint(pressure)
-        )
         effective = list(
-            startup_report.effective_lines(before, runtime.readiness, args)
+            startup_report.effective_lines(before, runtime.capabilities, args)
         )
         print(
             "real_public_manifest="
@@ -382,9 +354,6 @@ class RealModelMemoryReleaseTests(HarnessTestCase):
             after["weights"]["restores"], generated["weights"]["restores"] + 1
         )
         self.assertEqual(after["memory_plan"], before["memory_plan"])
-        self.assertTrue(after["moe_memory_pressure"]["model_ready"])
-        self.assertEqual(after["moe_memory_pressure"]["mode"], pressure["mode"])
-        self.assertFalse(during["moe_memory_pressure"]["model_ready"])
         self.assertEqual(len(processes), 1)
 
 
@@ -393,12 +362,6 @@ if __name__ == "__main__":
     parser.add_argument("--real-model-root", type=Path)
     parser.add_argument("--real-binary", type=Path)
     parser.add_argument("--real-max-memory", default="8G")
-    parser.add_argument(
-        "--real-moe-pressure",
-        choices=("off", "on"),
-        default="on",
-        help="off checks the omitted native flag (default off); on explicitly enables it",
-    )
     parser.add_argument("--real-ple-memory")
     REAL_MODEL_OPTIONS, remaining = parser.parse_known_args()
     unittest.main(argv=[sys.argv[0], *remaining])

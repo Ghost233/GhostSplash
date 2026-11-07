@@ -3,9 +3,12 @@
 #include "engine/MemoryPlan.hpp"
 
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <string_view>
+
+namespace splash::json {
+class Writer;
+} // namespace splash::json
 
 namespace splash::engine {
 
@@ -33,10 +36,12 @@ struct ActualMemoryReport {
     uint64_t sharedPrefillBytes = 0;
     uint64_t sharedDecodeBytes = 0;
     uint64_t kvAllocatedBytes = 0;
-    // A spill-capable target's readers of spilled KV: the hot block cache
-    // and the staging of a prefill's history; zero for another.
-    uint64_t kvBlockCacheBytes = 0;
-    uint64_t kvHistoryStagingBytes = 0;
+    // A spill-capable target's readers of spilled KV, as the spill plan
+    // budgets them (KvSpillPlan::hotLimitBytes, stagingBytes): the hot cache
+    // decode steps read through and the staging a prefill's history streams
+    // through; zero for another.
+    uint64_t spilledKvHotBytes = 0;
+    uint64_t spilledKvStagingBytes = 0;
     // The buffer state writes to the disk tier stage through; zero without
     // the tier.
     uint64_t stateStagingBytes = 0;
@@ -52,14 +57,6 @@ struct ActualMemoryReport {
     // The backend's own high-water mark, and the device's above, since the
     // weights that serve began to load (MetalBackend::restartPeaks).
     uint64_t backendPeakAllocatedBytes = 0;
-    uint64_t requiredHostBytes = 0;
-};
-
-// Current store categories inside the original global/dynamic plan. Expert
-// bytes are a subset of targetWeightsBytes, never added to it a second time.
-struct RuntimeStoreQuotaView final {
-    uint64_t expertQuotaBytes = 0, pleQuotaBytes = 0, maximumBytes = 0;
-    uint64_t expertAllocatedBytes = 0;
 };
 
 struct MemoryAuditResult {
@@ -73,12 +70,11 @@ struct MemoryAuditResult {
     uint32_t devicePeakDeviationBasisPoints = 0;
     uint64_t actualHeadroomBytes = 0;
 
-    bool runtimeEpoch = false;
-    std::optional<RuntimeStoreQuotaView> currentStores;
-
-    [[nodiscard]] std::string toStatusJson() const;
     [[nodiscard]] std::string describe() const;
 };
+
+// The audit as /status reports it (memory_audit).
+void writeJson(json::Writer &w, const MemoryAuditResult &audit);
 
 inline constexpr uint32_t kMaximumDevicePeakDeviationBasisPoints = 500;
 
@@ -86,12 +82,5 @@ inline constexpr uint32_t kMaximumDevicePeakDeviationBasisPoints = 500;
 // process-wide peak against the immutable plan.
 [[nodiscard]] MemoryAuditResult auditActualMemory(
     const EngineMemoryPlan &plan, ActualMemoryReport actual);
-
-// Runtime stores may be resized after dynamic state/KV was reclaimed. All
-// category, reserve and deviation limits remain the same; peaks must belong
-// to the current constant-PLE allocation epoch (MetalBackend::memoryEpochStats).
-[[nodiscard]] MemoryAuditResult auditRuntimeMemory(
-    const EngineMemoryPlan &plan, ActualMemoryReport actual,
-    std::optional<RuntimeStoreQuotaView> stores = std::nullopt);
 
 }  // namespace splash::engine

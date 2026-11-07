@@ -96,7 +96,7 @@ int main() {
                   "unsupported verifier failed for an unrelated reason");
         }
         require(supported == expected, "legacy verifier capability disagrees with compiled shader entries");
-        require(splash::ops::PagedAttention::prefillPlan(32, shape.first, shape.second).queryHeads == shape.first,
+        require(splash::ops::PagedAttention::prefillPlan(32, 0, shape.first, shape.second, 32).queryHeads == shape.first,
                 "a valid prefill path was excluded with the unsupported verifier");
       }
     }

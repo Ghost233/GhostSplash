@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by Splash 1.6
 ---
 
 # 专家缓存压力控制采用独立开关并保留固定预算语义

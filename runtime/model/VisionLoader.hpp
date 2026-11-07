@@ -22,7 +22,7 @@ public:
 
   [[nodiscard]] const ops::VisionLayout &layout() const noexcept;
   // The image of vision/model.bin.
-  [[nodiscard]] ImagePlan image(metal::MetalBackend *backend = nullptr) const;
+  [[nodiscard]] ImagePlan image() const;
 
 private:
   struct Planned;

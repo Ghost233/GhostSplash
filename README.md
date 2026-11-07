@@ -40,13 +40,13 @@ BF16/F16 张量、融合 MoE gate/up 专家和 Q5_0/Q5_1 支持，具体范围�
 | D3 mini | [d3minisplash.sh](d3minisplash.sh) |
 | Swift 1.5 Flash Next Q2_0 | [swift15flashnextsplash.sh](swift15flashnextsplash.sh) |
 
-Flash Next 入口使用 INT8 稀疏 KV、262144 上下文和 48 GiB 内存预算。
-可传 `--kv-format q4h` 使用 Q4H 稀疏 KV，覆盖内存、块缓存和 SSD 暂存路径；
-Q4_0 两种格式仍不支持。Q4H 使用现有 H256 Q/K、H64 V 及 FP32 scale 协议。
+Swift 1.5 Flash Next 入口默认使用 Q4H 稀疏 KV、262144 上下文和 30 GiB 内存预算。
+可通过 `--kv-format int8` 或 `--kv-format bf16` 切换 KV 格式。
+Q4H 使用 H256 Q/K、H64 V 及 FP32 scale，覆盖内存、块缓存和 SSD 暂存路径。
 布局与验证范围见 [Flash Next Q4H 说明](docs/flash-next-q4h-2026-10-21.md)。
-`--expert-memory off` 强制专家权重全量驻留；`--ple-memory 128M` 将 PLE 全表留在
-GGUF 所在的 SSD，仅保留有限行缓存和必要工作区。`--ple-memory off` 会加载整张表，
-与 SSD 卸载相反。草稿绑定本机 Q8_0 GGUF 的 BF16 转换产物，原文件保留。
+专家和 PLE 缓存默认由内存规划器决定。可用 `--expert-memory off` 将专家权重全量驻留，
+或用 `--ple-memory 128M` 将 PLE 表留在 SSD 并限制行缓存。
+`--ple-memory off` 会加载整张 PLE 表。草稿使用本机 Q8_0 GGUF 转换出的 BF16 文件。
 首次准备转换产物使用：
 
 ```sh
@@ -124,15 +124,11 @@ Coder390、Julia、Laya、Kev 和两个 MiniPlus V3 模型的本地权重已删�
   历史测试使用转换后的 draft；使用官方 DFlash2 的测速结果与作者 draft 的结果
   在记录中分别注明。
 
-### MoE 单实例内存压力控制（实验）
+### MoE 内存管理
 
-目标是由本地压力控制器管理当前实例的自动专家和自动 PLE 缓存。
-保留 `--moe-memory-pressure on` 独立开关，默认关闭，要求 `--expert-memory auto`。
-`--host-memory-reserve auto|SIZE` 设置本实例的系统预留目标，手动预算保持固定语义。
-
-2026-10-27 已改为单实例实现，Warning 下按真实余量缩容、保持或逐块恢复。
-有界 Tiel、资源释放与恢复校验已通过；真实 PLE 模型保留未验收。
-参数、状态和范围见[单实例内存压力控制](docs/moe-memory-control.md)。
+`ghost` 使用 Splash 1.6 的内存规划和压力回收。自动专家缓存可随系统余量缩容和恢复，
+手动专家与 PLE 缓存分别使用 `--expert-memory SIZE` 和 `--ple-memory SIZE`。
+迁移说明和原实验记录见 [MoE 内存管理](docs/moe-memory-control.md)。
 
 ### 性能记录
 
@@ -144,7 +140,7 @@ Coder390、Julia、Laya、Kev 和两个 MiniPlus V3 模型的本地权重已删�
 ## 未完成的实验
 
 - **Flash Next 历史分支**：早期分片加载、原生 BF16 MTP 和 teacher-only KV/index 实验
-  继续保留在原分支。当前 `ghost` 使用上游 1.4.0 的 Flash Next 和流式内存实现，
+  继续保留在原分支。当前 `ghost` 使用上游的 Flash Next 和 1.6 流式内存实现，
   不合入旧分支中未验收的实验。原始测试记录见该分支的
   [优化及验证记录](https://github.com/Ghost233/GhostSplash/blob/codex/qwen38-flash-next-support/docs/flash-next-optimization-2026-10-09.md)。
 - **Whittle 27B**：保存文本模型支持、Q5_0 权重适配、启动器与 64K 测速归档。

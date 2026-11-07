@@ -87,8 +87,9 @@ using splash::test::floatToBf16;
 
 namespace {
 
-// The legacy 5120-channel fixture remains unchanged; the dedicated 4B checks below use 2560. Its intermediate
-// size makes the ANE share, kAneUnits of its 12 channel units, span two segments of down's inputs.
+// A hidden size of two segments of the ANE programs (2560 channels each) in whole groups of ane_ffn_rotate (1024),
+// and an intermediate size whose ANE share, kAneUnits of its 12 channel units, spans two segments of down's inputs.
+// A separate fixture covers the 2560-channel 4B path.
 constexpr uint32_t kHidden = 5120, kSegment = 2560, kIntermediate = 6144, kLayers = 3, kAneUnits = 6;
 // The most the split's output may differ from the GPU's alone, as the RMS of their difference relative to the GPU's:
 // int8 leaves about 1%.
@@ -450,14 +451,25 @@ void takes(const Model &mlx, const Model &gguf) {
   if (AneFfn::unsupported(mlx.layers) || AneFfn::unsupported(gguf.layers))
     fail("the split does not take the models");
   if (!AneFfn::unsupported({})) fail("the split takes no layers");
-  // A hidden size the programs' segments do not take, and layers of two shapes.
+  // The rotation distributes whole blocks among SIMD groups, including a
+  // remainder, within its per-group capacity. All layers share one shape.
   const auto projection = [](uint32_t outputs, uint32_t inputs) {
     return Projection(outputs, inputs,
                       BlockWeights{{QuantizedSegment::planes(GGUF_FMT_AF4G64, outputs, inputs, {}, {}, {})}});
   };
-  const Projection gate = projection(kIntermediate, 4096), down = projection(4096, kIntermediate);
-  const std::vector<SwiGluProjections> narrow{{&gate, &gate, &down}}, mixed{mlx.layers[0], narrow[0]};
-  if (!AneFfn::unsupported(narrow)) fail("the split takes a hidden size of 4096");
+  const auto layer = [&](uint32_t hidden) {
+    return std::pair{projection(kIntermediate, hidden), projection(hidden, kIntermediate)};
+  };
+  const auto [gate, down] = layer(4096);
+  const auto [unevenGate, unevenDown] = layer(4608);
+  constexpr uint32_t beyondCapacity =
+      ANE_FFN_INPUT_BLOCK * (ANE_FFN_ROTATE_BLOCKS * (ANE_FFN_ROTATE_THREADS / 32) + 1);
+  const auto [largeGate, largeDown] = layer(beyondCapacity);
+  const std::vector<SwiGluProjections> narrow{{&gate, &gate, &down}}, uneven{{&unevenGate, &unevenGate, &unevenDown}},
+      oversized{{&largeGate, &largeGate, &largeDown}}, mixed{mlx.layers[0], narrow[0]};
+  if (const char *reason = AneFfn::unsupported(narrow)) fail(std::string("the split refuses a hidden size of 4096: ") + reason);
+  if (const char *reason = AneFfn::unsupported(uneven)) fail(std::string("the split refuses a hidden size of 4608: ") + reason);
+  if (!AneFfn::unsupported(oversized)) fail("the split takes more rotation blocks than the kernel can hold");
   if (!AneFfn::unsupported(mixed)) fail("the split takes layers of two shapes");
   if (AneFfn::units(mlx.layers) != kIntermediate / 512) fail("the split moves other units than 512 channels");
   // Units that leave the GPU or the ANE no channels.

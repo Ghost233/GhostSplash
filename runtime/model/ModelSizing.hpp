@@ -6,7 +6,6 @@
 // and each part that may stream, whole and at its smallest store.
 
 #include "model/GgufImage.hpp"
-#include "model/ExpertStoreStats.hpp"
 #include "model/FfnLoadOptions.hpp"
 #include "model/ModelDescriptor.hpp"
 
@@ -21,24 +20,23 @@ struct StreamableWeights final {
   // target's without its routed experts or table, the draft's and the
   // vision tower's.
   uint64_t loadedBytes = 0;
-  uint64_t loadingTemporaryBytes = 0;
-  uint64_t expertReaderTemporaryBytes = 0;
-  std::optional<ExpertStorageSnapshot> expertStorage;
   // A MoE target's routed experts: what the model takes more where they
   // load with their layers, their planes in the images and their slot table
   // (residentExpertSlots), and the smallest store that streams them
   // (ExpertStore::minimumBytes); zero for a dense FFN.
   uint64_t expertBytes = 0;
-  uint64_t expertFloorBytes = 0;
+  uint64_t expertMinimumBytes = 0;
   // The table a GGUF target holds (Qwen3.8-Flash-Next's PLE n-gram table):
   // what its image takes where it loads, the smallest row cache that
   // streams it, which holds one row beside its working memory
-  // (SparseRowStore), and the bytes of a row, which a step stages
-  // (StreamedParts::tableRowBytes); zero without one.
+  // (SparseRowStore), the row cache an automatic table takes at most, which
+  // holds the rows of every id a 128K-token prompt stages, and the bytes of
+  // a row, which a step stages (StreamedParts::tableRowBytes); zero without
+  // one.
   uint64_t tableBytes = 0;
-  uint64_t tableFloorBytes = 0;
+  uint64_t tableMinimumBytes = 0;
+  uint64_t tableShareBytes = 0;
   uint64_t tableRowBytes = 0;
-  std::optional<uint64_t> tableRows;
   // Why the table cannot stream (gguf::tableRows), which then loads with
   // the weights: among loadedBytes, with no part of its own.
   std::string tableRefusal;
@@ -49,8 +47,6 @@ struct StreamableWeights final {
 // stream as parts of their own: one it does not is among the images that
 // load.
 [[nodiscard]] StreamableWeights streamableWeights(const std::filesystem::path &root,
-                                                  const ModelDescriptor &descriptor, gguf::PlanOptions streams,
-                                                  FfnLoadOptions ffn = {}, bool resizableExperts = false,
-                                                  bool boundedHostMemory = false);
+                                                  const ModelDescriptor &descriptor, gguf::PlanOptions streams, FfnLoadOptions ffn = {});
 
 } // namespace splash::model

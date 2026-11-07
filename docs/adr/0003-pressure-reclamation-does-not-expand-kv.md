@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by Splash 1.6
 ---
 
 # 压力回收额度暂不用于扩大 KV 和状态缓存上限

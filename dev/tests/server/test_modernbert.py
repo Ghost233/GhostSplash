@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import Mock
 
-from server import judgments, protocol
+from server import protocol
+from server.dialects import scoring as judgments
 from server.modernbert import ModernBertScorer
 
 

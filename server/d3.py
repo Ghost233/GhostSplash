@@ -4,7 +4,8 @@ import json
 
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from . import judgments, protocol
+from . import protocol
+from .dialects import scoring as judgments
 from .kev import KevScorer
 from .tokenization import tokenizable
 

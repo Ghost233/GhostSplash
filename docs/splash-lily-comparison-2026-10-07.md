@@ -66,7 +66,7 @@ Splash 也采用有限模型家族的特化设计。目前本地实现的两个�
 
 ### 已有的共同思路
 
-Splash 已有融合的专家 gate/up、按专家分组复用权重、预填充与验证的不同 tiles、设备相关的矩阵路径、归一化时准备 Q4 operand、INT8 paged KV，以及把 drafting/verification/acceptance 放进完整 command graph 的路径。重新添加相同概念不能构成新的性能收益。[MoE 计划](../runtime/ops/MoE.cpp)、[设备策略](../dev/benchmarks/device-policy.md)、[已有融合](../dev/benchmarks/remaining-decode-optimizations.md)
+Splash 已有融合的专家 gate/up、按专家分组复用权重、预填充与验证的不同 tiles、设备相关的矩阵路径、归一化时准备 Q4 operand、INT8 paged KV，以及把 drafting/verification/acceptance 放进完整 command graph 的路径。重新添加相同概念不能构成新的性能收益。[MoE 计划](../runtime/ops/MoE.cpp)、[设备策略](https://github.com/Ghost233/GhostSplash/blob/225fb96838826ebbbda78235c1b62a98782c3a93/dev/benchmarks/device-policy.md)、[已有融合](../dev/benchmarks/remaining-decode-optimizations.md)
 
 Lily 的“argmax-only”也不能理解成融合了词表投影和 argmax：其代码仍产生完整 F32 logits，再执行 argmax。Splash 对 greedy 请求已有独立 argmax 路径，对采样请求执行概率相关计算，因此“让 Splash greedy 跳过完整 log-probs”不是新发现。[Lily 生成与模型代码](https://github.com/perplexityai/pplx-garden/blob/1ed972ed3f0bd5616c997c9507c25616c63394fc/lily/src/model.rs)、[Splash sampling](../runtime/ops/Sampling.cpp)、[Splash 输出 head](../runtime/model/QwenTarget.cpp)
 
@@ -95,6 +95,6 @@ Splash 的历史记录提供了一个具体反例：attention 的并行 denomina
 3. **再比较小行数宽矩阵 kernel**：特别是验证块和词表 head；分设备、MLX/GGUF 判断，不从热权重微基准推断全模型收益。
 4. **有证据后再做分支并发或有效验证行数**：这些涉及 command 依赖、接受与 commit，单独验证后再叠加。
 
-通过标准应同时包括 greedy 输出和状态恢复正确、采样分布规则正确、draft 接受情况不抵消收益、显存可接受，以及短/长提示、并发 1–4 下的重复 HTTP ABBA 性能收益。使用 `metrics.decode_cycle_ms` 或完整服务时间纳入 host 开销，而非只看某个 GPU kernel 的时间。[现有测量方法](../DEVELOPMENT.md#local-benchmarks)、[性能资格规则](../dev/benchmarks/device-policy.md)、[decode profile](../dev/benchmarks/decode_profile.mm)
+通过标准应同时包括 greedy 输出和状态恢复正确、采样分布规则正确、draft 接受情况不抵消收益、显存可接受，以及短/长提示、并发 1–4 下的重复 HTTP ABBA 性能收益。使用 `metrics.decode_cycle_ms` 或完整服务时间纳入 host 开销，而非只看某个 GPU kernel 的时间。[现有测量方法](../DEVELOPMENT.md#local-benchmarks)、[性能资格规则](https://github.com/Ghost233/GhostSplash/blob/225fb96838826ebbbda78235c1b62a98782c3a93/dev/benchmarks/device-policy.md)、[decode profile](../dev/benchmarks/decode_profile.mm)
 
 当前证据支持继续以 Splash 为主要运行时，选择性借鉴 Lily 的局部实现。扩大同家族权重和量化兼容性、移植某个 kernel、改变投机验证策略是三个独立工作项，应分别建立证据和验收标准。

@@ -329,9 +329,8 @@ QwenStateStorage::tryActivateLane(uint32_t index, uint64_t requestId, uint64_t e
     throw std::logic_error("Qwen lane is already assigned");
   }
   Buffers buffers;
-  if (auto admission = acquire(CompositeStateLayout::kLaneGdnCells, true,
-                               "qwen-state-lane-" + std::to_string(index),
-                               buffers, extraBytes, allocateExtra);
+  if (auto admission =
+          acquire(laneBuffers(), "qwen-state-lane-" + std::to_string(index), buffers, extraBytes, allocateExtra);
       !admission)
     return admission;
   current.cells = std::move(buffers);
@@ -375,12 +374,12 @@ void QwenStateStorage::clearDraftRings(uint32_t index) {
 
 uint64_t QwenStateStorage::releaseOneIdle(bool keepLane) noexcept {
   const uint64_t before = backend_.memoryStats().allocatedBytes;
-  const uint32_t kept = keepLane ? 1 : 0;
-  if (idleCells() > kept * CompositeStateLayout::kLaneGdnCells)
+  const BufferCounts kept = keepLane ? laneBuffers() : BufferCounts{};
+  if (idleCells() > kept.cells)
     pool_->cells.pop_back();
-  else if (idleRings() > kept)
+  else if (idleRings() > kept.rings)
     pool_->rings.pop_back();
-  else if (idleWindows() > kept)
+  else if (idleWindows() > kept.windows)
     pool_->windows.pop_back();
   else
     return 0;
@@ -400,23 +399,50 @@ uint32_t QwenStateStorage::idleWindows() const noexcept {
   return static_cast<uint32_t>(pool_->windows.size());
 }
 
-uint64_t QwenStateStorage::missingBytes(uint32_t cells, bool rings) const noexcept {
-  const uint64_t missing = cells - std::min<uint64_t>(pool_->cells.size(), cells);
-  return missing * layout_.target.cellBytes() +
-         (rings && pool_->rings.empty() ? layout_.draft.ringBytes() : 0) +
-         (layout_.draft.usesContextWindow() && pool_->windows.empty() ? layout_.draft.windowBytes() : 0);
+QwenStateStorage::BufferCounts QwenStateStorage::laneBuffers() const noexcept {
+  return {CompositeStateLayout::kLaneGdnCells, 1, layout_.draft.usesContextWindow()};
 }
 
-uint32_t QwenStateStorage::statesToActivate() const noexcept {
-  if (layout_.draft.usesContextWindow() && !idleRings())
-    return std::numeric_limits<uint32_t>::max();
-  // A lane takes no cell when its cells have no bytes.
-  const uint32_t laneCells = emptyCell_ ? 0 : CompositeStateLayout::kLaneGdnCells;
-  const uint32_t cells = laneCells - std::min(idleCells(), laneCells);
-  const uint32_t draft = layout_.draft.fullHistory ? (idleRings() ? 0 : 1)
-      : layout_.draft.usesContextWindow() ? (idleWindows() ? 0 : 1) : 0;
-  return std::max(cells, draft);
+QwenStateStorage::BufferCounts QwenStateStorage::stateBuffers() const noexcept {
+  return {1, layout_.draft.fullHistory, layout_.draft.usesContextWindow()};
 }
+
+QwenStateStorage::BufferCounts QwenStateStorage::startBuffers() const noexcept {
+  const auto lane = laneBuffers(), state = stateBuffers();
+  return {lane.cells + state.cells, lane.rings + state.rings, lane.windows + state.windows};
+}
+
+QwenStateStorage::BufferCounts QwenStateStorage::idle() const noexcept {
+  return {idleCells(), idleRings(), idleWindows()};
+}
+
+QwenStateStorage::BufferCounts QwenStateStorage::beyond(BufferCounts count, BufferCounts taken) noexcept {
+  const auto left = [](uint32_t of, uint32_t less) { return of - std::min(of, less); };
+  return {left(count.cells, taken.cells), left(count.rings, taken.rings), left(count.windows, taken.windows)};
+}
+
+uint64_t QwenStateStorage::bytes(BufferCounts buffers) const noexcept {
+  return uint64_t{buffers.cells} * layout_.target.cellBytes() + uint64_t{buffers.rings} * layout_.draft.ringBytes() +
+         uint64_t{buffers.windows} * layout_.draft.windowBytes();
+}
+
+std::optional<uint32_t> QwenStateStorage::statesToActivate() const noexcept {
+  const BufferCounts lacked = beyond(laneBuffers(), idle());
+  if (lacked.rings && layout_.draft.usesContextWindow())
+    return std::nullopt;
+  // A lane takes no cell when its cells have no bytes.
+  return std::max({emptyCell_ ? 0 : lacked.cells, lacked.windows, layout_.draft.fullHistory ? lacked.rings : 0});
+}
+
+uint64_t QwenStateStorage::idleBytes(uint32_t evictedStates, bool afterStart, bool keepLane) const noexcept {
+  BufferCounts pooled = afterStart ? beyond(idle(), startBuffers()) : idle();
+  pooled.cells += evictedStates * stateBuffers().cells;
+  pooled.rings += evictedStates * stateBuffers().rings;
+  pooled.windows += evictedStates * stateBuffers().windows;
+  return bytes(keepLane ? beyond(pooled, laneBuffers()) : pooled);
+}
+
+uint64_t QwenStateStorage::startBytes() const noexcept { return bytes(beyond(startBuffers(), idle())); }
 
 void QwenStateStorage::updateLengths(uint32_t index,
                                      QwenLogicalLengths lengths) {
@@ -462,7 +488,7 @@ QwenStateStorage::snapshot(uint32_t index, QwenLogicalLengths lengths) {
 std::shared_ptr<QwenStateReservation>
 QwenStateStorage::reserve(metal::AllocationFailure &refusal) {
   Buffers buffers;
-  refusal = acquire(1, layout_.draft.fullHistory, "qwen-state-cache", buffers).failure;
+  refusal = acquire(stateBuffers(), "qwen-state-cache", buffers).failure;
   if (refusal != metal::AllocationFailure::None)
     return nullptr;
   return std::shared_ptr<QwenStateReservation>(new QwenStateReservation(
@@ -518,9 +544,10 @@ QwenStateStorage::snapshotToDisk(uint32_t index, std::function<void()> completio
 }
 
 metal::AllocationResult
-QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
-                          Buffers &buffers, uint64_t extraBytes,
+QwenStateStorage::acquire(BufferCounts counts, std::string_view label, Buffers &buffers, uint64_t extraBytes,
                           const std::function<void()> &allocateExtra) {
+  uint32_t cells = counts.cells;
+  const bool rings = counts.rings != 0;
   // Cells of no bytes are all the empty cell, which neither an admission nor
   // the pool sees.
   if (emptyCell_) {
@@ -534,8 +561,8 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
   Buffers fresh;
   if (rings && !pooledRings && !layout_.draft.layers)
     fresh.draft = std::make_shared<DFlashDraftRing>(backend_, allocations_, layout_.draft, label);
-  if (const uint64_t bytes = missingBytes(cells, rings) + extraBytes) {
-    const auto admission = admitAllocation_(bytes, [&] {
+  if (const uint64_t missing = bytes(beyond(counts, idle())) + extraBytes) {
+    const auto admission = admitAllocation_(missing, [&] {
       if (allocateExtra)
         allocateExtra();
       for (uint32_t cell = pooledCells; cell < cells; ++cell) {
@@ -548,7 +575,7 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
             backend_, allocations_, layout_.draft,
             std::string(label) + "-draft"));
       }
-      if (layout_.draft.usesContextWindow() && !pooledWindow) {
+      if (counts.windows && !pooledWindow) {
         fresh.window = std::shared_ptr<DFlashContextWindow>(new DFlashContextWindow(
             backend_, allocations_, layout_.draft, std::string(label) + "-window"));
       }
@@ -572,7 +599,7 @@ QwenStateStorage::acquire(uint32_t cells, bool rings, std::string_view label,
   };
   if (rings)
     buffers.draft = take(pool_->rings, fresh.draft, pooledRings);
-  if (layout_.draft.usesContextWindow())
+  if (counts.windows)
     buffers.window = take(pool_->windows, fresh.window, pooledWindow);
   return {};
 }

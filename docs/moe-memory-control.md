@@ -1,4 +1,22 @@
-# 单实例 MoE 内存压力控制
+# MoE 内存管理
+
+`ghost` 采用 Splash 1.6 的内存规划和压力回收。自动专家缓存从模型可运行的下限启动，
+在主机有余量时逐块增长，遇到内存压力时释放可回收的块。固定专家缓存和 PLE 缓存各自计入全局预算。
+
+## 旧启动参数迁移
+
+| 已移除的参数 | 1.6 用法 |
+| --- | --- |
+| `--moe-memory-pressure`、`--host-memory-reserve` | 使用默认的系统压力回收。可保留 `--expert-memory auto`。 |
+| `--expert-ple-memory`、`--expert-ple-policy`、`--expert-ple-ratio` | 省略这些参数以使用自动规划，或分别指定 `--expert-memory SIZE` 与 `--ple-memory SIZE`。用 `--max-memory SIZE` 设置总预算。 |
+
+查看 `/status` 的 `memory_governor`、`streamed_experts` 和 `streamed_table`，
+可核对系统压力、专家缓存的上下限和实际容量，以及 PLE 行缓存用量。
+完整配置见[服务文档](server.md#streamed-experts)。
+
+## 旧实验归档
+
+以下内容记录 Ghost 在合入 1.6 前的实验和验收条件。参数、阈值和状态字段均属于当时的实现。
 
 目标是在一个 Splash 实例内，按系统压力调整自动专家与自动 PLE 缓存。
 2026-10-27 已按用户要求改为单实例设计，相关任务见[工单与 PR 计划](plans/moe-shared-memory-tickets.md)。

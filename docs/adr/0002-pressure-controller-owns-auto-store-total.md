@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by Splash 1.6
 ---
 
 # 压力控制器统一管理自动专家和 PLE 存储总预算

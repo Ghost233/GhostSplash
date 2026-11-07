@@ -34,7 +34,7 @@ build/worktree-preserved/20261015-ghost-integration/
 
 使用 APFS clone 保全，59,843 个普通文件共 16,416,252,446 逻辑字节逐项通过 SHA-256 对照，符号链接原值也已核对。逻辑字节数不等于新增物理占用。
 
-旧优化 worktree 的三个未跟踪文件位于对应备份的 `untracked/` 下：`dev/tools/qwen4b_baseline.py`、`dev/tests/tools/test_qwen4b_baseline.py`、`qwen4b-baseline.sh`。主目录原有三个未跟踪文档保持原路径和内容。
+旧优化 worktree 的三个未跟踪文件位于对应备份的 `untracked/` 下：`dev/tools/` 下的 `qwen4b_baseline.py`、`dev/tests/tools/` 下的 `test_qwen4b_baseline.py`、`qwen4b-baseline.sh`。主目录原有三个未跟踪文档保持原路径和内容。
 
 历史安装记录和日志保留当时的路径，供复核与恢复。当前运行使用主目录中新准备的安装记录。保全目录属于本机资产，不上传 Git；Git 管理的源码、原始测试数据和性能记录随分支整合。
 

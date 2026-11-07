@@ -205,8 +205,8 @@ Swift 27B 的实际输出头是 Q4_K，实测额外缓冲为 270.375 MiB，不�
 | 本机证据 | 路径 |
 | --- | --- |
 | 独立准确性验收 | [report.json](build/accuracy-5ea170c-v1/report.json) |
-| 准确性说明 | [accuracy-report.md](build/accuracy-5ea170c-v1/accuracy-report.md) |
-| 性能配对报告 | [paired-performance-report.md](build/performance-5ea170c-lookup-baseline-v1/paired-performance-report.md) |
+| 准确性说明 | accuracy-report.md（`build/accuracy-5ea170c-v1/` 下的 `accuracy-report.md`） |
+| 性能配对报告 | paired-performance-report.md（`build/performance-5ea170c-lookup-baseline-v1/` 下的 `paired-performance-report.md`） |
 | 缓存使用核对 | [ffn-cache-usage.json](build/performance-5ea170c-lookup-baseline-v1/ffn-cache-usage.json) |
 | 原始参数与输入 | [payload.json](build/performance-5ea170c-lookup-baseline-v1/01-512-lookup/payload.json) |
 
@@ -234,7 +234,7 @@ Swift 27B 的实际输出头是 Q4_K，实测额外缓冲为 270.375 MiB，不�
 首轮短输出达到 2487.7／148.4 tokens/s，首轮长输出达到 2489.1／280.1 tokens/s；后续样本变慢。
 以上中位数保留全部样本，不用最高值代替。当前记录尚不能确定波动原因。
 
-完整范围、逐次负载和上一轮同配置比较见 [复测报告](build/performance-selected-5ea170c-low-load-v1/selected-performance-report.md)，
+完整范围、逐次负载和上一轮同配置比较见 复测报告（`build/performance-selected-5ea170c-low-load-v1/` 下的 `selected-performance-report.md`），
 机器可读数据见 [selected-performance-report.json](build/performance-selected-5ea170c-low-load-v1/selected-performance-report.json)。
 
 ## 延长 ABAB 复测结果

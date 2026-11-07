@@ -23,6 +23,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from server.chat_format import FLINT
+
 from . import models
 from .models import ModelError
 
@@ -70,12 +72,14 @@ class Metadata:
         """Read a local path, or a binary stream at the start of the file such
         as a Hub range reader, which its caller closes. tensors also reads
         each tensor's type, its extents (innermost first, as GGUF lists them)
-        and its offset in the file's data section."""
+        and its offset in the file's data section. raw keeps the bytes read:
+        with tensors, the whole header, which the engine's model check plans
+        the target from (upstream.gguf_target)."""
         self.values = {}
         self.tensors = {}
         self.extents = {}
         self.offsets = {}
-        self.consumed = 0
+        self.raw = bytearray()
         with (
             Path(source).open("rb")
             if isinstance(source, (str, Path))
@@ -109,12 +113,12 @@ class Metadata:
                 self.offsets[name] = offset
 
     def read(self, size):
-        if size > self.MAX_BYTES - self.consumed:
+        if size > self.MAX_BYTES - len(self.raw):
             raise ModelError("GGUF metadata exceeds the size limit")
         data = self.stream.read(size)
         if len(data) != size:
             raise ModelError("truncated GGUF metadata")
-        self.consumed += size
+        self.raw += data
         return data
 
     def scalar(self, fmt):
@@ -506,25 +510,6 @@ def model_config(metadata, vision=None):
     return config
 
 
-def scalar_metadata(metadata):
-    """The header's scalar values as the native reader keeps them, for the
-    engine's model check, which holds them to the rules its GGUF planner
-    holds the file to at every start (GgufMetadata in
-    runtime/model/GgufFile.hpp): integers and booleans unsigned, a negative
-    one as its 64-bit two's complement, floats and strings, each kind apart,
-    as JSON alone would not keep them. JSON has no NaN or infinity, which no
-    rule accepts."""
-    typed = {"unsigned": {}, "float": {}, "string": {}}
-    for key, value in metadata.values.items():
-        if isinstance(value, int):
-            typed["unsigned"][key] = value % (1 << 64)
-        elif isinstance(value, float) and math.isfinite(value):
-            typed["float"][key] = value
-        elif isinstance(value, str):
-            typed["string"][key] = value
-    return typed
-
-
 def loaded_layers(metadata, arch):
     """The target's layer count without its MTP layers, which are never
     loaded."""
@@ -566,6 +551,44 @@ def layer_pattern(metadata, arch, name):
 EXPERT_GATING_FUNCTIONS = {1: "softmax", 2: "sigmoid"}
 
 
+def flint_stop_tokens(metadata):
+    """The tokens that end a Flint turn: the header's
+    tokenizer.ggml.eog_token_ids where it states them; otherwise the IDs of
+    Flint's stop tokens (FLINT.stop_tokens), each a control token once in the
+    vocabulary, one of them the header's EOS. unsloth/flint-GGUF states the
+    list; other publishers' Flint GGUFs, of the same vocabulary, do not."""
+    key = "tokenizer.ggml.eog_token_ids"
+    if key in metadata.values:
+        stops = metadata.values[key]
+        if (
+            type(stops) is not list
+            or not stops
+            or any(type(token) is not int for token in stops)
+        ):
+            raise ModelError("invalid GGUF metadata: " + key)
+        return stops
+    tokens = metadata.require("tokenizer.ggml.tokens", list)
+    types = metadata.require("tokenizer.ggml.token_type", list)
+    stops = []
+    for text in FLINT.stop_tokens:
+        found = [index for index, token in enumerate(tokens) if token == text]
+        if (
+            len(found) != 1
+            or len(types) != len(tokens)
+            or types[found[0]] != CONTROL_TOKEN
+        ):
+            raise ModelError(
+                f"GGUF metadata states no {key}, and its vocabulary does not "
+                f"hold {text} once as a control token"
+            )
+        stops += found
+    if metadata.require("tokenizer.ggml.eos_token_id", int) not in stops:
+        raise ModelError(
+            f"GGUF metadata states no {key}, and its EOS is none of Flint's stop tokens"
+        )
+    return stops
+
+
 def flint_text_config(metadata, arch):
     """What Flint's config.json states beyond the sizes every architecture's
     does, from its header: the dense, routed and shared experts' FFN widths,
@@ -573,14 +596,11 @@ def flint_text_config(metadata, arch):
     dense layers, the sliding window, the layers that slide
     (attention.sliding_window_pattern) and those without RoPE
     (attention.rope_pattern), and the tokens that end a turn. The engine's
-    check holds each to the family's by its key (its layer patterns
-    included, which scalar_metadata leaves out)."""
+    model check holds each to the family's, and the header to them."""
     gating = metadata.require(arch + ".expert_gating_func", int)
     if gating not in EXPERT_GATING_FUNCTIONS:
         raise ModelError(f"unsupported GGUF expert gating function: {gating}")
-    stops = metadata.require("tokenizer.ggml.eog_token_ids", list)
-    if not stops or any(type(token) is not int for token in stops):
-        raise ModelError("invalid GGUF metadata: tokenizer.ggml.eog_token_ids")
+    stops = flint_stop_tokens(metadata)
     sliding = layer_pattern(metadata, arch, "attention.sliding_window_pattern")
     rotated = layer_pattern(metadata, arch, "attention.rope_pattern")
     return {
@@ -653,9 +673,8 @@ def processor_config(vision):
     }
 
 
-# GGML tensor type names, the quantized types the native loader reads, and the
-# types of its formats: those, BF16 and F16 (runtime/metal/abi/QuantFormat.h,
-# checked by the tests).
+# The names of GGML tensor types (ggml_type), by id, which refusals name a
+# type by: names only, never which types the engine loads.
 TENSOR_TYPES = {
     0: "F32",
     1: "F16",
@@ -686,7 +705,6 @@ TENSOR_TYPES = {
 }
 QUANTIZED_TYPES = {
     "Q2_K",
-    "Q2_0",
     "Q3_K",
     "Q4_K",
     "Q5_K",
@@ -778,6 +796,29 @@ MOE_TENSORS = {
     "ffn_up_shexp.weight": FORMAT_TYPES,
     "ffn_down_shexp.weight": FORMAT_TYPES,
 }
+
+
+def require_quantized(headers):
+    """Splash serves quantized GGUFs: a target whose files' headers hold more
+    of its values in float tensors (BF16, F16 or F32) than in quantized ones
+    is a whole-BF16, F16 or F32 model, refused before any download, even
+    with its token table or a few small tensors quantized. A quantized
+    release that keeps some projections in BF16, as UD-Q8_K_XL's do,
+    quantizes most of its values."""
+    floats = quantized = 0
+    for header in headers:
+        for name, kind in header.tensors.items():
+            values = math.prod(header.extents[name])
+            if TENSOR_TYPES.get(kind) in ("BF16", "F16", "F32"):
+                floats += values
+            else:
+                quantized += values
+    if floats > quantized:
+        raise ModelError(
+            "this GGUF stores its weights unquantized (BF16, F16 or F32): Splash "
+            "loads quantized GGUFs, not whole-BF16 or F16 models; choose a "
+            "quantized variant of the repository"
+        )
 
 
 def fused_experts(moe_tensors):

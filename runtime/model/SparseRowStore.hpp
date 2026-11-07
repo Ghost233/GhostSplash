@@ -1,15 +1,13 @@
 #pragma once
 
-#include "HostMemory.hpp"
-
 // A large table of fixed-size native rows that stays in its source file and
 // is read a row at a time: a bounded host cache of rows, read on the engine's
-// SSD readers (model::SsdReaders), and the staging of one command's
-// rows into memory the GPU reads. Its user
-// names the table (SparseRowTable) and sizes the working memory of its
-// stages and prefetches (SparseRowStoreOptions). The store knows nothing of
-// what the rows mean: its user computes the row ids, and gathers the staged
-// rows with its own kernel.
+// SSD readers (model::SsdReaders), and the staging of one command's rows
+// into memory the GPU reads. Its user names the table (SparseRowTable) and
+// sizes the working memory of its stages and prefetches
+// (SparseRowStoreOptions). The store knows nothing of what the rows mean:
+// its user computes the row ids, and gathers the staged rows with its own
+// kernel.
 //
 // stage() copies every distinct row a command reads once into the command's
 // staging and, for each id, the index of its row there. It returns only once
@@ -30,7 +28,6 @@
 
 #include "model/LatencyHistogram.hpp"
 #include "model/SsdReaders.hpp"
-#include "model/StorageGrowth.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -94,11 +91,6 @@ struct SparseRowStoreOptions final {
   // The ids of a stage whose scratch the working memory holds; a larger
   // stage grows its scratch past that.
   uint32_t stageRows = 0;
-  // Nonzero enables physical chunk resizing with one bounded index reserved
-  // for this largest cache. Its bytes count in every current cache budget.
-  uint64_t maximumCacheBytes = 0;
-  bool boundedWorkingMemory = false;
-  HostMemoryAdmission hostAllocation{};
 };
 
 // What a stage or prefetch was for, which its statistics are kept by.
@@ -127,9 +119,6 @@ struct SparseRowStats final {
     uint64_t hitRows = 0;
     uint64_t readRows = 0;
     LatencyStats stage;
-    uint64_t reusedEvictedRows = 0;
-    uint64_t readWaitNanoseconds = 0;
-    uint64_t consumedPrefetchedRows = 0;
   };
   Use uses[kSparseRowUses];
   uint64_t readBytes = 0;
@@ -173,19 +162,14 @@ public:
   // Cache bytes plus the fixed working-memory reservation, at most
   // options.cacheBytes; not the store's measured allocation high-water mark.
   [[nodiscard]] uint64_t committedBytes() const noexcept;
-  [[nodiscard]] uint64_t hostAllocatedBytes() const noexcept;
-  [[nodiscard]] uint64_t nonBackendHostBytes() const noexcept;
-  [[nodiscard]] static uint64_t boundedWorkingBytes(uint32_t rowBytes, uint32_t prefetchRows, uint32_t stageRows) noexcept;
-  [[nodiscard]] static uint64_t minimumResizableBytes(uint64_t maximumBytes, uint32_t rowBytes,
-                                                     uint32_t prefetchRows, uint32_t stageRows,
-                                                     std::optional<uint64_t> modelRows = std::nullopt);
-  [[nodiscard]] static uint64_t maximumResizableBytes(uint64_t modelRows, uint32_t rowBytes,
-                                                     uint32_t prefetchRows, uint32_t stageRows);
-  // Between commands; drains prefetches and retains the most recent rows.
-  void resize(uint64_t cacheBytes);
-  [[nodiscard]] std::optional<StorageGrowthPlan> planGrowOne(uint64_t maximumBytes) const;
-  [[nodiscard]] StorageGrowthReceipt growOne(const StorageGrowthPlan &plan);
-  void setGrowthGuard(StorageGrowthGuard guard);
+  // Makes the cache's arrays, its rows with their ids, recency links and
+  // index, take all of their host memory now, by writing each of their pages
+  // back as it is: until then a page takes memory only once a row is cached
+  // in it, so that host memory measured meanwhile counts room the cache
+  // takes later. The working memory of stages and prefetches is not
+  // committed, as they allocate it while they run. The engine commits the
+  // store of the model it serves once, before it serves (RuntimeResources).
+  void commit();
 
   // Stages the rows of `ids` (any order, repeats allowed): row u of `rows`
   // (u * rowBytes) holds the u-th distinct id's row, and slots[i] = u for
@@ -193,10 +177,10 @@ public:
   // Blocks until every row is staged. With `adoptPrefetch`, it first
   // finishes the prefetches in flight (a read-ahead of the rows this stage
   // takes), helping read them; otherwise it leaves them to the readers and
-  // may read a row they are reading too. Throws
-  // SparseRowError when a row cannot be read (and poisons the store) or an
-  // id is past the table (a defect of the caller), std::invalid_argument
-  // when rows or slots are too small. Stages are serialized.
+  // may read a row they are reading too. Throws SparseRowError when a row
+  // cannot be read (and poisons the store) or an id is past the table (a
+  // defect of the caller), std::invalid_argument when rows or slots are too
+  // small. Stages are serialized.
   SparseRowStageResult stage(std::span<const uint32_t> ids, std::span<uint8_t> rows, std::span<uint32_t> slots,
                              SparseRowUse use, bool adoptPrefetch = false);
 
@@ -215,7 +199,6 @@ public:
   [[nodiscard]] SparseRowStats stats() const;
 
 private:
-  void resizeImpl(uint64_t cacheBytes, bool planned);
   struct Impl;
   std::unique_ptr<Impl> impl_;
 };

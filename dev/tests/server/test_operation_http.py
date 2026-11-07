@@ -17,6 +17,7 @@ from dev.tests.server_fixtures import (
 )
 from server import protocol as wire
 from server import runtime
+from server.dialects import scoring
 from server.modernbert import ModernBertScorer
 
 
@@ -165,7 +166,7 @@ class OperationHttpTests(HarnessTestCase):
         )
         with (
             mock.patch.object(
-                harness.app,
+                scoring,
                 "systemone_state_prefix",
                 side_effect=RuntimeError("private input"),
             ),
@@ -573,7 +574,7 @@ class OperationHttpTests(HarnessTestCase):
         state = json.loads(payload)
         self.assertFalse(state["terminal"])
         self.assertFalse(state["lease_released"])
-        self.assertTrue(call.cancel_requested)
+        self.assertTrue(call.end_requested)
         status, _, _ = harness.request(
             "DELETE", "/v1/splash/operations/hold", headers=headers
         )
@@ -650,9 +651,9 @@ class OperationHttpTests(HarnessTestCase):
         call.emit(wire.StartEvent(call.request_id, 0, 0))
         connection.close()
         deadline = time.monotonic() + 3
-        while not call.cancel_requested and time.monotonic() < deadline:
+        while not call.end_requested and time.monotonic() < deadline:
             time.sleep(0.01)
-        self.assertTrue(call.cancel_requested)
+        self.assertTrue(call.end_requested)
         status, _, payload = harness.request(
             "GET", "/v1/splash/operations/disconnect", headers=headers
         )

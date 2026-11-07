@@ -26,8 +26,8 @@ from dev.benchmarks.decision_models import (
 )
 from dev.benchmarks.qwen4b_ffn_cache import DEVICE_LOCK, environment
 from install import models
-from server import judgments
 from server.d3 import D3Scorer
+from server.dialects import scoring as judgments
 
 
 def call(url, path, body=None, key=None):

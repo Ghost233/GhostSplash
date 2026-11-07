@@ -150,7 +150,10 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
       loaded = true;
       logLine(d3 ? "D3: native weights=" : "ModernBERT: quantized weights=", weightBytes.load(), "; workspace=", workspaceBytes.load(),
               "; KV=", d3 ? (q4h ? "q4h" : "bf16") : "none", "; FP16 cache=0; selected option queries=", selected ? "on" : "off", "; numerical check passed");
-      send(protocol::ReadyEvent{4, context, false});
+      // Decision encoders accept neither generation nor masks. The common
+      // Ready frame still carries valid capacities for its wire format.
+      send(protocol::ReadyEvent{.maxConcurrentRequests = 4, .maxContextTokens = context,
+                                .vocabularySize = model.vocabularySize(), .stopTokens = {0}, .maskRows = 1});
       while (!stop.stop_requested() && !stopping) {
         std::vector<Pending> batch;
         {
@@ -256,7 +259,7 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
           std::lock_guard lock(mutex);
           if (!loaded || pending.size() >= 4 || pending.contains(message.requestId)) { error(message.requestId, "encoder is not ready, full, or request id is repeated"); return; }
           pending.insert(message.requestId); ++active; queue.push_back({std::move(message), micros()}); ready.notify_one();
-        } else if constexpr (std::is_same_v<T, protocol::CancelFrame>) {
+        } else if constexpr (std::is_same_v<T, protocol::CancelFrame> || std::is_same_v<T, protocol::StopFrame>) {
           std::lock_guard lock(mutex); if (pending.contains(message.requestId)) cancelled.insert(message.requestId);
         } else if constexpr (std::is_same_v<T, protocol::StatusRequestFrame> ||
                              std::is_same_v<T, protocol::ReleaseRequestFrame>) {
@@ -268,10 +271,11 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
   stopping = true; worker.request_stop(); ready.notify_all(); worker.join();
   return failed ? 70 : 0;
 }
-int serveModernBert(int argc,char **argv,const std::filesystem::path &lib,std::string_view id) {
-  return serveEncoder<model::ModernBert>(argc,argv,lib,id);
+int serveDecision(std::string_view command, int argc, char **argv,
+                  const std::filesystem::path &metallib, std::string_view buildId) {
+  if (command == "serve-d3-native")
+    return serveEncoder<model::D3>(argc, argv, metallib, buildId);
+  return serveEncoder<model::ModernBert>(argc, argv, metallib, buildId);
 }
-int serveD3(int argc,char **argv,const std::filesystem::path &lib,std::string_view id) {
-  return serveEncoder<model::D3>(argc,argv,lib,id);
-}
+
 } // namespace splash::encoder

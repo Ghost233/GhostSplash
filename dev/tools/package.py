@@ -49,12 +49,11 @@ SERVER_FILES = (
     "output.py",
     "frontend.py",
     "chat_templates.py",
-    "judgments.py",
     "kev.py",
     "modernbert.py",
     "d3.py",
     "diagnostics.py",
-    "api_shapes.py",
+    "chat_messages.py",
     "chat_format.py",
     "tool_schema.py",
     "tokenization.py",
@@ -64,6 +63,7 @@ SERVER_FILES = (
     "metrics.py",
     "operation_tracking.py",
     "errors.py",
+    "request_fields.py",
     "runtime.py",
     "protocol.py",
     "images.py",
@@ -77,14 +77,33 @@ SERVER_FILES = (
     "thinking.py",
     "schema_validation.py",
     "crash_trace.py",
+    "supervision.py",
+    "serve_record.py",
     "chat.html",
     "favicon.svg",
+)
+# How each API dialect answers (server/dialects).
+DIALECT_FILES = (
+    "__init__.py",
+    "anthropic.py",
+    "openai.py",
+    "responses.py",
+    "scoring.py",
 )
 CHAT_ASSET_FILES = (
     "markdown-it-15.0.2.min.js",
     "highlight-11.12.0.min.js",
+    "markdown-links.js",
     "github-11.12.0.min.css",
     "github-dark-11.12.0.min.css",
+)
+# The source folders the release ships, each with the files it ships of it.
+SOURCE_FOLDERS = (
+    ("install", INSTALL_FILES),
+    ("install/completions", COMPLETION_FILES),
+    ("server", SERVER_FILES),
+    ("server/dialects", DIALECT_FILES),
+    ("server/chat-assets", CHAT_ASSET_FILES),
 )
 # Splash's license and the notices of the third-party code it ships.
 LICENSE_FILES = ("LICENSE", "THIRD_PARTY_NOTICES")
@@ -103,6 +122,12 @@ SMOKE_IMPORTS = (
     "import tokenizers, llguidance, numpy, PIL, transformers, huggingface_hub, pypdfium2; "
     "import server.server, install.launcher"
 )
+
+
+def archive_name(version, macos_min):
+    """The release archive's name without its suffix. It names the major macOS
+    the runtime is built for (26 for 26.4), as the formula and the cask do."""
+    return f"splash-{version}-arm64-macos{macos_min.split('.')[0]}"
 
 
 def digest(path):
@@ -133,13 +158,7 @@ def python_distribution():
 def stage_runtime(destination, version):
     """Copy the allowlisted files Splash ships into destination and write its
     release.json."""
-    for folder, names in (
-        ("install", INSTALL_FILES),
-        ("install/completions", COMPLETION_FILES),
-        ("server", SERVER_FILES),
-        ("server/chat-assets", CHAT_ASSET_FILES),
-        ("engine", ENGINE_FILES),
-    ):
+    for folder, names in (*SOURCE_FOLDERS, ("engine", ENGINE_FILES)):
         (destination / folder).mkdir()
         source = ROOT / ("build" if folder == "engine" else folder)
         for name in names:
@@ -279,7 +298,7 @@ def main(argv=None):
         parser.error("invalid release version")
     dist = ROOT / "dist"
     dist.mkdir(exist_ok=True)
-    name = f"splash-{args.version}-arm64-macos26"
+    name = archive_name(args.version, args.macos_min)
     archive = dist / f"{name}.tar.gz"
     if archive.exists():
         parser.error(f"release already exists: {archive}")

@@ -54,11 +54,10 @@ static_assert(sizeof(DraftConvBatchParams) == 8,
 // Each layer supplies its cache capacity and sliding window (zero for full).
 // value_stride, the values ring's stride between head dimensions, equals the
 // capacity but stays a run-time value: with it
-// compiled into the value tiles, the split kernel returns wrong rows at random
-// on an M5 Max, and reports no error, when MTL_SHADER_VALIDATION instruments
-// threadgroup memory, tensors and resource usage together; with any of the
-// three off, without validation, or on an M3 Max, its output is bitwise that
-// of the run-time stride.
+// compiled into the value tiles, the split kernel returns wrong rows at
+// random, and reports no error, on an M5 Max under full
+// MTL_SHADER_VALIDATION; without validation its output is bitwise that of
+// the run-time stride.
 struct DraftAttentionBatchParams {
   uint32_t value_stride;
   uint32_t lanes;

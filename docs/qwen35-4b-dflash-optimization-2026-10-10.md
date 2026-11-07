@@ -70,6 +70,6 @@ Prefill 速度按原生批次 wall time 计算。Decode 速度按 HTTP 首次输
 ./qwen3.54bdflashsplash.sh --kv-format int8
 ```
 
-完整版本、SHA-256、指标和门禁日志路径见 [最终 JSON 报告](../build/qwen4b-goal150-final-report.json)。接口 ABBA 记录位于 `build/goal150-suffix-abba/`。缓存验收记录位于 `build/goal150-final-cache/`。
+完整版本、SHA-256、指标和门禁日志路径见 最终 JSON 报告（`build/` 下的 `qwen4b-goal150-final-report.json`）。接口 ABBA 记录位于 `build/goal150-suffix-abba/`。缓存验收记录位于 `build/goal150-final-cache/`。
 
 测试服务已经停止。原主工作区的 `ghost` 分支保持干净。代码保留在 `codex/qwen35-4b-optimization` worktree，尚未提交或推送。

@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by Splash 1.6
 ---
 
 # 单个 Splash 实例独立管理自动存储配额

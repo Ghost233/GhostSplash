@@ -112,7 +112,7 @@ LoadedModel loadModel(metal::MetalBackend &backend,
     throw std::invalid_argument("quantized FFN experiment requires Qwen3.5-4B");
   if (!result.descriptor.valid())
     throw std::invalid_argument("model descriptor is invalid");
-  result.images = std::make_shared<WeightImages>(backend, result.descriptor.sourceIdentity, options.boundedHostMemory);
+  result.images = std::make_shared<WeightImages>(backend, result.descriptor.sourceIdentity);
   WeightImages &images = *result.images;
   // Every source's metadata is checked before the first image is written:
   // the vision tower's and the draft's here, the target's by its loader.
@@ -121,7 +121,10 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   if (result.descriptor.hasDraft())
     draft.emplace(backend, images, root / "draft", result.descriptor.draft);
   // The weights that stream from their files read on the engine's readers.
-  const ExpertStoreOptions experts{.memoryBytes = options.expertMemoryBytes, .readers = options.readers, .resizable = options.resizableExperts, .boundedReadScratch = options.boundedHostMemory, .optionalRestore = options.optionalExpertRestore};
+  const ExpertStoreOptions experts{.memoryBytes = options.expertMemoryBytes,
+                                   .floorBytes = options.expertFloorBytes,
+                                   .floorShare = options.expertFloorShare,
+                                   .readers = options.readers};
   result.target = std::visit(
       [&](const auto &layout) -> TargetWeights {
         const std::filesystem::path directory = root / "target";
@@ -139,13 +142,6 @@ LoadedModel loadModel(metal::MetalBackend &backend,
           // a step stages and prefetches from the family.
           SparseRowStoreOptions table = streamedTableRows(layout);
           table.cacheBytes = options.streamedTableBytes;
-          table.maximumCacheBytes = options.maximumPleCacheBytes;
-          table.boundedWorkingMemory = options.boundedHostMemory;
-          if (options.boundedHostMemory)
-            table.hostAllocation = [&backend](uint64_t bytes, const std::function<void()> &allocate,
-                                               const std::function<uint64_t()> &held) {
-              return backend.allocateHostMemory(bytes, allocate, false, held);
-            };
           table.readers = options.readers;
           GgufTargetLoader loader(backend, images, findTargetGgufs(directory), layout.ggufArchitecture, layout, table,
                                   experts);
@@ -155,8 +151,6 @@ LoadedModel loadModel(metal::MetalBackend &backend,
         throw std::invalid_argument("unknown target source");
       },
       result.descriptor.target);
-  if (options.resizableExperts)
-    if (auto *store = result.expertStore()) result.initialExpertAllocatedBytes = store->allocatedBytes();
   if (draft) result.draft = loadDFlashDraftWeights(backend, *draft, result.descriptor.draft);
   result.vision = loadVisionWeights(backend, images, vision.get());
 
@@ -191,28 +185,6 @@ LoadedModel loadModel(metal::MetalBackend &backend,
   result.manifestFingerprintSha256 = weightManifestFingerprint(records);
   requireCompatibleModel(result);
   return result;
-}
-
-uint64_t LoadedModel::targetActualAllocatedBytes() const noexcept {
-  const uint64_t loaded = std::visit([](const auto &w) { return w.actualAllocatedBytes; }, target);
-  const auto *store = expertStore();
-  return store && initialExpertAllocatedBytes ? loaded - initialExpertAllocatedBytes + store->allocatedBytes() : loaded;
-}
-
-uint64_t LoadedModel::hostHeldBytes() const noexcept {
-  return (streamedTable() ? streamedTable()->hostAllocatedBytes() : 0) +
-         (expertStore() ? expertStore()->hostAllocatedBytes() : 0);
-}
-uint64_t LoadedModel::nonBackendHostBytes() const noexcept {
-  // Reader pools are born with backend leases. A PLE store's immutable
-  // construction options state whether all its declared payload is leased.
-  return streamedTable() ? streamedTable()->nonBackendHostBytes() : 0;
-}
-uint64_t LoadedModel::requiredHostBytes() const noexcept {
-  const auto *table = streamedTable();
-  const uint64_t tableExtra = table && table->hostAllocatedBytes() > table->committedBytes()
-      ? table->hostAllocatedBytes() - table->committedBytes() : 0;
-  return tableExtra + (expertStore() ? expertStore()->hostAllocatedBytes() : 0);
 }
 
 uint64_t modelWeightBytes(const std::filesystem::path &root, const ModelDescriptor &descriptor, FfnLoadOptions ffn) {

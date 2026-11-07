@@ -13,7 +13,7 @@ namespace splash::metal {
 // before it ends and as it returns. Every part must end within the timeout.
 // GPU completion callbacks can arrive out of order; older progress must not
 // shorten the deadline established by later work.
-// Metal also bounds an event wait to 5 s (EventStep).
+// Metal also bounds an event wait to supervision::kGpuWaitLimit (EventStep).
 class CommandWatchdog final {
 public:
   explicit CommandWatchdog(double timeoutSeconds)

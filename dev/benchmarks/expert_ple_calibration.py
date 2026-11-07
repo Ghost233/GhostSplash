@@ -55,15 +55,9 @@ def log(*values):
 
 def allocation(status, ple):
     smoke.validate_status(status, "q4h")
-    pool = status["memory_plan"]["budget"]["expert_ple_pool"]
-    expected = dict(
-        limit_bytes=POOL, expert_planned_bytes=POOL - ple, ple_planned_bytes=ple
-    )
-    if pool != expected:
-        raise ValueError(f"requested quota was changed: {expected!r} -> {pool!r}")
-    actual = status["expert_ple_adaptive"]
-    if actual["enabled"] or actual["state"] != "off" or actual["failure"]:
-        raise ValueError("online quota adjustment must be disabled")
+    budget = status["memory_plan"]["budget"]
+    if budget["streamed_table_bytes"] != ple:
+        raise ValueError("requested PLE quota was changed")
     expert, table = status["streamed_experts"], status["streamed_table"]
     if (
         not expert
@@ -73,7 +67,11 @@ def allocation(status, ple):
         or table["read_errors"]
     ):
         raise ValueError("streamed store failed")
-    e, p = actual["expert_allocated_bytes"], actual["ple_committed_bytes"]
+    # An explicitly sized expert store has no elastic chunks and rounds its
+    # cap down to the slots that fit. The cap includes fixed staging/tables.
+    e, p = expert["cap_bytes"], table["cache_bytes"]
+    if expert["floor_bytes"] != e or expert["chunks"] != expert["cap_chunks"]:
+        raise ValueError("expert store must use a fixed, fully allocated quota")
     if not (0 < e <= POOL - ple and 0 < p <= ple and e + p <= POOL):
         raise ValueError("actual store allocations exceed their quotas")
     if not status["memory_audit"]["valid"]:
@@ -256,10 +254,6 @@ def command(args, port, ple):
         "off",
         "--experimental-quantized-ffn",
         "off",
-        "--expert-ple-memory",
-        str(POOL),
-        "--expert-ple-policy",
-        "static",
         "--expert-memory",
         str(POOL - ple),
         "--ple-memory",

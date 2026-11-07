@@ -41,13 +41,13 @@ splits=8／并发 1 的基准和功能开关组必须与上轮冻结的 Q4H 完�
 原始目录：`/Users/ghost233/.codex/worktrees/qwen4b-quantized-ffn/GhostSplash/build/tiel-miniplus-q4h-output16k-sweep-v1`。
 
 - [实时日志](../build/tiel-miniplus-q4h-output16k-sweep-v1/controller.log)
-- [当前进度](../build/tiel-miniplus-q4h-output16k-sweep-v1/progress.json)
-- [计划与冻结身份](../build/tiel-miniplus-q4h-output16k-sweep-v1/plan.json)
-- [已完成样本](../build/tiel-miniplus-q4h-output16k-sweep-v1/summary.json)
-- [自动收尾状态](../build/tiel-miniplus-q4h-output16k-sweep-v1/finish-status.json)
+- 当前进度（`build/tiel-miniplus-q4h-output16k-sweep-v1/` 下的 `progress.json`）
+- 计划与冻结身份（`build/tiel-miniplus-q4h-output16k-sweep-v1/` 下的 `plan.json`）
+- 已完成样本（`build/tiel-miniplus-q4h-output16k-sweep-v1/` 下的 `summary.json`）
+- 自动收尾状态（`build/tiel-miniplus-q4h-output16k-sweep-v1/` 下的 `finish-status.json`）
 
 完成后生成 `docs/tiel-miniplus-q4h-output16k-2026-10-11.md` 和 `docs/data/tiel-miniplus-q4h-output16k-2026-10-11/`。
-若进入候选复核，另生成 `docs/tiel-miniplus-q4h-output16k-paired-2026-10-11.md` 与配套数据目录。
+若进入候选复核，另生成 `docs/` 下的 `tiel-miniplus-q4h-output16k-paired-2026-10-11.md` 与配套数据目录。
 原始载荷、输出、日志、环境采样、内存账本及哈希验证归档保存；不复制权重。
 
 ## 受干扰样本复测
@@ -62,8 +62,8 @@ splits=8／并发 1 的基准和功能开关组必须与上轮冻结的 Q4H 完�
 后续候选配对使用同样门禁。当前 Q4H 标准参数没有修改。
 
 - [新实时日志](../build/tiel-miniplus-q4h-output16k-sweep-v2/controller.log)
-- [新进度](../build/tiel-miniplus-q4h-output16k-sweep-v2/progress.json)
-- [复测审计与清单](../build/tiel-miniplus-q4h-output16k-sweep-v2/retest-audit.json)
+- 新进度（`build/tiel-miniplus-q4h-output16k-sweep-v2/` 下的 `progress.json`）
+- 复测审计与清单（`build/tiel-miniplus-q4h-output16k-sweep-v2/` 下的 `retest-audit.json`）
 - [原始 22 批数据](data/tiel-miniplus-q4h-output16k-interfered-2026-10-11/summary.json)
 - [原始结果归档](data/tiel-miniplus-q4h-output16k-interfered-2026-10-11/raw-results.tar.gz)
 - [归档哈希与清单](data/tiel-miniplus-q4h-output16k-interfered-2026-10-11/archive-manifest.json)
@@ -81,9 +81,9 @@ splits=8／并发 1 的基准和功能开关组必须与上轮冻结的 Q4H 完�
 当前无法从采样单独证明新一轮外部测试的精确重叠区间，重测 13 个样本采用保守处理，不表示每一条都已经证实受到干扰。
 
 - [当前实时日志](../build/tiel-miniplus-q4h-output16k-sweep-v3/controller.log)
-- [当前进度](../build/tiel-miniplus-q4h-output16k-sweep-v3/progress.json)
-- [隔壁测试结束的记录](../build/tiel-miniplus-q4h-output16k-sweep-v3/peer-benchmark-finished.json)
-- [第二轮受影响范围审计](../build/tiel-miniplus-q4h-output16k-sweep-v3/second-interference-audit.json)
+- 当前进度（`build/tiel-miniplus-q4h-output16k-sweep-v3/` 下的 `progress.json`）
+- 隔壁测试结束的记录（`build/tiel-miniplus-q4h-output16k-sweep-v3/` 下的 `peer-benchmark-finished.json`）
+- 第二轮受影响范围审计（`build/tiel-miniplus-q4h-output16k-sweep-v3/` 下的 `second-interference-audit.json`）
 - [第二次复测原始数据归档](data/tiel-miniplus-q4h-output16k-second-interference-2026-10-11/raw-results.tar.gz)
 - [归档哈希与清单](data/tiel-miniplus-q4h-output16k-second-interference-2026-10-11/archive-manifest.json)
 

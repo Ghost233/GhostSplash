@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-# Flash Next: expert/PLE shared pool, separate KV budget, text only.
+# Flash Next: automatic experts and PLE, separate KV budget, text only.
 model_dir=/Users/ghost233/.lmstudio/models/SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF
 draft_gguf=/Users/ghost233/.lmstudio/models/incoai/Qwen3.8-Flash-Next-DFlash2-GGUF/Qwen3.8-Flash-Next-DFlash2-Q8_0.gguf
 model_id=SC117/Swift-1.5-Qwen3.8-Flash-Next-GSQ-RCO-abliterated-GGUF:IQ3_S
@@ -40,8 +40,8 @@ from server import serve_options
 parser = argparse.ArgumentParser(
     prog="swift15flashnextsplash.sh",
     description="Swift 1.5 Flash Next abliterated IQ3_S with its converted Q8_0 DFlash2",
-    epilog="Defaults: context=262144, KV=q4h, queue=1, memory=20G, "
-           "expert/PLE pool=10G with both stores auto, adaptive policy=adaptive. "
+    epilog="Defaults: context=262144, KV=q4h, queue=1, memory=30G, "
+           "expert and PLE memory use automatic planning. "
            "--ple-memory off loads the WHOLE PLE table into RAM. "
            "Lookup, fast-topk, compact and the 4B FFN experiment are off.",
 )
@@ -54,8 +54,6 @@ parser.set_defaults(
     max_cache_disk=serve_options.parse_max_cache_disk(cache_disk),
     queue_size=int(queue), kv_format=kv_format, no_webui=True,
     ple_memory=None, expert_memory=None,
-    expert_ple_memory=serve_options.parse_max_memory("10G"),
-    expert_ple_policy="adaptive",
     disable_ane=True, prompt_lookup="off", compact_draft_head="off", fast_topk="off",
     experimental_quantized_ffn="off",
 )

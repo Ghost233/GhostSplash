@@ -48,11 +48,7 @@ class ExpertPleCalibrationTests(unittest.TestCase):
 
     def test_quota_cannot_be_silently_clamped(self):
         status = self.status()
-        status["memory_plan"]["budget"]["expert_ple_pool"] = dict(
-            limit_bytes=calibration.POOL,
-            expert_planned_bytes=calibration.POOL - 256 * calibration.MIB,
-            ple_planned_bytes=256 * calibration.MIB,
-        )
+        status["memory_plan"]["budget"]["streamed_table_bytes"] = 256 * calibration.MIB
         with self.assertRaisesRegex(ValueError, "quota was changed"):
             calibration.allocation(status, 512 * calibration.MIB)
 

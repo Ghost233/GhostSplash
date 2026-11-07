@@ -31,7 +31,7 @@ class StandardDFlashTest(unittest.TestCase):
             format="gguf",
             vision_format="none",
             config=self.root / "target-config.json",
-            gguf_metadata=self.root / "gguf-metadata.json",
+            gguf_headers=self.root / "headers",
         )
 
     def test_default_4b_has_no_draft_or_draft_hub_request(self):
@@ -56,7 +56,7 @@ class StandardDFlashTest(unittest.TestCase):
             "gguf",
             "none",
             self.target.config,
-            gguf_metadata=self.target.gguf_metadata,
+            gguf_headers=self.target.gguf_headers,
             draft=source / "config.json",
         )
 

@@ -5,13 +5,15 @@
 // read or of a written source, and fails every later stage once poisoned;
 // and reads a prefetch's rows ahead, below stages, within its bound,
 // skipping rows an earlier prefetch still reads and dropping a row it fails
-// to read; and a store that goes while a prefetch reads waits for it.
+// to read; a store that goes while a prefetch reads waits for it; and a
+// committed store's cache holds its host memory before rows fill it.
 #include "TestChecks.hpp"
 #include "TestFiles.hpp"
 #include "model/SparseRowStore.hpp"
 #include "model/WeightSource.hpp"
 
 #include <fcntl.h>
+#include <mach/mach.h>
 #include <unistd.h>
 
 #include <atomic>
@@ -151,6 +153,37 @@ void cacheBytesHoldTheirRows() {
   require(gib > (uint64_t{1} << 30) / (rowBytes + 28) && gib < (uint64_t{1} << 30) / (rowBytes + 20),
           "1 GiB holds an unexpected row count");
   rejects([] { Fixture(1000, 0); }, "holds no row", "a cache without a row was accepted");
+}
+
+// The process's physical footprint: the memory it holds, which a page
+// counts toward once written.
+uint64_t footprint() {
+  task_vm_info_data_t info{};
+  mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
+  require(task_info(mach_task_self(), TASK_VM_INFO, reinterpret_cast<task_info_t>(&info), &count) == KERN_SUCCESS,
+          "the task's memory is unknown");
+  return info.phys_footprint;
+}
+
+// A store's cache of about 256 MiB holds little of its memory once built,
+// its index at most, and all of it once committed;
+// the rows it cached before stay as they were. It runs first, in a process
+// whose allocator holds no freed memory a store could take already resident.
+void commitTakesTheCacheMemory() {
+  const uint64_t cacheRows = (uint64_t{256} << 20) / (rowBytes + 16);
+  const uint64_t cacheBytes = SparseRowStore::cacheBytesFor(cacheRows, rowBytes);
+  const uint64_t before = footprint();
+  Fixture f(10'000, cacheRows);
+  std::vector<uint32_t> ids(1000);
+  for (uint32_t i = 0; i < ids.size(); ++i) ids[i] = i * 7;
+  require(f.stage(ids).readRows == ids.size(), "a store's first stage did not read its rows");
+  const uint64_t built = footprint();
+  f.store->commit();
+  const uint64_t committed = footprint();
+  const auto grown = [&](uint64_t now) { return now > before ? now - before : 0; };
+  require(grown(built) < cacheBytes / 2, "a store's cache took its memory before it was committed");
+  require(grown(committed) >= cacheBytes / 100 * 95, "a committed store's cache does not hold its memory");
+  require(f.stage(ids).hitRows == ids.size(), "a store's cached rows were lost when it was committed");
 }
 
 void stagesExactRowsOnce() {
@@ -486,77 +519,14 @@ void readsAnOpenFile(const std::filesystem::path &directory) {
 
 } // namespace
 
-void testResize() {
-  constexpr uint64_t maximum = 8ULL << 20;
-  const uint64_t floor = SparseRowStore::minimumResizableBytes(maximum, rowBytes, 16, kStageRows);
-  auto options = optionsOf(maximum, 2, 16);
-  options.maximumCacheBytes = maximum;
-  auto source = std::make_unique<MemoryReader>(randomBytes(kOffset + 65536 * rowBytes, 93));
-  SparseRowStore store(tableOf(65536), std::move(source), options);
-  std::vector<uint8_t> rows(2 * rowBytes);
-  std::vector<uint32_t> slots(2);
-  const std::vector<uint32_t> ids{4, 17};
-  store.stage(ids, rows, slots, SparseRowUse::Decode);
-  const auto expected = rows;
-  const auto before = store.committedBytes();
-  store.resize(floor);
-  require(store.committedBytes() < before, "PLE shrink did not release physical row chunks");
-  auto result = store.stage(ids, rows, slots, SparseRowUse::Decode);
-  require(rows == expected && result.hitRows == 2, "PLE shrink lost retained rows or changed their values");
-  // Evict an old row, prefetch it back, then consume it through the real
-  // prefill path. Its cache hit must still expose the repeated SSD read.
-  const auto capacity = store.stats().cacheCapacityRows;
-  std::vector<uint32_t> scan(capacity + 1);
-  for (uint32_t i = 0; i < scan.size(); ++i) scan[i] = i + 100;
-  std::vector<uint8_t> scanRows(scan.size() * rowBytes);
-  std::vector<uint32_t> scanSlots(scan.size());
-  store.stage(scan, scanRows, scanSlots, SparseRowUse::Prefill);
-  const std::vector<uint32_t> first{100};
-  store.prefetch(first);
-  store.drainPrefetch();
-  store.stage(first, rows, slots, SparseRowUse::Prefill, true);
-  const auto stats = store.stats();
-  require(stats.uses[0].reusedEvictedRows == 1 && stats.uses[0].consumedPrefetchedRows == 1,
-          "prefetch hid a repeated evicted PLE row from adaptive observations");
-  store.resize(maximum);
-  require(store.committedBytes() == before, "PLE growth did not restore capacity");
-  store.stage(ids, rows, slots, SparseRowUse::Decode);
-  require(store.stage(ids, rows, slots, SparseRowUse::Decode).hitRows == 2 && rows == expected,
-          "PLE growth changed rows or lost the hot cache");
-}
-
-void testTinyBoundedTableHasARealFullAtMinimumLayout() {
-  constexpr uint64_t tableRows = 32;
-  // One 32-row table: 64 hash buckets, the existing 4096-entry eviction
-  // history, payload and three links plus prefetch marker per real row.
-  const uint64_t full = SparseRowStore::workingBytes(rowBytes, 16, kStageRows) +
-      64 * sizeof(uint32_t) + 4096 * sizeof(uint32_t) + tableRows * (rowBytes + 13);
-  auto options = optionsOf(full, 2, 16);
-  options.maximumCacheBytes = full;
-  options.boundedWorkingMemory = true;
-  const auto sourceBytes = randomBytes(kOffset + tableRows * rowBytes, 37);
-  SparseRowStore store(tableOf(tableRows), std::make_unique<MemoryReader>(sourceBytes), options);
-  std::vector<uint8_t> rows(3 * rowBytes);
-  std::vector<uint32_t> slots(3);
-  const std::vector<uint32_t> ids{0, 31, 15};
-  store.stage(ids, rows, slots, SparseRowUse::Decode);
-  for (size_t i = 0; i < ids.size(); ++i)
-    require(std::equal(rows.begin() + i * rowBytes, rows.begin() + (i + 1) * rowBytes,
-                       sourceBytes.begin() + kOffset + ids[i] * rowBytes),
-            "tiny bounded PLE full layout changed source rows");
-  require(store.committedBytes() == full && store.stats().cacheCapacityRows == tableRows,
-          "a tiny bounded PLE table allocated beyond its real full-at-minimum model layout");
-  store.resize(full);
-  rejects([&] { store.resize(full - 1); }, "physical chunk floor",
-          "tiny bounded PLE could shrink below its full-at-minimum layout");
-}
-
 int main() {
   try {
+    // Before any store freed memory the allocator could hand a later one
+    // back already resident, which the footprint would not count again.
+    rowBytes = 90;
+    commitTakesTheCacheMemory();
     for (const uint32_t width : {90u, 170u}) {
       rowBytes = width;
-      testResize();
-      testTinyBoundedTableHasARealFullAtMinimumLayout();
       const splash::test::TemporaryDirectory directory("sparse-row-store");
       cacheBytesHoldTheirRows();
       stagesExactRowsOnce();

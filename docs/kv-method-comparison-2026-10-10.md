@@ -69,7 +69,7 @@ Ministral-7B 的 2.5-bit 平均分为 49.62，基线为 49.89；总结分为 24.
 
 ## 已有本地结果
 
-**读取既有数据。** 同一份 32K 请求，5 种格式各跑 2 轮。10 次退出码均为 0，前缀命中均为 0，12 项字面事实全部通过。构建固定为 `splash 0dfd1482…` 和 `metallib 836c990c…`，完整 SHA 见[原始记录](../build/five-kv-final/results.json)。
+**读取既有数据。** 同一份 32K 请求，5 种格式各跑 2 轮。10 次退出码均为 0，前缀命中均为 0，12 项字面事实全部通过。构建固定为 `splash 0dfd1482…` 和 `metallib 836c990c…`，完整 SHA 见原始记录（`build/five-kv-final/` 下的 `results.json`）。
 
 | 格式 | prefill 两轮（秒） | Metal 峰值（GiB） |
 |---|---:|---:|
@@ -79,9 +79,9 @@ Ministral-7B 的 2.5-bit 平均分为 49.62，基线为 49.89；总结分为 24.
 | 未旋转 Q4_0 | 20.560 / 25.540 | 4.194 |
 | q4h | 15.202 / 16.160 | 4.194 |
 
-已直接读取逐次 JSON，核对请求哈希、实际格式、32,768 输入和 prefill token、零前缀命中、12 项字面事实以及资源释放。保存的二进制和 metallib 的 SHA 与报告一致。当前 `build/splash` 与该保存构建不同，表中数据仅代表这个固定版本。硬件记录为 M5 Pro，20 核 GPU、64 GiB 内存。[保存结果](../build/five-kv-final/results.json)
+已直接读取逐次 JSON，核对请求哈希、实际格式、32,768 输入和 prefill token、零前缀命中、12 项字面事实以及资源释放。保存的二进制和 metallib 的 SHA 与报告一致。当前 `build/splash` 与该保存构建不同，表中数据仅代表这个固定版本。硬件记录为 M5 Pro，20 核 GPU、64 GiB 内存。保存结果（`build/five-kv-final/` 下的 `results.json`）
 
-数据来自[汇总记录](../build/five-kv-final/aggregate.json)。标准 Q4 省内存，但这份实现的 prefill 慢于 INT8。旋转和未旋转 Q4 耗时接近，不能把全部开销归因于 Hadamard。q4h 值得继续比较；它与标准 Q4 的峰值相同，说明 raw KV 差异还受分配对齐影响。
+数据来自汇总记录（`build/five-kv-final/` 下的 `aggregate.json`）。标准 Q4 省内存，但这份实现的 prefill 慢于 INT8。旋转和未旋转 Q4 耗时接近，不能把全部开销归因于 Hadamard。q4h 值得继续比较；它与标准 Q4 的峰值相同，说明 raw KV 差异还受分配对齐影响。
 
 两轮的环境耗时有变化，生成 token 数也不同。decode 不能当作同输出速度比较。一个固定样例通过字面事实检查，只证明这个样例达标。一般总结质量是否等同或优于 BF16，仍需更多文档验证。
 

@@ -1,7 +1,8 @@
-// What the engine's memory and caches take from each family Splash serves
-// (model::kFamilies), against family_values_golden.txt: the bytes of a KV
-// page of each form in each KV format and the extents a pool of each size
-// takes, a lane's and a cached state's bytes in each state format, and the
+// What the start options and the engine's memory and caches take from each
+// family Splash serves (model::kFamilies), against family_values_golden.txt:
+// the facts the options of a start depend on (model::familyFacts), the bytes
+// of a KV page of each form in each KV format and the extents a pool of each
+// size takes, a lane's and a cached state's bytes in each state format, and the
 // persistent cache's namespace of each pair of formats. A change to shared
 // code that moves one of them for a family fails here, and names the values
 // it now has; a new family adds its lines.
@@ -22,6 +23,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <vector>
 
 using namespace splash;
 
@@ -60,6 +62,7 @@ constexpr std::array<uint64_t, 22> kPoolPages{
 
 std::string familyValues() {
   std::ostringstream out;
+  const std::vector<model::FamilyFacts> facts = model::familyFacts();
   model::forEachFamily([&](const auto &family) {
     const model::DFlashDraftLayout draft = draftOf(family);
     // A family whose drafts choose their mask token holds its draft's, the
@@ -72,10 +75,16 @@ std::string familyValues() {
                                    model::VisionSource::None);
     require(model.valid(), std::string(family.family) + "'s descriptor is not valid");
     const kv::Layout &kv = model.targetKvLayout;
+    const auto fact = std::ranges::find(facts, family.family, &model::FamilyFacts::family);
+    require(fact != facts.end(), std::string(family.family) + "'s facts are missing");
+    const auto &own = *fact;
     out << "family " << family.family;
     if constexpr (std::is_same_v<std::remove_cvref_t<decltype(family)>, model::Qwen3_5_4BDFlashLayout>)
       out << " draft standard";
     out << '\n'
+        << "facts experts " << own.experts << " recurrent-state " << own.recurrentState << " ple-table "
+        << own.pleTable << " sparse-kv " << own.sparseKv << " dense-ffn " << own.denseFfn << " context "
+        << own.contextTokens << ".." << own.maximumContextTokens << '\n'
         << "kv layers " << kv.attentionLayers << " heads " << kv.kvHeads << " dimension " << kv.headDimension
         << " index " << kv.indexDimension << (kv.valuesTokenMajor ? " values-token-major" : "");
     if (kv.windowedLayers)

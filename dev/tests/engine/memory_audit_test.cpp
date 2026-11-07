@@ -1,4 +1,5 @@
 #include "TestChecks.hpp"
+#include "TestJson.hpp"
 #include "TestModel.hpp"
 #include "engine/MemoryAudit.hpp"
 
@@ -16,7 +17,7 @@ using splash::test::require;
 
 EngineMemoryPlan plan(uint64_t visionBytes = kGiB,
                       uint64_t stateStagingBytes = 0, uint64_t aneFfnBytes = 0,
-                      uint64_t streamedTableBytes = 0, uint64_t draftBytes = kGiB, uint64_t expertPlePool = 0) {
+                      uint64_t streamedTableBytes = 0, uint64_t hostHeldBackBytes = 0, uint64_t draftBytes = kGiB) {
   DeviceCapabilities device;
   device.deviceName = "test";
   device.appleGpuFamily = 9;
@@ -33,11 +34,7 @@ EngineMemoryPlan plan(uint64_t visionBytes = kGiB,
   model.footprint.stateStagingBytes = stateStagingBytes;
   model.footprint.aneFfnBytes = aneFfnBytes;
   model.footprint.streamedTableBytes = streamedTableBytes;
-  if (expertPlePool) {
-    model.expertPleMemoryBytes = expertPlePool;
-    model.expertPlannedBytes = kGiB;
-    model.plePlannedBytes = streamedTableBytes;
-  }
+  model.footprint.hostHeldBackBytes = hostHeldBackBytes;
   return test::requireMemoryPlan(device, model);
 }
 
@@ -66,75 +63,13 @@ ActualMemoryReport report(const EngineMemoryPlan &memoryPlan,
   return result;
 }
 
-void testRuntimeEpochDoesNotMixOldMetalAndNewPlePeaks() {
-  auto memoryPlan = plan(0, 0, 0, 512 * kMiB, kGiB, 3 * kGiB);
-  auto actual = report(memoryPlan);
-  const auto &b = memoryPlan.breakdown();
-  actual.streamedTableBytes = 512 * kMiB;
-  actual.kvAllocatedBytes = b.dynamicBudgetBytes - actual.stateAllocatedBytes - 64 * kMiB;
-  actual.backendAllocatedBytes = actual.targetWeightsBytes + actual.draftWeightsBytes + actual.stateAllocatedBytes +
-      actual.sharedPrefillBytes + actual.sharedDecodeBytes + actual.kvAllocatedBytes;
-  actual.deviceCurrentAllocatedBytes = actual.backendAllocatedBytes;
-  actual.backendPeakAllocatedBytes = actual.devicePeakAllocatedBytes = actual.backendAllocatedBytes + 64 * kMiB;
-  require(auditRuntimeMemory(memoryPlan, actual).valid, "old near-limit store epoch should fit");
-  memoryPlan.setExpertPleSplit(kGiB - 128 * kMiB, 640 * kMiB);
-  actual.streamedTableBytes += 128 * kMiB;
-  actual.targetWeightsBytes -= 128 * kMiB;
-  actual.backendAllocatedBytes -= 128 * kMiB;
-  actual.deviceCurrentAllocatedBytes = actual.backendAllocatedBytes;
-  require(auditRuntimeMemory(memoryPlan, actual).error == MemoryAuditError::HardBudgetExceeded,
-          "a report mixing different store epochs was not rejected");
-  actual.backendPeakAllocatedBytes = actual.devicePeakAllocatedBytes = actual.backendAllocatedBytes;
-  require(auditRuntimeMemory(memoryPlan, actual).valid,
-          "the new same-epoch report failed after a constant-total store transfer");
-}
-
-void testCurrentStoreQuotaViewPreservesTheDynamicPlan() {
-  const auto memoryPlan = plan(0, 0, 0, 512 * kMiB, kGiB, 3 * kGiB);
-  const auto originalPlan = memoryPlan.toStatusJson();
-  auto actual = report(memoryPlan);
-  actual.streamedTableBytes = 640 * kMiB;
-  actual.targetWeightsBytes -= 128 * kMiB;
-  actual.backendAllocatedBytes -= 128 * kMiB;
-  actual.deviceCurrentAllocatedBytes = actual.backendPeakAllocatedBytes =
-      actual.devicePeakAllocatedBytes = actual.backendAllocatedBytes;
-  require(auditRuntimeMemory(memoryPlan, actual).error == MemoryAuditError::CategoryExceedsPlan,
-          "legacy audit stopped enforcing its original PLE category");
-  const RuntimeStoreQuotaView current{896 * kMiB, 640 * kMiB, 3 * kGiB, 896 * kMiB};
-  const auto accepted = auditRuntimeMemory(memoryPlan, actual, current);
-  require(accepted.valid && memoryPlan.toStatusJson() == originalPlan,
-          "current expert/PLE category quotas were rejected or rewrote KV/state/context ceilings");
-  auto excess = current;
-  --excess.expertQuotaBytes;
-  require(auditRuntimeMemory(memoryPlan, actual, excess).error == MemoryAuditError::CategoryExceedsPlan,
-          "current expert allocation escaped its category quota");
-}
-
-void testRuntimeEpochAcceptsLegitimateZeroDynamicResources() {
-  const auto memoryPlan = plan(0);
-  auto actual = report(memoryPlan);
-  const auto removed = actual.stateAllocatedBytes + actual.kvAllocatedBytes;
-  actual.stateAllocatedBytes = actual.kvAllocatedBytes = 0;
-  actual.backendAllocatedBytes -= removed;
-  actual.deviceCurrentAllocatedBytes = actual.devicePeakAllocatedBytes = actual.backendAllocatedBytes;
-  actual.backendPeakAllocatedBytes = actual.backendAllocatedBytes;
-  require(auditActualMemory(memoryPlan, actual).error == MemoryAuditError::MissingMeasurement,
-          "startup warmup stopped requiring its dynamic resources");
-  const auto runtime = auditRuntimeMemory(memoryPlan, actual);
-  require(runtime.valid && runtime.toStatusJson().find("runtime_store_epoch") != std::string::npos,
-          "runtime audit rejected legitimately reclaimed state/KV or reported startup scope");
-  actual.streamedTableBytes = 1;
-  require(auditRuntimeMemory(memoryPlan, actual).error == MemoryAuditError::CategoryExceedsPlan,
-          "runtime scope relaxed a real table allocation limit");
-}
-
 void testUnifiedDynamicAudit() {
   EngineMemoryPlan memoryPlan = plan();
   ActualMemoryReport actual = report(memoryPlan);
   auto valid = auditActualMemory(memoryPlan, actual);
   require(valid.valid && valid.error == MemoryAuditError::None,
           "valid elastic memory report failed audit");
-  require(valid.toStatusJson().find("\"scope\":\"startup_warmup\"") !=
+  require(test::jsonOf(valid).find("\"scope\":\"startup_warmup\"") !=
               std::string::npos,
           "memory audit status does not identify its startup scope");
 
@@ -151,8 +86,33 @@ void testUnifiedDynamicAudit() {
           "dynamic state/KV budget overflow was accepted");
 }
 
+// The expert store starts at its floor, the 1 GiB of chunks above it the
+// plan's all the same: startup's state may take what the store has not
+// grown into, 512 MiB past the dynamic budget, but not once the store has
+// grown into 768 MiB of it.
+void testStateMayTakeWhatTheStoreHasNotGrownInto() {
+  const EngineMemoryPlan memoryPlan = plan(kGiB, 0, 0, 0, kGiB);
+  const auto withState = [&](uint64_t stateBytes, uint64_t weightsGrown) {
+    ActualMemoryReport actual = report(memoryPlan);
+    actual.targetWeightsBytes += weightsGrown;
+    actual.backendAllocatedBytes += weightsGrown + stateBytes - actual.stateAllocatedBytes;
+    actual.stateAllocatedBytes = stateBytes;
+    actual.deviceCurrentAllocatedBytes = actual.backendAllocatedBytes;
+    actual.devicePeakAllocatedBytes = actual.backendAllocatedBytes + 16 * kMiB;
+    actual.backendPeakAllocatedBytes = actual.devicePeakAllocatedBytes;
+    return auditActualMemory(memoryPlan, actual);
+  };
+  const uint64_t past = memoryPlan.breakdown().dynamicBudgetBytes - memoryPlan.breakdown().kvExtentBytes + 512 * kMiB;
+  const MemoryAuditResult ungrown = withState(past, 0);
+  require(ungrown.valid, "startup state within what the expert store has not grown into failed audit: " +
+                             ungrown.message);
+  const MemoryAuditResult grown = withState(past, 768 * kMiB);
+  require(!grown.valid && grown.error == MemoryAuditError::CategoryExceedsPlan,
+          "startup state in what the expert store had grown into was accepted");
+}
+
 void testOptionalDraftAudit() {
-  const auto targetOnly = plan(0, 0, 0, 0, 0);
+  const auto targetOnly = plan(0, 0, 0, 0, 0, 0);
   require(auditActualMemory(targetOnly, report(targetOnly)).valid,
           "target-only memory planning or audit requires nonexistent draft weights");
   const auto paired = plan(0);
@@ -296,8 +256,8 @@ void testSpilledKvReadersHaveTheirBounds() {
   ActualMemoryReport actual = report(memoryPlan);
   const auto withReaders = [&](uint64_t hot, uint64_t staging) {
     ActualMemoryReport result = actual;
-    result.kvBlockCacheBytes = hot;
-    result.kvHistoryStagingBytes = staging;
+    result.spilledKvHotBytes = hot;
+    result.spilledKvStagingBytes = staging;
     for (uint64_t *bytes : {&result.backendAllocatedBytes, &result.deviceCurrentAllocatedBytes,
                             &result.devicePeakAllocatedBytes, &result.backendPeakAllocatedBytes})
       *bytes += hot + staging;
@@ -389,10 +349,8 @@ void testDevicePeakDeviationExcludesReserves() {
 
 int main() {
   try {
-    testRuntimeEpochDoesNotMixOldMetalAndNewPlePeaks();
-    testCurrentStoreQuotaViewPreservesTheDynamicPlan();
-    testRuntimeEpochAcceptsLegitimateZeroDynamicResources();
     testUnifiedDynamicAudit();
+    testStateMayTakeWhatTheStoreHasNotGrownInto();
     testOptionalDraftAudit();
     testOptionalVisionAudit();
     testUnreportedAllocationsCountAgainstReserves();

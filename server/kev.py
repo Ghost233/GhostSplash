@@ -6,7 +6,7 @@ import re
 
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from . import judgments
+from .dialects import scoring as judgments
 from .tokenization import tokenizable
 
 _SPECIAL = re.compile(r"<\|([A-Za-z0-9_]+)\|>")

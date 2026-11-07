@@ -73,11 +73,12 @@ def prepare():
     )
     source = (ROOT / "runtime/ops/PagedAttention.cpp").read_text()
     start = source.index("  const uint32_t splits = rows == 32")
-    end = source.index("  const uint32_t fusedRows", start)
+    split = "  const uint32_t splits = rows == 32"
     source = (
         source[:start]
-        + "  const uint32_t splits = rows == 32 && kernel == KernelLayout::Kv4Group6\n      ? matrixTailSplits() : prefillSplits(tiles);\n"
-        + source[end:]
+        + "  const uint32_t splits = rows == 32 && kernel.suffix.empty()\n"
+        "                              ? matrixTailSplits() : rows == 32"
+        + source[start + len(split) :]
     )
     source = replace_once(
         source,

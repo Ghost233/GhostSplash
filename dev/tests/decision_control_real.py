@@ -45,7 +45,7 @@ def run(args):
         process = runtime._process
         assert process is not None
         result["pid"] = process.pid
-        readiness = runtime.readiness
+        readiness = runtime.capabilities
         assert readiness is not None
         startup_status = json.loads(runtime.status(timeout=2).json)
         assert startup_status["maximum_context_tokens"] == context
@@ -83,7 +83,9 @@ def run(args):
                 flags=flags[kind],
                 cache_salt=0,
             )
-            return GenerationRequest(frame, time.monotonic() + 120, None, None)
+            return GenerationRequest(
+                frame, time.monotonic() + 120, None, wire.request_fingerprint(frame)
+            )
 
         serial = [runtime.submit(request(i % 3, i)).result(120) for i in range(4)]
         parallel = [runtime.submit(request(i % 3, i)) for i in range(4)]

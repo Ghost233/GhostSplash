@@ -1,6 +1,7 @@
 #include "ops/PagedAttention.hpp"
 
 #include "ops/BufferExtent.hpp"
+#include "ops/LaneBindings.hpp"
 
 #include <algorithm>
 #include <array>
@@ -14,10 +15,14 @@ namespace splash::ops {
 
 namespace {
 
+// Whether a layout's attention reads the blocks its index selects, through
+// the sparse kernels and block lists.
+bool selectsBlocks(kv::Layout layout) { return layout.reads == kv::Reads::SelectedBlocks; }
+
 // The parts a dense tile of a layout's GQA group runs in, each a threadgroup
 // of the split (SPLASH_ATTENTION_TILE_PARTS); a sparse tile is one.
 uint64_t tileParts(uint32_t queryHeads, kv::Layout layout) {
-  return layout.valuesTokenMajor ? 1 : SPLASH_ATTENTION_TILE_PARTS(queryHeads / layout.kvHeads);
+  return selectsBlocks(layout) ? 1 : SPLASH_ATTENTION_TILE_PARTS(queryHeads / layout.kvHeads);
 }
 
 // One thread per gate element, across rows x query heads x head dimension.
@@ -30,9 +35,10 @@ uint64_t gateGroups(uint64_t rows, uint32_t queryHeads, uint32_t headDimension) 
 // The compiled attention geometries (kernels/{prefill,decode}/attention_qkv.metal,
 // paged_attention.metal and paged_attention_store.metal, and
 // shared/sparse_attention.metal): query heads over KV heads of a head
-// dimension in a value order, and their kernels' name suffix, the stores' by
-// KV heads, head dimension and value order. The sparse kernels gather blocks
-// of token-major values (Qwen3.8-Flash-Next's); the dense page loop reads
+// dimension and how they read the pages, and their kernels' name suffix, the
+// stores' by KV heads, head dimension and the value order of the reader. The
+// sparse kernels read selected blocks of token-major values
+// (Qwen3.8-Flash-Next's); the dense page loop reads every page of
 // dimension-major ones. Each geometry's kernels are compiled for:
 // - gated: projection rows that hold each query head's output gate after its
 //   queries, by whose sigmoid the output multiplies the attention rows
@@ -43,11 +49,14 @@ uint64_t gateGroups(uint64_t rows, uint32_t queryHeads, uint32_t headDimension) 
 // - windowTokens: a split and reduce over a window of that many keys before
 //   each row as well as over the whole history, for an AttentionVariant of
 //   that window; 0 without.
+// Its q/k norm kernels take the norm types its families store (normKernel):
+// F32 and bf16, or F32 alone for the geometries of families that load from
+// GGUFs only (Qwen3.8-Flash-Next's, Flint's).
 struct CompiledAttention final {
   uint32_t queryHeads;
   uint32_t kvHeads;
   uint32_t headDimension;
-  bool valuesTokenMajor;
+  kv::Reads reads;
   bool gated;
   bool sinks;
   uint32_t rotaryPairs;
@@ -57,20 +66,20 @@ struct CompiledAttention final {
   std::string_view storeSuffix;
 };
 constexpr std::array kCompiledAttention{
-    CompiledAttention{24, 4, 256, false, true, false, 32, false, 0, "", ""},
-    CompiledAttention{16, 2, 256, false, true, false, 32, false, 0, "_kv2_g8", "_kv2_g8"},
-    CompiledAttention{8, 2, 256, false, true, false, 32, false, 0, "_kv2_g4", "_kv2_g8"},
-    CompiledAttention{16, 4, 256, false, true, false, 32, false, 0, "_kv4_g4", ""},
-    CompiledAttention{32, 2, 256, false, true, false, 32, false, 0, "_kv2_g16", "_kv2_g8"},
-    CompiledAttention{24, 2, 256, true, true, false, 32, false, 0, "_kv2_g12", "_kv2_vt"},
-    CompiledAttention{32, 4, 128, false, false, true, 64, true, 512, "_kv4_g8_d128", "_kv4_d128"},
+    CompiledAttention{24, 4, 256, kv::Reads::EveryPage, true, false, 32, false, 0, "", ""},
+    CompiledAttention{16, 2, 256, kv::Reads::EveryPage, true, false, 32, false, 0, "_kv2_g8", "_kv2_g8"},
+    CompiledAttention{8, 2, 256, kv::Reads::EveryPage, true, false, 32, false, 0, "_kv2_g4", "_kv2_g8"},
+    CompiledAttention{16, 4, 256, kv::Reads::EveryPage, true, false, 32, false, 0, "_kv4_g4", ""},
+    CompiledAttention{32, 2, 256, kv::Reads::EveryPage, true, false, 32, false, 0, "_kv2_g16", "_kv2_g8"},
+    CompiledAttention{24, 2, 256, kv::Reads::SelectedBlocks, true, false, 32, false, 0, "_kv2_g12", "_kv2_vt"},
+    CompiledAttention{32, 4, 128, kv::Reads::EveryPage, false, true, 64, true, 512, "_kv4_g8_d128", "_kv4_d128"},
 };
 
 // Whether a compiled geometry's pages are a layout's: its KV heads, head
 // dimension and value order.
 bool storesLayout(const CompiledAttention &compiled, kv::Layout layout) {
   return compiled.kvHeads == layout.kvHeads && compiled.headDimension == layout.headDimension &&
-         compiled.valuesTokenMajor == layout.valuesTokenMajor;
+         kv::valuesTokenMajorFor(compiled.reads) == layout.valuesTokenMajor;
 }
 
 // The KV store kernels' suffix of a layout's KV heads, head dimension and
@@ -82,20 +91,22 @@ std::string_view storeSuffix(kv::Layout layout) {
   throw std::invalid_argument("no KV store kernel for layout");
 }
 
-// The compiled geometry of `queryHeads` over a layout's KV heads, so the
-// kernels need no geometry branches, which must compile a layer's variant.
+// The compiled geometry of `queryHeads` over a layout's KV heads that reads
+// its pages as it does, so the kernels need no geometry branches, which must
+// compile a layer's variant.
 const CompiledAttention &compiledAttention(uint32_t queryHeads, kv::Layout layout,
                                            AttentionVariant variant = {}) {
   static_cast<void>(storeSuffix(layout));
   for (const CompiledAttention &compiled : kCompiledAttention) {
-    if (compiled.queryHeads != queryHeads || !storesLayout(compiled, layout)) continue;
+    if (compiled.queryHeads != queryHeads || compiled.reads != layout.reads || !storesLayout(compiled, layout))
+      continue;
     if ((!variant.rotated && !compiled.unrotated) ||
         (variant.windowTokens && variant.windowTokens != compiled.windowTokens))
       throw std::invalid_argument("no attention kernel for the layer's variant");
     return compiled;
   }
-  throw std::invalid_argument(layout.valuesTokenMajor ? "no sparse attention kernel for layout"
-                                                       : "no paged-attention kernel for layout");
+  throw std::invalid_argument(selectsBlocks(layout) ? "no sparse attention kernel for layout"
+                                                    : "no paged-attention kernel for layout");
 }
 
 // A phase's ("prefill" or "verify") attention kernel `name` with a suffix.
@@ -111,7 +122,7 @@ std::string splitSuffix(const CompiledAttention &compiled, AttentionVariant vari
 // The reduce kernel of a geometry's variant, which adds the geometry's sinks.
 std::string reduceKernel(std::string_view phase, const CompiledAttention &compiled, AttentionVariant variant, kv::Layout layout) {
   const std::string name = std::string(kv::usesHadamard(layout.format) ? "q4h_" : "") +
-                           (compiled.valuesTokenMajor ? "sparse_reduce" : "reduce");
+                           (compiled.reads == kv::Reads::SelectedBlocks ? "sparse_reduce" : "reduce");
   return kernelName(phase, name,
                     splitSuffix(compiled, variant) + (compiled.sinks ? "_sinks" : ""));
 }
@@ -238,19 +249,36 @@ std::array<metal::MetalBuffer, 2> blockBindings(const AttentionBlocks &blocks, c
 // dimension.
 metal::DispatchSize reduceThreads(kv::Layout layout) { return {layout.headDimension, 1, 1}; }
 
-// Each query tile's history splits: the maximum shared out over the chunk's
-// tiles, at least one, and with a window of windowTokens keys before each
-// row no more than the pages it reads (a split each).
-uint32_t prefillSplits(uint32_t tiles, uint32_t windowTokens) {
+// The fewest history splits of a chunk's `tiles` query tiles: the maximum
+// shared out over them (all a short history or a window takes).
+uint32_t sharedSplits(uint32_t tiles) {
   constexpr uint32_t maximum = SPLASH_PREFILL_ATTENTION_MAXIMUM_SPLITS;
-  const uint32_t splits = std::clamp(maximum / tiles, 1U, maximum);
+  return std::clamp(maximum / tiles, 1U, maximum);
+}
+// The most: the maximum, nor over all the tiles more than the longest chunk's
+// tiles, whose partials the prefill workspace holds.
+uint32_t mostSplits(uint32_t tiles) {
+  constexpr uint32_t ceiling = kv::prefillAttentionTiles(kv::kChunkedPrefillMaximumRows);
+  return std::clamp(ceiling / tiles, sharedSplits(tiles), uint32_t{SPLASH_PREFILL_ATTENTION_MAXIMUM_SPLITS});
+}
+// Each query tile's history splits: one per `pagesPerSplit` pages a tile's
+// rows read (AttentionCalibration), those of the visibleTokens the chunk's rows
+// see or, with a window of windowTokens keys before each row, no more than its
+// window's, between the shared and the most splits; with a window no more than
+// the pages it reads (a split each).
+uint32_t prefillSplits(uint32_t tiles, uint64_t visibleTokens, uint32_t windowTokens, uint32_t pagesPerSplit) {
+  const uint64_t seen = (visibleTokens + kv::kPageTokens - 1) / kv::kPageTokens;
+  const uint64_t pages = windowTokens ? std::min<uint64_t>(seen, kv::windowAttentionPages(windowTokens)) : seen;
+  const uint32_t splits =
+      static_cast<uint32_t>(std::clamp<uint64_t>(pages / pagesPerSplit, sharedSplits(tiles), mostSplits(tiles)));
   return windowTokens ? std::min(splits, kv::windowAttentionPages(windowTokens)) : splits;
 }
 
 } // namespace
 
-PrefillAttentionPlan PagedAttention::prefillPlan(
-    uint32_t rows, uint32_t queryHeads, kv::Layout layout, AttentionVariant variant, uint32_t tileRows) {
+PrefillAttentionPlan PagedAttention::prefillPlan(uint32_t rows, uint32_t historyTokens, uint32_t queryHeads,
+                                                 kv::Layout layout, uint32_t pagesPerSplit,
+                                                 AttentionVariant variant, uint32_t tileRows) {
   const CompiledAttention &kernel = compiledAttention(queryHeads, layout, variant);
   if (!rows || rows > kv::kChunkedPrefillMaximumRows)
     throw std::invalid_argument("invalid attention workspace rows");
@@ -263,17 +291,18 @@ PrefillAttentionPlan PagedAttention::prefillPlan(
   const uint32_t tiles = (rows + tileRows - 1) / tileRows;
   // Preserve the 4B publication path's fixed-order softmax on its 32-row suffix.
   const uint32_t splits = rows == 32 && tileRows == 16 && compact && layout.format == kv::Format::Int8
-                              ? 1U : prefillSplits(tiles, variant.windowTokens);
+                              ? 1U : prefillSplits(tiles, selectsBlocks(layout) ? 0 : uint64_t{historyTokens} + rows,
+                                                   variant.windowTokens, pagesPerSplit);
   const uint32_t fusedRows = tileRows * (queryHeads / layout.kvHeads);
   const std::string tileSuffix = tileRows == kv::kPrefillAttentionTileRows ? "" : "_r" + std::to_string(tileRows);
   return {rows, tileRows, splits,
           attentionWorkspace(uint64_t{tiles} * splits * layout.kvHeads * fusedRows,
                              layout.headDimension),
-          kernelName("prefill", kernelFormat(layout) + (kernel.valuesTokenMajor ? "_sparse" : "_split"),
+          kernelName("prefill", kernelFormat(layout) + (selectsBlocks(layout) ? "_sparse" : "_split"),
                      splitSuffix(kernel, variant) + tileSuffix),
           reduceKernel("prefill", kernel, variant, layout) + tileSuffix,
           {layout.kvHeads * tileParts(queryHeads, layout), tiles, splits},
-          {layout.kvHeads, fusedRows, tiles}, layout.valuesTokenMajor, kernel.sinks,
+          {layout.kvHeads, fusedRows, tiles}, selectsBlocks(layout), kernel.sinks,
           layout, queryHeads};
 }
 
@@ -297,7 +326,7 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
   }
   return {lanes, laneSplits, splits,
           verifyWorkspaceBound(lanes, queryHeads, layout),
-          kernelName("verify", kernelFormat(layout) + (kernel.valuesTokenMajor ? "_sparse" : "_split"),
+          kernelName("verify", kernelFormat(layout) + (selectsBlocks(layout) ? "_sparse" : "_split"),
                      splitSuffix(kernel, variant)),
           reduceKernel("verify", kernel, variant, layout),
           // A sparse lane's list fills only the first of the plan's splits.
@@ -305,12 +334,12 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
           // split: an M5 Max spread the same order as a two-dimensional grid
           // (x the KV head, y the split) worse, running it up to 1.7x slower
           // on most grids of more than 32 splits.
-          layout.valuesTokenMajor ? metal::DispatchSize{layout.kvHeads * splits, 1, lanes}
-                                  : metal::DispatchSize{layout.kvHeads * tileParts(queryHeads, layout), splits, lanes},
+          selectsBlocks(layout) ? metal::DispatchSize{layout.kvHeads * splits, 1, lanes}
+                                : metal::DispatchSize{layout.kvHeads * tileParts(queryHeads, layout), splits, lanes},
           {layout.kvHeads,
            kv::kVerifyRows * (queryHeads / layout.kvHeads), lanes},
-          layout.valuesTokenMajor, kernel.sinks,
-          kernel.valuesTokenMajor ? kernelName("verify", kernelFormat(layout) + "_sparse_located", kernel.suffix) : "",
+          selectsBlocks(layout), kernel.sinks,
+          selectsBlocks(layout) ? kernelName("verify", kernelFormat(layout) + "_sparse_located", kernel.suffix) : "",
           kernelName("verify", kernelFormat(layout) + "_store", storeSuffix(layout)),
           {uint64_t{lanes} * 2 * kv::kVerifyRows * layout.kvHeads, 1, 1},
           {layout.headDimension, 1, 1}, layout, queryHeads};
@@ -318,18 +347,18 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
 
 AttentionWorkspace PagedAttention::prefillWorkspace(
     uint32_t maximumRows, uint32_t queryHeads, kv::Layout layout) {
-  (void)compiledAttention(queryHeads, layout);
+  const bool compact = compiledAttention(queryHeads, layout).suffix == "_kv4_g4";
   if (!maximumRows || maximumRows > kv::kChunkedPrefillMaximumRows)
     throw std::invalid_argument("invalid attention workspace rows");
-  // Include every shorter sequence's selected 4B tile as well as every
-  // geometry's ordinary tile. A window cannot require more splits.
-  AttentionWorkspace bound{};
-  for (uint32_t rows = 1; rows <= maximumRows; ++rows) {
-    const auto plan = prefillPlan(rows, queryHeads, layout);
-    bound.partialsBytes = std::max(bound.partialsBytes, plan.workspace.partialsBytes);
-    bound.statisticsBytes = std::max(bound.statisticsBytes, plan.workspace.statisticsBytes);
+  // Bound every shorter sequence, including each supported compact tile.
+  uint64_t slots = 0;
+  for (uint32_t tileRows : {2u, kv::kPrefillAttentionTileRows, 16u}) {
+    if (!compact && tileRows != kv::kPrefillAttentionTileRows) continue;
+    const uint32_t maximumTiles = (maximumRows + tileRows - 1) / tileRows;
+    for (uint32_t tiles = 1; tiles <= maximumTiles; ++tiles)
+      slots = std::max(slots, uint64_t{tiles} * mostSplits(tiles) * tileRows);
   }
-  return bound;
+  return attentionWorkspace(slots * queryHeads, layout.headDimension);
 }
 
 AttentionWorkspace PagedAttention::verifyWorkspace(
@@ -526,7 +555,7 @@ void PagedAttention::addVerify(metal::CommandGraph &graph, SplashKvLayer layer,
                                std::span<const kv::ChunkedPrefillParams> chunks,
                                const VerifyAttentionPlan &plan, AttentionBlocks blocks) {
   constexpr uint32_t maximumLanes = SPLASH_MAXIMUM_BATCH_WIDTH;
-  if (chunks.size() != plan.lanes || buffers.pageTables.size() != maximumLanes) {
+  if (chunks.size() != plan.lanes || buffers.pageTables.size() < plan.lanes) {
     throw std::invalid_argument("invalid paged verify batch");
   }
   const Staging staging = verifyStaging(plan.lanes, plan.layout);
@@ -538,8 +567,15 @@ void PagedAttention::addVerify(metal::CommandGraph &graph, SplashKvLayer layer,
   requireBytes(buffers.output, rows, "attention output");
   requireBytes(buffers.partials, plan.workspace.partialsBytes, "verify attention partials");
   requireBytes(buffers.statistics, plan.workspace.statisticsBytes, "verify attention statistics");
-  for (uint32_t lane = 0; lane < plan.lanes; ++lane)
-    requirePageTable(buffers.pageTables[lane], chunks[lane]);
+  // The store writes a lane's rows only for a verify chunk: kVerifyRows rows
+  // in kVerifyChunkStride rows of staging (verifyParams).
+  for (uint32_t lane = 0; lane < plan.lanes; ++lane) {
+    const kv::ChunkedPrefillParams &chunk = chunks[lane];
+    if (chunk.chunk_tokens != kv::kVerifyRows || chunk.chunk_stride != kv::kVerifyChunkStride ||
+        !kv::chunkedPrefillValidationError(chunk).empty())
+      throw std::invalid_argument("a paged verify lane's chunk is not a verify chunk");
+    requirePageTable(buffers.pageTables[lane], chunk);
+  }
   requireBlocks(blocks, plan.sparse, plan.lanes);
   requireSinks(buffers.sinks, plan.sinks, plan.queryHeads);
   // The located split reads a location for each entry of each lane's list.
@@ -549,9 +585,8 @@ void PagedAttention::addVerify(metal::CommandGraph &graph, SplashKvLayer layer,
     requireBytes(blocks.locations, (uint64_t{blocks.list} + plan.lanes) * blocks.stride * sizeof(uint32_t),
                  "attention block locations");
   }
-  // verifyParams validated each chunk, and the plan scaled each lane's
-  // split count from the same committed history; every lane's partials use
-  // the plan-wide slot stride.
+  // The plan scaled each lane's split count from the same committed history;
+  // every lane's partials use the plan-wide slot stride.
   std::array<kv::ChunkedPrefillParams, maximumLanes> stores{};
   std::array<kv::VerifyAttentionParams, maximumLanes> attention{};
   for (uint32_t lane = 0; lane < plan.lanes; ++lane) {
@@ -562,13 +597,12 @@ void PagedAttention::addVerify(metal::CommandGraph &graph, SplashKvLayer layer,
                        plan.laneSplits[lane], plan.splits, blocks.stride,
                        blocks.list + lane};
   }
-  const auto &tables = buffers.pageTables;
-  graph.add(std::string(plan.storePipeline_),
-            {buffers.chunkKeys, buffers.chunkValues, tables[0], tables[1], tables[2],
-             tables[3]},
-            stores, plan.storeGroups_, plan.storeThreads_);
-  std::vector<metal::MetalBuffer> split{buffers.queries, buffers.partials, buffers.statistics,
-                                        tables[0], tables[1], tables[2], tables[3]};
+  const auto tables = laneBindings(buffers.pageTables.first(plan.lanes));
+  std::vector<metal::MetalBuffer> store{buffers.chunkKeys, buffers.chunkValues};
+  store.insert(store.end(), tables.begin(), tables.end());
+  graph.add(std::string(plan.storePipeline_), std::move(store), stores, plan.storeGroups_, plan.storeThreads_);
+  std::vector<metal::MetalBuffer> split{buffers.queries, buffers.partials, buffers.statistics};
+  split.insert(split.end(), tables.begin(), tables.end());
   std::vector<metal::MetalBuffer> reduce{buffers.partials, buffers.statistics, buffers.output};
   if (plan.sparse) {
     const auto [lists, counts] = blockBindings(blocks, buffers.partials);

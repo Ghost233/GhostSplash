@@ -125,7 +125,7 @@ def expected_configuration(root, block):
     }
     rules = "".join(
         f"{sha_file(root / p)}  {p}\n"
-        for p in ("Makefile", "dev/native.mk", "dev/tools/build_config.py")
+        for p in ("Makefile", "dev/tools/build_config.py")
     )
     rules_digest = hashlib.sha256(rules.encode()).hexdigest()[:16]
     production = prefix_digest(
@@ -137,14 +137,18 @@ def expected_configuration(root, block):
             "-MMD -MP",
             link,
             "xcrun -sdk macosx ar",
-            "xcrun -sdk macosx metal",
-            metal,
-            "xcrun -sdk macosx metallib",
         ]
+    )
+    metal_config = prefix_digest(
+        [rules_digest, "xcrun -sdk macosx metal", metal, "xcrun -sdk macosx metallib"]
+    )
+    native_config = prefix_digest(
+        [production, f"{sha_file(root / 'dev/native.mk')}  dev/native.mk"]
     )
     test = prefix_digest(
         [
-            production,
+            native_config,
+            metal_config,
             f"-std=c++20 -O2 -Wall -Wextra -Werror -Iruntime -Idev {deployment}",
             metal.replace(" -O3", ""),
         ]
@@ -164,7 +168,7 @@ def expected_configuration(root, block):
         "constants": constants,
         "production": production,
         "test": test,
-        "metallib": production
+        "metallib": metal_config
         + "-"
         + prefix_digest(headers)
         + "-"
@@ -175,11 +179,11 @@ def expected_configuration(root, block):
 def expected_attention(root):
     """Verify the generator's exact matrix-only override snapshot."""
     source = (root / "runtime/ops/PagedAttention.cpp").read_text()
-    old = "compact && layout.format == kv::Format::Int8\n                              ? 1U : prefillSplits(tiles, variant.windowTokens);"
+    old = "compact && layout.format == kv::Format::Int8\n                              ? 1U : prefillSplits(tiles, selectsBlocks(layout) ? 0 : uint64_t{historyTokens} + rows,\n                                                   variant.windowTokens, pagesPerSplit);"
     replacements = (
         (
             old,
-            "compact\n                              ? matrixTailSplits() : prefillSplits(tiles, variant.windowTokens);",
+            "compact\n                              ? matrixTailSplits() : prefillSplits(tiles, selectsBlocks(layout) ? 0 : uint64_t{historyTokens} + rows,\n                                                   variant.windowTokens, pagesPerSplit);",
         ),
         (
             "namespace splash::ops {",

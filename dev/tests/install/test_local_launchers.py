@@ -221,13 +221,11 @@ class LocalLauncherTests(unittest.TestCase):
     def test_saluki_launcher_is_removed(self):
         self.assertFalse((ROOT / "saluki27biq2mixsplash.sh").exists())
 
-    def test_flash_next_uses_ssd_ple_and_resident_experts(self):
+    def test_flash_next_uses_official_automatic_memory_planning(self):
         script = ROOT / "swift15flashnextsplash.sh"
         args = self.launch(script)
         self.assertIsNone(args.ple_memory)
         self.assertIsNone(args.expert_memory)
-        self.assertEqual(args.expert_ple_memory, 10 * 1024**3)
-        self.assertEqual(args.expert_ple_policy, "adaptive")
         self.assertTrue(args.disable_ane)
         self.assertEqual(args.prompt_lookup, "off")
         self.assertEqual(args.fast_topk, "off")
@@ -235,8 +233,6 @@ class LocalLauncherTests(unittest.TestCase):
         changed = self.launch(
             script,
             startup_options=(
-                "--expert-ple-policy",
-                "static",
                 "--ple-memory",
                 "256M",
                 "--expert-memory",
