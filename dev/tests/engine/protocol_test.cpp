@@ -423,7 +423,17 @@ void testScoreRequestAndDoneLogits() {
   withImage.imageSpans = {
       {0, 1, 2, 2, 0x1111222233334444ULL, 0x5555666677778888ULL}};
   withImage.imagePixels.resize(withImage.imageSpans[0].pixelBytes());
+  CHECK(test, roundTrip(withImage) == withImage);
+  withImage.flags |= splash::RequestDecisionScoring;
   expectRequestIssue(test, withImage, IssueCode::InvalidCount);
+
+  RequestFrame joint = request;
+  joint.flags |= kInlineReadoutsFlag;
+  joint.generationPromptTokens = 0;
+  joint.readoutPositions = {0, 1};
+  CHECK(test, roundTrip(joint) == joint);
+  joint.readoutPositions = {1, 1};
+  expectRequestIssue(test, joint, IssueCode::InvalidCount);
 
   RequestFrame constrained = request;
   constrained.constraint = ConstraintMode::TokenMask;

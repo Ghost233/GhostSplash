@@ -1320,7 +1320,12 @@ def _native_command(args, model_root, relaunch_context=None):
         raise ValueError(
             "--experimental-quantized-ffn only supports Qwen3.5-4B generation"
         )
-    if getattr(args, "decision_type", None) in ("laya", "vllm-d3"):
+    if getattr(args, "decision_type", None) in (
+        "laya",
+        "vllm-d3",
+        "h2o-lightning",
+        "pplx-decider-v3",
+    ):
         if any(
             getattr(args, key) == "on"
             for key in ("compact_draft_head", "prompt_lookup", "fast_topk")
@@ -1333,7 +1338,7 @@ def _native_command(args, model_root, relaunch_context=None):
         command = [
             args.binary,
             "serve-d3-native"
-            if args.decision_type == "vllm-d3"
+            if args.decision_type in ("vllm-d3", "h2o-lightning", "pplx-decider-v3")
             else "serve-encoder-native",
             str(model_root),
             str(args.max_context if args.max_context is not None else relaunch_context)
@@ -1345,7 +1350,7 @@ def _native_command(args, model_root, relaunch_context=None):
             "--encoder-submit-batch-size",
             str(getattr(args, "encoder_submit_batch_size", 4)),
         ]
-        if args.decision_type == "vllm-d3":
+        if args.decision_type in ("vllm-d3", "h2o-lightning", "pplx-decider-v3"):
             if args.kv_format not in ("q4h", "bf16"):
                 raise ValueError("D3 KV format must be q4h or bf16")
             command.extend(("--kv-format", args.kv_format))
@@ -1493,11 +1498,13 @@ def main():
         stage = "tokenizer"
         tokenizer_options = {}
         decision_config = None
+        systemone_config = None
         tokenizer_config = model_root / "tokenizer" / "config.json"
         if tokenizer_config.is_file():
             model_config = json.loads(tokenizer_config.read_text(encoding="utf-8"))
             model_type = model_config.get("model_type")
             decision_config = model_config.get("decision_config")
+            systemone_config = model_config.get("systemone_config")
             if model_type in (
                 "qwen3_5",
                 "qwen3_5_text",
@@ -1595,6 +1602,7 @@ def main():
             default_reasoning_effort=args.default_reasoning_effort,
             default_thinking_token_budget=args.thinking_token_budget,
             decision_config=decision_config,
+            systemone_config=systemone_config,
         )
         server.app = app
         server.server_activate()

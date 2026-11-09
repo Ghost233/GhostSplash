@@ -180,6 +180,10 @@ FLINT_PATTERNS = (
 # for: the patterns that split text, each isolating its matches, in order,
 # and whether text is NFC-normalized before them.
 TOKENIZER_PROFILES = {
+    "qwen2": (
+        (QWEN35_PATTERN.replace(r"[\p{L}\p{M}]", r"\p{L}").replace(r"\p{M}", ""),),
+        False,
+    ),
     "qwen35": ((QWEN35_PATTERN,), True),
     "flint": (FLINT_PATTERNS, False),
 }
@@ -280,6 +284,8 @@ def tokenizer_files(metadata):
         )
     else:
         patterns, nfc = TOKENIZER_PROFILES.get(profile, ((), True))
+        if profile == "qwen2":
+            nfc = metadata.values.get("tokenizer.ggml.normalizer.nfc", nfc)
         if nfc:
             backend.normalizer = normalizers.NFC()
         backend.pre_tokenizer = (
@@ -377,25 +383,94 @@ def text_architecture(metadata):
 def decision_config(metadata):
     arch = text_architecture(metadata)
     kind = metadata.values.get(arch + ".decision.type")
+    if kind is None and any(key.startswith("pplx_decider.") for key in metadata.values):
+        if (
+            arch != "qwen35"
+            or metadata.values.get("qwen35.attention.causal") is not False
+            or metadata.values.get("pplx_decider.protocol_version") != 3
+            or metadata.values.get("pplx_decider.template")
+            != "joint-question-inline-readout-v1"
+            or metadata.values.get("pplx_decider.marker") != "<|fim_suffix|>"
+        ):
+            raise ModelError("unsupported PPLX Decider protocol or attention mode")
+        tokens = metadata.require("tokenizer.ggml.tokens", list)
+        codes = metadata.require("pplx_decider.codes", list)
+        token_ids = metadata.require("pplx_decider.token_ids", list)
+        if (
+            not 2 <= len(codes) <= 255
+            or len(codes) != len(token_ids)
+            or any(not isinstance(code, str) or not code for code in codes)
+            or len(set(codes)) != len(codes)
+            or any(
+                type(token) is not int or not 0 <= token < len(tokens)
+                for token in token_ids
+            )
+            or len(set(token_ids)) != len(token_ids)
+            or any(tokens[token] != code for code, token in zip(codes, token_ids))
+        ):
+            raise ModelError("invalid PPLX answer-code mapping")
+        marker = metadata.require("pplx_decider.marker", str)
+        escapes = metadata.require("pplx_decider.escape_tokens", list)
+        temperature = metadata.require("pplx_decider.temperature", float)
+        if (
+            marker not in tokens
+            or not escapes
+            or any(not isinstance(value, str) or not value for value in escapes)
+            or not math.isfinite(temperature)
+            or temperature <= 0
+        ):
+            raise ModelError("invalid PPLX marker, escape tokens, or temperature")
+        return {
+            "type": "pplx-decider-v3",
+            "head_size": 256,
+            "codes": codes,
+            "token_ids": token_ids,
+            "temperature": temperature,
+            "marker": marker,
+            "marker_token_id": tokens.index(marker),
+            "escape_tokens": escapes,
+            "max_pixels": metadata.positive("pplx_decider.max_pixels"),
+        }
     if kind is None:
         return None
-    if kind == "vllm-d3" and arch == "qwen35":
-        if metadata.values.get(arch + ".attention.causal") is not False:
+    if kind in {"vllm-d3", "h2o-lightning"} and arch == "qwen35":
+        if (
+            kind == "vllm-d3"
+            and metadata.values.get(arch + ".attention.causal") is not False
+        ):
             raise ModelError("D3 requires explicit noncausal attention")
         tokens = metadata.require("tokenizer.ggml.tokens", list)
         vocabulary = {token: index for index, token in enumerate(tokens)}
-        codes = []
-        for length in (1, 2, 3):
-            for letters in itertools.product(string.ascii_uppercase, repeat=length):
-                code = "".join(letters)
-                if code in vocabulary:
-                    codes.append(code)
-                    if len(codes) == 255:
-                        break
-            if len(codes) == 255:
-                break
-        if len(codes) < 2:
-            raise ModelError("D3 vocabulary has fewer than two answer codes")
+        if kind == "h2o-lightning":
+            from tokenizers.pre_tokenizers import ByteLevel
+
+            codes = metadata.require(arch + ".decision.labels", list)
+            if not 2 <= len(codes) <= 255 or any(
+                not isinstance(code, str) or not code for code in codes
+            ):
+                raise ModelError("invalid H2O decision labels")
+            byte_level = ByteLevel(add_prefix_space=False, use_regex=False)
+            token_ids = []
+            for code in codes:
+                pieces = byte_level.pre_tokenize_str(code)
+                token = vocabulary.get(pieces[0][0]) if len(pieces) == 1 else None
+                if token is None or token in token_ids:
+                    raise ModelError("H2O labels must be distinct single tokens")
+                token_ids.append(token)
+        else:
+            codes = []
+            for length in (1, 2, 3):
+                for letters in itertools.product(string.ascii_uppercase, repeat=length):
+                    code = "".join(letters)
+                    if code in vocabulary:
+                        codes.append(code)
+                        if len(codes) == 255:
+                            break
+                if len(codes) == 255:
+                    break
+            if len(codes) < 2:
+                raise ModelError("D3 vocabulary has fewer than two answer codes")
+            token_ids = [vocabulary[code] for code in codes]
         temperatures = {}
         for question in ("choice", "score", "noul"):
             value = metadata.require(arch + ".decision.temperature." + question, float)
@@ -409,9 +484,14 @@ def decision_config(metadata):
             "type": kind,
             "head_size": 256,
             "codes": codes,
-            "token_ids": [vocabulary[code] for code in codes],
+            "token_ids": token_ids,
             "temperatures": temperatures,
             "chat_template": template,
+            **(
+                {"causal": metadata.values.get(arch + ".attention.causal", True)}
+                if kind == "h2o-lightning"
+                else {}
+            ),
         }
     if kind == "laya" and arch == "modern-bert":
         temperatures = {}
@@ -502,9 +582,32 @@ def model_config(metadata, vision=None):
     }
     decision = decision_config(metadata)
     if decision is not None:
-        if vision is not None:
+        if vision is not None and decision["type"] != "pplx-decider-v3":
             raise ModelError("Kev currently requires a text-only target")
         config["decision_config"] = decision
+    if (
+        arch == "qwen35"
+        and metadata.values.get("general.name") == "StartLux-Decision-v1.1-4B-AutoThink"
+    ):
+        # Published letter readout calibration at HF revision 23dd4c513ef387705bb13fd8caadc2d5c863082f.
+        letters = list(range(32, 58))
+        tokens = metadata.require("tokenizer.ggml.tokens", list)
+        if (
+            text["hidden_size"] != 2560
+            or text["num_hidden_layers"] != 32
+            or len(tokens) < 58
+            or any(
+                tokens[token] != chr(65 + index) for index, token in enumerate(letters)
+            )
+        ):
+            raise ModelError(
+                "unexpected StartLux AutoThink model geometry or tokenizer"
+            )
+        config["systemone_config"] = {
+            "type": "startlux-autothink",
+            "token_ids": letters,
+            "temperatures": {"choice": 0.9276, "noul": 1.0054, "score": 0.9503},
+        }
     if vision is not None:
         config["vision_config"] = vision_config(vision)
     return config
@@ -985,7 +1088,7 @@ def loaded_tensors(metadata):
         and metadata.values.get(arch + ".embedding_length") == 2560
         and loaded_layers(metadata, arch) == 32
         and "output.weight" not in metadata.tensors
-        and decision is None
+        and (decision is None or decision["type"] == "h2o-lightning")
     ):
         tensors.pop("output.weight", None)
     for layer in range(loaded_layers(metadata, arch)):
@@ -1123,12 +1226,21 @@ def require_loadable(metadata):
                 raise ModelError("unsupported ModernBERT tensor type: " + name)
         return
     decision = decision_config(metadata)
-    if decision is not None and decision["type"] == "vllm-d3":
+    if decision is not None and decision["type"] in {
+        "vllm-d3",
+        "h2o-lightning",
+        "pplx-decider-v3",
+    }:
         expected = (
             metadata.positive("qwen35.embedding_length"),
             len(metadata.require("tokenizer.ggml.tokens", list)),
         )
-        if metadata.extents.get("output.weight") != expected:
+        head = (
+            "output.weight"
+            if "output.weight" in metadata.tensors
+            else "token_embd.weight"
+        )
+        if metadata.extents.get(head) != expected:
             raise ModelError("unexpected D3 output.weight shape")
     if decision is not None and decision["type"] == "kev":
         for name, shape in (

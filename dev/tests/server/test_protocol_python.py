@@ -678,10 +678,12 @@ class ProtocolPythonTests(unittest.TestCase):
                         91, reason, 4096, 512, 1000, 2000, 3500, (), bounded=bounded
                     ),
                 )
-        # More logits than score options do not fit a Done frame.
+        # A joint Done can hold one vocabulary readout per prompt marker.
         self.assert_fatal_event(
             p.IssueCode.FRAME_TOO_LARGE,
-            p.DoneEvent(**base, option_logits=tuple(float(i) for i in range(256))),
+            p.DoneEvent(
+                **base, option_logits=(0.0,) * (p.MAX_READOUTS * p.MAX_SCORE_TOKENS + 1)
+            ),
         )
         # Scored, generation and cancelled done events decode unchanged.
         for event in (

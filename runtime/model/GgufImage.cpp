@@ -192,7 +192,9 @@ public:
 
   // D3 scores answer codes, never the rest of the vocabulary. Padding is zero.
   void decisionCodes(std::span<const uint32_t> tokens) {
-    const auto *t = find("output.weight", quantizedType);
+    const std::string name = geometry_.tiedWordEmbeddings && !file_.find("output.weight")
+        ? "token_embd.weight" : "output.weight";
+    const auto *t = find(name, quantizedType);
     if (!t) return;
     if (t->rows() != geometry_.vocabularySize || t->columns() != geometry_.hiddenSize ||
         tokens.size() < 2 || tokens.size() > 255)
@@ -908,7 +910,10 @@ void requireMetadata(const GgufFile &file, std::string_view architecture, const 
     throw GgufError("GGUF architecture is " + metadata.architecture() + ", but the model's target is " + arch);
   const auto decision = metadata.stringValue(arch + ".decision.type");
   if (geometry.decisionHeadSize == 256) {
-    if (decision != "vllm-d3" || metadata.unsignedValue(arch + ".attention.causal") != 0 ||
+    const bool h2o = decision == "h2o-lightning" && geometry.hiddenSize == 2560 && geometry.layers == 32;
+    const bool pplx = !decision && metadata.unsignedValue("pplx_decider.protocol_version") == 3 &&
+        geometry.hiddenSize == 2560 && geometry.layers == 32;
+    if ((!h2o && ((decision != "vllm-d3" && !pplx) || metadata.unsignedValue(arch + ".attention.causal") != 0)) ||
         !((geometry.hiddenSize == 1024 && geometry.layers == 24) ||
           (geometry.hiddenSize == 2560 && geometry.layers == 32)))
       throw GgufError("GGUF metadata does not match a noncausal D3 layout");

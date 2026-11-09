@@ -52,7 +52,7 @@ kernel void d3_attention(
       float local[4], tileMax = -INFINITY;
       for (ushort j = 0; j < 4; ++j) {
         uint column = lane + j * 32, key = tile * N + column;
-        bool visible = key < p.tokens;
+        bool visible = key < p.tokens && (!p.causal || key <= start + p.query_start + row);
         local[j] = visible ? storage[row * N + column] * 0.0625f * (p.q4h ? kv_scales[kv*p.stride+key] : 1.0f) : -INFINITY;
         tileMax = max(tileMax, local[j]);
       }

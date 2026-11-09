@@ -16,6 +16,7 @@
 #include <sys/select.h>
 #include <deque>
 #include <iostream>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <thread>
@@ -32,6 +33,10 @@ uint64_t micros() { return static_cast<uint64_t>(awakeMilliseconds() * 1000.0); 
 struct Pending {
   protocol::RequestFrame request;
   uint64_t submitted = 0;
+};
+struct ActiveRequest {
+  size_t promptTokens = 0;
+  std::string_view phase = "queued";
 };
 }
 
@@ -64,12 +69,15 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
   protocol::ProtocolLimits limits; limits.maxPromptTokens = context;
   std::mutex mutex, outputMutex; std::condition_variable ready;
   std::deque<Pending> queue;
-  std::unordered_set<uint64_t> pending, cancelled;
+  std::map<uint64_t, ActiveRequest> pending;
+  std::unordered_set<uint64_t> cancelled;
   std::atomic<bool> failed{false}, loaded{false};
   std::atomic<uint64_t> weightBytes{0}, quantizedBytes{0}, workspaceBytes{0}, allocatedBytes{0}, peakBytes{0}, requests{0}, gpuMicros{0};
   std::atomic<uint64_t> kvBytes{0};
+  std::atomic<bool> lightning{false}, pplx{false}, vision{false};
   std::atomic<uint32_t> active{0}, maximumBatch{0};
   std::atomic<uint64_t> batchCount{0};
+  uint64_t inputTokens = 0, wallMicros = 0;
   const auto send = [&](protocol::EngineEvent event) {
     auto result = protocol::serializeEvent(event, limits);
     if (!result) throw std::runtime_error(result.issue->describe());
@@ -87,16 +95,29 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
     send(protocol::ErrorEvent{protocol::FailureClass::RequestError, id, false, "invalid_encoder_request", std::move(message)});
   };
   const auto status = [&] {
+    std::lock_guard lock(mutex);
     std::ostringstream s;
     s << "{\"schema_version\":" << protocol::kStatusSchemaVersion
       << ",\"healthy\":true,\"ready\":" << (loaded ? "true" : "false")
       << ",\"maximum_context_tokens\":" << context
-      << ",\"active_requests\":" << active << ",\"model_kind\":\"" << (d3 ? "vllm-d3" : "modern-bert") << "\","
+      << ",\"generation\":false"
+      << ",\"active_requests\":" << active << ",\"encoder_requests\":[";
+    bool first = true;
+    for (const auto &[id, request] : pending) {
+      if (!first) s << ',';
+      first = false;
+      s << "{\"id\":" << id << ",\"phase\":\"" << request.phase
+        << "\",\"prompt_tokens\":" << request.promptTokens
+        << ",\"prompt_processed\":null,\"generated_tokens\":0,\"cancellation_requested\":"
+        << (cancelled.contains(id) ? "true" : "false") << '}';
+    }
+    s << "],\"model_kind\":\"" << (d3 ? (pplx ? "pplx-decider-v3" : lightning ? "h2o-lightning" : "vllm-d3") : "modern-bert") << "\","
       << "\"weights\":{\"release_supported\":false,\"released\":false,\"restoring\":false},\"memory\":{"
       << "\"loaded_weight_bytes\":" << weightBytes << ",\"quantized_weight_bytes\":" << quantizedBytes << ",\"auxiliary_weight_bytes\":" << weightBytes - quantizedBytes << ",\"fp16_weight_cache_bytes\":0,\"workspace_bytes\":" << workspaceBytes
       << ",\"kv_bytes\":" << kvBytes << ",\"state_bytes\":0,\"allocated_bytes\":" << allocatedBytes << ",\"peak_allocated_bytes\":" << peakBytes
       << ",\"max_memory_bytes\":" << maximum << "},\"telemetry\":{\"completed_requests\":" << requests
-      << ",\"submission_batches\":" << batchCount << ",\"maximum_submission_batch\":" << maximumBatch << ",\"total_prefill_gpu_seconds\":" << double(gpuMicros) / 1e6 << "},\"features\":{"
+      << ",\"submission_batches\":" << batchCount << ",\"maximum_submission_batch\":" << maximumBatch << ",\"total_prefill_gpu_seconds\":" << double(gpuMicros) / 1e6
+      << ",\"total_input_tokens\":" << inputTokens << ",\"total_prefill_wall_seconds\":" << double(wallMicros) / 1e6 << "},\"features\":{"
       << "\"drafter\":\"none\",\"ane\":\"off\",\"compact_draft_head\":\"off\",\"fast_topk\":\"off\",\"prompt_lookup\":\"off\","
       << "\"encoder_option_queries\":" << (selected ? "true" : "false") << ",\"encoder_submit_batch_limit\":" << submitLimit << ",\"causal_prefix_cache\":false},"
       << "\"ane_ffn\":{\"state\":\"off\",\"share\":0,\"minimum_rows\":0,\"reason\":\"GPU encoder\"},"
@@ -126,6 +147,11 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
         else return std::make_unique<Model>(backend,modelPath,context,maximum);
       }();
       auto &model=*owner;
+      if constexpr(d3) {
+        lightning = model.decisionType() == "h2o-lightning";
+        pplx = model.decisionType() == "pplx-decider-v3";
+        vision = model.hasVision();
+      }
       weightBytes = model.weightBytes(); quantizedBytes = model.quantizedWeightBytes(); workspaceBytes = model.workspaceBytes();
       // Startup validates selected queries against the complete last-head path.
       std::vector<uint32_t> prompt, options;
@@ -153,7 +179,7 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
       // Decision encoders accept neither generation nor masks. The common
       // Ready frame still carries valid capacities for its wire format.
       send(protocol::ReadyEvent{.maxConcurrentRequests = 4, .maxContextTokens = context,
-                                .vocabularySize = model.vocabularySize(), .stopTokens = {0}, .maskRows = 1});
+                                .vision = vision, .vocabularySize = model.vocabularySize(), .stopTokens = {0}, .maskRows = 1});
       while (!stop.stop_requested() && !stopping) {
         std::vector<Pending> batch;
         {
@@ -173,6 +199,7 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
               batch.push_back(std::move(*it)); it = queue.erase(it);
             } else ++it;
           }
+          for (const auto &item : batch) pending.at(item.request.requestId).phase = "running";
         }
         const auto retire = [&](uint64_t id) {
           std::lock_guard lock(mutex); pending.erase(id); cancelled.erase(id); --active;
@@ -186,7 +213,8 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
           auto &item = batch[i]; auto &r = item.request;
           send(protocol::StartEvent{r.requestId, static_cast<uint32_t>(i), 0});
           if (isCancelled(r.requestId)) {
-            send(protocol::DoneEvent{r.requestId, EngineFinishReason::Cancelled, 0, 0, 0, 0, micros() - item.submitted, {}});
+            send(protocol::DoneEvent{r.requestId, EngineFinishReason::Cancelled,
+                static_cast<uint32_t>(r.promptTokens.size()), 0, 0, 0, micros() - item.submitted, {}});
             retire(r.requestId); continue;
           }
           try {
@@ -196,20 +224,37 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
             if ((d3 ? bool(r.flags & RequestDecisionScoring) : !(r.flags & RequestDecisionScoring)) ||
                 (r.flags & RequestDecisionScoreType && r.flags & RequestDecisionNoulType) ||
                 r.logicalMaxOutputTokens || !r.sampling.isNeutral() || r.constraint != ConstraintMode::None ||
-                !r.imageSpans.empty() || r.flags & RequestIgnoreEndOfSequence)
+                (!r.imageSpans.empty() && !vision) || r.flags & RequestIgnoreEndOfSequence)
               throw std::invalid_argument("encoder serves typed decision scoring only");
             model::ModernBertInput input{r.promptTokens, r.scoreTokens, kind};
+            if (pplx != !r.readoutPositions.empty())
+              throw std::invalid_argument("inline readouts require a PPLX encoder");
+            input.readoutPositions = r.readoutPositions;
+            input.images = r.imageSpans;
+            input.pixels = r.imagePixels;
             model.validate(input); inputs.push_back(input); selectedRequests.push_back(i);
           } catch (const std::invalid_argument &e) { error(r.requestId, e.what()); retire(r.requestId); }
         }
         if (!inputs.empty()) {
+          {
+            std::lock_guard lock(mutex);
+            for (size_t index : selectedRequests) pending.at(batch[index].request.requestId).phase = "prefill";
+          }
           auto logits = model.scoreBatch(inputs, selected);
           workspaceBytes = model.workspaceBytes();
           if constexpr(d3) kvBytes=model.kvBytes();
           const auto timing = model.lastTiming();
-          gpuMicros += static_cast<uint64_t>(timing.gpuSeconds * 1e6);
-          requests += inputs.size(); ++batchCount;
-          maximumBatch = std::max(maximumBatch.load(), static_cast<uint32_t>(inputs.size()));
+          {
+            std::lock_guard lock(mutex);
+            // Count only successful forward batches, including cancellation
+            // observed after computation. Startup and rejected work are excluded.
+            for (const auto &input : inputs) inputTokens += input.tokens.size();
+            wallMicros += static_cast<uint64_t>(timing.wallSeconds * 1e6);
+            gpuMicros += static_cast<uint64_t>(timing.gpuSeconds * 1e6);
+            requests += inputs.size(); ++batchCount;
+            maximumBatch = std::max(maximumBatch.load(), static_cast<uint32_t>(inputs.size()));
+            for (size_t index : selectedRequests) pending.at(batch[index].request.requestId).phase = "running";
+          }
           for (size_t slot = 0; slot < selectedRequests.size(); ++slot) {
             auto &item = batch[selectedRequests[slot]]; auto &r = item.request;
             bool cancellation = isCancelled(r.requestId);
@@ -258,7 +303,8 @@ int serveEncoder(int argc, char **argv, const std::filesystem::path &metallib, s
         if constexpr (std::is_same_v<T, protocol::RequestFrame>) {
           std::lock_guard lock(mutex);
           if (!loaded || pending.size() >= 4 || pending.contains(message.requestId)) { error(message.requestId, "encoder is not ready, full, or request id is repeated"); return; }
-          pending.insert(message.requestId); ++active; queue.push_back({std::move(message), micros()}); ready.notify_one();
+          pending.emplace(message.requestId, ActiveRequest{message.promptTokens.size()}); ++active;
+          queue.push_back({std::move(message), micros()}); ready.notify_one();
         } else if constexpr (std::is_same_v<T, protocol::CancelFrame> || std::is_same_v<T, protocol::StopFrame>) {
           std::lock_guard lock(mutex); if (pending.contains(message.requestId)) cancelled.insert(message.requestId);
         } else if constexpr (std::is_same_v<T, protocol::StatusRequestFrame> ||

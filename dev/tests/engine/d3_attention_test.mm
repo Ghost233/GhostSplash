@@ -8,7 +8,7 @@
 #include <limits>
 using namespace splash;
 using namespace splash::test;
-void check(metal::MetalBackend &b,uint32_t n,uint32_t heads,bool selected,bool nonuniform=false) {
+void check(metal::MetalBackend &b,uint32_t n,uint32_t heads,bool selected,bool nonuniform=false,bool causal=false) {
   const uint32_t stride=ops::D3::storageRows(n), kv=heads/4;
   auto allocate=[&](uint64_t bytes){auto r=b.allocateBuffer(bytes,metal::BufferStorage::Shared,"d3-test");std::memset(r.contents(),0,bytes);return r;};
   auto q=allocate(uint64_t{stride}*heads*256*2), k=allocate(uint64_t{stride}*kv*256*2);
@@ -21,17 +21,18 @@ void check(metal::MetalBackend &b,uint32_t n,uint32_t heads,bool selected,bool n
   }
   metal::CommandGraph graph;
   ops::D3::transposeValues(graph,v,transposed,{n,stride,selected?1:n,selected?n-1:0,heads,kv});
-  ops::D3::attention(graph,q,k,transposed,out,{n,stride,selected?1:n,selected?n-1:0,heads,kv});
+  ops::D3::attention(graph,q,k,transposed,out,{n,stride,selected?1:n,selected?n-1:0,heads,kv,0,uint32_t(causal)});
   static_cast<void>(b.submitCommandAsync(graph.command()).wait());
   const auto *actual=static_cast<const uint16_t *>(out.contents());
   for(uint32_t h=0;h<heads;++h) for(uint32_t t=0;t<(selected?1:n);++t) {
     uint32_t query=selected?n-1:t; double maximum=-INFINITY, sum=0;
     auto score=[&](uint32_t j){return double(bf16ToFloat(qq[(((h/4)*stride+query)*4+h%4)*256]))*bf16ToFloat(kk[((h/4)*stride+j)*256])/16;};
-    for(uint32_t j=0;j<n;++j) maximum=std::max(maximum,score(j));
-    for(uint32_t j=0;j<n;++j) sum+=std::exp(score(j)-maximum);
+    const uint32_t visible=causal?query+1:n;
+    for(uint32_t j=0;j<visible;++j) maximum=std::max(maximum,score(j));
+    for(uint32_t j=0;j<visible;++j) sum+=std::exp(score(j)-maximum);
     for(uint32_t c=0;c<256;++c) {
       double expected=0;
-      for(uint32_t j=0;j<n;++j) {
+      for(uint32_t j=0;j<visible;++j) {
         double exponent=std::exp(score(j)-maximum);
         expected+=bf16ToFloat(floatToBf16(float(exponent)))*bf16ToFloat(vv[((h/4)*256+c)*stride+j]);
       }
@@ -40,7 +41,7 @@ void check(metal::MetalBackend &b,uint32_t n,uint32_t heads,bool selected,bool n
       require(value>=bf16ToFloat(floatToBf16(float(expected-error))) && value<=bf16ToFloat(floatToBf16(float(expected+error))),"D3 noncausal attention outside FP64 mixed-precision bound n="+std::to_string(n)+" heads="+std::to_string(heads)+" selected="+std::to_string(selected)+" h="+std::to_string(h)+" t="+std::to_string(t)+" c="+std::to_string(c)+" got="+std::to_string(value)+" expected="+std::to_string(expected));
     }
   }
-  std::cout<<"D3 FP64 attention n="<<n<<" heads="<<heads<<" selected="<<selected<<" nonuniform="<<nonuniform<<" PASS\n";
+  std::cout<<"D3 FP64 attention n="<<n<<" heads="<<heads<<" selected="<<selected<<" nonuniform="<<nonuniform<<" causal="<<causal<<" PASS\n";
 }
 void quantized(metal::MetalBackend &b,uint32_t heads) {
   const uint32_t n=37, stride=ops::D3::storageRows(n), kv=heads/4;
@@ -74,6 +75,6 @@ void quantized(metal::MetalBackend &b,uint32_t heads) {
 }
 int main(int argc,char **argv){
   if(argc!=2)return 2;
-  try{metal::MetalBackend b(argv[1]);for(uint32_t heads:{8,16}){for(uint32_t n:{1,37,128,129})for(bool selected:{false,true})check(b,n,heads,selected);check(b,128,heads,false,true);check(b,2049,heads,true);quantized(b,heads);}}
+  try{metal::MetalBackend b(argv[1]);for(uint32_t heads:{8,16}){for(uint32_t n:{1,37,128,129})for(bool selected:{false,true})for(bool causal:{false,true})check(b,n,heads,selected,true,causal);check(b,128,heads,false,true);check(b,2049,heads,true);quantized(b,heads);}}
   catch(const std::exception &e){std::cerr<<e.what()<<'\n';return 1;}return 0;
 }

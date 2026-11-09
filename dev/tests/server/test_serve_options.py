@@ -609,7 +609,7 @@ class ServeOptionsTests(unittest.TestCase):
                     self.assertEqual(command[index + 1], "on")
                 else:
                     self.assertNotIn("--experimental-quantized-ffn", command)
-            for decision_type in ("laya", "vllm-d3", "kev"):
+            for decision_type in ("laya", "vllm-d3", "h2o-lightning", "kev"):
                 args.decision_type = decision_type
                 args.kv_format = "q4h"
                 if setting == "on":

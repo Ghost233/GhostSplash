@@ -849,14 +849,18 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
   else throw std::invalid_argument("unsupported vision source format: " + std::string(visionFormat));
   const bool smallDense = type == Qwen3_5_4BLayout::modelType && targetSource == TargetSource::Gguf &&
       [text[@"hidden_size"] doubleValue] == 2560 && [text[@"num_hidden_layers"] doubleValue] == 32;
+  const bool startLux = [config[@"systemone_config"][@"type"] isEqual:@"startlux-autothink"];
+  if (startLux && (!smallDense || draft || config[@"decision_config"] || visionSource == VisionSource::Safetensors))
+    throw std::invalid_argument("StartLux AutoThink requires a Qwen3.5-4B GGUF without a draft");
   const bool kev08 = type == Qwen3_5_0_8BLayout::modelType && targetSource == TargetSource::Gguf &&
       config[@"decision_config"] && [text[@"hidden_size"] doubleValue] == 1024 &&
       [text[@"num_hidden_layers"] doubleValue] == 24;
   if (smallDense) {
-    if (visionSource != VisionSource::None)
+    if (visionSource != VisionSource::None && !startLux)
       throw std::invalid_argument("Qwen3.5-4B currently requires a text-only target");
     if (draft) target = Qwen3_5_4BDFlashLayout{};
     else target = Qwen3_5_4BLayout{};
+    if (startLux) std::get<Qwen3_5_4BLayout>(*target).family = "Lodestar-AutoThink";
   }
   if (kev08) target = Qwen3_5_0_8BLayout{};
   if (config[@"decision_config"]) {
@@ -885,7 +889,7 @@ ModelDescriptor describeSourceModel(std::string name, std::string_view targetFor
     if (draft) dflashLayout = readDraftLayout(draft, layout);
   }, *target);
   ModelDescriptor result = makeModelDescriptor(std::move(name), *target, dflashLayout,
-                                               {.outputHiddenSize = std::visit(
+                                               startLux ? ops::kQwen4BVision : ops::VisionLayout{.outputHiddenSize = std::visit(
                                                     [](const auto &layout) { return layout.hiddenSize; }, *target)},
                                                targetSource, visionSource);
   if (result.hasVision())
@@ -940,7 +944,8 @@ bool ModelDescriptor::valid() const noexcept {
       (hasDraft() && vision.outputHiddenSize != draft.hiddenSize) ||
       (!hasDraft() && ((!std::holds_alternative<Qwen3_5_4BLayout>(target) &&
                        !std::holds_alternative<Qwen3_5_0_8BLayout>(target)) ||
-                      draft != DFlashDraftLayout{} || hasVision()))) {
+                      draft != DFlashDraftLayout{} || (hasVision() &&
+                       (family() != "Lodestar-AutoThink" || vision != ops::kQwen4BVision))))) {
     return false;
   }
   return std::visit(
@@ -1002,7 +1007,7 @@ std::vector<FamilyFacts> familyFacts() {
   const auto compact = Qwen3_5_4BLayout{}.nativeContextTokens;
   facts.push_back({.family = "Kev-4B", .recurrentState = true, .denseFfn = true,
                    .contextTokens = compact, .maximumContextTokens = compact});
-  for (const std::string_view family : {"D3-lite", "D3-mini"})
+  for (const std::string_view family : {"D3-lite", "D3-mini", "H2O-Lightning-4B", "PPLX-Decider-Flash", "Lodestar-AutoThink"})
     facts.push_back({.family = family, .recurrentState = true, .denseFfn = true,
                      .contextTokens = compact, .maximumContextTokens = compact});
   for (const std::string_view family : {"Julia-1", "Laya"})
@@ -1035,13 +1040,17 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
   @autoreleasepool {
     NSDictionary *target = readObject(config, "upstream model config");
     NSDictionary *text = target[@"text_config"];
-    if ([target[@"decision_config"][@"type"] isEqual:@"vllm-d3"]) {
-      if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufHeaders)
-        throw std::invalid_argument("D3 requires text-only GGUF without a draft");
+    const bool h2o = [target[@"decision_config"][@"type"] isEqual:@"h2o-lightning"];
+    const bool pplx = [target[@"decision_config"][@"type"] isEqual:@"pplx-decider-v3"];
+    if (h2o || pplx || [target[@"decision_config"][@"type"] isEqual:@"vllm-d3"]) {
+      if (targetFormat != "gguf" || (visionFormat != "none" && (!pplx || visionFormat != "gguf")) || draft || !ggufHeaders)
+        throw std::invalid_argument("encoder decisions require a supported GGUF source without a draft");
       QwenHybridLayout geometry{[text[@"hidden_size"] doubleValue] == 1024
           ? static_cast<QwenTargetDimensions>(Qwen3_5_0_8BLayout{})
           : static_cast<QwenTargetDimensions>(Qwen3_5_4BLayout{}), "D3"};
       geometry.decisionHeadSize = 256;
+      if ((h2o || pplx) && geometry.hiddenSize != 2560)
+        throw std::invalid_argument("this decision model requires Qwen3.5-4B");
       validateTextConfig(text, geometry, TargetSource::Gguf);
       NSDictionary *decision = target[@"decision_config"];
       requireNumbers(decision, "D3", "decision config", {{"head_size", 256}});
@@ -1055,7 +1064,15 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
       }
       const OpenGguf headers(findTargetGgufs(*ggufHeaders), GgufContents::Headers);
       gguf::requireMetadata(headers.file(), "qwen35", geometry);
-      return geometry.hiddenSize == 1024 ? "D3-lite" : "D3-mini";
+      if (pplx) {
+        if (headers.file().metadata().unsignedValue("pplx_decider.protocol_version") != 3 ||
+            requireWhole(decision[@"marker_token_id"], "PPLX marker token id") >= geometry.vocabularySize)
+          throw std::invalid_argument("PPLX config does not match the GGUF readout protocol");
+        if (visionFormat == "gguf")
+          validateVisionConfig(requireObject(target, @"vision_config", "vision config"), ops::kQwen4BVision, TargetSource::Gguf);
+        return "PPLX-Decider-Flash";
+      }
+      return h2o ? "H2O-Lightning-4B" : geometry.hiddenSize == 1024 ? "D3-lite" : "D3-mini";
     }
     if ([text[@"model_type"] isEqual:@"modernbert_text"]) {
       if (targetFormat != "gguf" || visionFormat != "none" || draft || !ggufHeaders)
@@ -1084,6 +1101,9 @@ std::string_view inspectSourceConfiguration(std::string_view targetFormat, std::
     if (descriptor.targetSource == TargetSource::Gguf) {
       if (!ggufHeaders) throw std::invalid_argument("a GGUF target is checked with its headers");
       const OpenGguf headers(findTargetGgufs(*ggufHeaders), GgufContents::Headers);
+      if (descriptor.family() == "Lodestar-AutoThink" &&
+          headers.file().metadata().stringValue("general.name") != "StartLux-Decision-v1.1-4B-AutoThink")
+        throw std::invalid_argument("StartLux configuration does not match the GGUF name");
       std::visit(
           [&](const auto &layout) {
             static_cast<void>(gguf::planImages(headers.file(), layout.ggufArchitecture, layout));

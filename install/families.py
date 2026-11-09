@@ -74,6 +74,9 @@ FAMILIES = (
     ModelFamily("Kev-0.8B", None, QWEN, QWEN_SAMPLING, vision=False),
     ModelFamily("D3-lite", None, QWEN, QWEN_SAMPLING, vision=False),
     ModelFamily("D3-mini", None, QWEN, QWEN_SAMPLING, vision=False),
+    ModelFamily("H2O-Lightning-4B", None, QWEN, QWEN_SAMPLING, vision=False),
+    ModelFamily("PPLX-Decider-Flash", None, QWEN, QWEN_SAMPLING),
+    ModelFamily("Lodestar-AutoThink", None, QWEN, QWEN_SAMPLING),
     ModelFamily("Julia-1", None, QWEN, QWEN_SAMPLING, vision=False),
     ModelFamily("Laya", None, QWEN, QWEN_SAMPLING, vision=False),
     ModelFamily("Qwen3.8-27B", "incoai/Qwen3.8-27B-DFlash2", QWEN, QWEN_SAMPLING),
@@ -96,7 +99,18 @@ FAMILIES = (
 )
 
 NO_DRAFT_FAMILIES = frozenset(
-    {"Qwen3.5-4B", "Kev-4B", "Kev-0.8B", "D3-lite", "D3-mini", "Julia-1", "Laya"}
+    {
+        "Qwen3.5-4B",
+        "Kev-4B",
+        "Kev-0.8B",
+        "D3-lite",
+        "D3-mini",
+        "H2O-Lightning-4B",
+        "PPLX-Decider-Flash",
+        "Lodestar-AutoThink",
+        "Julia-1",
+        "Laya",
+    }
 )
 
 

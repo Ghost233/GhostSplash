@@ -21,11 +21,6 @@ using namespace metal;
 using namespace mpp::tensor_ops;
 
 constant ushort kVisionHeads = 16;
-constant ushort kVisionHeadDim = 72;
-// Q/K are stored padded to 80 dims (matmul K extents must be multiples of
-// 16); the zeroed tail contributes nothing to the dot products.
-constant ushort kVisionQkDim = 80;
-constant ushort kVisionHidden = 1152;
 constant ushort kVisionPatch = 16;
 constant ushort kVisionMerge = 2;
 constant ushort kVisionPatchDim = 1536;  // 3 channels x 2 temporal x 16 x 16
@@ -87,6 +82,7 @@ inline void vision_bilinear_taps(uint index, uint size, thread uint *tap,
     }
 }
 
+template <ushort kVisionHeadDim>
 kernel void vision_prepare_positions(
     device const bfloat *table [[buffer(0)]],
     device float *hidden [[buffer(1)]],
@@ -96,6 +92,7 @@ kernel void vision_prepare_positions(
     uint token [[threadgroup_position_in_grid]],
     uint thread_index [[thread_index_in_threadgroup]])
 {
+    constexpr ushort kVisionHidden = kVisionHeads * kVisionHeadDim;
     device float *out = hidden + ulong(token) * kVisionHidden;
     // The padding rows of the last GEMM tile start each image from zero: the
     // residual GEMMs add to these rows in place, and the constructor's memset
@@ -134,6 +131,11 @@ kernel void vision_prepare_positions(
         rope_sin[ulong(token) * kVisionHeadDim + thread_index] = sin(angle);
     }
 }
+
+using VisionPositionKernel = void (device const bfloat *, device float *, device float *, device float *, constant VisionGridParams &, uint, uint);
+template [[host_name("vision_prepare_positions")]] kernel VisionPositionKernel vision_prepare_positions<72>;
+template [[host_name("vision_prepare_positions_64")]] kernel VisionPositionKernel vision_prepare_positions<64>;
+
 
 // Dense bf16 GEMM: output[M, N] = input[M, K] * weights[N, K]^T + bias[N]
 
@@ -310,6 +312,7 @@ kernel void vision_layer_norm(
 // tokens are written as zeros so full 128-key tiles are always readable and
 // hold finite values under the softmax mask.
 
+template <ushort kVisionHeadDim>
 kernel void vision_qkv_prepare(
     device const bfloat *qkv [[buffer(0)]],
     device const float *rope_cos [[buffer(1)]],
@@ -321,6 +324,8 @@ kernel void vision_qkv_prepare(
     uint token [[threadgroup_position_in_grid]],
     uint thread_index [[thread_index_in_threadgroup]])
 {
+    constexpr ushort kVisionHidden = kVisionHeads * kVisionHeadDim;
+    constexpr ushort kVisionQkDim = (kVisionHeadDim + 15) / 16 * 16;
     constexpr ushort half_dim = kVisionHeadDim / 2;
     const bool valid = token < params.tokens;
     device const bfloat *row =
@@ -361,6 +366,11 @@ kernel void vision_qkv_prepare(
     }
 }
 
+using VisionQkvKernel = void (device const bfloat *, device const float *, device const float *, device bfloat *, device bfloat *, device bfloat *, constant VisionQkvParams &, uint, uint);
+template [[host_name("vision_qkv_prepare")]] kernel VisionQkvKernel vision_qkv_prepare<72>;
+template [[host_name("vision_qkv_prepare_64")]] kernel VisionQkvKernel vision_qkv_prepare<64>;
+
+
 // Non-causal flash attention over the per-head layout.
 // Grid: {ceil(tokens / 32), heads} of 128 threads, the query rows and threads
 // of metal/abi/Vision.h. Output: (heads, padded_tokens, 72).
@@ -375,6 +385,7 @@ kernel void vision_qkv_prepare(
 // running output, which each tile first rescales by its rows' maximum
 // change, so one M x D fp32 cooperative tensor is live.
 
+template <ushort kVisionHeadDim>
 kernel void vision_attention(
     device bfloat *queries [[buffer(0)]],
     device bfloat *keys [[buffer(1)]],
@@ -384,6 +395,7 @@ kernel void vision_attention(
     uint2 group [[threadgroup_position_in_grid]],
     uint thread_index [[thread_index_in_threadgroup]])
 {
+    constexpr ushort kVisionQkDim = (kVisionHeadDim + 15) / 16 * 16;
     constexpr ushort M = SPLASH_VISION_ATTENTION_ROWS, N = 128,
                      D = kVisionHeadDim;
     constexpr ushort DQ = kVisionQkDim;
@@ -523,8 +535,14 @@ kernel void vision_attention(
     converted.store(ot.slice<D, M>(0, 0));
 }
 
+using VisionAttentionKernel = void (device bfloat *, device bfloat *, device bfloat *, device bfloat *, constant VisionAttentionParams &, uint2, uint);
+template [[host_name("vision_attention")]] kernel VisionAttentionKernel vision_attention<72>;
+template [[host_name("vision_attention_64")]] kernel VisionAttentionKernel vision_attention<64>;
+
+
 // Gather padded attention output back to (tokens, 1152) rows.
 
+template <ushort kVisionHeadDim>
 kernel void vision_attention_gather(
     device const bfloat *padded [[buffer(0)]],
     device bfloat *output [[buffer(1)]],
@@ -532,6 +550,7 @@ kernel void vision_attention_gather(
     uint token [[threadgroup_position_in_grid]],
     uint thread_index [[thread_index_in_threadgroup]])
 {
+    constexpr ushort kVisionHidden = kVisionHeads * kVisionHeadDim;
     device bfloat *row = output + ulong(token) * kVisionHidden;
     for (uint index = thread_index; index < kVisionHidden; index += 256) {
         uint head = index / kVisionHeadDim;
@@ -541,3 +560,7 @@ kernel void vision_attention_gather(
             dim];
     }
 }
+
+using VisionGatherKernel = void (device const bfloat *, device bfloat *, constant VisionQkvParams &, uint, uint);
+template [[host_name("vision_attention_gather")]] kernel VisionGatherKernel vision_attention_gather<72>;
+template [[host_name("vision_attention_gather_64")]] kernel VisionGatherKernel vision_attention_gather<64>;

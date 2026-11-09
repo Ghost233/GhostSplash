@@ -27,6 +27,7 @@ STATUS_SCHEMA_VERSION = 8
 # final-position logit per requested token, in request order.
 MIN_SCORE_TOKENS = 2
 MAX_SCORE_TOKENS = 255
+MAX_READOUTS = 64
 # A thinking budget's end holds 1 to this many tokens.
 MAX_THINKING_END_TOKENS = 64
 # Patches per image, the most the vision encoder takes; the server's pixel
@@ -207,6 +208,7 @@ class RequestFlag(IntFlag):
     DECISION_SCORING = 1 << 2
     DECISION_SCORE_TYPE = 1 << 3
     DECISION_NOUL_TYPE = 1 << 4
+    INLINE_READOUTS = 1 << 5
 
 
 # A request with any other bit set is a request error.
@@ -216,6 +218,7 @@ _REQUEST_FLAG_BITS = int(
     | RequestFlag.DECISION_SCORING
     | RequestFlag.DECISION_SCORE_TYPE
     | RequestFlag.DECISION_NOUL_TYPE
+    | RequestFlag.INLINE_READOUTS
 )
 
 
@@ -306,6 +309,8 @@ class RequestFrame:
     # Only a request that generates inside a thinking block has one; a score
     # request never does.
     thinking_budget: ThinkingBudget | None = None
+    # With INLINE_READOUTS, one score row per absolute prompt position.
+    readout_positions: tuple[int, ...] = ()
 
 
 @dataclass(slots=True, frozen=True)
@@ -693,7 +698,7 @@ def _payload_bounds(frame_type: FrameType) -> tuple[int, int]:
                 _MASK_REQUEST.size + MAX_SIMULATION_TOKENS * 4,
             )
         case FrameType.DONE:
-            bounds = (_DONE.size, _DONE.size + MAX_SCORE_TOKENS * 4)
+            bounds = (_DONE.size, _DONE.size + MAX_READOUTS * MAX_SCORE_TOKENS * 4)
         case FrameType.ERROR:
             bounds = (_ERROR.size, _ERROR.size + MAX_ERROR_STRING_BYTES * 2)
         case FrameType.STATUS_JSON:
@@ -758,7 +763,7 @@ def _image_spans_check(request: RequestFrame, prompt_tokens: int) -> None:
 
 def _validated_request(
     request: RequestFrame,
-) -> tuple[array.array, array.array, tuple, array.array]:
+) -> tuple[array.array, array.array, tuple, array.array, array.array]:
     """The request's prompt and score words as uint32 arrays, its float32
     sampling block and its thinking end words, each checked once; raises a
     ProtocolError with the first rule the request breaks."""
@@ -829,8 +834,25 @@ def _validated_request(
             or scores[-1] >= len(prompt) - 1
         ):
             raise ValueError("decision positions must be ordered before the query")
-        if scores and (request.image_spans or request.image_pixels):
-            raise ValueError("score requests are text-only")
+        if flags & RequestFlag.DECISION_SCORING and request.image_spans:
+            raise ValueError("option-position score requests are text-only")
+        readouts = (
+            array.array("I")
+            if request.readout_positions == ()
+            else _words(request.readout_positions, "inline readout positions")
+        )
+        if bool(readouts) != bool(flags & RequestFlag.INLINE_READOUTS) or (
+            readouts
+            and (
+                not scores
+                or generation
+                or flags & RequestFlag.DECISION_SCORING
+                or len(readouts) > MAX_READOUTS
+                or readouts[-1] >= len(prompt)
+                or list(readouts) != sorted(set(readouts))
+            )
+        ):
+            raise ValueError("invalid inline readout positions")
         if scores and (
             len(scores) < MIN_SCORE_TOKENS
             or len(scores) > MAX_SCORE_TOKENS
@@ -907,7 +929,7 @@ def _validated_request(
         _integer(request.cache_salt, 0, (1 << 128) - 1, "cache salt")
     except ValueError as error:
         _fail_request(IssueCode.INTEGER_OVERFLOW, str(error), request_id)
-    return prompt, scores, sampling, end
+    return prompt, scores, sampling, end, readouts
 
 
 def _mask_payload(values):
@@ -930,13 +952,14 @@ def _frame(frame_type: FrameType, payload_bytes: int) -> bytearray:
 def _request_frame(request: RequestFrame) -> bytearray:
     """The whole request frame, header included, in one buffer that each part
     is copied into once: image pixels run to hundreds of MiB."""
-    prompt, scores, sampling, end = _validated_request(request)
+    prompt, scores, sampling, end, readouts = _validated_request(request)
     prompt_offset = FRAME_HEADER_BYTES + _REQUEST.size
     spans_offset = prompt_offset + 4 * len(prompt)
     pixels_offset = spans_offset + _IMAGE_SPAN.size * len(request.image_spans)
     scores_offset = pixels_offset + len(request.image_pixels)
     end_offset = scores_offset + 4 * len(scores)
-    payload_bytes = end_offset + 4 * len(end) - FRAME_HEADER_BYTES
+    readouts_offset = end_offset + 4 * len(end)
+    payload_bytes = readouts_offset + 4 * len(readouts) - FRAME_HEADER_BYTES
     if issue := _payload_length_issue(FrameType.REQUEST, payload_bytes):
         _fail_request(issue.code, issue.message, request.request_id)
     frame = _frame(FrameType.REQUEST, payload_bytes)
@@ -984,7 +1007,8 @@ def _request_frame(request: RequestFrame) -> bytearray:
         view[prompt_offset:spans_offset] = memoryview(prompt).cast("B")
         view[pixels_offset:scores_offset] = request.image_pixels
         view[scores_offset:end_offset] = memoryview(scores).cast("B")
-        view[end_offset:] = memoryview(end).cast("B")
+        view[end_offset:readouts_offset] = memoryview(end).cast("B")
+        view[readouts_offset:] = memoryview(readouts).cast("B")
     return frame
 
 
@@ -1057,7 +1081,7 @@ _UNFINGERPRINTED = frozenset(
         "image_pixels",
     }
 )
-_TOKEN_FIELDS = frozenset({"prompt_tokens", "score_tokens"})
+_TOKEN_FIELDS = frozenset({"prompt_tokens", "score_tokens", "readout_positions"})
 
 
 def request_fingerprint(request: RequestFrame) -> bytes:
@@ -1068,6 +1092,8 @@ def request_fingerprint(request: RequestFrame) -> bytes:
         if field.name in _UNFINGERPRINTED:
             continue
         value = getattr(request, field.name)
+        if field.name == "readout_positions" and not value:
+            continue
         if field.name in _TOKEN_FIELDS:
             digest.update(f"{field.name}:{len(value)}:".encode())
             digest.update(array.array("I", value))

@@ -1,5 +1,6 @@
 #pragma once
 #include "metal/MetalBackend.hpp"
+#include "model/Model.hpp"
 #include <filesystem>
 #include <memory>
 #include <span>
@@ -9,6 +10,9 @@ namespace splash::model {
 struct ModernBertInput {
   std::span<const uint32_t> tokens, options;
   uint32_t kind = 0;
+  std::span<const uint32_t> readoutPositions{};
+  std::span<const ImageSpan> images{};
+  std::span<const uint8_t> pixels{};
 };
 
 // Bidirectional decision encoder. No causal KV or recurrent prefix state.

@@ -118,6 +118,7 @@ FrameType write(Writer &out, const RequestFrame &request) {
   out.raw(request.imagePixels);
   out.words(request.scoreTokens);
   out.words(thinking.end);
+  out.words(request.readoutPositions);
   return FrameType::Request;
 }
 

@@ -8,8 +8,8 @@
 
 namespace splash::ops {
 
-// A vision tower's geometry. The defaults are the one tower the kernels are
-// specialized for, Qwen3.5's 27 blocks; outputHiddenSize, the width of the
+// A vision tower's geometry. The defaults are Qwen3.5's 27-block tower;
+// outputHiddenSize, the width of the
 // text model its merger projects into, is each family's, stated beside its
 // target (Qwen3_8.hpp, Qwen3_6Moe.hpp).
 struct VisionLayout final {
@@ -28,6 +28,11 @@ struct VisionLayout final {
 
   bool operator==(const VisionLayout &) const = default;
 };
+
+inline constexpr VisionLayout kQwen4BVision{
+    .depth = 24, .hiddenSize = 1024, .intermediateSize = 4096,
+    .paddedIntermediateSize = 4096, .mergedHiddenSize = 4096,
+    .outputHiddenSize = 2560, .headDimension = 64};
 
 struct VisionAffine final {
   metal::MetalBuffer weight;

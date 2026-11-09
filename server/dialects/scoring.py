@@ -40,6 +40,7 @@ import string
 import weakref
 from dataclasses import dataclass
 
+from .. import protocol as wire
 from .. import request_fields
 from ..chat_format import THINK_END, THINK_START
 from ..chat_templates import render_chat_template, template_options
@@ -655,6 +656,9 @@ def post_judgments(exchange, body, deadline):
 def post_systemone(exchange, body, deadline):
     answers = {}
     input_tokens = 0
+    scorer = exchange.app.decision_scorer
+    if getattr(scorer, "kind", None) == "startlux-autothink":
+        return scorer.respond(exchange, body, deadline)
     prefill_only = body.get("prefill_only", False)
     entries = prepare_systemone(
         exchange.app, body, deadline=deadline, disconnected=exchange.client_disconnected
@@ -687,6 +691,19 @@ def post_systemone(exchange, body, deadline):
     for qid, spec, job in entries:
         if job is None:
             answers[qid] = deterministic_answer(spec)
+            continue
+        if job.readout_positions:
+            exchange.submit(job)
+            result = await_done(exchange, job)
+            input_tokens += result.prompt_tokens
+            width = len(job.score_tokens)
+            scorer = exchange.app.decision_scorer
+            for index, (key, question) in enumerate(qid):
+                start = index * width
+                logits = result.option_logits[start : start + len(question.labels)]
+                answers[key] = scorer.answer(
+                    question, scorer.probabilities(question, logits)
+                )
             continue
         # One admitted job per HTTP request preserves the existing
         # queue bound and lets later questions reuse the state prefix.
@@ -803,11 +820,52 @@ def prepare_judgment(app, body, *, deadline, disconnected):
     return job, digest(prompt)
 
 
-def prepare_systemone(app, body, *, deadline, disconnected):
+def prepare_systemone(app, body, *, deadline, disconnected, startlux=None):
     details = []
+    kind = getattr(app.decision_scorer, "kind", None)
+    image_values = []
+    if kind in ("pplx-decider-v3", "startlux-autothink"):
+        supplied = body.get("images")
+        if supplied is not None:
+            if not isinstance(supplied, list) or any(
+                not isinstance(image, str) for image in supplied
+            ):
+                details.append(
+                    field_error(["images"], "images must be an array of base64 images")
+                )
+            elif supplied and not app.vision:
+                details.append(
+                    field_error(["images"], "this model is serving without vision")
+                )
+            elif kind == "startlux-autothink" and len(supplied) > 16:
+                details.append(
+                    field_error(["images"], "StartLux supports at most 16 images")
+                )
+            else:
+                image_values = supplied
+        if body.get("assets"):
+            details.append(field_error(["assets"], "send images in the images field"))
+    if getattr(app.decision_scorer, "kind", None) == "h2o-lightning":
+        if body.get("images") or body.get("assets"):
+            details.append(
+                field_error(["images"], "H2O currently supports text decisions only")
+            )
+        mode = body.get("attention_mode")
+        expected_mode = "causal" if app.decision_scorer.causal else "bidirectional"
+        if mode is not None and mode != expected_mode:
+            details.append(
+                field_error(
+                    ["attention_mode"],
+                    "this model uses " + expected_mode + " attention",
+                )
+            )
     prefill_only = body.get("prefill_only", False)
     if not isinstance(prefill_only, bool):
         details.append(field_error(["prefill_only"], "must be a boolean"))
+    elif prefill_only and startlux is not None:
+        details.append(
+            field_error(["prefill_only"], "StartLux scores complete questions")
+        )
     elif prefill_only and app.noncausal_scoring:
         details.append(field_error(["prefill_only"], "requires a causal model"))
     if prefill_only and body.get("stream", False) is not False:
@@ -835,6 +893,21 @@ def prepare_systemone(app, body, *, deadline, disconnected):
     total_tokens = 0
     checkpoint = _preparation_checkpoint(deadline, disconnected)
     with app.preparation(deadline):
+        media = None
+        if image_values:
+            parts = [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": value
+                        if value.startswith("data:")
+                        else "data:image/unknown;base64," + value
+                    },
+                }
+                for value in image_values
+            ]
+            images = app._prepare_images([{"content": parts}], deadline)
+            media = images, b"".join(image.pixels for image in images)
         if prefill_only:
             checkpoint()
             try:
@@ -855,6 +928,55 @@ def prepare_systemone(app, body, *, deadline, disconnected):
                     app.score_job(tokens, (), deadline, priority, cache_salt),
                 )
             ]
+        if getattr(app.decision_scorer, "kind", None) == "pplx-decider-v3":
+            checkpoint()
+            try:
+                joint = app.decision_scorer.encode_joint(
+                    state,
+                    [(qid, spec, body["questions"][qid]) for qid, spec in specs],
+                    app.max_context,
+                    image_tokens=tuple(image.tokens for image in media[0])
+                    if media
+                    else (),
+                )
+            except ValueError as error:
+                raise APIError(400, str(error)) from error
+            for questions, tokens, codes in joint:
+                checkpoint()
+                job = app.score_job(
+                    tokens, codes, deadline, priority, cache_salt, media=media
+                )
+                total_tokens += len(job.prompt_tokens)
+                if total_tokens > MAX_SYSTEMONE_TOTAL_TOKENS:
+                    raise RequestValidationError(
+                        [
+                            field_error(
+                                ["questions"],
+                                "total prepared question tokens exceed limit",
+                            )
+                        ]
+                    )
+                job.flags |= wire.RequestFlag.INLINE_READOUTS
+                job.readout_positions = tuple(
+                    i
+                    for i, token in enumerate(job.prompt_tokens)
+                    if token == app.decision_scorer.marker_id
+                )
+                jobs.append((questions, None, job))
+            return jobs
+        if startlux is not None:
+            return app.decision_scorer.prepare(
+                app,
+                state,
+                body["questions"],
+                specs,
+                startlux,
+                deadline,
+                priority,
+                cache_salt,
+                media,
+                checkpoint,
+            )
         for qid, spec in specs:
             if spec.deterministic:
                 jobs.append((qid, spec, None))
@@ -880,7 +1002,9 @@ def prepare_systemone(app, body, *, deadline, disconnected):
                         ]
                     )
                 total_tokens += len(tokens)
-                job = app.score_job(tokens, positions, deadline, priority, cache_salt)
+                job = app.score_job(
+                    tokens, positions, deadline, priority, cache_salt, media=media
+                )
                 job.flags = app.decision_scorer.flags(spec)
                 jobs.append((qid, spec, job))
                 continue

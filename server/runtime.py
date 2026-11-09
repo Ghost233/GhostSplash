@@ -222,7 +222,9 @@ class RuntimeCall:
         frame = request.frame
         self._prompt_tokens = len(frame.prompt_tokens)
         self._logical_max = frame.logical_max_output_tokens
-        self._score_tokens = len(frame.score_tokens)
+        self._score_tokens = len(frame.score_tokens) * max(
+            1, len(frame.readout_positions)
+        )
         self._return_progress = bool(frame.flags & wire.RequestFlag.RETURN_PROGRESS)
         self.fingerprint = request.fingerprint
         self.mask_provider = request.mask_provider

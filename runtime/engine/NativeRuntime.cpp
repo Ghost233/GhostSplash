@@ -217,6 +217,8 @@ bool NativeRuntime::handleRequest(protocol::RequestFrame &request) {
   // tokens, image pixels) move into the engine request. Error paths below
   // only read the request id.
   try {
+    if (!request.readoutPositions.empty())
+      throw std::invalid_argument("inline readouts require a PPLX encoder");
     EngineRequest engineRequest;
     engineRequest.id = request.requestId;
     engineRequest.priority = request.priority;

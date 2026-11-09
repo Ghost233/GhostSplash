@@ -12,7 +12,11 @@ from .tokenization import tokenizable
 
 class D3Scorer(KevScorer):
     def __init__(self, tokenizer, config):
-        if config.get("type") != "vllm-d3" or config.get("head_size") != 256:
+        self.kind = config.get("type")
+        if (
+            self.kind not in {"vllm-d3", "h2o-lightning"}
+            or config.get("head_size") != 256
+        ):
             raise ValueError("unsupported D3 configuration")
         self.codes = config["codes"]
         self.token_ids = config["token_ids"]
@@ -83,7 +87,7 @@ class D3Scorer(KevScorer):
 
     def status(self):
         return {
-            "type": "vllm-d3",
+            "type": self.kind,
             "architecture": "qwen35",
             "generation": False,
             "readout": "last token, selected vocabulary code rows",

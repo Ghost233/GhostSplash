@@ -41,10 +41,23 @@ TEXT_DENSE = UNUSABLE["Qwen3.8-27B"] | {"--language-only", "--max-image-pixels"}
 UNUSABLE.update(
     {
         name: TEXT_DENSE
-        for name in ("Qwen3.5-4B", "Kev-4B", "Kev-0.8B", "D3-lite", "D3-mini")
+        for name in (
+            "Qwen3.5-4B",
+            "Kev-4B",
+            "Kev-0.8B",
+            "D3-lite",
+            "D3-mini",
+            "H2O-Lightning-4B",
+        )
     }
 )
 UNUSABLE.update({name: TEXT_DENSE | {"--state-format"} for name in ("Julia-1", "Laya")})
+UNUSABLE.update(
+    {
+        name: UNUSABLE["Qwen3.8-27B"]
+        for name in ("PPLX-Decider-Flash", "Lodestar-AutoThink")
+    }
+)
 YARN_FAMILIES = {
     "Qwen3.8-27B",
     "Qwen3.6-35B-A3B",

@@ -48,6 +48,7 @@ std::array<uint64_t, 12> scratchLayout(const VisionLayout &layout,
   const uint64_t mergedRows = roundUp(maximumPatches / 4, kMergerRowTile);
   const uint64_t hidden = layout.hiddenSize;
   const uint64_t headRows = uint64_t{layout.heads} * padded;
+  const uint32_t qkDimension = roundUp(layout.headDimension, 16);
   return {
       rows * layout.patchDimension * kBf16Bytes,                 // Patches
       uint64_t{maximumPatches} * layout.headDimension * kFloatBytes, // RopeCos
@@ -58,8 +59,8 @@ std::array<uint64_t, 12> scratchLayout(const VisionLayout &layout,
       std::max(rows * 3 * hidden, mergedRows * layout.mergedHiddenSize) *
           kBf16Bytes,                                            // Qkv
       rows * layout.paddedIntermediateSize * kBf16Bytes,         // Intermediate
-      headRows * kQkDimension * kBf16Bytes,                      // Queries
-      headRows * kQkDimension * kBf16Bytes,                      // Keys
+      headRows * qkDimension * kBf16Bytes,                       // Queries
+      headRows * qkDimension * kBf16Bytes,                       // Keys
       headRows * layout.headDimension * kBf16Bytes,              // Values
       headRows * layout.headDimension * kBf16Bytes,              // Attention
       rows * hidden * kBf16Bytes,                                // Context
@@ -71,9 +72,10 @@ void requireLayout(const VisionLayout &layout) {
   // projection width varies with the text model.
   VisionLayout tower = layout;
   tower.outputHiddenSize = kTower.outputHiddenSize;
-  if (tower != kTower || !layout.outputHiddenSize || layout.outputHiddenSize % kMergerColumnTile) {
+  if (layout != kQwen4BVision &&
+      (tower != kTower || !layout.outputHiddenSize || layout.outputHiddenSize % kMergerColumnTile)) {
     throw std::invalid_argument(
-        "vision kernels are specialized for the Qwen3.5 27-block tower");
+        "unsupported Qwen vision tower layout");
   }
 }
 
@@ -178,6 +180,7 @@ void Vision::encode(CommandGraph &graph, ImageGrid grid,
                     const MetalBuffer &pixels,
                     const MetalBuffer &embeddings) const {
   const VisionLayout &layout = model_.layout;
+  const bool compact = layout == kQwen4BVision;
   if (!grid.valid() || grid.patches() > maximumPatches_) {
     throw std::invalid_argument("image grid exceeds the vision encoder");
   }
@@ -200,7 +203,7 @@ void Vision::encode(CommandGraph &graph, ImageGrid grid,
   graph.add("vision_patchify", {pixels, scratch(Scratch::Patches)}, gridParams,
             {tokens, 1, 1});
   // The positions start the residual stream the patch embedding adds to.
-  graph.add("vision_prepare_positions",
+  graph.add(compact ? "vision_prepare_positions_64" : "vision_prepare_positions",
             {model_.positionTable, hidden, scratch(Scratch::RopeCos),
              scratch(Scratch::RopeSin)},
             gridParams, {roundUp(tokens, kGemmRowTile), 1, 1});
@@ -215,12 +218,12 @@ void Vision::encode(CommandGraph &graph, ImageGrid grid,
             kGemmColumnTile);
     // Padded key tokens are zeroed by the prepare pass so every 128-key tile
     // is finite under the softmax mask.
-    graph.add("vision_qkv_prepare",
+    graph.add(compact ? "vision_qkv_prepare_64" : "vision_qkv_prepare",
               {qkv, scratch(Scratch::RopeCos), scratch(Scratch::RopeSin),
                scratch(Scratch::Queries), scratch(Scratch::Keys),
                scratch(Scratch::Values)},
               qkvParams, {padded, 1, 1});
-    graph.add("vision_attention",
+    graph.add(compact ? "vision_attention_64" : "vision_attention",
               {scratch(Scratch::Queries), scratch(Scratch::Keys),
                scratch(Scratch::Values), scratch(Scratch::Attention)},
               attentionParams,
@@ -228,7 +231,7 @@ void Vision::encode(CommandGraph &graph, ImageGrid grid,
                    SPLASH_VISION_ATTENTION_ROWS,
                layout.heads, 1},
               {SPLASH_VISION_ATTENTION_THREADS, 1, 1});
-    graph.add("vision_attention_gather", {scratch(Scratch::Attention), context},
+    graph.add(compact ? "vision_attention_gather_64" : "vision_attention_gather", {scratch(Scratch::Attention), context},
               qkvParams, {tokens, 1, 1});
     addGemm(graph, "vision_gemm_m64n128_residual", context, block.projection, hidden,
             hidden, layout.hiddenSize, layout.hiddenSize, tokens, kGemmRowTile,

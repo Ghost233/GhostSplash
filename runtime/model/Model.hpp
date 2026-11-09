@@ -640,6 +640,7 @@ struct ExecutionLimits final {
   // 2..255 distinct token ids and returns their raw final-position logits.
   static constexpr uint32_t minimumScoreOptions = 2;
   static constexpr uint32_t maximumScoreOptions = 255;
+  static constexpr uint32_t maximumScoreReadouts = 64;
 };
 
 static_assert(ExecutionLimits::draftQueryRows ==

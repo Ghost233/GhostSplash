@@ -33,7 +33,7 @@ int main(int argc,char **argv) {
     auto alloc=[&](uint64_t bytes){if(!bytes)return metal::MetalBuffer{};auto b=backend.allocateBuffer(bytes,metal::BufferStorage::Shared,"d3-head-test");std::memset(b.contents(),0,bytes);return b;};
     auto input=alloc(uint64_t{plan.storageRows()}*geometry.hiddenSize*2), output=alloc(uint64_t{plan.storageRows()}*256*4);
     ops::LinearScratch scratch{alloc(need.input),alloc(need.sums),alloc(need.partials),alloc(need.counters),alloc(need.rotated)};
-    const auto &tensor=file.require("output.weight");uint64_t rowBytes=tensor.bytes/tensor.rows();
+    const auto &tensor=file.require(file.find("output.weight")?"output.weight":"token_embd.weight");uint64_t rowBytes=tensor.bytes/tensor.rows();
     auto format=gguf_reference::Fmt(gguf_format_of(tensor.type));std::vector<uint8_t> raw(rowBytes);std::vector<float> x(geometry.hiddenSize),w(x.size());
     uint64_t checked=0;double maximumError=0;
     for(uint32_t sample=0;sample<8;++sample){

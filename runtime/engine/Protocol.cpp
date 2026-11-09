@@ -301,16 +301,20 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
     return invalid(IssueCode::InvalidEnumValue,
                    "constraint mode is not defined by native protocol");
   }
-  if (request.flags & ~(kRequestFlagBits | kReturnProgressFlag)) {
-    return invalid(IssueCode::InvalidEnumValue,
-                   "request flags are not defined by native protocol");
-  }
   if (!request.absoluteDeadlineUnixMicros || !request.remainingDeadlineMicros) {
     return invalid(IssueCode::InvalidDeadline,
                    "absolute and remaining deadlines must be non-zero");
   }
   const bool scoring = !request.scoreTokens.empty();
   const bool decision = request.flags & RequestDecisionScoring;
+  const bool inlineReadouts = request.flags & kInlineReadoutsFlag;
+  const auto &positions = request.readoutPositions;
+  if (inlineReadouts && (!scoring || decision || positions.empty() ||
+      positions.size() > kMaximumReadouts || request.generationPromptTokens ||
+      positions.back() >= request.promptTokens.size() ||
+      !std::is_sorted(positions.begin(), positions.end()) ||
+      std::adjacent_find(positions.begin(), positions.end()) != positions.end()))
+    return invalid(IssueCode::InvalidCount, "invalid inline readout positions");
   const uint32_t encoderType = request.flags & (RequestDecisionScoreType | RequestDecisionNoulType);
   if (encoderType && (!decision || encoderType == (RequestDecisionScoreType | RequestDecisionNoulType)))
     return invalid(IssueCode::InvalidEnumValue, "encoder question-type flags require a single decision type");
@@ -344,7 +348,7 @@ std::optional<ProtocolIssue> validateRequest(const RequestFrame &request,
                    "generation prompt must leave a prompt token");
   }
   if (scoring) {
-    if (!request.imageSpans.empty()) {
+    if (decision && !request.imageSpans.empty()) {
       return invalid(IssueCode::InvalidCount,
                      "score requests are text-only");
     }
@@ -527,9 +531,9 @@ std::optional<ProtocolIssue> validateDone(const DoneEvent &event) {
   }
   if (!event.optionLogits.empty()) {
     if (event.optionLogits.size() < ExecutionLimits::minimumScoreOptions ||
-        event.optionLogits.size() > ExecutionLimits::maximumScoreOptions) {
+        event.optionLogits.size() > kMaximumReadouts * ExecutionLimits::maximumScoreOptions) {
       return invalidEvent(IssueCode::InvalidCount, event.requestId,
-                          "done option logit count must be in [2, 255]");
+                          "done option logit count exceeds the score readout limit");
     }
     if (event.reason != EngineFinishReason::Stop ||
         event.completionTokens != 0 || event.decodeMicros != 0 ||
@@ -784,6 +788,11 @@ ProtocolResult<ClientMessage> decodeRequest(std::vector<uint8_t> &&payload,
   }
   request.priority = static_cast<RequestPriority>(priority);
   request.constraint = static_cast<ConstraintMode>(constraint);
+  if (request.flags & ~(kRequestFlagBits | kReturnProgressFlag | kInlineReadoutsFlag)) {
+    return failure<ClientMessage>(
+        requestIssue(IssueCode::InvalidEnumValue, request.requestId,
+                     "request flags are not defined by native protocol"));
+  }
   if (thinking.tokens == kNoThinkingBudget &&
       (thinkingEndCount || thinking.alsoEnds))
     return failure<ClientMessage>(
@@ -829,10 +838,16 @@ ProtocolResult<ClientMessage> decodeRequest(std::vector<uint8_t> &&payload,
   const size_t pixelsOffset = payload.size() - reader.remaining();
   const uint64_t wordBytes =
       (uint64_t{scoreCount} + thinkingEndCount) * sizeof(uint32_t);
-  if (reader.remaining() != pixelBytes + wordBytes ||
+  const uint64_t remaining = reader.remaining();
+  const uint64_t readoutBytes = remaining >= pixelBytes && remaining - pixelBytes >= wordBytes
+      ? remaining - pixelBytes - wordBytes : 0;
+  if ((request.flags & kInlineReadoutsFlag
+           ? readoutBytes == 0 || readoutBytes % 4 || readoutBytes / 4 > kMaximumReadouts
+           : readoutBytes != 0) ||
       !reader.skip(pixelBytes) ||
       !reader.words(scoreCount, request.scoreTokens) ||
-      !reader.words(thinkingEndCount, thinking.end)) {
+      !reader.words(thinkingEndCount, thinking.end) ||
+      !reader.words(readoutBytes / 4, request.readoutPositions) || reader.remaining()) {
     return failure<ClientMessage>(
         requestIssue(IssueCode::InvalidPayloadLength, request.requestId,
                      "image pixel, score or thinking end payload does not "

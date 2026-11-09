@@ -196,6 +196,9 @@ def _well_formed(record):
                     "Kev-0.8B",
                     "D3-lite",
                     "D3-mini",
+                    "H2O-Lightning-4B",
+                    "PPLX-Decider-Flash",
+                    "Lodestar-AutoThink",
                     "Julia-1",
                     "Laya",
                 }

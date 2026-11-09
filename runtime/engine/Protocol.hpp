@@ -140,8 +140,10 @@ validateLimits(const ProtocolLimits &limits);
 //  106 u32 thinking end token count, u32 thinkingBudget.alsoEnds, zero
 //      without a budget
 // then the prompt tokens, the 32-byte image spans, the image pixels, the
-// score tokens and the thinking end tokens.
+// score tokens, thinking end tokens and, with kInlineReadoutsFlag,
+// one to 64 ordered u32 readout positions inferred from the remaining bytes.
 inline constexpr uint64_t kRequestFixedBytes = 114;
+inline constexpr uint32_t kMaximumReadouts = model::ExecutionLimits::maximumScoreReadouts;
 inline constexpr uint32_t kNoThinkingBudget = 0xFFFFFFFFU;
 // A thinking budget's end holds 1 to this many tokens.
 inline constexpr uint32_t kMaximumThinkingEndTokens = 64;
@@ -149,7 +151,8 @@ inline constexpr uint32_t kMaximumThinkingEndTokens = 64;
 // The request flags word holds the RequestFlag bits and this one, which asks
 // for PromptProgressEvents while the prompt prefills.
 inline constexpr uint32_t kReturnProgressFlag = 1U << 1;
-static_assert(!(kReturnProgressFlag & kRequestFlagBits));
+inline constexpr uint32_t kInlineReadoutsFlag = 1U << 5;
+static_assert(!((kReturnProgressFlag | kInlineReadoutsFlag) & kRequestFlagBits));
 
 struct RequestFrame {
   uint64_t requestId = 0;
@@ -174,8 +177,10 @@ struct RequestFrame {
   ConstraintMode constraint = ConstraintMode::None;
   // Empty selects ordinary generation. Nonempty selects score-only mode:
   // 2..255 distinct token ids, logicalMaxOutputTokens must be zero, and the
-  // request must be text-only, unconstrained, and greedy.
+  // request must be unconstrained and greedy.
   std::vector<uint32_t> scoreTokens{};
+  // Score the same vocabulary ids at each position, in row-major order.
+  std::vector<uint32_t> readoutPositions{};
   // Trailing prompt tokens of the chat template's generation prompt; zero
   // when unknown. It must leave at least one prompt token.
   uint32_t generationPromptTokens = 0;

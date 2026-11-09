@@ -33,10 +33,13 @@ from .errors import (
     field_error,
     remaining_request_time,
 )
+from .h2o import H2OScorer
 from .latency import LatencyMetrics
 from .metrics import is_finite_number
 from .modernbert import ModernBertScorer
 from .output import MAX_STOP_CHARACTERS
+from .pplx import PplxScorer
+from .startlux import StartLuxScorer
 from .tokenization import PromptTokenizer, tokenizable
 from .tool_schema import (
     ToolPolicy,
@@ -185,6 +188,7 @@ class Frontend:
         announce_served_name=False,
         default_reasoning_effort=None,
         decision_config=None,
+        systemone_config=None,
         default_thinking_token_budget=None,
         sampling_defaults=None,
     ):
@@ -199,13 +203,19 @@ class Frontend:
         self.tokenizer = tokenizer
         self.decision_scorer = (
             (
-                D3Scorer(tokenizer, decision_config)
+                PplxScorer(tokenizer, decision_config)
+                if decision_config.get("type") == "pplx-decider-v3"
+                else D3Scorer(tokenizer, decision_config)
                 if decision_config.get("type") == "vllm-d3"
+                else H2OScorer(tokenizer, decision_config)
+                if decision_config.get("type") == "h2o-lightning"
                 else ModernBertScorer(tokenizer, decision_config)
                 if decision_config.get("type") == "laya"
                 else kev.KevScorer(tokenizer, decision_config)
             )
             if decision_config is not None
+            else StartLuxScorer(tokenizer, systemone_config)
+            if systemone_config is not None
             else None
         )
         # Probed at startup; requests choose among these, never the
@@ -252,7 +262,10 @@ class Frontend:
                 raise ValueError(f"invalid sampling default {name}={value!r}")
         self.request_timeout = request_timeout
         self.constraint_factory = constraint_factory
-        self.max_image_pixels = max_image_pixels
+        model_pixel_limit = (decision_config or {}).get("max_pixels", max_image_pixels)
+        if systemone_config is not None:
+            model_pixel_limit = 1 << 20
+        self.max_image_pixels = min(max_image_pixels, model_pixel_limit)
         self.images = image_input.ImageCache()
         self.ids = count(1)
         self.preparation_capacity = preparation_capacity
@@ -269,7 +282,9 @@ class Frontend:
 
     @property
     def noncausal_scoring(self):
-        return isinstance(self.decision_scorer, (D3Scorer, ModernBertScorer))
+        return isinstance(
+            self.decision_scorer, (D3Scorer, ModernBertScorer, PplxScorer)
+        )
 
     def accepts_model(self, model):
         """Whether a request may name `model`: a name the server answers to,
@@ -451,7 +466,7 @@ class Frontend:
         """The prompt's length once each image's placeholder is widened."""
         return len(prompt_tokens) + sum(image.tokens - 1 for image in prepared)
 
-    def _expand_image_pads(self, prompt_tokens, prepared, positions):
+    def _expand_image_pads(self, prompt_tokens, prepared, positions, *, pixels=None):
         """Widens the template's single placeholder per image to the image's
         merged token count and returns the spans the engine injects into."""
         token_count = self._image_token_count(prompt_tokens, prepared)
@@ -479,7 +494,8 @@ class Frontend:
             expanded.extend([pad_id] * image.tokens)
             cursor = position + 1
         expanded.extend(prompt_tokens[cursor:])
-        pixels = b"".join(image.pixels for image in prepared)
+        if pixels is None:
+            pixels = b"".join(image.pixels for image in prepared)
         return expanded, tuple(spans), pixels
 
     def request_deadline(self, body, started_at):
@@ -601,9 +617,20 @@ class Frontend:
             remaining_request_time(deadline)
             return tokens
 
-    def score_job(self, prompt_tokens, slot_ids, deadline, priority, cache_salt):
+    def score_job(
+        self, prompt_tokens, slot_ids, deadline, priority, cache_salt, *, media=None
+    ):
         """A job that reads the logits of `slot_ids` where the prompt ends and
         generates nothing: what a scoring API submits."""
+        images, spans, pixels = None, (), b""
+        if media is not None:
+            images, pixels = media
+            pad_id = self.tokenizer.convert_tokens_to_ids(self.chat_format.image_pad)
+            positions = [i for i, token in enumerate(prompt_tokens) if token == pad_id]
+            self._check_image_placeholders(prompt_tokens, images, positions)
+            prompt_tokens, spans, pixels = self._expand_image_pads(
+                prompt_tokens, images, positions, pixels=pixels
+            )
         return Job(
             request_id=next(self.ids),
             prompt_tokens=prompt_tokens,
@@ -613,6 +640,9 @@ class Frontend:
             deadline=deadline,
             priority=priority,
             score_tokens=tuple(slot_ids),
+            image_spans=spans,
+            image_pixels=pixels,
+            image_owner=images,
             public_id=secrets.token_hex(16),
             cache_salt=cache_salt,
         )

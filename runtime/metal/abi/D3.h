@@ -8,5 +8,6 @@
 struct D3AttentionParams {
   uint32_t tokens, stride, query_rows, query_start, query_heads, kv_heads;
   uint32_t q4h = 0;
+  uint32_t causal = 0;
 };
-static_assert(sizeof(D3AttentionParams) == 28);
+static_assert(sizeof(D3AttentionParams) == 32);
