@@ -8,7 +8,13 @@ from unittest import mock
 from tokenizers import Regex, Tokenizer, decoders, models, normalizers, pre_tokenizers
 from transformers.utils import logging as transformers_logging
 
-from dev.tests.server_fixtures import READY, byte_alphabet, main_args, unprepared_hold
+from dev.tests.server_fixtures import (
+    READY,
+    byte_alphabet,
+    console_written,
+    main_args,
+    unprepared_hold,
+)
 from install import families
 from install.gguf import QWEN35_PATTERN
 from server import constraints as generation_constraints
@@ -105,6 +111,7 @@ class TokenizerContractTests(unittest.TestCase):
         ):
             server.main()
         self.assertEqual(raised.exception.code, 1)
+        console_written()
         self.assertIn("tokenizer must encode", stderr.getvalue())
         native.assert_not_called()
         http.server_activate.assert_not_called()

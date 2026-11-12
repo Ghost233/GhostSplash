@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
       "ANE down view lost logical K, physical stride or FFN policy");
   DeviceCapabilities device;
   device.appleGpuFamily = 10; device.gpuCoreCount = 20;
-  ops::Linear linear(device);
+  ops::Linear linear(device, ops::Int8Activations::Off);
   const auto small = linear.prefillPlan(down, 8, ops::LinearEpilogue::Residual);
   const auto decode = linear.decodePlan(down, 1, ops::LinearEpilogue::Residual);
   test::require(small.workload().phase == ops::LinearPhase::Prefill && decode.workload().phase == ops::LinearPhase::Decode,

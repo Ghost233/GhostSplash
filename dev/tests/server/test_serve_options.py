@@ -188,6 +188,9 @@ OPTIONS = {
         "--compact-draft-ranking", {"/tmp/rank file": Path("/tmp/rank file")}, ("",)
     ),
     "--fast-topk": values("--fast-topk", {"off": "off", "on": "on"}, ("1", "yes")),
+    "--activations": values(
+        "--activations", {"auto": "auto", "bf16": "bf16"}, ("", "on", "off", "BF16")
+    ),
     "--verify-rows": values(
         "--verify-rows",
         {"auto": "auto", "all": "all"},

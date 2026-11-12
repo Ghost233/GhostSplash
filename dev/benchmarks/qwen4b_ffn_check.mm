@@ -123,7 +123,7 @@ void check(metal::MetalBackend &backend, model::WeightSource &source, const mode
   const auto *half=static_cast<const uint16_t *>(h.blocks().segments.front().prefillHalf.contents());
   for (const auto &row:weights) for (uint32_t i=0;i<k;++i)
     require(half[uint64_t{row.column}*k+i]==gguf_reference::f2h(row.half[i]),"GPU cache differs from independent native GGUF decoding");
-  ops::Linear linear(backend.capabilities());
+  ops::Linear linear(backend.capabilities(), ops::Int8Activations::Off);
   for (uint32_t rows:rowCounts) {
     const auto plan=linear.prefillPlan(q,rows,ep); const uint32_t storage=plan.storageRows();
     const auto input=allocate(backend,uint64_t{storage}*k*2), aux=allocate(backend,uint64_t{storage}*n*2);
@@ -190,7 +190,7 @@ void pipeline(metal::MetalBackend &backend,model::WeightSource &source,const mod
   auto down=aneView?layer.downProjection.leadingInputs(4608):layer.downProjection;
   auto gateH=cached(backend,layer.gateProjection,gate),upH=cached(backend,layer.upProjection,up),downH=cached(backend,layer.downProjection,down);
   const uint32_t rows=decode?model::ExecutionLimits::targetVerifyRows:512,k=gate.inputSize,n=up.outputSize,d=down.outputSize;
-  ops::Linear linear(backend.capabilities());
+  ops::Linear linear(backend.capabilities(), ops::Int8Activations::Off);
   const auto pairPlan=decode?linear.decodePlan(up,1,ops::LinearEpilogue::GateUp,&gate):linear.prefillPlan(up,rows,ops::LinearEpilogue::UpWithGate);
   const auto downPlan=decode?linear.decodePlan(down,1,ops::LinearEpilogue::Residual):linear.prefillPlan(down,rows,ops::LinearEpilogue::Residual);
   const uint32_t storage=pairPlan.storageRows();auto sizes=pairPlan.scratchSize();sizes.include(downPlan.scratchSize());const auto work=scratch(backend,sizes);

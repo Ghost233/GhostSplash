@@ -153,7 +153,7 @@ Result run(const std::filesystem::path &library, const std::filesystem::path &ro
   result.device = backend.capabilities().deviceName;
   result.targetWeightBytes = loaded.targetActualAllocatedBytes();
   result.draftWeightBytes = loaded.draft.actualAllocatedBytes;
-  ops::ExecutionPlans operators(backend.capabilities());
+  ops::ExecutionPlans operators(backend.capabilities(), ops::Int8Activations::On);
   const auto layout = loaded.targetKvLayout(kv::Format::Int8);
   const uint32_t pagesPerLane = (ContextTokens + model::ExecutionLimits::targetVerifyRows +
                                  kv::kPageTokens - 1) / kv::kPageTokens + 1;

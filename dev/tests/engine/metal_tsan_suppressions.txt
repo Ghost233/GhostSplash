@@ -8,6 +8,10 @@
 # so ThreadSanitizer reports the handlers' reads against those writes. Nothing
 # of the spilled-KV readers runs in a completed handler.
 race:invocation*for*block*in*splash::metal::MetalBackend::Impl::commit
+# The leading buffers' progress handler likewise captures the state owner
+# and sequence before Metal commits the buffer and publishes its callback.
+# The handler updates the watchdog through BackendAsyncState's gate mutex.
+race:invocation*for*block*in*splash::metal::MetalBackend::Impl::observeGpuProgress
 #
 # A shared event's listener calls a notify() block on a thread of Metal's
 # once the event reaches its value, which SharedEvent::notify registered after

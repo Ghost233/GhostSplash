@@ -29,7 +29,7 @@ int main(int argc,char **argv) {
     auto projection=model::readBlockProjection(head,256,geometry.hiddenSize,"D3 head");projection.destination=ops::FloatOutput::Float32;
     auto bias=head.section(256*4,"zero bias");head.finish();
     for(uint32_t i=0;i<256;++i)test::require(static_cast<float *>(bias.contents())[i]==0,"D3 synthesized bias is not zero");
-    ops::Linear linear(backend.capabilities());auto plan=linear.prefillPlan(projection,1,ops::LinearEpilogue::None);auto need=plan.scratchSize();
+    ops::Linear linear(backend.capabilities(), ops::Int8Activations::Off);auto plan=linear.prefillPlan(projection,1,ops::LinearEpilogue::None);auto need=plan.scratchSize();
     auto alloc=[&](uint64_t bytes){if(!bytes)return metal::MetalBuffer{};auto b=backend.allocateBuffer(bytes,metal::BufferStorage::Shared,"d3-head-test");std::memset(b.contents(),0,bytes);return b;};
     auto input=alloc(uint64_t{plan.storageRows()}*geometry.hiddenSize*2), output=alloc(uint64_t{plan.storageRows()}*256*4);
     ops::LinearScratch scratch{alloc(need.input),alloc(need.sums),alloc(need.partials),alloc(need.counters),alloc(need.rotated)};

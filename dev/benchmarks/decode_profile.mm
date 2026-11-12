@@ -1,7 +1,7 @@
 // Per-kernel GPU time attribution for the production executor.
 //
 //   decode-profile METALLIB MODEL_ROOT [--prompt-tokens N] [--prompt-token-file PATH] [--context-tokens N] [--cycles K] [--kv-format int8|bf16] [--prefill-only 0|1] [--max-width 1..4]
-//                  [--state-format fp32|bf16] [--expert-memory SIZE] [--ple-memory SIZE] [--dispatch-list FILE]
+//                  [--state-format fp32|bf16] [--expert-memory SIZE] [--ple-memory SIZE] [--dispatch-list FILE] [--verify-rows auto|all]
 //   decode-profile METALLIB MODEL_ROOT --images HxW[,HxW...] [--cycles K]
 //
 // Drives the real model runtime with Metal dispatch profiling enabled, so
@@ -328,7 +328,7 @@ int main(int argc, char **argv) {
         std::cerr << "usage: decode-profile METALLIB MODEL_ROOT "
                      "[--prompt-tokens N] [--prompt-token-file PATH] [--context-tokens N] [--cycles K] [--kv-format int8|bf16] [--prefill-only 0|1] [--max-width 1..4] "
                      "[--state-format fp32|bf16] [--expert-memory SIZE] [--ple-memory SIZE] "
-                     "[--dispatch-list FILE]\n"
+                     "[--dispatch-list FILE] [--verify-rows auto|all]\n"
                      "       decode-profile METALLIB MODEL_ROOT "
                      "--images HxW[,HxW...] [--cycles K]\n";
         return 2;
@@ -346,6 +346,7 @@ int main(int argc, char **argv) {
       model::ModelLoadOptions loadOptions;
       bool textOptions = false;
       std::string dispatchList;
+      model::VerifyRows verifyRows = model::VerifyRows::Auto;
       for (int index = 3; index < argc; index += 2) {
         const std::string_view option(argv[index]);
         if (index + 1 >= argc)
@@ -384,6 +385,12 @@ int main(int argc, char **argv) {
           stateFormat = value == "fp32" ? ops::GdnStateFormat::Float32 : ops::GdnStateFormat::BFloat16;
           textOptions = true;
         } else if (tools::takeLoadOption(option, argv[index + 1], loadOptions)) {
+          textOptions = true;
+        } else if (option == "--verify-rows") {
+          const std::string_view value(argv[index + 1]);
+          if (value != "auto" && value != "all")
+            throw std::invalid_argument("--verify-rows takes auto or all");
+          verifyRows = value == "all" ? model::VerifyRows::All : model::VerifyRows::Auto;
           textOptions = true;
         } else if (option == "--dispatch-list") {
           dispatchList = argv[index + 1];
@@ -434,7 +441,7 @@ int main(int argc, char **argv) {
       }
       loadOptions.readers = std::make_shared<model::SsdReaders>(model::kSsdReaders);
       model::LoadedModel model = model::loadModel(backend, root, descriptor, loadOptions);
-      ops::ExecutionPlans operators(backend.capabilities());
+      ops::ExecutionPlans operators(backend.capabilities(), ops::Int8Activations::On);
       if (const auto *target = std::get_if<model::Qwen3_5_4BWeights>(&model.target)) {
         const auto bytes = [](const ops::Projection &projection) {
           uint64_t size = 0;
@@ -484,6 +491,7 @@ int main(int argc, char **argv) {
                                       governor.allocationAdmission(),
                                       model.stateLayout(stateFormat), nullptr);
       model::RuntimeContext context{backend, model, pages, states, operators};
+      context.verifyRows = verifyRows;
       model::Runtime executor(context);
 
       std::printf("device %s, %u prompt tokens, %u context capacity, %u cycles per width, %s state\n",
@@ -541,9 +549,10 @@ int main(int argc, char **argv) {
         }
         const CycleTiming median = fused[fused.size() / 2];
         std::printf("\n%s: median fused gpu %.2f ms, wall %.2f ms, %llu "
-                    "command(s) per cycle\n",
+                    "command(s) per cycle, %.2f tokens per cycle, %.2f wall ms per token\n",
                     title, median.gpuSeconds * 1e3, median.wallSeconds * 1e3,
-                    static_cast<unsigned long long>(median.commands));
+                    static_cast<unsigned long long>(median.commands), double(total.outputTokens) / cycles,
+                    total.outputTokens ? total.wallSeconds * 1e3 / total.outputTokens : 0.0);
         // Only the unprofiled cycles above contribute throughput and
         // acceptance. Warmup and attributed replays are separate work.
         std::printf("fused totals: %u cycles, %llu committed output tokens, %llu drafted, %llu accepted, "

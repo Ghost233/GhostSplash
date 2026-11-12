@@ -120,7 +120,7 @@ void formatCheck(metal::MetalBackend &backend, uint32_t format) {
   }
   auto originalOutput = test::sharedBuffer(backend, R * N * 4);
   auto compactOutput = test::sharedBuffer(backend, R * C * 4);
-  const Linear linear(backend.capabilities());
+  const Linear linear(backend.capabilities(), Int8Activations::Off);
   metal::CommandGraph graph;
   for (const auto &pair : std::array<std::pair<const Projection *, metal::MetalBuffer>, 2>{{{&source, originalOutput}, {&compact, compactOutput}}}) {
     const auto plan = Linear::plan({{pair.first->outputSize, K}, R, LinearPhase::Decode, LinearEpilogue::None},

@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #include "metal/BackendInstrumentation.hpp"
+#include "metal/abi/QuantFormat.h"
 #include "AwakeClock.hpp"
 
 #include <chrono>
@@ -18,7 +19,18 @@ int main(int argc, const char **argv) {
         for (const auto &entry : BackendInstrumentation::pipelineStatistics(backend))
           if (entry.kernel == kernel) previousCreationSeconds = entry.creationSeconds;
         const auto started = splash::AwakeClock::now();
-        BackendInstrumentation::preparePipeline(backend, kernel);
+        if (const std::string_view name(kernel);
+            name == "moe_expert_gguf_m32_gate_up" || name == "moe_expert_gguf_m32_gate_up_mixed") {
+          ComputeDispatch dispatch;
+          dispatch.pipelineName = name;
+          dispatch.threadgroups = dispatch.threadsPerThreadgroup = {1, 1, 1};
+          dispatch.constants = name.ends_with("_mixed")
+              ? std::vector<uint32_t>{GGUF_FMT_Q4K, GGUF_FMT_IQ4XS, GGUF_FMT_Q6K, GGUF_FMT_Q6K}
+              : std::vector<uint32_t>(4, GGUF_FMT_Q4K);
+          backend.preparePipelines(std::span(&dispatch, 1));
+        } else {
+          BackendInstrumentation::preparePipeline(backend, kernel);
+        }
         const double seconds = std::chrono::duration<double>(splash::AwakeClock::now() - started).count();
         PipelineStatistics selected;
         for (const auto &entry : BackendInstrumentation::pipelineStatistics(backend))

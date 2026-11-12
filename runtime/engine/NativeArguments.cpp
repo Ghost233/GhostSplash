@@ -233,6 +233,10 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       if (!parsePositive(value, number)) throw UsageError(std::string(option) + " requires a positive integer");
       if (option == "--prompt-lookup-min-match") result.optionalFeatures.lookupMinimumMatch = number;
       else result.optionalFeatures.compactCapacity = number;
+    } else if (option == "--activations") {
+      if (value != "auto" && value != "bf16")
+        throw UsageError("--activations requires auto or bf16");
+      result.int8Activations = value == "auto" ? ops::Int8Activations::On : ops::Int8Activations::Off;
     } else if (option == "--verify-rows") {
       if (value != "auto" && value != "all")
         throw UsageError("--verify-rows requires auto or all");

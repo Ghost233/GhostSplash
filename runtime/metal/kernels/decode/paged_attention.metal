@@ -47,7 +47,8 @@
   if (!tile.active || group.y >= tile.splits)                                  \
     return;
 
-#define PAGED_VERIFY_SPLIT(Name, Heads, Group, HeadDim, Window, CacheElement)  \
+#define PAGED_VERIFY_SPLIT(Name, Heads, Group, HeadDim, Window, CacheElement,  \
+                           Int8Queries)                                        \
   PAGED_VERIFY_SPLIT_SIGNATURE(Name) {                                         \
     PAGED_VERIFY_SCRATCH(Group)                                                \
     threadgroup bfloat stage[is_same<CacheElement, SplashQ4Block>::value ?      \
@@ -55,7 +56,7 @@
     PAGED_VERIFY_TILE_AT(Heads, Group, HeadDim)                                \
     splash_paged_attention_tile<Heads, Group,                                  \
                                 SPLASH_TARGET_VERIFY_ROWS / Parts, HeadDim,    \
-                                Window, CacheElement>(                         \
+                                Window, CacheElement, Int8Queries>(            \
         queries + tile.offset,                                                 \
         SPLASH_LANE_BINDING(group.z, page_table0, page_table1, page_table2,    \
                             page_table3),                                      \
@@ -65,34 +66,41 @@
         thread_index, stage);                                                  \
   }
 
-PAGED_VERIFY_SPLIT(verify_attention_q8_split, 4, 6, 256, 0, int8_t)
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g8, 2, 8, 256, 0, int8_t)
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g16, 2, 16, 256, 0, int8_t)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split, 4, 6, 256, 0, int8_t, false)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g8, 2, 8, 256, 0, int8_t, false)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g16, 2, 16, 256, 0, int8_t, false)
 // Four KV heads of 128 dimensions over the whole history, and over a window
 // of the 512 keys before each row.
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g8_d128, 4, 8, 128, 0, int8_t)
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g8_d128_w512, 4, 8, 128, 512, int8_t)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g8_d128, 4, 8, 128, 0, int8_t, false)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g8_d128_w512, 4, 8, 128, 512, int8_t, false)
+// INT8 query codes against the INT8 keys, where a split reads enough pages
+// (AttentionCalibration::int8QueriesFromPages).
+PAGED_VERIFY_SPLIT(verify_attention_q8q_split, 4, 6, 256, 0, int8_t, true)
+PAGED_VERIFY_SPLIT(verify_attention_q8q_split_kv2_g8, 2, 8, 256, 0, int8_t, true)
+PAGED_VERIFY_SPLIT(verify_attention_q8q_split_kv2_g16, 2, 16, 256, 0, int8_t, true)
+PAGED_VERIFY_SPLIT(verify_attention_q8q_split_kv4_g8_d128, 4, 8, 128, 0, int8_t, true)
+PAGED_VERIFY_SPLIT(verify_attention_q8q_split_kv4_g8_d128_w512, 4, 8, 128, 512, int8_t, true)
 // BF16 shares the page loop and reduction, without quantization scales.
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split, 4, 6, 256, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g8, 2, 8, 256, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g16, 2, 16, 256, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g8_d128, 4, 8, 128, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g8_d128_w512, 4, 8, 128, 512, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g4, 2, 4, 256, 0, int8_t)
-PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g4, 4, 4, 256, 0, int8_t)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split, 4, 6, 256, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g8, 2, 8, 256, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g16, 2, 16, 256, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g8_d128, 4, 8, 128, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g8_d128_w512, 4, 8, 128, 512, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv2_g4, 2, 4, 256, 0, int8_t, false)
+PAGED_VERIFY_SPLIT(verify_attention_q8_split_kv4_g4, 4, 4, 256, 0, int8_t, false)
 // BF16 shares the page loop and reduction, without quantization scales.
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g4, 2, 4, 256, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g4, 4, 4, 256, 0, bfloat)
-PAGED_VERIFY_SPLIT(verify_attention_q4h_split, 4, 6, 256, 0, uchar)
-PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g8, 2, 8, 256, 0, uchar)
-PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g4, 2, 4, 256, 0, uchar)
-PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv4_g4, 4, 4, 256, 0, uchar)
-PAGED_VERIFY_SPLIT(verify_attention_q4_0_split, 4, 6, 256, 0, SplashQ4Block)
-PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g8, 2, 8, 256, 0, SplashQ4Block)
-PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g4, 2, 4, 256, 0, SplashQ4Block)
-PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv4_g4, 4, 4, 256, 0, SplashQ4Block)
-PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g16, 2, 16, 256, 0, uchar)
-PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g16, 2, 16, 256, 0, SplashQ4Block)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g4, 2, 4, 256, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g4, 4, 4, 256, 0, bfloat, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split, 4, 6, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g8, 2, 8, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g4, 2, 4, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv4_g4, 4, 4, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split, 4, 6, 256, 0, SplashQ4Block, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g8, 2, 8, 256, 0, SplashQ4Block, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g4, 2, 4, 256, 0, SplashQ4Block, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv4_g4, 4, 4, 256, 0, SplashQ4Block, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g16, 2, 16, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4_0_split_kv2_g16, 2, 16, 256, 0, SplashQ4Block, false)
 #undef PAGED_VERIFY_SPLIT
 #undef PAGED_VERIFY_TILE_AT
 #undef PAGED_VERIFY_SCRATCH

@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
       images.release();
       require(backend.memoryStats().allocatedBytes == 0, "weight release left allocated memory");
       for (const auto &entry : images.contents()) require(entry.bytes.empty(), "released image retained bytes");
-      while (!images.restore(splash::test::admitAll)) {}
+      splash::test::restoreWeights(images);
       require(backend.memoryStats().allocatedBytes == allocated, "restore changed allocation accounting");
       const auto restored = images.contents();
       for (size_t i = 0; i < restored.size(); ++i)

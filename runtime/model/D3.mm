@@ -84,7 +84,7 @@ struct D3::Impl {
     }
   }
   Impl(metal::MetalBackend &b, const std::filesystem::path &path, uint32_t capacity, uint64_t limit, bool quantized)
-      : backend(b), linear(b.capabilities()), images(b,"d3"), context(capacity), q4h(quantized), maximum(limit) {
+      : backend(b), linear(b.capabilities(), ops::Int8Activations::Off), images(b,"d3"), context(capacity), q4h(quantized), maximum(limit) {
     if (!context || context>262144 || !maximum) throw std::invalid_argument("invalid D3 context or memory limit");
     auto configPath = path.parent_path().parent_path()/"config.json";
     if (std::filesystem::file_size(configPath)>8*1024*1024) throw GgufError("D3 config exceeds size limit");

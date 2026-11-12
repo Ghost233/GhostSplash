@@ -1,5 +1,6 @@
 #include "model/DFlashDraft.hpp"
 #include "metal/abi/Sampling.h"
+#include "ops/KernelCalibration.hpp"
 #include "ops/Linear.hpp"
 #include "ops/PagedAttention.hpp"
 
@@ -47,7 +48,7 @@ int main() {
     splash::DeviceCapabilities device;
     device.appleGpuFamily = 10;
     device.gpuCoreCount = 20;
-    splash::ops::Linear linear(device);
+    splash::ops::Linear linear(device, splash::ops::Int8Activations::Off);
     for (const uint32_t lanes : {1u, 2u, 4u}) {
       const uint32_t rows = lanes * block;
       const uint32_t targetStorageRows = linear.decodeStorageRows(
@@ -84,19 +85,22 @@ int main() {
                              splash::kv::Format::Int4Hadamard, splash::kv::Format::Q4_0Hadamard,
                              splash::kv::Format::Q4_0Unrotated}) {
       const splash::kv::Layout four{1, 4, 256, format}, two{1, 2, 256, format};
-      const auto required = splash::ops::PagedAttention::verifyPlan(1, 16, four, histories);
+      const auto required = splash::ops::PagedAttention::verifyPlan(1, 16, four, histories,
+          splash::ops::kApple10Attention, splash::ops::Int8Activations::Off);
       require(required.queryHeads == 16, "4B GQA4 verifier was incorrectly excluded");
       for (const auto shape : {std::pair{24u, four}, std::pair{16u, two}}) {
         const bool expected = shape.first == 24 ? block != 2 && block != 16 : block != 16;
         bool supported = true;
-        try { static_cast<void>(splash::ops::PagedAttention::verifyPlan(1, shape.first, shape.second, histories)); }
+        try { static_cast<void>(splash::ops::PagedAttention::verifyPlan(1, shape.first, shape.second, histories,
+            splash::ops::kApple10Attention, splash::ops::Int8Activations::Off)); }
         catch (const std::invalid_argument &error) {
           supported = false;
           require(std::string_view(error.what()).find("verify does not support GQA") != std::string_view::npos,
                   "unsupported verifier failed for an unrelated reason");
         }
         require(supported == expected, "legacy verifier capability disagrees with compiled shader entries");
-        require(splash::ops::PagedAttention::prefillPlan(32, 0, shape.first, shape.second, 32).queryHeads == shape.first,
+        require(splash::ops::PagedAttention::prefillPlan(32, 0, shape.first, shape.second,
+            splash::ops::kApple10Attention, splash::ops::Int8Activations::Off).queryHeads == shape.first,
                 "a valid prefill path was excluded with the unsupported verifier");
       }
     }

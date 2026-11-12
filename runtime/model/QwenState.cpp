@@ -407,11 +407,6 @@ QwenStateStorage::BufferCounts QwenStateStorage::stateBuffers() const noexcept {
   return {1, layout_.draft.fullHistory, layout_.draft.usesContextWindow()};
 }
 
-QwenStateStorage::BufferCounts QwenStateStorage::startBuffers() const noexcept {
-  const auto lane = laneBuffers(), state = stateBuffers();
-  return {lane.cells + state.cells, lane.rings + state.rings, lane.windows + state.windows};
-}
-
 QwenStateStorage::BufferCounts QwenStateStorage::idle() const noexcept {
   return {idleCells(), idleRings(), idleWindows()};
 }
@@ -435,14 +430,14 @@ std::optional<uint32_t> QwenStateStorage::statesToActivate() const noexcept {
 }
 
 uint64_t QwenStateStorage::idleBytes(uint32_t evictedStates, bool afterStart, bool keepLane) const noexcept {
-  BufferCounts pooled = afterStart ? beyond(idle(), startBuffers()) : idle();
+  BufferCounts pooled = afterStart ? beyond(idle(), laneBuffers()) : idle();
   pooled.cells += evictedStates * stateBuffers().cells;
   pooled.rings += evictedStates * stateBuffers().rings;
   pooled.windows += evictedStates * stateBuffers().windows;
   return bytes(keepLane ? beyond(pooled, laneBuffers()) : pooled);
 }
 
-uint64_t QwenStateStorage::startBytes() const noexcept { return bytes(beyond(startBuffers(), idle())); }
+uint64_t QwenStateStorage::startBytes() const noexcept { return bytes(beyond(laneBuffers(), idle())); }
 
 void QwenStateStorage::updateLengths(uint32_t index,
                                      QwenLogicalLengths lengths) {

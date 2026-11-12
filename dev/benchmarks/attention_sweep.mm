@@ -58,7 +58,7 @@
 #include "metal/abi/BlockIndexer.h"
 #include "metal/abi/RoPE.h"
 #include "ops/BlockIndexer.hpp"
-#include "ops/KernelCalibration.hpp"
+#include "ops/ExecutionPlans.hpp"
 #include "ops/PagedAttention.hpp"
 
 #include <algorithm>
@@ -195,22 +195,20 @@ std::vector<uint32_t> qsaBitmaps(const AttentionFixturePlan &plan, const std::st
 }
 
 // A prefill chunk of `rows` rows on one lane, or the verify rows of `lanes`
-// lanes, all after `history` tokens, with their plan's scratch; a prefill
-// splits per the device's `pagesPerSplit` (AttentionCalibration).
+// lanes, all after `history` tokens, with the scratch of the device's plan.
 AttentionFixturePlan casePlan(AttentionShape shape, bool prefill, uint32_t lanes,
-                              uint32_t history, uint32_t extentPages, uint32_t rows, uint32_t pagesPerSplit, uint32_t tileRows) {
+                              uint32_t history, uint32_t extentPages, uint32_t rows, const ExecutionPlans &plans, uint32_t tileRows) {
   const kv::Layout layout = test::attentionLayout(shape);
   const uint32_t caseLanes = prefill ? 1 : lanes;
   AttentionFixturePlan::Histories histories{};
   std::fill_n(histories.begin(), caseLanes, history);
   AttentionWorkspace scratch =
-      prefill ? PagedAttention::prefillPlan(rows, history, shape.queryHeads, layout, pagesPerSplit, shape.variant, tileRows)
-                    .workspace
-              : PagedAttention::verifyPlan(caseLanes, shape.queryHeads, layout,
-                                           std::span(histories).first(caseLanes), shape.variant)
+      prefill ? plans.prefillAttention(rows, history, shape.queryHeads, layout, shape.variant, tileRows).workspace
+              : plans.verifyAttention(caseLanes, shape.queryHeads, layout, std::span(histories).first(caseLanes),
+                                      shape.variant)
                     .workspace;
   if (prefill) {
-    const auto baseline = PagedAttention::prefillPlan(rows, history, shape.queryHeads, layout, pagesPerSplit, shape.variant, 8);
+    const auto baseline = plans.prefillAttention(rows, history, shape.queryHeads, layout, shape.variant, 8);
     scratch.partialsBytes = std::max(scratch.partialsBytes, baseline.workspace.partialsBytes);
     scratch.statisticsBytes = std::max(scratch.statisticsBytes, baseline.workspace.statisticsBytes);
   }
@@ -398,7 +396,7 @@ double listEntries(const QsaBlocks &qsa) {
 // block lists when it has QSA bitmaps, and the indexer that selects them
 // with --qsa indexer.
 metal::CommandGraph caseGraph(const AttentionFixture &fixture, bool prefill, const QsaBlocks &qsa,
-                              uint32_t pagesPerSplit, uint32_t tileRows) {
+                              const ExecutionPlans &plans, uint32_t tileRows) {
   const AttentionFixturePlan &plan = fixture.plan();
   metal::CommandGraph graph;
   if (const QsaIndexer *indexer = qsa.indexer ? &*qsa.indexer : nullptr) {
@@ -419,14 +417,13 @@ metal::CommandGraph caseGraph(const AttentionFixture &fixture, bool prefill, con
   }
   if (prefill)
     fixture.addGraph(graph,
-                     PagedAttention::prefillPlan(plan.rows, plan.histories[0], plan.shape.queryHeads,
-                                                 plan.layout(), pagesPerSplit, plan.shape.variant, tileRows),
+                     plans.prefillAttention(plan.rows, plan.histories[0], plan.shape.queryHeads, plan.layout(),
+                                            plan.shape.variant, tileRows),
                      qsa.blocks);
   else
     fixture.addGraph(graph,
-                     PagedAttention::verifyPlan(plan.lanes, plan.shape.queryHeads, plan.layout(),
-                                                std::span(plan.histories).first(plan.lanes),
-                                                plan.shape.variant),
+                     plans.verifyAttention(plan.lanes, plan.shape.queryHeads, plan.layout(),
+                                           std::span(plan.histories).first(plan.lanes), plan.shape.variant),
                      qsa.blocks);
   return graph;
 }
@@ -474,7 +471,7 @@ double median(std::vector<double> values) {
 // and must give the same output reading them through their locations.
 std::vector<Case> measure(std::span<metal::MetalBackend *> backends,
                           const AttentionFixturePlan &plan, bool prefill, uint32_t repeat,
-                          double warmupSeconds, const std::string &qsa, bool located, uint32_t pagesPerSplit, uint32_t tileRows) {
+                          double warmupSeconds, const std::string &qsa, bool located, const ExecutionPlans &plans, uint32_t tileRows) {
   std::vector<std::unique_ptr<AttentionFixture>> fixtures;
   std::vector<QsaBlocks> blocks;
   std::vector<metal::CommandGraph> graphs;
@@ -488,20 +485,19 @@ std::vector<Case> measure(std::span<metal::MetalBackend *> backends,
         std::make_unique<AttentionFixture>(*backends[i], plan, "attention-sweep-fixture"));
     fixtures.back()->fill();
     blocks.push_back(qsaBlocks(*backends[i], plan, prefill, bitmaps, words, qsa == "indexer", located));
-    graphs.push_back(caseGraph(*fixtures.back(), prefill, blocks.back(), pagesPerSplit, i ? 8U : tileRows));
+    graphs.push_back(caseGraph(*fixtures.back(), prefill, blocks.back(), plans, i ? 8U : tileRows));
     if (located) {
       (void)backends[i]->submitCommandAsync(graphs.back().dispatches()).wait();
       const uint64_t paged = outputDigest(*fixtures.back());
       locate(*backends[i], *fixtures.back(), blocks.back());
-      graphs.back() = caseGraph(*fixtures.back(), prefill, blocks.back(), pagesPerSplit, i ? 8U : tileRows);
+      graphs.back() = caseGraph(*fixtures.back(), prefill, blocks.back(), plans, i ? 8U : tileRows);
       (void)backends[i]->submitCommandAsync(graphs.back().dispatches()).wait();
       if (outputDigest(*fixtures.back()) != paged)
         throw std::runtime_error("the located verify split changed attention output bits");
     }
     results[i].kvBytes = historyBytes(plan);
     results[i].tileRows = prefill
-        ? PagedAttention::prefillPlan(plan.rows, plan.histories[0], plan.shape.queryHeads, plan.layout(),
-                                      pagesPerSplit, plan.shape.variant, i ? 8U : tileRows).tileRows
+        ? plans.prefillAttention(plan.rows, plan.histories[0], plan.shape.queryHeads, plan.layout(), plan.shape.variant, i ? 8U : tileRows).tileRows
         : kVerifyRows;
   }
   // Warm every variant, then alternate order to limit clock/thermal drift.
@@ -711,7 +707,7 @@ int main(int argc, const char *argv[]) {
                                     " " + std::string(kv::formatName(format)));
     }
     metal::MetalBackend backend(argv[1]);
-    const uint32_t pagesPerSplit = KernelCalibration::of(backend.capabilities()).attention.prefillPagesPerSplit;
+    const ExecutionPlans plans(backend.capabilities(), Int8Activations::On);
     std::unique_ptr<metal::MetalBackend> comparison;
     std::vector<metal::MetalBackend *> backends{&backend};
     if (!comparisonLibrary.empty()) {
@@ -742,8 +738,8 @@ int main(int argc, const char *argv[]) {
           // Only a verify with lists reads its blocks through locations.
           const bool caseLocated = located && !prefill && !shapeQsa.empty();
           const auto cases =
-              measure(backends, casePlan(geometry, prefill, lane, history, shapeExtentPages, rows, pagesPerSplit, tileRows),
-                      prefill, repeat, warmupSeconds, shapeQsa, caseLocated, pagesPerSplit, tileRows);
+              measure(backends, casePlan(geometry, prefill, lane, history, shapeExtentPages, rows, plans, tileRows),
+                      prefill, repeat, warmupSeconds, shapeQsa, caseLocated, plans, tileRows);
           warmupSeconds = 0.1;
           for (size_t i = 0; i < cases.size(); ++i) {
             std::cout << (firstCase ? "" : ",")

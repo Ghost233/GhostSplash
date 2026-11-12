@@ -289,11 +289,11 @@ public:
   // context window to the pool (QwenBufferPool::give), at the layout's
   // sizes, which each allocation covers: with keepLane a lane keeps two
   // cells, the draft rings and a window, and cells of no bytes count none.
-  // With `afterStart`, of the pool a lane's activation and a state reserved
-  // beside it leave once they took their buffers from it first (startBytes).
+  // With `afterStart`, of the pool a lane's activation leaves once it took
+  // its buffers from it first (startBytes).
   [[nodiscard]] uint64_t idleBytes(uint32_t evictedStates, bool afterStart, bool keepLane) const noexcept;
-  // What a lane's activation and a state reserved beside it allocate: their
-  // buffers (kStartBuffers) that the idle pool lacks.
+  // What a lane's activation allocates: its buffers that the idle pool
+  // lacks.
   [[nodiscard]] uint64_t startBytes() const noexcept;
 
   // Hot-path metadata operations; none performs a buffer copy. A step makes
@@ -377,14 +377,12 @@ private:
     Buffers cells;
   };
   // Counts of the pool's buffers: a lane takes two GDN cells, the draft
-  // rings and a context window, a cached state a cell and a window, and a
-  // lane's start the lane's and those of the state it captures.
+  // rings and a context window, and a cached state a cell and a window.
   struct BufferCounts final {
     uint32_t cells = 0, rings = 0, windows = 0;
   };
   [[nodiscard]] BufferCounts laneBuffers() const noexcept;
   [[nodiscard]] BufferCounts stateBuffers() const noexcept;
-  [[nodiscard]] BufferCounts startBuffers() const noexcept;
 
   [[nodiscard]] Lane &lane(uint32_t index);
   [[nodiscard]] const Lane &lane(uint32_t index) const;

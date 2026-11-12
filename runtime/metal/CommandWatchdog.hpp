@@ -9,11 +9,10 @@ namespace splash::metal {
 // Guarded by the backend's submission mutex. A completed GPU command stops
 // this clock even if its model ticket continues waiting for CPU work. A
 // command's deadline is a timeout after its last progress: its commit, and
-// then its completed GPU buffers and each of its host steps as the GPU work
-// before it ends and as it returns. Every part must end within the timeout.
-// GPU completion callbacks can arrive out of order; older progress must not
-// shorten the deadline established by later work.
-// Metal also bounds an event wait to supervision::kGpuWaitLimit (EventStep).
+// then completed GPU buffers and each host step as its preceding GPU work
+// ends and as it returns. Every part must end within the timeout. An older
+// completion must not shorten the deadline set by later progress. Metal's
+// event-wait limit applies to external events and never spans a host step.
 class CommandWatchdog final {
 public:
   explicit CommandWatchdog(double timeoutSeconds)

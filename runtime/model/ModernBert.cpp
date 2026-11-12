@@ -83,7 +83,7 @@ struct ModernBert::Impl {
   }
 
   Impl(metal::MetalBackend &b, const std::filesystem::path &path, uint32_t capacity, uint64_t maximum)
-      : backend(b), source(path), file(source), linear(b.capabilities()), context(capacity), budget(maximum) {
+      : backend(b), source(path), file(source), linear(b.capabilities(), ops::Int8Activations::Off), context(capacity), budget(maximum) {
     const std::string prefix = "modern-bert.";
     const auto integer = [&](std::string_view name) {
       auto v = file.metadata().unsignedValue(prefix + std::string(name));

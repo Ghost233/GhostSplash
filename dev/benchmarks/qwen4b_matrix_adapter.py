@@ -179,11 +179,15 @@ def expected_configuration(root, block):
 def expected_attention(root):
     """Verify the generator's exact matrix-only override snapshot."""
     source = (root / "runtime/ops/PagedAttention.cpp").read_text()
-    old = "compact && layout.format == kv::Format::Int8\n                              ? 1U : prefillSplits(tiles, selectsBlocks(layout) ? 0 : uint64_t{historyTokens} + rows,\n                                                   variant.windowTokens, pagesPerSplit);"
+    old = (
+        "compact && layout.format == kv::Format::Int8\n"
+        "                              ? 1U : prefillSplits(tiles, pages, variant.windowTokens, calibration.prefillPagesPerSplit);"
+    )
     replacements = (
         (
             old,
-            "compact\n                              ? matrixTailSplits() : prefillSplits(tiles, selectsBlocks(layout) ? 0 : uint64_t{historyTokens} + rows,\n                                                   variant.windowTokens, pagesPerSplit);",
+            "compact\n"
+            "                              ? matrixTailSplits() : prefillSplits(tiles, pages, variant.windowTokens, calibration.prefillPagesPerSplit);",
         ),
         (
             "namespace splash::ops {",

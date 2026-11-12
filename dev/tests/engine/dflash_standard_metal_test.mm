@@ -143,7 +143,7 @@ Values attention(const Values &qkv, bool causal, Values *preparedKeys = nullptr)
 }
 
 void run(MetalBackend &backend, bool causal) {
-  const ExecutionPlans operators(backend.capabilities());
+  const ExecutionPlans operators(backend.capabilities(), Int8Activations::On);
   DFlashDraftWeights weights;
   weights.layout = {.layers=1, .hiddenSize=Hidden, .vocabularySize=Vocabulary, .dynamicSize=0,
       .qkvSize=Qkv, .attentionSize=Attention, .intermediateSize=Intermediate,
@@ -164,15 +164,22 @@ void run(MetalBackend &backend, bool causal) {
   auto head = projection(backend, Vocabulary, Hidden, 6); head.destination = FloatOutput::Float32;
   weights.contextProjection = projection(backend, Hidden, weights.layout.targetHiddenSize(), 7);
   weights.hiddenNorm = {ones(backend, Hidden), false};
-  const auto &linear = operators.linear();
+  const auto &linear = operators.draftLinear();
+  const auto &target = operators.linear();
+  const DFlashDraft draft(weights, backend, operators);
+  const uint32_t storageLanes = draft.decodeStorageLanes(1);
+  require(storageLanes >= 1 && storageLanes <= ExecutionLimits::maximumBatchWidth,
+          "standard draft storage planning treated absent dynamic projections as matrices");
   LinearScratchSize size;
   for (const auto *p : {&layer.qkvProjection, &layer.outputProjection, &layer.upProjection,
-                        &layer.downProjection, &head, &weights.contextProjection})
+                        &layer.downProjection, &weights.contextProjection})
     size.include(linear.decodeScratchSize(p->shape()));
+  size.include(linear.decodeScratchSize({weights.layout.contextKvSize(), Hidden}));
+  size.include(target.decodeScratchSize(head.shape()));
   const LinearScratch scratch{allocated(backend,size.input), allocated(backend,size.sums),
       allocated(backend,size.partials), allocated(backend,size.counters), allocated(backend,size.rotated)};
   const auto aw = DraftAttention::plan(weights.layout.attentionShape(), 1).workspace();
-  const uint32_t storageRows = linear.decodeStorageRows(Rows, layer.qkvProjection.shape());
+  const uint32_t storageRows = std::max(storageLanes * Rows, target.decodeStorageRows(Rows, head.shape()));
   const auto hidden = [&] { return allocated(backend, storageRows * Hidden * 2); };
   DFlashDecodeBuffers buffers;
   buffers.linearScratch=scratch; buffers.hidden={hidden(), hidden()}; buffers.normalized=hidden();
@@ -213,10 +220,6 @@ void run(MetalBackend &backend, bool causal) {
                                 float(int(n % 3) - 1) * 0.23f + row * 0.009f);
       static_cast<uint16_t *>(buffers.hidden[0].contents())[row * Hidden + n] = floatToBf16(input[row * Hidden + n]);
     }
-  const DFlashDraft draft(weights, backend, operators);
-  require(draft.decodeStorageLanes(1) >= 1 &&
-              draft.decodeStorageLanes(1) <= ExecutionLimits::maximumBatchWidth,
-          "standard draft storage planning treated absent dynamic projections as matrices");
   {
     // Exercise the actual FC -> hidden norm -> context K/V graph entry.
     // Runtime must bind physical storage capacity while this entry's
@@ -233,7 +236,7 @@ void run(MetalBackend &backend, bool causal) {
     context.persistentKeys = buffers.persistentKeys;
     context.persistentValues = buffers.persistentValues;
     const std::array<uint32_t, 1> starts{0};
-    if (storageRows > Rows) {
+    if (linear.decodePlan(weights.contextProjection, 1).storageRows() > Rows) {
       auto shortContext = context;
       shortContext.capturedTargetHidden = backend.view(context.capturedTargetHidden, 0,
           uint64_t{Rows} * weights.layout.targetHiddenSize() * 2);

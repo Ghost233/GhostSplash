@@ -479,6 +479,22 @@ void takes(const Model &mlx, const Model &gguf) {
   section("takes: models of one splittable shape, and units that leave each part channels");
 }
 
+// A calibration is remembered under the layers' shapes and formats and the int8 activations the GPU's part plans with
+// (AneFfn::calibrationKey): each setting and each model's layers have a key of their own, and a key repeats.
+void keys(const DeviceCapabilities &device, const Model &mlx, const Model &gguf) {
+  const Linear on(device, Int8Activations::On), off(device, Int8Activations::Off);
+  const std::string mlxOn = AneFfn::calibrationKey(mlx.layers, on);
+  if (mlxOn != AneFfn::calibrationKey(mlx.layers, Linear(device, Int8Activations::On)))
+    fail("a calibration key does not repeat");
+  if (mlxOn == AneFfn::calibrationKey(mlx.layers, off) ||
+      AneFfn::calibrationKey(gguf.layers, on) == AneFfn::calibrationKey(gguf.layers, off))
+    fail("int8 activations on and off share a calibration key");
+  if (mlxOn == AneFfn::calibrationKey(gguf.layers, on)) fail("two models' layers share a calibration key");
+  test::rejects([&] { static_cast<void>(AneFfn::calibrationKey({}, on)); }, "ANE FFN split has no layers",
+                "layers the split does not take have a calibration key");
+  section("keys: a calibration's key holds its layers and the int8-activation setting");
+}
+
 // The chunk's buffers of `rows` rows at most: the normalized rows and the FFN's scratch, and the hidden rows the
 // layers' residuals and outputs alternate between.
 struct Chunk {
@@ -487,8 +503,14 @@ struct Chunk {
 };
 Chunk chunk(MetalBackend &backend, uint32_t rows) {
   const auto bf16Rows = [&](uint32_t width) { return test::sharedBuffer(backend, uint64_t{rows} * width * 2); };
-  // Chunks of at least kMinimumRows rows take no split scratch (Linear::prefillScratchSize).
-  return {{bf16Rows(kHidden), bf16Rows(kIntermediate), bf16Rows(kIntermediate), {}},
+  // Chunks of at least kMinimumRows rows take no split scratch, but where the family runs the int8 prefill tile its
+  // codes and scales (Linear::prefillScratchSize).
+  const Linear linear(backend.capabilities(), Int8Activations::On);
+  LinearScratchSize size = linear.prefillScratchSize({kIntermediate, kHidden});
+  size.include(linear.prefillScratchSize({kHidden, kIntermediate}));
+  const auto bytes = [&](uint64_t count) { return count ? test::sharedBuffer(backend, count) : MetalBuffer{}; };
+  return {{bf16Rows(kHidden), bf16Rows(kIntermediate), bf16Rows(kIntermediate),
+           {.input = bytes(size.input), .sums = bytes(size.sums)}},
           {bf16Rows(kHidden), bf16Rows(kHidden)}};
 }
 // Normal values scaled by row(r) into the leading rows of the chunk's normalized rows.
@@ -561,7 +583,8 @@ std::unique_ptr<AneFfn> splitOf(MetalBackend &backend, const Model &model) {
   std::vector<SwiGluProjections> layers;
   for (uint32_t layer = 0; layer < kLayers; ++layer)
     layers.push_back({&copies[3 * layer], &copies[3 * layer + 1], &copies[3 * layer + 2]});
-  return std::make_unique<AneFfn>(backend, layers, kAneUnits, nullptr);
+  return std::make_unique<AneFfn>(backend, Linear(backend.capabilities(), Int8Activations::On), layers, kAneUnits,
+                                  nullptr);
 }
 
 void split(MetalBackend &backend, const Linear &linear, const Model &model, const Chunk &chunk) {
@@ -617,7 +640,7 @@ void split(MetalBackend &backend, const Linear &linear, const Model &model, cons
 // unwritten, which verify() fails, and the split stops.
 void misbound(MetalBackend &backend, const Model &model, const Chunk &chunk) {
   ane::ProgramInstrumentation::arm({.swappedBinding = {"ffn640", "ffn512"}});
-  AneFfn split(backend, model.layers, kAneUnits, nullptr);
+  AneFfn split(backend, Linear(backend.capabilities(), Int8Activations::On), model.layers, kAneUnits, nullptr);
   test::rejects([&] { static_cast<void>(split.verify(model.layers, chunk.ffn, chunk.hidden)); },
                 "split of 640 rows failed", "verify() passed a function bound to another's procedure");
   if (!split.retired() || split.splits(AneFfn::kMaximumRows)) fail("a split that failed verify() did not stop");
@@ -626,7 +649,7 @@ void misbound(MetalBackend &backend, const Model &model, const Chunk &chunk) {
 
 // Layers added out of order and buffers short of a chunk's rows are refused before anything is encoded.
 void refusals(MetalBackend &backend, const Model &model, const Chunk &chunk) {
-  AneFfn split(backend, model.layers, kAneUnits, nullptr);
+  AneFfn split(backend, Linear(backend.capabilities(), Int8Activations::On), model.layers, kAneUnits, nullptr);
   constexpr uint32_t kRows = AneFfn::kMinimumRows;
   const auto &[ffn, hidden] = chunk;
   CommandGraph graph;
@@ -796,7 +819,7 @@ void stops(MetalBackend &backend, const Linear &linear, const Model &model, cons
            ane::ProgramInstrumentation::Faults faults, const std::string &what, uint32_t rows,
            std::string_view reason) {
   ane::ProgramInstrumentation::arm(faults);
-  const auto split = std::make_unique<AneFfn>(backend, model.layers, kAneUnits, nullptr);
+  const auto split = std::make_unique<AneFfn>(backend, linear, model.layers, kAneUnits, nullptr);
   const Forward faulted = forward(backend, linear, model, split.get(), chunk, rows);
   const std::string label = what + ", " + std::to_string(rows) + " rows";
   if (faulted.usable) fail(label + ": the results were usable");
@@ -827,7 +850,7 @@ void loses(MetalBackend &backend, const Linear &linear, const Model &model, cons
   }
   double evaluation = 0.0;
   {
-    AneFfn unlagged(backend, model.layers, kAneUnits, nullptr);
+    AneFfn unlagged(backend, linear, model.layers, kAneUnits, nullptr);
     if (!forward(backend, linear, model, &unlagged, chunk, kRows).usable) {
       fail("a slow Neural Engine: a split without the lag was unusable: " + unlagged.reason());
       return;
@@ -837,7 +860,7 @@ void loses(MetalBackend &backend, const Linear &linear, const Model &model, cons
   const auto lag = std::chrono::ceil<std::chrono::milliseconds>(
       2.0 * std::chrono::duration<double, std::milli>(std::max(timings.gpu[1].milliseconds, evaluation)));
   ane::ProgramInstrumentation::arm({.lag = lag});
-  const auto split = std::make_unique<AneFfn>(backend, model.layers, kAneUnits, nullptr);
+  const auto split = std::make_unique<AneFfn>(backend, linear, model.layers, kAneUnits, nullptr);
   uint32_t lost = 0;
   split->setBreaker(ane_ffn::Breaker(timings.gpu), [&] { ++lost; });
   for (uint32_t command = 1; command <= kWindow; ++command) {
@@ -872,9 +895,10 @@ void loses(MetalBackend &backend, const Linear &linear, const Model &model, cons
 // The split of the MLX and the GGUF model over normalized rows of normal values, and the numerics of rows the ANE's
 // fp16 barely holds.
 void split(MetalBackend &backend) {
-  const Linear linear(backend.capabilities());
+  const Linear linear(backend.capabilities(), Int8Activations::On);
   const Model mlx = mlxModel(backend), gguf = ggufModel(backend);
   takes(mlx, gguf);
+  keys(backend.capabilities(), mlx, gguf);
   const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
   split(backend, linear, mlx, buffers);
   split(backend, linear, gguf, buffers);
@@ -915,7 +939,7 @@ void check4b(MetalBackend &backend) {
   };
   PrefillFfnBuffers buffers{bf16Rows(hidden), bf16Rows(intermediate), bf16Rows(intermediate), {}};
   const std::array<MetalBuffer, 2> output{bf16Rows(hidden), bf16Rows(hidden)};
-  AneFfn split(backend, layers, aneUnits, nullptr);
+  AneFfn split(backend, Linear(backend.capabilities(), Int8Activations::On), layers, aneUnits, nullptr);
   split.setMinimumRows(512);
   if (split.share() != 0.5 || !split.splits(512)) fail("4B manual split did not keep the requested share/rows");
   const double error = split.verify(layers, buffers, output);
@@ -930,7 +954,9 @@ void powerReference(MetalBackend &backend) {
   const Model model = mlxModel(backend);
   const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
   const auto split = splitOf(backend, model);
-  const auto reference = ane_ffn::Measurement(backend, model.layers, buffers.ffn, buffers.hidden, {}).powerReference(*split);
+  const Linear linear(backend.capabilities(), Int8Activations::On);
+  const auto reference = ane_ffn::Measurement(backend, linear, model.layers, buffers.ffn, buffers.hidden, {})
+                             .powerReference(*split);
   if (!reference.valid || !reference.peakWatts || !reference.steadyWatts || reference.samples < 3 ||
       reference.loadSeconds < 5 || !(reference.referenceWatts > 0))
     fail("automatic reference did not obtain valid high-load power: " + reference.reason);
@@ -945,7 +971,7 @@ void powerReference(MetalBackend &backend) {
 }
 
 void recovery(MetalBackend &backend) {
-  const Linear linear(backend.capabilities());
+  const Linear linear(backend.capabilities(), Int8Activations::On);
   const Model model = mlxModel(backend);
   const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
   fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
@@ -991,7 +1017,7 @@ void recovery(MetalBackend &backend) {
 
 void faults(MetalBackend &backend) {
   using Faults = ane::ProgramInstrumentation::Faults;
-  const Linear linear(backend.capabilities());
+  const Linear linear(backend.capabilities(), Int8Activations::On);
   const Model model = mlxModel(backend);
   const Chunk buffers = chunk(backend, AneFfn::kMaximumRows);
   fillRows(buffers, AneFfn::kMaximumRows, [](uint64_t) { return 1.0f; });
@@ -1019,7 +1045,9 @@ void faults(MetalBackend &backend) {
 
   // A program that does not load again after the idle release.
   ane::ProgramInstrumentation::arm({.failingLoad = true});
-  const auto split = std::make_unique<AneFfn>(backend, model.layers, kAneUnits, nullptr);
+  const auto split =
+      std::make_unique<AneFfn>(backend, Linear(backend.capabilities(), Int8Activations::On), model.layers, kAneUnits,
+                               nullptr);
   if (!split->release()) fail("a failed reload: the program was not unloaded");
   split->restore();
   if (!split->retired() || split->splits(AneFfn::kMaximumRows)) fail("a failed reload: the split did not stop");

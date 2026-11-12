@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     }
     try {
       MetalBackend backend(argv[1]);
-      const Linear linear(backend.capabilities());
+      const Linear linear(backend.capabilities(), Int8Activations::Off);
       replayIq1s(backend, linear, argv[2], repeats);
     } catch (const std::exception &error) {
       std::cerr << "IQ1S replay: FAIL: " << error.what() << '\n';

@@ -101,6 +101,7 @@ class LocalLauncherTests(unittest.TestCase):
             "tielcoder35ba3bq4xlsplash.sh",
             "d3litesplash.sh",
             "d3minisplash.sh",
+            "h2olightning4bsplash.sh",
             "qwen3827bmlx4bitsplash.sh",
             "swift15flashnextsplash.sh",
         }:
@@ -377,6 +378,7 @@ class LocalLauncherTests(unittest.TestCase):
                         "qwen3.54bdflashsplash.sh",
                         "d3litesplash.sh",
                         "d3minisplash.sh",
+                        "h2olightning4bsplash.sh",
                     }
                     else "0.0.0.0",
                 )

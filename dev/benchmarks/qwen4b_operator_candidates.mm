@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
       } else if (const auto *target = std::get_if<model::Qwen3_5_4BDFlashWeights>(&model.target)) {
         layers = &target->layers; head = &target->logitsProjection;
       } else throw std::invalid_argument("requires Qwen3.5-4B");
-      const ops::Linear linear(backend.capabilities());
+      const ops::Linear linear(backend.capabilities(), ops::Int8Activations::Off);
       std::vector<Operand> operands;
       for (const auto &layer : *layers) {
         if (!prefill) std::visit([&](const auto &mixer) {

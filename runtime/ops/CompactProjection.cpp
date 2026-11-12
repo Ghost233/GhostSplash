@@ -99,7 +99,7 @@ CompactProjectionValidation validateCompactProjection(
       // These dyadic probe values are exactly representable in BF16.
       values[uint64_t{row} * source.inputSize + k] = uint16_t(std::bit_cast<uint32_t>(value) >> 16);
     }
-  const Linear linear(backend.capabilities());
+  const Linear linear(backend.capabilities(), Int8Activations::Off);
   metal::CommandGraph graph;
   for (const auto &[projection, output] :
        std::array<std::pair<const Projection *, metal::MetalBuffer>, 2>{{{&source, fullOutput}, {&compact, compactOutput}}}) {
