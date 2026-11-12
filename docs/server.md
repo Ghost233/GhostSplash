@@ -629,6 +629,12 @@ take INT8 queries even with no history, and verify takes them from about 7K
 tokens of history. `--activations bf16` keeps the queries bf16 with either
 KV format.
 
+On Apple10 and newer GPUs, `--activations q4h --kv-format q4h` enables
+experimental four-bit query values for Qwen3.6-35B-A3B, including Axion.
+The attention kernel widens the query codes to INT8 for its dot product with
+packed INT4 keys. Other GPU activations use the BF16 policy. Persistent
+prefixes use a separate cache namespace.
+
 ### State precision
 
 The linear-attention (GDN) layers of the targets carry a recurrent state,

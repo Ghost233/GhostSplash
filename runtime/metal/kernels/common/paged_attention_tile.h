@@ -280,7 +280,7 @@ inline void splash_attention_page_softmax(
 // dimensions each, so each returns its own row's scale: NaN for a row holding
 // an infinity or a NaN, whose scores are then NaN, as with bf16 queries.
 // Lanes past those of M rows return 0.
-template <uint M, uint HeadDim>
+template <uint M, uint HeadDim, bool Q4 = false>
 inline float splash_attention_query_codes(device const bfloat *queries, device int8_t *codes,
                                           uint thread_index) {
   constexpr uint LanesPerRow = SplashAttentionLanesPerRow;
@@ -303,12 +303,24 @@ inline float splash_attention_query_codes(device const bfloat *queries, device i
   maximum = max(maximum, simd_shuffle_xor(maximum, 2));
   finite &= simd_shuffle_xor(finite, 1);
   finite &= simd_shuffle_xor(finite, 2);
-  const Int8Block block = int8_activation_block(maximum);
   device char4 *target = reinterpret_cast<device char4 *>(codes + first);
+  if constexpr (Q4) {
+    // Quantize to signed four-bit values. Widen their storage to int8 for
+    // Metal's INT8 x packed INT4 matrix product, retaining the four-bit scale.
+    const bool coded = finite && maximum > 0x1p-100f;
+    const float scale = coded ? precise::divide(maximum, 7.0f) : 0.0f;
+    const float inverse = coded ? precise::divide(7.0f, maximum) : 0.0f;
 #pragma unroll
-  for (uint i = 0; i < Quarter / 4; ++i)
-    target[i] = char4(int8_activation_code(float4(source[i]), block.inverse));
-  return as_type<float>(int8_activation_bits(block.scale, finite != 0));
+    for (uint i = 0; i < Quarter / 4; ++i)
+      target[i] = coded ? char4(clamp(rint(float4(source[i]) * inverse), -7.0f, 7.0f)) : char4(0);
+    return as_type<float>(int8_activation_bits(scale, finite != 0));
+  } else {
+    const Int8Block block = int8_activation_block(maximum);
+#pragma unroll
+    for (uint i = 0; i < Quarter / 4; ++i)
+      target[i] = char4(int8_activation_code(float4(source[i]), block.inverse));
+    return as_type<float>(int8_activation_bits(block.scale, finite != 0));
+  }
 }
 
 // One tile over its split's pages: direct device operands for INT8/BF16/q4h,
@@ -320,10 +332,9 @@ inline float splash_attention_query_codes(device const bfloat *queries, device i
 // entry (kv_extent.h).
 // Three barriers per page order the score store, the softmax and the
 // probability reads of PV.
-// Int8Queries (INT8 K/V only) scores the tile's queries as INT8 codes
-// against the INT8 keys, exact in int32 (|sum| < 2^22 at 256 dimensions);
-// the codes live in the threadgroup's own partials slot, which it writes
-// only after its last page.
+// Int8Queries scores integer query codes against quantized keys in int32.
+// For Q4H keys, the signed 4-bit query codes use INT8 storage. The codes
+// live in the threadgroup's partials slot until its last page is scored.
 template <uint KVHeads, uint QueryHeadsPerKVHead, uint RowsPerTile, uint HeadDim,
           uint Window, typename CacheElement, bool Int8Queries>
 inline void splash_paged_attention_tile(
@@ -352,14 +363,14 @@ inline void splash_paged_attention_tile(
   if (page_begin >= pages)
     return;
   uint page_end = min(pages, page_begin + per_split);
-  static_assert(is_same<CacheElement, int8_t>::value || !Int8Queries, "INT8 queries take INT8 keys");
+  static_assert(is_same<CacheElement, int8_t>::value || Packed4 || !Int8Queries);
   using QueryElement = conditional_t<Int8Queries, int8_t, bfloat>;
   using Score = conditional_t<Int8Queries, int, float>;
   device QueryElement *queries;
   float score_scale = splash_attention_scale<HeadDim>();
   if constexpr (Int8Queries) {
     queries = reinterpret_cast<device int8_t *>(partials + slot * M * D);
-    score_scale *= splash_attention_query_codes<M, HeadDim>(tile_queries, queries, thread_index);
+    score_scale *= splash_attention_query_codes<M, HeadDim, Packed4>(tile_queries, queries, thread_index);
   } else {
     queries = tile_queries;
   }

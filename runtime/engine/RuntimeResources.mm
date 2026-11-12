@@ -539,7 +539,7 @@ makeRuntimeCacheIdentity(std::string_view combinedManifestSha256,
 }
 
 std::string persistentCacheNamespace(const RuntimeCacheIdentity &identity,
-                                     const model::CompositeStateLayout &states) {
+                                     const model::CompositeStateLayout &states, ops::ActivationPrecision activations) {
   const kv::Layout &kv = identity.kvLayout;
   const model::GdnStateLayout &gdn = states.target;
   const model::DraftStateLayout &draft = states.draft;
@@ -550,7 +550,8 @@ std::string persistentCacheNamespace(const RuntimeCacheIdentity &identity,
             << kv.headDimension << ' ' << kv::formatName(kv.format)
             // Dimension-major values add nothing, so dense layouts keep the
             // caches they wrote.
-            << (kv.valuesTokenMajor ? " values-token-major" : "");
+            << (kv.valuesTokenMajor ? " values-token-major" : "")
+            << (activations == ops::ActivationPrecision::Query4 ? " q4h-queries-v1" : "");
   // A block index's pooled keys (kv::Layout::indexDimension), bf16, one a
   // block of SPLASH_ATTENTION_BLOCK_TOKENS tokens. A change to how a block's
   // key is pooled, normalized or rotated changes this line.
@@ -912,7 +913,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
 
   // One plan owner is used both before allocation and during encoding. The
   // engine lends it to model execution without inspecting its plans.
-  ops::ExecutionPlans operators(device, config.int8Activations);
+  ops::ExecutionPlans operators(device, config.activations);
   model::LoadedModel loaded;
   // The runtime's lane state and arenas as the model loaded, with its K/V in
   // memory and where it spills.
@@ -1139,7 +1140,7 @@ RuntimeResources::create(const RuntimeResourcesConfig &inputConfig,
     // them whatever room the volume has, as the first engine's context it
     // keeps may rest on them.
     const std::string cacheNamespace =
-        persistentCacheNamespace(cacheIdentity, loaded.stateLayout(config.stateFormat));
+        persistentCacheNamespace(cacheIdentity, loaded.stateLayout(config.stateFormat), config.activations);
     // The KV file's slots hold a page as the tier lays it out, checksummed by
     // segment when persistent, and the writes of both files hold back while
     // a step waits for reads.

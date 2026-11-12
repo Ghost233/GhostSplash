@@ -234,9 +234,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
       if (option == "--prompt-lookup-min-match") result.optionalFeatures.lookupMinimumMatch = number;
       else result.optionalFeatures.compactCapacity = number;
     } else if (option == "--activations") {
-      if (value != "auto" && value != "bf16")
-        throw UsageError("--activations requires auto or bf16");
-      result.int8Activations = value == "auto" ? ops::Int8Activations::On : ops::Int8Activations::Off;
+      if (const auto precision = ops::parseActivationPrecision(value)) result.activations = *precision;
+      else throw UsageError("--activations requires auto, bf16 or q4h");
     } else if (option == "--verify-rows") {
       if (value != "auto" && value != "all")
         throw UsageError("--verify-rows requires auto or all");
@@ -263,6 +262,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
     throw UsageError("--max-cache-disk-writes requires an SSD cache, which MAX_CACHE_DISK_BYTES 0 turns off");
   if (!result.cacheRoot.empty() && !result.persistentCache)
     throw UsageError("--cache-dir requires --persistent-cache on");
+  if (result.activations == ops::ActivationPrecision::Query4 && result.kvFormat != kv::Format::Int4Hadamard)
+    throw UsageError("--activations q4h requires --kv-format q4h");
   result.modelRoot = requireModelRoot(argv[2]);
   model::ModelDescriptor inspected = inspectModel(result.modelRoot);
   result.maxContext = parseMaxContext(argv[3]);
@@ -271,6 +272,8 @@ NativeArguments parseNativeArguments(int argc, const char *const *argv) {
   } catch (const std::invalid_argument &error) {
     throw UsageError(std::string("MAX_CONTEXT: ") + error.what());
   }
+  if (result.activations == ops::ActivationPrecision::Query4 && result.model.family() != model::Qwen3_6MoeLayout{}.family)
+    throw UsageError("--activations q4h only supports Qwen3.6-35B-A3B generation");
   if (result.ffnLoading.mode == model::FfnWeightMode::Quantized &&
       result.model.family() != model::Qwen3_5_4BLayout{}.family)
     throw UsageError("--experimental-quantized-ffn only supports Qwen3.5-4B generation");

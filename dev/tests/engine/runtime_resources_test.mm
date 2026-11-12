@@ -415,6 +415,12 @@ void testPersistentCacheNamespace() {
       persistentCacheNamespace(identity('a', "build", kv::Format::Int8), model.stateLayout);
   require(name.size() == 32 && name.find_first_not_of("0123456789abcdef") == std::string::npos,
           "a cache namespace is not 32 lowercase hex digits");
+  const auto q4h = identity('a', "build", kv::Format::Int4Hadamard);
+  require(persistentCacheNamespace(q4h, model.stateLayout, ops::ActivationPrecision::Bf16) ==
+              persistentCacheNamespace(q4h, model.stateLayout) &&
+              persistentCacheNamespace(q4h, model.stateLayout, ops::ActivationPrecision::Query4) !=
+                  persistentCacheNamespace(q4h, model.stateLayout),
+          "four-bit queries must use a separate persistent cache namespace");
   require(persistentCacheNamespace(identity('a', "another build", kv::Format::Int8),
                                    model.stateLayout) == name,
           "the build changed the cache namespace");

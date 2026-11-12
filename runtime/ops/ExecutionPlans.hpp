@@ -7,18 +7,24 @@
 #include "ops/PagedAttention.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace splash::ops {
 
+enum class ActivationPrecision : uint8_t { Auto, Bf16, Query4 };
+[[nodiscard]] std::optional<ActivationPrecision> parseActivationPrecision(std::string_view value);
+
 // The device's plans of every operator a model runs, at the runtime's
-// Int8Activations, which its Linear holds and its attention plans read too.
+// activation settings. Attention plans also read the opt-in Q4H query mode.
 // One runtime owns this object and production models borrow it; it never
 // changes after creation.
 class ExecutionPlans final {
 public:
-  explicit ExecutionPlans(const DeviceCapabilities &device, Int8Activations int8Activations);
+  ExecutionPlans(const DeviceCapabilities &device, Int8Activations int8Activations);
+  ExecutionPlans(const DeviceCapabilities &device, ActivationPrecision activations);
   [[nodiscard]] const Linear &linear() const noexcept { return linear_; }
   // A DFlash2 draft's plans: linear()'s in bf16 activations
   // (Int8Activations::Off), so no prefill chunk runs the int8 prefill tile.
@@ -66,6 +72,7 @@ public:
 private:
   Linear linear_;
   Linear draftLinear_;
+  bool q4hQueries_;
 };
 
 } // namespace splash::ops

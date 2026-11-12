@@ -153,7 +153,12 @@ uint64_t readPages(uint64_t visibleTokens, uint32_t windowTokens) {
 // tile or lane reads, reaches int8QueriesFromPages.
 std::string splitKernel(std::string_view phase, kv::Layout layout, const CompiledAttention &compiled,
                         AttentionVariant variant, uint32_t int8QueriesFromPages, Int8Activations int8Activations,
-                        uint64_t splitReads) {
+                        uint64_t splitReads, bool q4hQueries) {
+  if (q4hQueries) {
+    if (layout.format != kv::Format::Int4Hadamard || compiled.suffix != "_kv2_g8" || variant.windowTokens)
+      throw std::invalid_argument("Q4H queries require the dense 16-query/2-KV head Q4H layout");
+    return kernelName(phase, "q4hq_split", splitSuffix(compiled, variant));
+  }
   if (selectsBlocks(layout))
     return kernelName(phase, kernelFormat(layout) + "_sparse", splitSuffix(compiled, variant));
   const bool int8Queries = int8Activations == Int8Activations::On && layout.format == kv::Format::Int8 &&
@@ -297,7 +302,8 @@ uint32_t prefillSplits(uint32_t tiles, uint64_t pages, uint32_t windowTokens, ui
 
 PrefillAttentionPlan PagedAttention::prefillPlan(uint32_t rows, uint32_t historyTokens, uint32_t queryHeads,
                                                  kv::Layout layout, const AttentionCalibration &calibration,
-                                                 Int8Activations int8Activations, AttentionVariant variant, uint32_t tileRows) {
+                                                 Int8Activations int8Activations, AttentionVariant variant, uint32_t tileRows,
+                                                 bool q4hQueries) {
   const CompiledAttention &kernel = compiledAttention(queryHeads, layout, variant);
   if (!rows || rows > kv::kChunkedPrefillMaximumRows)
     throw std::invalid_argument("invalid attention workspace rows");
@@ -317,7 +323,7 @@ PrefillAttentionPlan PagedAttention::prefillPlan(uint32_t rows, uint32_t history
   const std::string tileSuffix = tileRows == kv::kPrefillAttentionTileRows ? "" : "_r" + std::to_string(tileRows);
   return prefillPlanOf(rows, tileRows, splits,
                        splitKernel("prefill", layout, kernel, variant, calibration.int8QueriesFromPages,
-                                   int8Activations, splitReads) + tileSuffix,
+                                   int8Activations, splitReads, q4hQueries) + tileSuffix,
                        reduceKernel("prefill", kernel, variant, layout) + tileSuffix,
                        selectsBlocks(layout), kernel.sinks, layout, queryHeads);
 }
@@ -346,7 +352,7 @@ PrefillAttentionTail PagedAttention::prefillTail(const PrefillAttentionPlan &chu
 VerifyAttentionPlan PagedAttention::verifyPlan(
     uint32_t lanes, uint32_t queryHeads, kv::Layout layout,
     std::span<const uint32_t> historyTokens, const AttentionCalibration &calibration,
-    Int8Activations int8Activations, AttentionVariant variant) {
+    Int8Activations int8Activations, AttentionVariant variant, bool q4hQueries) {
   const CompiledAttention &kernel = compiledAttention(queryHeads, layout, variant);
   if (!lanes || lanes > SPLASH_MAXIMUM_BATCH_WIDTH)
     throw std::invalid_argument("invalid attention workspace batch width");
@@ -368,7 +374,7 @@ VerifyAttentionPlan PagedAttention::verifyPlan(
   return {lanes, laneSplits, splits,
           verifyWorkspaceBound(lanes, queryHeads, layout),
           splitKernel("verify", layout, kernel, variant, calibration.int8QueriesFromPages, int8Activations,
-                      splitReads),
+                      splitReads, q4hQueries),
           reduceKernel("verify", kernel, variant, layout),
           // A sparse lane's list fills only the first of the plan's splits.
           // Its split grid is one-dimensional, x the KV head and then the

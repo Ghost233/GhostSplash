@@ -93,6 +93,7 @@ PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv2_g4, 2, 4, 256, 0, bfloat, fal
 PAGED_VERIFY_SPLIT(verify_attention_bf16_split_kv4_g4, 4, 4, 256, 0, bfloat, false)
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split, 4, 6, 256, 0, uchar, false)
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g8, 2, 8, 256, 0, uchar, false)
+PAGED_VERIFY_SPLIT(verify_attention_q4hq_split_kv2_g8, 2, 8, 256, 0, uchar, true)
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv2_g4, 2, 4, 256, 0, uchar, false)
 PAGED_VERIFY_SPLIT(verify_attention_q4h_split_kv4_g4, 4, 4, 256, 0, uchar, false)
 PAGED_VERIFY_SPLIT(verify_attention_q4_0_split, 4, 6, 256, 0, SplashQ4Block, false)

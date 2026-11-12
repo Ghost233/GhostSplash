@@ -188,8 +188,13 @@ OPTIONS = {
         "--compact-draft-ranking", {"/tmp/rank file": Path("/tmp/rank file")}, ("",)
     ),
     "--fast-topk": values("--fast-topk", {"off": "off", "on": "on"}, ("1", "yes")),
-    "--activations": values(
-        "--activations", {"auto": "auto", "bf16": "bf16"}, ("", "on", "off", "BF16")
+    "--activations": (
+        [
+            (["--activations", "auto"], "auto"),
+            (["--activations", "bf16"], "bf16"),
+            (["--activations", "q4h", "--kv-format", "q4h"], "q4h"),
+        ],
+        [["--activations", value] for value in ("", "on", "off", "BF16", "q4h")],
     ),
     "--verify-rows": values(
         "--verify-rows",
@@ -386,6 +391,14 @@ class ServeOptionsTests(unittest.TestCase):
             ):
                 with self.subTest(parser=parse.__module__, arguments=arguments):
                     self.refuse(parse, [*required, *arguments])
+
+    def test_q4h_queries_reach_the_engine(self):
+        for parse, required in PARSERS:
+            args = parse([*required, "--kv-format", "q4h", "--activations", "q4h"])
+            self.assertEqual(
+                serve_options.engine_argv(args)[-4:],
+                ["--kv-format", "q4h", "--activations", "q4h"],
+            )
 
     def test_both_parsers_check_defaults_from_the_environment(self):
         for name, value, parsed, flag in (

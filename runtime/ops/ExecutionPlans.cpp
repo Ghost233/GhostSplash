@@ -25,8 +25,23 @@ void include(Workspace &bound, const Workspace &required,
 
 } // namespace
 
+std::optional<ActivationPrecision> parseActivationPrecision(std::string_view value) {
+  if (value == "auto") return ActivationPrecision::Auto;
+  if (value == "bf16") return ActivationPrecision::Bf16;
+  if (value == "q4h") return ActivationPrecision::Query4;
+  return std::nullopt;
+}
+
 ExecutionPlans::ExecutionPlans(const DeviceCapabilities &device, Int8Activations int8Activations)
-    : linear_(device, int8Activations), draftLinear_(device, Int8Activations::Off) {}
+    : ExecutionPlans(device, int8Activations == Int8Activations::On
+                                 ? ActivationPrecision::Auto : ActivationPrecision::Bf16) {}
+
+ExecutionPlans::ExecutionPlans(const DeviceCapabilities &device, ActivationPrecision activations)
+    : linear_(device, activations == ActivationPrecision::Auto ? Int8Activations::On : Int8Activations::Off),
+      draftLinear_(device, Int8Activations::Off), q4hQueries_(activations == ActivationPrecision::Query4) {
+  if (q4hQueries_ && device.appleGpuFamily < 10)
+    throw std::invalid_argument("--activations q4h requires an Apple10 or newer GPU");
+}
 
 // A chunk's rows pick its projections' tile, and a staged tile's height names
 // its kernels (gguf_decode_<format>_m<rows>_*), so each height a chunk takes
@@ -54,14 +69,14 @@ PrefillAttentionPlan ExecutionPlans::prefillAttention(
     uint32_t rows, uint32_t historyTokens, uint32_t queryHeads, kv::Layout layout,
     AttentionVariant variant, uint32_t tileRows) const {
   return PagedAttention::prefillPlan(rows, historyTokens, queryHeads, layout, calibration().attention,
-                                     linear_.int8Activations(), variant, tileRows);
+                                     linear_.int8Activations(), variant, tileRows, q4hQueries_);
 }
 
 VerifyAttentionPlan ExecutionPlans::verifyAttention(
     uint32_t lanes, uint32_t queryHeads, kv::Layout layout,
     std::span<const uint32_t> historyTokens, AttentionVariant variant) const {
   return PagedAttention::verifyPlan(lanes, queryHeads, layout, historyTokens, calibration().attention,
-                                    linear_.int8Activations(), variant);
+                                    linear_.int8Activations(), variant, q4hQueries_);
 }
 
 DraftAttentionPlan ExecutionPlans::draftAttention(DraftAttentionShape shape,

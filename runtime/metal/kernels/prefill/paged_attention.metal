@@ -114,6 +114,7 @@ PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv4_g4_r2, 4, 4, 256, 0, 2, bfl
 PAGED_PREFILL_SPLIT(prefill_attention_bf16_split_kv4_g4_r16, 4, 4, 256, 0, 16, bfloat, false)
 PAGED_PREFILL_SPLIT(prefill_attention_q4h_split, 4, 6, 256, 0, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar, false)
 PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv2_g8, 2, 8, 256, 0, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar, false)
+PAGED_PREFILL_SPLIT(prefill_attention_q4hq_split_kv2_g8, 2, 8, 256, 0, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar, true)
 PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv2_g4, 2, 4, 256, 0, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar, false)
 PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv4_g4, 4, 4, 256, 0, SPLASH_PREFILL_ATTENTION_TILE_ROWS, uchar, false)
 PAGED_PREFILL_SPLIT(prefill_attention_q4h_split_kv4_g4_r2, 4, 4, 256, 0, 2, uchar, false)

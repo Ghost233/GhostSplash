@@ -988,7 +988,8 @@ int main(int argc, char **argv) {
     config.buildId = SPLASH_BUILD_ID;
     config.kvFormat = kvFormat;
     config.aneFfn = engine::AneFfnSetting::fromGiven(aneFfnShare, aneFfnMinimumRows);
-    config.int8Activations = int8Activations;
+    config.activations = int8Activations == ops::Int8Activations::On
+                             ? ops::ActivationPrecision::Auto : ops::ActivationPrecision::Bf16;
     // The verify budget's rows follow the wall times and acceptance of the
     // cycles before them, so a MoE target's outputs would not repeat from
     // round to round: every cycle verifies every row (--verify-rows all), and

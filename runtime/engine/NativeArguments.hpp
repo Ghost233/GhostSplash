@@ -91,10 +91,8 @@ struct NativeArguments final {
   // --verify-rows auto|all: the rows of the draft's block a decode
   // cycle verifies (RuntimeResourcesConfig::verifyRows).
   model::VerifyRows verifyRows = model::VerifyRows::Auto;
-  // --activations auto|bf16: whether activations may round to int8 where
-  // an int8-activation path takes them
-  // (RuntimeResourcesConfig::int8Activations).
-  ops::Int8Activations int8Activations = ops::Int8Activations::On;
+  // --activations selects automatic precision, BF16, or four-bit queries.
+  ops::ActivationPrecision activations = ops::ActivationPrecision::Auto;
 };
 
 // Reads `serve-native MODEL_DIRECTORY MAX_CONTEXT|auto MAX_MEMORY_BYTES|auto

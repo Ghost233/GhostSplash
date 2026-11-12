@@ -955,14 +955,16 @@ SERVE_OPTIONS = (
         "--activations",
         "requests",
         dict(
-            choices=("auto", "bf16"),
+            choices=("auto", "bf16", "q4h"),
             default="auto",
             help="auto rounds activations to 8 bits where the GPU multiplies "
             "them twice as fast (M5 and later) and leaves the others bf16: "
             "long prompts through MLX 4- and 5-bit weights (about a quarter "
             "less time to the first token), rotated PQ2_0 decode and attention "
             "over the INT8 KV cache; bf16 keeps every activation bf16, for "
-            "evaluations and bf16 parity (default: auto)",
+            "evaluations and bf16 parity. q4h experimentally quantizes attention "
+            "queries to four bits on Qwen3.6-35B-A3B with Q4H KV and Apple10 "
+            "or newer GPUs (default: auto)",
         ),
         engine=EngineArgument("--activations"),
     ),
@@ -1018,6 +1020,8 @@ def add_serve_arguments(parser, groups=None):
 
 def check_serve_arguments(parser, args):
     """The checks of the shared options that involve more than one."""
+    if args.activations == "q4h" and args.kv_format != "q4h":
+        parser.error("--activations q4h requires --kv-format q4h")
     if args.compact_draft_head == "on" and args.compact_draft_ranking is None:
         parser.error("--compact-draft-head on requires --compact-draft-ranking FILE")
     if args.ane_ffn_minimum_rows is not None and args.ane_ffn_share is None:

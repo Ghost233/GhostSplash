@@ -294,7 +294,7 @@ public:
   [[nodiscard]] static PrefillAttentionPlan
   prefillPlan(uint32_t rows, uint32_t historyTokens, uint32_t queryHeads, kv::Layout layout,
               const AttentionCalibration &calibration, Int8Activations int8Activations,
-              AttentionVariant variant = {}, uint32_t tileRows = 0);
+              AttentionVariant variant = {}, uint32_t tileRows = 0, bool q4hQueries = false);
   // `chunk`'s rows from the first of the tile that holds `row`: the chunk's
   // kernels and splits, so each of their tiles computes what it does in the
   // chunk.
@@ -304,7 +304,7 @@ public:
   [[nodiscard]] static VerifyAttentionPlan
   verifyPlan(uint32_t lanes, uint32_t queryHeads, kv::Layout layout,
              std::span<const uint32_t> historyTokens, const AttentionCalibration &calibration,
-             Int8Activations int8Activations, AttentionVariant variant = {});
+             Int8Activations int8Activations, AttentionVariant variant = {}, bool q4hQueries = false);
 
   // The runtime owns allocation, not the selected kernel's workspace layout.
   // Prefill storage covers every sequence length up to maximumRows; sequences

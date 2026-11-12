@@ -160,7 +160,7 @@ void printUsage(std::string_view executable) {
       " [--prompt-lookup on|off] [--prompt-lookup-min-match 2|3|4]"
       " [--compact-draft-head on|off] [--compact-draft-ranking FILE]"
       " [--compact-draft-capacity ROWS] [--fast-topk on|off]"
-      " [--activations auto|bf16] [--relaunch-context TOKENS] [--ple-memory BYTES|auto|off]"
+      " [--activations auto|bf16|q4h] [--relaunch-context TOKENS] [--ple-memory BYTES|auto|off]"
       " [--expert-memory BYTES|auto|off] [--sparse-kv-memory BYTES|auto]"
       " [--kv-spill always] [--kv-window-trim on|off] [--verify-rows auto|all]");
   writeStderrLine("       " + command + " model-check mlx-affine none|safetensors CONFIG [DRAFT_CONFIG]");
@@ -247,7 +247,7 @@ bootstrapConfig(const engine::NativeArguments &arguments) {
   config.resources.kvSpillAlways = arguments.kvSpillAlways;
   config.resources.kvWindowTrim = arguments.kvWindowTrim;
   config.resources.verifyRows = arguments.verifyRows;
-  config.resources.int8Activations = arguments.int8Activations;
+  config.resources.activations = arguments.activations;
   config.nativeLoop.engine.maxContext = arguments.maxContext;
   config.nativeLoop.engine.decodeShare = arguments.decodeShare;
   return config;

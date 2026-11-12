@@ -1992,6 +1992,13 @@ int main(int argc, char **argv) {
     for (auto format : {kv::Format::Q4_0Hadamard, kv::Format::Q4_0Unrotated})
       rejects([&] { (void)ops::PagedAttention::prefillPlan(8, 0, 24, Geometry{24, 2, 256, kv::Reads::SelectedBlocks}.layout(format), kApple10Row, kBf16); },
               "no KV store kernel for layout", "sparse Q4 was accepted without a matching kernel");
+    const kv::Layout q4h{10, 2, 256, kv::Format::Int4Hadamard};
+    const auto q4hPrefill = ops::PagedAttention::prefillPlan(64, 256, 16, q4h, kApple10Row, kBf16, {}, 0, true);
+    const auto q4hVerify = ops::PagedAttention::verifyPlan(1, 16, q4h, std::array<uint32_t, 1>{256},
+                                                          kApple10Row, kBf16, {}, true);
+    require(q4hPrefill.splitPipeline == "prefill_attention_q4hq_split_kv2_g8" &&
+                q4hVerify.splitPipeline == "verify_attention_q4hq_split_kv2_g8",
+            "four-bit queries did not select their kernels in both phases");
     if (argc == 1) {
       std::cout << "paged attention plans: CPU PASS\n";
       return 0;

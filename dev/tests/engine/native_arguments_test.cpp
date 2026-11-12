@@ -30,16 +30,16 @@ using splash::test::require;
 std::filesystem::path modelConfigs;
 
 // A model directory the engine accepts: the target and draft directories and
-// the assembly's record and configurations of an MLX Qwen3.8-27B.
+// the assembly's record and configurations of a supported MLX model.
 class ModelDirectory final {
 public:
-  ModelDirectory() {
+  explicit ModelDirectory(std::string_view family = "qwen3.8-27b") {
     for (const char *directory : {"target", "draft"})
       std::filesystem::create_directory(path() / directory);
     test::writeFile(path() / "model.json",
                     R"({"version":1,"model":"mlx-community/Qwen3.8-27B-4bit",)"
                     R"("target_format":"mlx-affine","vision_format":"none"})");
-    const std::filesystem::path configs = modelConfigs / "qwen3.8-27b";
+    const std::filesystem::path configs = modelConfigs / family;
     std::filesystem::copy_file(configs / "config.json", path() / "config.json");
     std::filesystem::copy_file(configs / "draft" / "config.json", path() / "draft" / "config.json");
   }
@@ -214,12 +214,12 @@ void testServerCommandLines(const char *path) {
       }},
       {"fast_topk", [](NativeArguments &read) { read.optionalFeatures.fastTopK = true; }},
       {"features_off", [](NativeArguments &) {}},
-      {"activations_bf16", [](NativeArguments &read) { read.int8Activations = ops::Int8Activations::Off; }},
+      {"activations_bf16", [](NativeArguments &read) { read.activations = ops::ActivationPrecision::Bf16; }},
       {"verify_rows_all", [](NativeArguments &read) { read.verifyRows = model::VerifyRows::All; }},
       // The defaults the server leaves out are the engine's: each meaning
       // names the value, so a change of the engine's default fails it.
       {"verify_rows_auto", [](NativeArguments &read) { read.verifyRows = model::VerifyRows::Auto; }},
-      {"activations_auto", [](NativeArguments &read) { read.int8Activations = ops::Int8Activations::On; }},
+      {"activations_auto", [](NativeArguments &read) { read.activations = ops::ActivationPrecision::Auto; }},
       {"kv_format_default", [](NativeArguments &read) { read.kvFormat = kv::Format::Int8; }},
       {"state_format_default",
        [](NativeArguments &read) { read.stateFormat = ops::GdnStateFormat::Float32; }},
@@ -288,7 +288,7 @@ void testServerCommandLines(const char *path) {
            read.pleMemory == meant.pleMemory && read.expertMemory == meant.expertMemory &&
            read.sparseKvMemory == meant.sparseKvMemory && read.kvSpillAlways == meant.kvSpillAlways &&
            read.kvWindowTrim == meant.kvWindowTrim &&
-           read.int8Activations == meant.int8Activations &&
+           read.activations == meant.activations &&
            read.verifyRows == meant.verifyRows;
   };
   const auto golden = readGolden(path);
@@ -317,12 +317,21 @@ void testNeuralEngine() {
 
 // Activations may round to int8 unless --activations bf16 keeps them bf16;
 // --activations auto, which the server never writes, keeps the rule.
-void testInt8Activations() {
+// q4h uses the BF16 policy outside attention and requires Q4H KV.
+void testActivations() {
   const ModelDirectory model;
-  require(parse(model, {"auto", "auto"}).int8Activations == ops::Int8Activations::On &&
-              parse(model, {"auto", "auto", "--activations", "auto"}).int8Activations == ops::Int8Activations::On &&
-              parse(model, {"auto", "auto", "--activations", "bf16"}).int8Activations == ops::Int8Activations::Off,
+  require(parse(model, {"auto", "auto"}).activations == ops::ActivationPrecision::Auto &&
+              parse(model, {"auto", "auto", "--activations", "auto"}).activations == ops::ActivationPrecision::Auto &&
+              parse(model, {"auto", "auto", "--activations", "bf16"}).activations == ops::ActivationPrecision::Bf16,
           "--activations did not reach the arguments as given");
+  const ModelDirectory moe("qwen3.6-35b-a3b");
+  const auto q4h = parse(moe, {"auto", "auto", "--activations", "q4h", "--kv-format", "q4h"});
+  require(q4h.activations == ops::ActivationPrecision::Query4,
+          "--activations q4h did not select four-bit queries");
+  rejects([&] { (void)parse(moe, {"auto", "auto", "--activations", "q4h"}); },
+          "requires --kv-format q4h", "four-bit queries accepted INT8 KV");
+  rejects([&] { (void)parse(model, {"auto", "auto", "--activations", "q4h", "--kv-format", "q4h"}); },
+          "only supports Qwen3.6-35B-A3B", "four-bit queries accepted an unsupported family");
 }
 
 // --verify-rows auto, which the server never writes, is the engine's rule.
@@ -413,7 +422,7 @@ void testRefusals() {
     refuses({"auto", "auto", "--compact-draft-capacity", value}, "--compact-draft-capacity");
   refuses({"auto", "auto", "--compact-draft-ranking"}, "--compact-draft-ranking requires a file");
   for (const char *value : {"on", "off", "BF16", ""})
-    refuses({"auto", "auto", "--activations", value}, "--activations requires auto or bf16");
+    refuses({"auto", "auto", "--activations", value}, "--activations requires auto, bf16 or q4h");
   for (const char *rows : {"budget", "every", "ALL", ""})
     refuses({"auto", "auto", "--verify-rows", rows}, "--verify-rows requires auto or all");
   // The server passes bytes, auto or off.
@@ -533,7 +542,7 @@ int main(int argc, char **argv) {
       setenv(name, "invalid", 1);
     testServerCommandLines(argv[1]);
     testNeuralEngine();
-    testInt8Activations();
+    testActivations();
     testVerifyRows();
     testStreamedMemoryAndSpill();
     testWindowTrim();
